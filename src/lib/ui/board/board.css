@@ -1,0 +1,118 @@
+/* Rookie-Brett: warmes Holz, Glut-Akzente. Überschreibt chessground.base.css */
+:root {
+	--sq-light: #f0e6d4;
+	--sq-dark: #b98a5f;
+	--sq-last: rgb(242 140 82 / 0.42);
+	--sq-selected: rgb(226 88 62 / 0.45);
+	--sq-dot: rgb(40 28 18 / 0.22);
+	--sq-coord-light: #b98a5f;
+	--sq-coord-dark: #f0e6d4;
+}
+
+.cg-wrap {
+	width: 100%;
+	height: 100%;
+}
+
+cg-board {
+	background: repeating-conic-gradient(var(--sq-dark) 0 25%, var(--sq-light) 0 50%) 0 0 / 25% 25%;
+	border-radius: 0;
+}
+
+cg-board square.last-move {
+	background-color: var(--sq-last);
+}
+
+cg-board square.selected {
+	background-color: var(--sq-selected);
+}
+
+cg-board square.move-dest {
+	background: radial-gradient(var(--sq-dot) 21%, transparent 23%);
+}
+
+cg-board square.move-dest:hover {
+	background: rgb(226 88 62 / 0.28);
+}
+
+cg-board square.oc.move-dest {
+	background: radial-gradient(transparent 0%, transparent 78%, var(--sq-dot) 80%);
+}
+
+cg-board square.oc.move-dest:hover {
+	background: rgb(226 88 62 / 0.3);
+}
+
+cg-board square.check {
+	background: radial-gradient(
+		ellipse at center,
+		rgb(255 50 30 / 0.95) 0%,
+		rgb(230 40 20 / 0.7) 25%,
+		rgb(200 20 0 / 0) 89%
+	);
+}
+
+cg-board square.hint-good {
+	background-color: rgb(43 154 102 / 0.45);
+}
+
+cg-board square.hint-bad {
+	background-color: rgb(214 69 69 / 0.42);
+}
+
+cg-board piece.dragging {
+	cursor: grabbing;
+	filter: drop-shadow(0 8px 10px rgb(0 0 0 / 0.3));
+}
+
+cg-board piece.ghost {
+	opacity: 0.35;
+}
+
+.cg-wrap coords {
+	font-family: var(--font-body);
+	font-weight: 650;
+	font-size: clamp(8px, 1.6vw, 11px);
+	opacity: 1;
+	text-shadow: none;
+}
+
+.cg-wrap coords.ranks {
+	right: 2px;
+	left: auto;
+	top: 2px;
+}
+
+.cg-wrap coords.files {
+	left: 3px;
+	bottom: 1px;
+	text-align: left;
+}
+
+.cg-wrap coords coord:nth-child(odd) {
+	color: var(--sq-coord-light);
+}
+
+.cg-wrap coords coord:nth-child(even) {
+	color: var(--sq-coord-dark);
+}
+
+.cg-wrap.orientation-black coords coord:nth-child(odd) {
+	color: var(--sq-coord-dark);
+}
+
+.cg-wrap.orientation-black coords coord:nth-child(even) {
+	color: var(--sq-coord-light);
+}
+
+@media (prefers-color-scheme: dark) {
+	:root:not([data-theme='light']) {
+		--sq-light: #e4d6bf;
+		--sq-dark: #a77a51;
+	}
+}
+
+:root[data-theme='dark'] {
+	--sq-light: #e4d6bf;
+	--sq-dark: #a77a51;
+}

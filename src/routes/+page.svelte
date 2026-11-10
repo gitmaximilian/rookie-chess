@@ -2,27 +2,84 @@
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 	import type { PageRouteId } from '$app/types';
+	import type { Component } from 'svelte';
 	import Flame from '@lucide/svelte/icons/flame';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import ChessKnight from '@lucide/svelte/icons/chess-knight';
 	import Puzzle from '@lucide/svelte/icons/puzzle';
 	import GraduationCap from '@lucide/svelte/icons/graduation-cap';
 	import ChartLine from '@lucide/svelte/icons/chart-line';
+	import Repeat from '@lucide/svelte/icons/repeat';
+	import ShieldAlert from '@lucide/svelte/icons/shield-alert';
+	import Play from '@lucide/svelte/icons/play';
+	import Check from '@lucide/svelte/icons/check';
 	import HeroBoard from '#lib/ui/HeroBoard.svelte';
 	import GoalRing from '#lib/ui/GoalRing.svelte';
+	import Board from '#lib/ui/board/Board.svelte';
+	import BotAvatar from '#lib/ui/BotAvatar.svelte';
+	import { db, getSetting, today } from '#lib/db/db.js';
+	import { computeStreak } from '#lib/training/streak.js';
+	import { countDue } from '#lib/training/srs.js';
+	import { dailyPuzzle, PuzzleRun } from '#lib/training/puzzles.js';
+	import { themeName, THEMES } from '#lib/data/themes.js';
+	import { botById } from '#lib/bots/bots.js';
+
+	const dailyHref = `${resolve('/puzzles')}?mode=daily`;
+	const reviewHref = `${resolve('/puzzles')}?mode=review`;
 
 	let greeting = $state('Hallo');
+	let streak = $state(0);
+	let todayDone = $state(false);
+	let solvedToday = $state(0);
+	let goal = $state(5);
+	let due = $state(0);
+	let backupDue = $state(false);
+	let resume = $state<{ botId: string; moves: string[] } | null>(null);
+	let daily = $state<{
+		fen: string;
+		color: 'white' | 'black';
+		theme: string;
+		done: boolean;
+	} | null>(null);
 
-	onMount(() => {
+	onMount(async () => {
 		const h = new Date().getHours();
 		greeting = h < 5 ? 'Gute Nacht' : h < 11 ? 'Guten Morgen' : h < 18 ? 'Hallo' : 'Guten Abend';
+
+		const rows = await db.activity.toArray();
+		const s = computeStreak(rows);
+		streak = s.days;
+		todayDone = s.todayDone;
+		solvedToday = (await db.activity.get(today()))?.puzzles ?? 0;
+		goal = await getSetting('dailyGoal', 5);
+		due = await countDue();
+		resume = await getSetting('currentGame', null);
+
+		const last = await getSetting<number | null>('lastBackupAt', null);
+		const hasData = rows.length > 2;
+		backupDue = hasData && (!last || Date.now() - last > 14 * 86400000);
+
+		try {
+			const p = await dailyPuzzle(today());
+			const run = new PuzzleRun(p);
+			run.playIntro();
+			const t = p.themes.find((x) => THEMES.find((th) => th.key === x)?.core) ?? p.themes[0];
+			daily = {
+				fen: run.game.fen,
+				color: run.playerColor,
+				theme: t ? themeName(t) : 'Taktik',
+				done: (await getSetting<string>('dailyDone', '')) === today()
+			};
+		} catch {
+			daily = null;
+		}
 	});
 
 	const modes: {
 		href: PageRouteId;
 		title: string;
 		text: string;
-		icon: typeof Puzzle;
+		icon: Component;
 		c: string;
 		soft: string;
 	}[] = [
@@ -71,34 +128,100 @@
 			<span class="eyebrow">Dein Training</span>
 			<h1>{greeting}!</h1>
 		</div>
-		<span class="streak" title="Trainingsserie">
+		<span class="streak" class:lit={todayDone} title="Trainingsserie in Tagen">
 			<Flame size={18} strokeWidth={2.4} />
-			<b>0</b>
+			<b>{streak}</b>
 			<span class="sr-only">Tage in Folge</span>
 		</span>
 	</header>
 
+	{#if backupDue}
+		<a class="banner card" href={resolve('/settings')}>
+			<ShieldAlert size={20} />
+			<span><b>Zeit für eine Sicherung.</b> Safari kann Daten nach längerer Pause löschen.</span>
+			<ArrowRight size={18} />
+		</a>
+	{/if}
+
+	{#if resume}
+		<a class="resume card pressable" href={resolve('/play')}>
+			<BotAvatar bot={botById(resume.botId)} size={44} />
+			<span class="resume-text">
+				<b>Partie fortsetzen</b>
+				<span
+					>gegen {botById(resume.botId).name} · Zug {Math.floor(resume.moves.length / 2) + 1}</span
+				>
+			</span>
+			<span class="resume-go"><Play size={18} /></span>
+		</a>
+	{/if}
+
 	<section class="hero card">
 		<div class="hero-text">
 			<span class="eyebrow on-dark">Puzzle des Tages</span>
-			<h2>Weiß zieht – finde das Matt in 1</h2>
-			<p>Jeden Tag ein neues Rätsel, passend zu deinem Niveau.</p>
-			<a href={resolve('/puzzles')} class="btn hero-btn">
-				Loslegen <ArrowRight size={18} strokeWidth={2.4} />
-			</a>
+			{#if daily?.done}
+				<h2>Erledigt <Check size={28} strokeWidth={3} /></h2>
+				<p>Morgen wartet ein neues Rätsel auf dich.</p>
+				<a href={resolve('/puzzles')} class="btn hero-btn"
+					>Mehr Puzzles <ArrowRight size={18} strokeWidth={2.4} /></a
+				>
+			{:else}
+				<h2>
+					{daily ? (daily.color === 'white' ? 'Weiß' : 'Schwarz') : 'Du'} am Zug – {daily?.theme ??
+						'finde den besten Zug'}
+				</h2>
+				<p>Jeden Tag ein neues Rätsel. Schaffst du es ohne Tipp?</p>
+				<a href={dailyHref} class="btn hero-btn">
+					Lösen <ArrowRight size={18} strokeWidth={2.4} />
+				</a>
+			{/if}
 		</div>
 		<div class="hero-board">
-			<HeroBoard />
+			{#if daily}
+				<div class="real-board">
+					<Board
+						fen={daily.fen}
+						orientation={daily.color}
+						viewOnly
+						coordinates={false}
+						label="Puzzle des Tages"
+					/>
+				</div>
+			{:else}
+				<HeroBoard />
+			{/if}
 		</div>
 	</section>
 
-	<section class="goal card">
-		<GoalRing value={0} max={5} />
-		<div>
-			<h3>Tagesziel</h3>
-			<p>Löse heute 5 Puzzles, um deine Serie zu starten.</p>
-		</div>
-	</section>
+	<div class="duo">
+		<section class="goal card">
+			<GoalRing value={Math.min(solvedToday, goal)} max={goal} />
+			<div>
+				<h3>Tagesziel</h3>
+				<p>
+					{#if solvedToday >= goal}
+						Geschafft! {solvedToday} Puzzles heute.
+					{:else}
+						Noch {goal - solvedToday} Puzzle{goal - solvedToday === 1 ? '' : 's'} bis zum Ziel.
+					{/if}
+				</p>
+			</div>
+		</section>
+
+		<a
+			class="due card pressable"
+			href={reviewHref}
+			class:none={due === 0}
+		>
+			<span class="due-ico"><Repeat size={22} /></span>
+			<div>
+				<h3>{due === 0 ? 'Alles wiederholt' : `${due} Wiederholung${due === 1 ? '' : 'en'}`}</h3>
+				<p>
+					{due === 0 ? 'Fehler kommen automatisch zurück.' : 'Jetzt fällig – festigt dein Wissen.'}
+				</p>
+			</div>
+		</a>
+	</div>
 
 	<h2 class="section-title">Was möchtest du trainieren?</h2>
 	<div class="modes">
@@ -147,10 +270,68 @@
 		border-radius: 999px;
 		background: var(--surface);
 		border: 1px solid var(--line);
-		color: var(--accent);
+		color: var(--text-3);
 		font-family: var(--font-display);
 		font-size: 1.05rem;
 		box-shadow: var(--shadow-1);
+	}
+
+	.streak.lit {
+		color: var(--accent);
+		border-color: color-mix(in srgb, var(--accent) 30%, transparent);
+		background: var(--accent-soft);
+	}
+
+	.streak.lit :global(svg) {
+		animation: flicker 2.4s ease-in-out infinite;
+	}
+
+	@keyframes flicker {
+		50% {
+			transform: scale(1.12) rotate(-4deg);
+		}
+	}
+
+	.banner {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		padding: 0.85rem 1rem;
+		color: color-mix(in srgb, var(--warn) 70%, var(--text));
+		background: color-mix(in srgb, var(--warn) 12%, var(--surface));
+		font-size: 0.92rem;
+	}
+
+	.banner span {
+		flex: 1;
+	}
+
+	.resume {
+		display: flex;
+		align-items: center;
+		gap: 0.85rem;
+		padding: 0.8rem 1rem;
+	}
+
+	.resume-text {
+		display: flex;
+		flex-direction: column;
+		flex: 1;
+	}
+
+	.resume-text span {
+		font-size: 0.88rem;
+		color: var(--text-2);
+	}
+
+	.resume-go {
+		display: grid;
+		place-items: center;
+		width: 40px;
+		height: 40px;
+		border-radius: 50%;
+		background: var(--accent);
+		color: #fff;
 	}
 
 	/* Hero: dunkle Bühne, warmer Schein – auch im Hellmodus */
@@ -183,6 +364,9 @@
 	}
 
 	.hero h2 {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
 		font-size: clamp(1.6rem, 5.5vw, 2.2rem);
 	}
 
@@ -203,6 +387,19 @@
 		margin: 0 -0.25rem -0.25rem 0;
 	}
 
+	.real-board {
+		transform: perspective(900px) rotateX(8deg) rotateZ(-3deg);
+		animation: float 6s ease-in-out infinite;
+		border-radius: 14px;
+		box-shadow: 0 20px 50px rgb(0 0 0 / 0.45);
+	}
+
+	@keyframes float {
+		50% {
+			transform: perspective(900px) rotateX(6deg) rotateZ(-1.5deg) translateY(-6px);
+		}
+	}
+
 	@media (min-width: 640px) {
 		.hero {
 			grid-template-columns: 1.2fr 1fr;
@@ -215,21 +412,51 @@
 		}
 	}
 
-	.goal {
+	.duo {
+		display: grid;
+		gap: 0.75rem;
+	}
+
+	@media (min-width: 640px) {
+		.duo {
+			grid-template-columns: 1fr 1fr;
+		}
+	}
+
+	.goal,
+	.due {
 		display: flex;
 		align-items: center;
 		gap: 1rem;
 		padding: 1rem 1.25rem;
 	}
 
-	.goal h3 {
+	.goal h3,
+	.due h3 {
 		font-size: 1.1rem;
 		margin-bottom: 0.15rem;
 	}
 
-	.goal p {
+	.goal p,
+	.due p {
 		color: var(--text-2);
-		font-size: 0.95rem;
+		font-size: 0.92rem;
+	}
+
+	.due-ico {
+		display: grid;
+		place-items: center;
+		flex: none;
+		width: 56px;
+		height: 56px;
+		border-radius: 50%;
+		background: var(--c-puzzle-soft);
+		color: var(--c-puzzle);
+	}
+
+	.due.none .due-ico {
+		background: color-mix(in srgb, var(--good) 14%, transparent);
+		color: var(--good);
 	}
 
 	.section-title {

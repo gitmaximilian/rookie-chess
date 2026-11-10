@@ -19,6 +19,12 @@
 		/>
 		<link rel="apple-touch-icon" href="/apple-touch-icon-180x180.png" />
 		<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+		<script>
+			try {
+				var t = localStorage.getItem('rookie:theme');
+				if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+			} catch (e) {}
+		</script>
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover">

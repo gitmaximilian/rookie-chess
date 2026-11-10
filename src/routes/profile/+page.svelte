@@ -2,6 +2,7 @@
 	import { resolve } from '$app/paths';
 	import ChartLine from '@lucide/svelte/icons/chart-line';
 	import Info from '@lucide/svelte/icons/info';
+	import Settings from '@lucide/svelte/icons/settings';
 	import Scale from '@lucide/svelte/icons/scale';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import PageHeader from '#lib/ui/PageHeader.svelte';
@@ -25,6 +26,11 @@
 	>
 		Rating-Verlauf, Trainingsserie und deine schwächsten Themen – alles auf einen Blick.
 	</ComingSoon>
+	<a href={resolve('/settings')} class="row card pressable">
+		<span class="ico"><Settings size={20} /></span>
+		<span class="txt">Einstellungen &amp; Datensicherung</span>
+		<ChevronRight size={18} />
+	</a>
 	<a href={resolve('/about')} class="row card pressable">
 		<span class="ico"><Info size={20} /></span>
 		<span class="txt">Über Rookie &amp; Lizenzen</span>

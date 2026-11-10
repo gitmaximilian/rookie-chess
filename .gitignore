@@ -27,3 +27,6 @@ test-results
 # Stockfish wird bei npm install aus node_modules kopiert
 /static/engine
 playwright-report
+
+# Rohdaten (Lichess-Download)
+/.data
