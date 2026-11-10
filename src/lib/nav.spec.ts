@@ -8,8 +8,8 @@ describe('isActive', () => {
 	});
 
 	it('Bereiche sind auch auf Unterseiten aktiv', () => {
-		expect(isActive('/lernen', '/lernen/endspiele')).toBe(true);
-		expect(isActive('/lernen', '/lernenx')).toBe(false);
+		expect(isActive('/learn', '/learn/endgames')).toBe(true);
+		expect(isActive('/learn', '/learnx')).toBe(false);
 	});
 
 	it('hat genau fünf Tabs fürs iPhone', () => {

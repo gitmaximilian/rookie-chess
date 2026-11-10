@@ -29,7 +29,7 @@ npm run check && npm run lint
 ## Deployment auf Cloudflare Pages (gratis)
 
 1. Repo auf GitHub anlegen und pushen:
-   `gh repo create schach-trainer --public --source=. --push`
+   `gh repo create chess-trainer --public --source=. --push`
 2. Cloudflare Dashboard → **Workers & Pages** → **Create** → **Pages** → **Connect to Git** → Repo wählen.
 3. Build-Einstellungen:
    - Framework preset: **SvelteKit**

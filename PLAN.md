@@ -11,7 +11,7 @@ Deine Antworten:
 - **Nutzer:** Die App ist öffentlich, der Quellcode liegt öffentlich auf GitHub.
 - **Konten:** GitHub und Cloudflare sind vorhanden.
 
-Umgesetzt wird in einem eigenen Projektordner `~/schach-trainer`, nicht im temporären Session-Ordner. Der Name „Zugzwang“ ist nur ein Arbeitstitel.
+Umgesetzt wird in einem eigenen Projektordner `~/chess-trainer`, nicht im temporären Session-Ordner. Der Name „Zugzwang“ ist nur ein Arbeitstitel.
 
 ## Stack (Entscheidung)
 
@@ -42,7 +42,7 @@ Die Lichess-Puzzles und die Eröffnungsnamen (`lichess-org/chess-openings`) steh
 ## Architektur
 
 ```
-schach-trainer/
+chess-trainer/
 ├─ src/
 │  ├─ lib/
 │  │  ├─ chess/        # chessops-Hilfen: Zugvalidierung, PGN/FEN, SAN, Material
@@ -54,7 +54,7 @@ schach-trainer/
 │  │  ├─ data/         # Laden der Puzzle-Pakete, Cache-Logik
 │  │  ├─ api/          # lichess.ts, chesscom.ts, tablebase.ts (mit Timeout und Offline-Fallback)
 │  │  └─ ui/           # Board.svelte (chessground-Wrapper), EvalBar, MoveList, Sheet, TabBar, Sidebar
-│  ├─ routes/          # / (Start), /spielen, /puzzles, /analyse, /eroeffnungen, /endspiele, /import, /statistik, /einstellungen, /ueber
+│  ├─ routes/          # / (Start), /play, /puzzles, /analysis, /learn/openings, /learn/endgames, /import, /profile, /settings, /about (URLs englisch, Oberfläche deutsch)
 │  └─ app.css          # Design-Tokens (Hell/Dunkel), Safe Areas
 ├─ static/
 │  ├─ engine/          # stockfish-*.js/.wasm (+ .nnue, falls separat)
@@ -155,7 +155,7 @@ schach-trainer/
 
 ## Deployment-Anleitung (kommt ins README)
 
-1. `gh repo create schach-trainer --public` und pushen.
+1. `gh repo create chess-trainer --public` und pushen.
 2. Cloudflare Dashboard → Workers & Pages → Create → Pages → Connect to Git → Repo wählen.
 3. Build: Framework „SvelteKit“, Befehl `npm run build`, Ausgabe `build`, `NODE_VERSION=22`.
 4. `static/_headers`:

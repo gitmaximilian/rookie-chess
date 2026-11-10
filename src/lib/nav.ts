@@ -16,10 +16,10 @@ export interface NavItem {
 
 export const navItems: NavItem[] = [
 	{ href: '/', label: 'Start', icon: House, color: 'var(--accent)' },
-	{ href: '/spielen', label: 'Spielen', icon: ChessKnight, color: 'var(--c-play)' },
+	{ href: '/play', label: 'Spielen', icon: ChessKnight, color: 'var(--c-play)' },
 	{ href: '/puzzles', label: 'Puzzles', icon: Puzzle, color: 'var(--c-puzzle)' },
-	{ href: '/lernen', label: 'Lernen', icon: GraduationCap, color: 'var(--c-learn)' },
-	{ href: '/profil', label: 'Profil', icon: CircleUserRound, color: 'var(--c-analysis)' }
+	{ href: '/learn', label: 'Lernen', icon: GraduationCap, color: 'var(--c-learn)' },
+	{ href: '/profile', label: 'Profil', icon: CircleUserRound, color: 'var(--c-analysis)' }
 ];
 
 /** Ist `href` der aktive Bereich für `pathname`? */

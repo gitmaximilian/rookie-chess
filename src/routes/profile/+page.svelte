@@ -24,7 +24,7 @@
 	>
 		Rating-Verlauf, Trainingsserie und deine schwächsten Themen – alles auf einen Blick.
 	</ComingSoon>
-	<a href={resolve('/ueber')} class="row card pressable">
+	<a href={resolve('/about')} class="row card pressable">
 		<span class="ico"><Info size={20} /></span>
 		<span class="txt">Über Zugzwang &amp; Lizenzen</span>
 		<ChevronRight size={18} />

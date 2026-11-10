@@ -27,7 +27,7 @@
 		soft: string;
 	}[] = [
 		{
-			href: '/spielen',
+			href: '/play',
 			title: 'Spielen',
 			text: 'Acht Bots von „Bauer Bruno“ bis „Dame Doris“',
 			icon: ChessKnight,
@@ -43,7 +43,7 @@
 			soft: 'var(--c-puzzle-soft)'
 		},
 		{
-			href: '/lernen',
+			href: '/learn',
 			title: 'Lernen',
 			text: 'Eröffnungen und Endspiele Schritt für Schritt',
 			icon: GraduationCap,
@@ -51,7 +51,7 @@
 			soft: 'var(--c-learn-soft)'
 		},
 		{
-			href: '/profil',
+			href: '/profile',
 			title: 'Fortschritt',
 			text: 'Statistik, Partien und Schwächen',
 			icon: ChartLine,
