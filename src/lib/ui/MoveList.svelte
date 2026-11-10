@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { tick } from 'svelte';
 	import type { PlayedMove } from '#lib/chess/game.js';
+	import { figurine } from '#lib/chess/notation.js';
 
 	interface Props {
 		moves: PlayedMove[];
@@ -49,6 +50,11 @@
 	});
 </script>
 
+{#snippet san(s: string)}
+	{@const f = figurine(s)}
+	{#if /^[♔♕♖♗♘]/.test(f)}<span class="fig">{f[0]}</span>{f.slice(1)}{:else}{f}{/if}
+{/snippet}
+
 <div class="moves" bind:this={box} role="list" aria-label="Zugliste">
 	{#if rows.length === 0}
 		<p class="empty">Noch keine Züge</p>
@@ -64,7 +70,7 @@
 					class:cur={current === r.w.ply}
 					onclick={() => onSelect?.(r.w!.ply)}
 				>
-					{r.w.san}{#if marks[r.w.ply]}<sup>{marks[r.w.ply]}</sup>{/if}
+					{@render san(r.w.san)}{#if marks[r.w.ply]}<sup>{marks[r.w.ply]}</sup>{/if}
 				</button>
 			{:else}
 				<span class="mv dim">…</span>
@@ -77,7 +83,7 @@
 					class:cur={current === r.b.ply}
 					onclick={() => onSelect?.(r.b!.ply)}
 				>
-					{r.b.san}{#if marks[r.b.ply]}<sup>{marks[r.b.ply]}</sup>{/if}
+					{@render san(r.b.san)}{#if marks[r.b.ply]}<sup>{marks[r.b.ply]}</sup>{/if}
 				</button>
 			{/if}
 		</div>
@@ -141,6 +147,14 @@
 	.mv.dim {
 		color: var(--text-3);
 		cursor: default;
+	}
+
+	.fig {
+		display: inline-block;
+		font-size: 1.3em;
+		line-height: 0;
+		margin-right: 1px;
+		transform: translateY(1px);
 	}
 
 	sup {

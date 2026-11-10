@@ -70,7 +70,7 @@ export default defineConfig({
 				},
 				generateSW: {
 					// App-Shell, Schrift und Engine vorab speichern → startet komplett offline
-					globPatterns: ['**/*.{woff2,wasm}'],
+					globPatterns: ['**/*.{woff2,wasm}', '**/openings.json'],
 					globIgnores: ['**/*vietnamese*', '**/sw.js', '**/workbox-*.js'],
 					navigateFallback: '/',
 					cleanupOutdatedCaches: true,

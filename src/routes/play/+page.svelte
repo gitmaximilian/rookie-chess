@@ -598,8 +598,7 @@
 			<div class="sheet-actions">
 				<button class="btn" onclick={rematch}>Revanche</button>
 				{#if savedGameId}
-					<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-					<a class="btn secondary" href={resolve('/analysis') + `?game=${savedGameId}`}>
+					<a class="btn secondary" href={resolve(`/analysis?game=${savedGameId}`)}>
 						<ChartLine size={18} /> Analysieren
 					</a>
 				{/if}

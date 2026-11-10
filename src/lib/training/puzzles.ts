@@ -201,6 +201,14 @@ export class PuzzleRun {
 		return reply;
 	}
 
+	/** Erkennt einen gleichwertigen Alternativzug an (z. B. per Engine geprüft) und beendet das Puzzle */
+	acceptAlternative(uci: string): boolean {
+		if (!this.game.play(uci)) return false;
+		this.mistakes = Math.max(0, this.mistakes - 1);
+		this.step = this.puzzle.moves.length;
+		return true;
+	}
+
 	/** Spielt den nächsten Lösungszug (für „Lösung zeigen“) */
 	showNext(): string | null {
 		const exp = this.expected;

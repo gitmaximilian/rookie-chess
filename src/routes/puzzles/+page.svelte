@@ -20,6 +20,8 @@
 	import { THEMES, themeName } from '#lib/data/themes.js';
 	import { db, bumpActivity, today, getSetting, setSetting } from '#lib/db/db.js';
 	import { sound } from '#lib/ui/sound.js';
+	import { engine } from '#lib/engine/engine.js';
+	import { scoreToCp } from '#lib/engine/uci.js';
 	import type { Rating } from '#lib/training/glicko2.js';
 
 	type Mode = 'rated' | 'review' | 'daily' | 'mistakes' | 'theme';
@@ -147,8 +149,23 @@
 		}
 	}
 
-	function onMove(uci: string) {
+	async function onMove(uci: string) {
 		if (!run || status !== 'solving') return;
+		// Eigene Fehler: auch andere gute Züge gelten (Engine prüft)
+		if (
+			run.puzzle.source === 'mistake' &&
+			uci !== run.expected &&
+			!(run.expected ?? '').startsWith(uci)
+		) {
+			status = 'intro';
+			const ok = await isGoodAlternative(run.game.fen, uci, run.expected ?? '');
+			status = 'solving';
+			if (ok && run.acceptAlternative(uci)) {
+				sound.move(!!run.game.moves.at(-1)?.captured, run.game.isCheck);
+				v++;
+				return finish(true);
+			}
+		}
 		const res = run.try(uci);
 		shapes = [];
 		if (res.result === 'wrong') {
@@ -174,6 +191,18 @@
 			v++;
 			status = 'solving';
 		}, 450);
+	}
+
+	async function isGoodAlternative(fen: string, uci: string, best: string): Promise<boolean> {
+		try {
+			const res = await engine.analyse({ fen, depth: 10, multipv: 4 });
+			const top = res.lines[0];
+			const mine = res.lines.find((l) => l.pv[0] === uci);
+			if (!top || !mine || !best) return false;
+			return scoreToCp(top) - scoreToCp(mine) <= 60;
+		} catch {
+			return false;
+		}
 	}
 
 	let failureRecorded = false;

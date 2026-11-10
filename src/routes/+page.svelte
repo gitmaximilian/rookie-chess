@@ -24,8 +24,8 @@
 	import { themeName, THEMES } from '#lib/data/themes.js';
 	import { botById } from '#lib/bots/bots.js';
 
-	const dailyHref = `${resolve('/puzzles')}?mode=daily`;
-	const reviewHref = `${resolve('/puzzles')}?mode=review`;
+	const dailyHref = resolve('/puzzles?mode=daily');
+	const reviewHref = resolve('/puzzles?mode=review');
 
 	let greeting = $state('Hallo');
 	let streak = $state(0);
@@ -208,11 +208,7 @@
 			</div>
 		</section>
 
-		<a
-			class="due card pressable"
-			href={reviewHref}
-			class:none={due === 0}
-		>
+		<a class="due card pressable" href={reviewHref} class:none={due === 0}>
 			<span class="due-ico"><Repeat size={22} /></span>
 			<div>
 				<h3>{due === 0 ? 'Alles wiederholt' : `${due} Wiederholung${due === 1 ? '' : 'en'}`}</h3>
