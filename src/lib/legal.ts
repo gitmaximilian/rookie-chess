@@ -5,11 +5,11 @@
  */
 export const operator = {
 	/** Vor- und Nachname */
-	name: '',
+	name: 'Maximilian Auer',
 	/** Wohnort (Ort genügt für die kleine Offenlegung, z. B. „Wien, Österreich“) */
-	place: '',
+	place: 'Wien, Österreich',
 	/** Kontakt-E-Mail – optional, aber empfehlenswert */
-	email: ''
+	email: 'contact@maximilianauer.at'
 };
 
 /** Stand der Datenschutzerklärung */
