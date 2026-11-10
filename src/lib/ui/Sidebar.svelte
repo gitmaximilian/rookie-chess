@@ -27,7 +27,10 @@
 		{/each}
 	</nav>
 
-	<p class="foot">Kostenlos &amp; Open Source</p>
+	<p class="foot">
+		Kostenlos &amp; Open Source<br />
+		<a href={resolve('/legal')}>Impressum &amp; Datenschutz</a>
+	</p>
 </aside>
 
 <style>
@@ -105,6 +108,16 @@
 	.item.active .icon {
 		background: var(--item-color);
 		color: #fff;
+	}
+
+	.foot a {
+		text-decoration: underline;
+		text-underline-offset: 2px;
+		text-decoration-color: var(--line-strong);
+	}
+
+	.foot a:hover {
+		color: var(--text);
 	}
 
 	.foot {

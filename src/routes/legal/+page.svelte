@@ -22,12 +22,12 @@
 	];
 </script>
 
-<svelte:head><title>Impressum & Datenschutz – Zugzwang</title></svelte:head>
+<svelte:head><title>Impressum & Datenschutz – Rookie</title></svelte:head>
 
 <PageHeader
 	eyebrow="Rechtliches"
 	title="Impressum & Datenschutz"
-	subtitle="Kurz gesagt: Zugzwang sammelt keine Daten über dich."
+	subtitle="Kurz gesagt: Rookie sammelt keine Daten über dich."
 />
 
 <div class="wrap">
@@ -73,8 +73,8 @@
 		<p>
 			Spielstände, Ratings, Puzzle-Fortschritt, Partien und Einstellungen werden ausschließlich
 			lokal in deinem Browser gespeichert (IndexedDB). Sie werden nicht an uns übertragen. Wir
-			können sie weder einsehen noch wiederherstellen. Du kannst sie jederzeit löschen, indem du
-			die Website-Daten in deinem Browser entfernst.
+			können sie weder einsehen noch wiederherstellen. Du kannst sie jederzeit löschen, indem du die
+			Website-Daten in deinem Browser entfernst.
 		</p>
 
 		<h3>Hosting</h3>
@@ -107,7 +107,7 @@
 
 		<h3>Cookies & lokaler Speicher</h3>
 		<p>
-			Zugzwang verwendet keine Cookies und keine Analyse- oder Werbedienste. Der lokale Speicher im
+			Rookie verwendet keine Cookies und keine Analyse- oder Werbedienste. Der lokale Speicher im
 			Browser wird nur genutzt, um die von dir gewünschte Funktion bereitzustellen (§ 165 Abs. 3 TKG
 			2021) – etwa deinen Fortschritt und die Offline-Version der App. Schriften und Icons werden
 			vom eigenen Server geladen, nicht von Google oder anderen Anbietern.

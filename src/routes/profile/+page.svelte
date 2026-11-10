@@ -30,6 +30,11 @@
 		<span class="txt">Über Rookie &amp; Lizenzen</span>
 		<ChevronRight size={18} />
 	</a>
+	<a href={resolve('/legal')} class="row card pressable">
+		<span class="ico"><Scale size={20} /></span>
+		<span class="txt">Impressum &amp; Datenschutz</span>
+		<ChevronRight size={18} />
+	</a>
 </div>
 
 <style>

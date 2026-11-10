@@ -7,9 +7,9 @@ export default defineConfig({
 		maskable: {
 			...minimal2023Preset.maskable,
 			padding: 0,
-			resizeOptions: { background: '#e2583e' }
+			resizeOptions: { background: '#f6f3ee' }
 		},
-		apple: { ...minimal2023Preset.apple, padding: 0, resizeOptions: { background: '#e2583e' } }
+		apple: { ...minimal2023Preset.apple, padding: 0, resizeOptions: { background: '#f6f3ee' } }
 	},
 	images: ['pwa-assets/icon.svg']
 });
