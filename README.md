@@ -37,18 +37,18 @@ npm run check && npm run lint
    - Output directory: `build`
    - Umgebungsvariable: `NODE_VERSION = 22`
 4. Jeder Push auf `main` wird automatisch veröffentlicht.
-5. **Eigene Domain:** Pages-Projekt → **Custom domains** → **Set up a custom domain** → `schach.maximilianauer.at` → **Activate**. Da die Domain bei Cloudflare liegt, werden CNAME und HTTPS automatisch eingerichtet.
-6. Optional: unter **Rules** eine Weiterleitung von `*.pages.dev` auf `https://schach.maximilianauer.at` anlegen. Gespeicherte Daten (IndexedDB) hängen an der Adresse – so gibt es nur eine.
+5. **Eigene Domain:** Pages-Projekt → **Custom domains** → **Set up a custom domain** → `chess.maximilianauer.at` → **Activate**. Da die Domain bei Cloudflare liegt, werden CNAME und HTTPS automatisch eingerichtet.
+6. Optional: unter **Rules** eine Weiterleitung von `*.pages.dev` auf `https://chess.maximilianauer.at` anlegen. Gespeicherte Daten (IndexedDB) hängen an der Adresse – so gibt es nur eine.
 
 Die Datei [`static/_headers`](static/_headers) setzt die COOP/COEP-Header, damit Stockfish mehrere Threads nutzen kann.
 
 ### Auf iPhone / iPad installieren
 
-Safari → `https://schach.maximilianauer.at` öffnen → **Teilen** → **Zum Home-Bildschirm**.
+Safari → `https://chess.maximilianauer.at` öffnen → **Teilen** → **Zum Home-Bildschirm**.
 
 ### Auf dem Mac installieren
 
-Safari → `https://schach.maximilianauer.at` öffnen → **Ablage** → **Zum Dock hinzufügen** (macOS Sonoma oder neuer).
+Safari → `https://chess.maximilianauer.at` öffnen → **Ablage** → **Zum Dock hinzufügen** (macOS Sonoma oder neuer).
 
 ## Lizenz
 

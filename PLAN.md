@@ -90,8 +90,8 @@ schach-trainer/
 - Manifest (Name, Icons inkl. `apple-touch-icon`, `display: standalone`), `apple-mobile-web-app-*`-Metatags, `viewport-fit=cover`.
 - Layout mit Tab-Leiste (iPhone) bzw. Seitenleiste (≥ 768 px), Hell/Dunkel-Modus, Safe Areas.
 - GitHub-Repo → Cloudflare Pages (Build `npm run build`, Ausgabe `build`), `_headers` mit COOP/COEP.
-- Eigene Domain **`schach.maximilianauer.at`** als Custom Domain im Pages-Projekt. Die Domain liegt schon bei Cloudflare, deshalb legt Cloudflare den DNS-Eintrag und das HTTPS-Zertifikat automatisch an.
-- **Fertig, wenn:** die leere App unter `https://schach.maximilianauer.at` läuft, sich auf dem iPhone auf den Home-Bildschirm legen lässt, offline startet und `crossOriginIsolated === true` ist.
+- Eigene Domain **`chess.maximilianauer.at`** als Custom Domain im Pages-Projekt. Die Domain liegt schon bei Cloudflare, deshalb legt Cloudflare den DNS-Eintrag und das HTTPS-Zertifikat automatisch an.
+- **Fertig, wenn:** die leere App unter `https://chess.maximilianauer.at` läuft, sich auf dem iPhone auf den Home-Bildschirm legen lässt, offline startet und `crossOriginIsolated === true` ist.
 
 ### Phase 1: MVP – Spielen und Puzzles
 
@@ -168,8 +168,8 @@ schach-trainer/
    /puzzles/*
      Cache-Control: public, max-age=604800
    ```
-5. **Eigene Domain:** Pages-Projekt → Custom domains → „Set up a custom domain“ → `schach.maximilianauer.at` → Activate. Weil `maximilianauer.at` schon bei Cloudflare liegt, wird der CNAME automatisch angelegt, und HTTPS ist nach wenigen Minuten aktiv. Die Hauptdomain bleibt frei für deine Website. Optional: unter Rules eine Weiterleitung von `*.pages.dev` auf die eigene Domain, damit es nur eine Adresse gibt (wichtig, weil IndexedDB-Daten an die Adresse gebunden sind).
-6. Auf dem iPhone in Safari `https://schach.maximilianauer.at` öffnen → Teilen → Zum Home-Bildschirm. Auf dem Mac: Ablage → Zum Dock hinzufügen.
+5. **Eigene Domain:** Pages-Projekt → Custom domains → „Set up a custom domain“ → `chess.maximilianauer.at` → Activate. Weil `maximilianauer.at` schon bei Cloudflare liegt, wird der CNAME automatisch angelegt, und HTTPS ist nach wenigen Minuten aktiv. Die Hauptdomain bleibt frei für deine Website. Optional: unter Rules eine Weiterleitung von `*.pages.dev` auf die eigene Domain, damit es nur eine Adresse gibt (wichtig, weil IndexedDB-Daten an die Adresse gebunden sind).
+6. Auf dem iPhone in Safari `https://chess.maximilianauer.at` öffnen → Teilen → Zum Home-Bildschirm. Auf dem Mac: Ablage → Zum Dock hinzufügen.
 
 ## Risiken
 
