@@ -296,7 +296,9 @@
 				spellcheck="false"></textarea>
 			{#if pgnError}<p class="err">{pgnError}</p>{/if}
 			<div class="row-btns">
-				<button class="btn" onclick={importPgn} disabled={!pgnText.trim()}>{t('analysis.analyse')}</button>
+				<button class="btn" onclick={importPgn} disabled={!pgnText.trim()}
+					>{t('analysis.analyse')}</button
+				>
 				<button class="btn secondary" onclick={pasteFromClipboard}
 					><ClipboardPaste size={18} /> {t('analysis.paste')}</button
 				>
