@@ -62,7 +62,7 @@
 </script>
 
 <svelte:head>
-	<title>Zugzwang – Schach-Trainer</title>
+	<title>Rookie – Schach-Trainer</title>
 </svelte:head>
 
 <div class="home">

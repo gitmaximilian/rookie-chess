@@ -8,7 +8,7 @@
 <aside class="sidebar">
 	<a href={resolve('/')} class="brand">
 		<Logo size={34} />
-		<span>Zugzwang</span>
+		<span>Rookie</span>
 	</a>
 
 	<nav aria-label="Hauptnavigation">

@@ -4,7 +4,7 @@
 	import ComingSoon from '#lib/ui/ComingSoon.svelte';
 </script>
 
-<svelte:head><title>Spielen – Zugzwang</title></svelte:head>
+<svelte:head><title>Spielen – Rookie</title></svelte:head>
 
 <PageHeader
 	eyebrow="Gegen den Computer"

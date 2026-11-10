@@ -4,7 +4,7 @@
 	import ComingSoon from '#lib/ui/ComingSoon.svelte';
 </script>
 
-<svelte:head><title>Puzzles – Zugzwang</title></svelte:head>
+<svelte:head><title>Puzzles – Rookie</title></svelte:head>
 
 <PageHeader eyebrow="Taktik" title="Puzzles" subtitle="Finde den besten Zug – Rätsel für Rätsel." />
 <ComingSoon

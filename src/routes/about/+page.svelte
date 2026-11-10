@@ -49,11 +49,11 @@
 	];
 </script>
 
-<svelte:head><title>Über – Zugzwang</title></svelte:head>
+<svelte:head><title>Über – Rookie</title></svelte:head>
 
 <PageHeader
 	eyebrow="Open Source"
-	title="Über Zugzwang"
+	title="Über Rookie"
 	subtitle="Ein kostenloser Schach-Trainer. Keine Werbung, kein Tracking, keine Anmeldung."
 />
 
@@ -61,7 +61,7 @@
 	<section class="card block">
 		<h2>Lizenz</h2>
 		<p>
-			Zugzwang steht unter der <b>GNU General Public License v3</b>. Du darfst den Code nutzen,
+			Rookie steht unter der <b>GNU General Public License v3</b>. Du darfst den Code nutzen,
 			verändern und weitergeben – solange er offen bleibt. Alle Daten bleiben auf deinem Gerät.
 		</p>
 	</section>

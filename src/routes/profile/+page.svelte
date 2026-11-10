@@ -2,12 +2,13 @@
 	import { resolve } from '$app/paths';
 	import ChartLine from '@lucide/svelte/icons/chart-line';
 	import Info from '@lucide/svelte/icons/info';
+	import Scale from '@lucide/svelte/icons/scale';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import PageHeader from '#lib/ui/PageHeader.svelte';
 	import ComingSoon from '#lib/ui/ComingSoon.svelte';
 </script>
 
-<svelte:head><title>Profil – Zugzwang</title></svelte:head>
+<svelte:head><title>Profil – Rookie</title></svelte:head>
 
 <PageHeader
 	eyebrow="Du"
@@ -26,7 +27,7 @@
 	</ComingSoon>
 	<a href={resolve('/about')} class="row card pressable">
 		<span class="ico"><Info size={20} /></span>
-		<span class="txt">Über Zugzwang &amp; Lizenzen</span>
+		<span class="txt">Über Rookie &amp; Lizenzen</span>
 		<ChevronRight size={18} />
 	</a>
 </div>

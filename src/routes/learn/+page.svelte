@@ -4,7 +4,7 @@
 	import ComingSoon from '#lib/ui/ComingSoon.svelte';
 </script>
 
-<svelte:head><title>Lernen – Zugzwang</title></svelte:head>
+<svelte:head><title>Lernen – Rookie</title></svelte:head>
 
 <PageHeader
 	eyebrow="Wissen"

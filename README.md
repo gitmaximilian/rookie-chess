@@ -1,4 +1,4 @@
-# Zugzwang – kostenloser Schach-Trainer
+# Rookie – kostenloser Schach-Trainer
 
 Ein Schach-Trainer als Progressive Web App für iPhone, iPad und Mac – komplett kostenlos, offline-fähig, ohne App Store, ohne Konto, ohne Tracking.
 
@@ -29,7 +29,7 @@ npm run check && npm run lint
 ## Deployment auf Cloudflare Pages (gratis)
 
 1. Repo auf GitHub anlegen und pushen:
-   `gh repo create chess-trainer --public --source=. --push`
+   `gh repo create rookie-chess --public --source=. --push`
 2. Cloudflare Dashboard → **Workers & Pages** → **Create** → **Pages** → **Connect to Git** → Repo wählen.
 3. Build-Einstellungen:
    - Framework preset: **SvelteKit**
@@ -52,4 +52,4 @@ Safari → `https://chess.maximilianauer.at` öffnen → **Ablage** → **Zum Do
 
 ## Lizenz
 
-GPL-3.0-or-later – siehe [LICENSE](LICENSE). Verwendete Projekte und ihre Lizenzen stehen in der App unter _Profil → Über Zugzwang_.
+GPL-3.0-or-later – siehe [LICENSE](LICENSE). Verwendete Projekte und ihre Lizenzen stehen in der App unter _Profil → Über Rookie_.

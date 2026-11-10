@@ -45,8 +45,8 @@ export default defineConfig({
 				kit: { adapterFallback: '404.html', trailingSlash: 'never' },
 				maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
 				manifest: {
-					name: 'Zugzwang – Schach-Trainer',
-					short_name: 'Zugzwang',
+					name: 'Rookie – Schach-Trainer',
+					short_name: 'Rookie',
 					description: 'Kostenloser Schach-Trainer: Spielen, Puzzles, Eröffnungen und Endspiele.',
 					lang: 'de',
 					start_url: '/',

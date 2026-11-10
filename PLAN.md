@@ -1,4 +1,4 @@
-# Plan: Kostenloser Schach-Trainer „Zugzwang“ (PWA für iOS & macOS)
+# Plan: Rookie – kostenloser Schach-Trainer (PWA für iOS & macOS)
 
 ## Kontext
 
@@ -11,7 +11,7 @@ Deine Antworten:
 - **Nutzer:** Die App ist öffentlich, der Quellcode liegt öffentlich auf GitHub.
 - **Konten:** GitHub und Cloudflare sind vorhanden.
 
-Umgesetzt wird in einem eigenen Projektordner `~/chess-trainer`, nicht im temporären Session-Ordner. Der Name „Zugzwang“ ist nur ein Arbeitstitel.
+Umgesetzt wird in einem eigenen Projektordner `~/chess-trainer`, nicht im temporären Session-Ordner. Die App heißt **Rookie**: „Anfänger“ und _rook_ (Turm) in einem Wort.
 
 ## Stack (Entscheidung)
 
@@ -155,7 +155,7 @@ chess-trainer/
 
 ## Deployment-Anleitung (kommt ins README)
 
-1. `gh repo create chess-trainer --public` und pushen.
+1. `gh repo create rookie-chess --public` und pushen.
 2. Cloudflare Dashboard → Workers & Pages → Create → Pages → Connect to Git → Repo wählen.
 3. Build: Framework „SvelteKit“, Befehl `npm run build`, Ausgabe `build`, `NODE_VERSION=22`.
 4. `static/_headers`:
