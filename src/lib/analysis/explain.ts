@@ -4,7 +4,8 @@ import { makeSan } from 'chessops/san';
 import { makeFen } from 'chessops/fen';
 import type { NormalMove, Role } from 'chessops/types';
 import { positionFromFen } from '#lib/chess/game.js';
-import { figurine, rolePoss, roleAcc, VALUE } from '#lib/chess/notation.js';
+import { figurine, VALUE } from '#lib/chess/notation.js';
+import { t } from '#lib/i18n/i18n.svelte.js';
 import type { PlyEval, Judgement } from './classify.js';
 
 export interface Explanation {
@@ -55,6 +56,8 @@ export function explain(
 	const best = before.best;
 	const bestSan = best ? san(fenBefore, best) : '';
 
+	const better = bestSan ? ' ' + t('explain.better', { san: bestSan }) : '';
+
 	// 1) Matt übersehen
 	if (
 		before.mate !== undefined &&
@@ -63,14 +66,15 @@ export function explain(
 	) {
 		const n = Math.abs(before.mate);
 		return {
-			title: n === 1 ? 'Matt in 1 übersehen' : `Matt in ${n} übersehen`,
-			text: `Du hattest ein erzwungenes Matt: ${sanLine(fenBefore, before.pv ?? (best ? [best] : []), n * 2 - 1)}.`,
+			title: t('explain.mateMissedTitle', { n }),
+			text: t('explain.mateMissedText', {
+				line: sanLine(fenBefore, before.pv ?? (best ? [best] : []), n * 2 - 1)
+			}),
 			motif: 'mate-missed'
 		};
 	}
 
 	const mv = parseUci(played) as NormalMove;
-	const movedRole = pos.board.get(mv.from)?.role ?? 'pawn';
 	const afterPos = pos.clone();
 	afterPos.play(mv);
 	const fenAfter = fenFrom(afterPos);
@@ -78,14 +82,14 @@ export function explain(
 	// 2) Matt zugelassen
 	if (after.mate !== undefined && sign * after.mate < 0) {
 		const n = Math.abs(after.mate);
-		const reply = after.pv?.length
+		const line = after.pv?.length
 			? sanLine(fenAfter, after.pv, n * 2 - 1)
 			: after.best
 				? san(fenAfter, after.best)
 				: '';
 		return {
-			title: 'Matt zugelassen',
-			text: `Nach diesem Zug kann dein Gegner in ${n} Zug${n === 1 ? '' : 'en'} mattsetzen${reply ? ` (${reply})` : ''}. ${bestSan ? `Besser war ${bestSan}.` : ''}`.trim(),
+			title: t('explain.mateAllowedTitle'),
+			text: t('explain.mateAllowedText', { n, line }) + better,
 			motif: 'mate-allowed'
 		};
 	}
@@ -96,14 +100,17 @@ export function explain(
 	if (reply) {
 		const victim = afterPos.board.get(reply.to);
 		if (victim && victim.color === me && victim.role !== 'pawn') {
-			const replySan = san(fenAfter, after.best!);
-			const sq = makeSquare(reply.to);
+			const params = {
+				piece: t(`pieces.poss.${victim.role}`),
+				Piece: t(`pieces.Poss.${victim.role}`),
+				pron: t(`pieces.pron.${victim.role}`),
+				sq: makeSquare(reply.to),
+				reply: san(fenAfter, after.best!)
+			};
 			const justMoved = reply.to === mv.to;
 			return {
-				title: justMoved ? 'Figur eingestellt' : 'Figur hängt',
-				text: justMoved
-					? `${cap(rolePoss(victim.role))} auf ${sq} ist ungeschützt – ${replySan} schlägt ${victim.role === 'queen' ? 'sie' : 'ihn'}. ${bestSan ? `Besser war ${bestSan}.` : ''}`.trim()
-					: `Nach deinem Zug hängt ${rolePoss(victim.role)} auf ${sq}: ${replySan}. ${bestSan ? `Besser war ${bestSan}.` : ''}`.trim(),
+				title: t(justMoved ? 'explain.blunderedTitle' : 'explain.hangingTitle'),
+				text: t(justMoved ? 'explain.blunderedText' : 'explain.hangingText', params) + better,
 				motif: 'hanging'
 			};
 		}
@@ -116,27 +123,23 @@ export function explain(
 			const att = attacks(replyPiece, reply.to, replyPos.board.occupied);
 			const targets: Role[] = [];
 			for (const sq of att) {
-				const t = replyPos.board.get(sq);
+				const p = replyPos.board.get(sq);
 				if (
-					t &&
-					t.color === me &&
-					(t.role === 'king' || VALUE[t.role] > VALUE[replyPiece.role] || VALUE[t.role] >= 3)
+					p &&
+					p.color === me &&
+					(p.role === 'king' || VALUE[p.role] > VALUE[replyPiece.role] || VALUE[p.role] >= 3)
 				) {
-					targets.push(t.role);
+					targets.push(p.role);
 				}
 			}
 			if (targets.length >= 2) {
-				const names = targets
-					.sort((a, b) => VALUE[b] - VALUE[a])
+				const [a, b] = targets
+					.sort((x, y) => VALUE[y] - VALUE[x])
 					.slice(0, 2)
-					.map((r) =>
-						r === 'king'
-							? 'deinen König'
-							: roleAcc(r).replace(/^(den|die) /, (a) => (a === 'die ' ? 'deine ' : 'deinen '))
-					);
+					.map((r) => acc(r));
 				return {
-					title: 'Gabel zugelassen',
-					text: `Dein Gegner hat ${san(fenAfter, after.best!)} – damit greift er ${names.join(' und ')} gleichzeitig an. ${bestSan ? `Besser war ${bestSan}.` : ''}`.trim(),
+					title: t('explain.forkTitle'),
+					text: t('explain.forkText', { reply: san(fenAfter, after.best!), a, b }) + better,
 					motif: 'fork'
 				};
 			}
@@ -149,35 +152,33 @@ export function explain(
 		const target = pos.board.get(b.to);
 		if (target && target.color !== me && VALUE[target.role] >= 3) {
 			return {
-				title: 'Chance verpasst',
-				text: `Mit ${bestSan} hättest du ${roleAcc(target.role).replace(/^den /, 'den gegnerischen ').replace(/^die /, 'die gegnerische ')} auf ${makeSquare(b.to)} gewinnen können.`,
+				title: t('explain.missedTitle'),
+				text: t('explain.missedText', {
+					best: bestSan,
+					piece: t(`pieces.enemy.${target.role}`),
+					sq: makeSquare(b.to)
+				}),
 				motif: 'missed-win'
 			};
 		}
 	}
 
 	// 6) Allgemein
-	const movedName = movedRole === 'pawn' ? 'Bauernzug' : `${roleNameShort(movedRole)}zug`;
 	return {
-		title: judgement === 'inaccuracy' ? 'Nicht der beste Zug' : 'Stellung verschlechtert',
-		text: `Dieser ${movedName} gibt Vorteil ab. ${bestSan ? `Stärker war ${bestSan}${before.pv && before.pv.length > 1 ? ` mit der Idee ${sanLine(fenBefore, before.pv, 3)}` : ''}.` : ''}`.trim(),
+		title: t(judgement === 'inaccuracy' ? 'explain.inaccuracyTitle' : 'explain.worseTitle'),
+		text: t('explain.positionalText', {
+			best: bestSan,
+			idea: before.pv && before.pv.length > 1 ? sanLine(fenBefore, before.pv, 3) : ''
+		}),
 		motif: 'positional'
 	};
 }
 
-function roleNameShort(r: Role): string {
-	return {
-		pawn: 'Bauern',
-		knight: 'Springer',
-		bishop: 'Läufer',
-		rook: 'Turm',
-		queen: 'Damen',
-		king: 'Königs'
-	}[r];
-}
-
-function cap(s: string): string {
-	return s.charAt(0).toUpperCase() + s.slice(1);
+/** Akkusativ mit Possessiv: „deinen Springer“ / „your knight“ */
+function acc(r: Role): string {
+	const poss = t(`pieces.poss.${r}`);
+	// Deutsch: „dein Springer“ → „deinen Springer“ (Dame bleibt „deine Dame“)
+	return poss.replace(/^dein /, 'deinen ');
 }
 
 function fenFrom(pos: ReturnType<typeof positionFromFen>): string {

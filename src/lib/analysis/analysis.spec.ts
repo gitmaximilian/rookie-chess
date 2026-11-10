@@ -1,7 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { judge, accuracy } from './classify';
 import { explain } from './explain';
 import { figurine } from '#lib/chess/notation.js';
+import { setLocaleForTest } from '#lib/i18n/i18n.svelte.js';
 
 describe('Zugbewertung', () => {
 	it('erkennt Patzer, Fehler, Ungenauigkeit', () => {
@@ -30,6 +31,9 @@ describe('Zugbewertung', () => {
 });
 
 describe('Erklärungen', () => {
+	beforeAll(() => setLocaleForTest('de'));
+	afterAll(() => setLocaleForTest('en'));
+
 	it('Figur eingestellt', () => {
 		// Weiß zieht Springer nach e5, wo ein Bauer d6 ihn schlägt
 		const fen = 'rnbqkbnr/ppp2ppp/3p4/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 0 3';
@@ -65,6 +69,15 @@ describe('Erklärungen', () => {
 		const e = explain(fen, 'e2d1', { cp: 0, best: 'a2a3' }, { cp: -400, best: 'b4c2' }, 'blunder');
 		expect(e?.motif).toBe('fork');
 		expect(e?.text).toMatch(/König|Turm|Dame/);
+	});
+
+	it('auf Englisch', () => {
+		setLocaleForTest('en');
+		const fen = 'rnbqkbnr/ppp2ppp/3p4/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 0 3';
+		const e = explain(fen, 'f3g5', { cp: 30, best: 'd2d4' }, { cp: -300, best: 'd8g5' }, 'blunder');
+		expect(e?.title).toBe('Piece blundered');
+		expect(e?.text).toContain('Your knight on g5 is unprotected');
+		setLocaleForTest('de');
 	});
 
 	it('gute Züge brauchen keine Erklärung', () => {

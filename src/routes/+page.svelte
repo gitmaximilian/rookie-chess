@@ -23,11 +23,13 @@
 	import { dailyPuzzle, PuzzleRun } from '#lib/training/puzzles.js';
 	import { themeName, THEMES } from '#lib/data/themes.js';
 	import { botById } from '#lib/bots/bots.js';
+	import { t } from '#lib/i18n/i18n.svelte.js';
+	import { colorName } from '#lib/chess/labels.js';
 
 	const dailyHref = resolve('/puzzles?mode=daily');
 	const reviewHref = resolve('/puzzles?mode=review');
 
-	let greeting = $state('Hallo');
+	let greeting = $state('hello');
 	let streak = $state(0);
 	let todayDone = $state(false);
 	let solvedToday = $state(0);
@@ -44,7 +46,7 @@
 
 	onMount(async () => {
 		const h = new Date().getHours();
-		greeting = h < 5 ? 'Gute Nacht' : h < 11 ? 'Guten Morgen' : h < 18 ? 'Hallo' : 'Guten Abend';
+		greeting = h < 5 ? 'night' : h < 11 ? 'morning' : h < 18 ? 'hello' : 'evening';
 
 		const rows = await db.activity.toArray();
 		const s = computeStreak(rows);
@@ -63,11 +65,11 @@
 			const p = await dailyPuzzle(today());
 			const run = new PuzzleRun(p);
 			run.playIntro();
-			const t = p.themes.find((x) => THEMES.find((th) => th.key === x)?.core) ?? p.themes[0];
+			const tk = p.themes.find((x) => THEMES.find((th) => th.key === x)?.core) ?? p.themes[0];
 			daily = {
 				fen: run.game.fen,
 				color: run.playerColor,
-				theme: t ? themeName(t) : 'Taktik',
+				theme: tk ?? '',
 				done: (await getSetting<string>('dailyDone', '')) === today()
 			};
 		} catch {
@@ -85,32 +87,32 @@
 	}[] = [
 		{
 			href: '/play',
-			title: 'Spielen',
-			text: 'Acht Bots von „Bauer Bruno“ bis „Dame Doris“',
+			title: 'nav.play',
+			text: 'home.modes.play',
 			icon: ChessKnight,
 			c: 'var(--c-play)',
 			soft: 'var(--c-play-soft)'
 		},
 		{
 			href: '/puzzles',
-			title: 'Puzzles',
-			text: 'Taktik trainieren, Rating aufbauen',
+			title: 'nav.puzzles',
+			text: 'home.modes.puzzles',
 			icon: Puzzle,
 			c: 'var(--c-puzzle)',
 			soft: 'var(--c-puzzle-soft)'
 		},
 		{
 			href: '/learn',
-			title: 'Lernen',
-			text: 'Eröffnungen und Endspiele Schritt für Schritt',
+			title: 'nav.learn',
+			text: 'home.modes.learn',
 			icon: GraduationCap,
 			c: 'var(--c-learn)',
 			soft: 'var(--c-learn-soft)'
 		},
 		{
 			href: '/profile',
-			title: 'Fortschritt',
-			text: 'Statistik, Partien und Schwächen',
+			title: 'home.modes.progress',
+			text: 'home.modes.progressText',
 			icon: ChartLine,
 			c: 'var(--c-analysis)',
 			soft: 'var(--c-analysis-soft)'
@@ -119,26 +121,26 @@
 </script>
 
 <svelte:head>
-	<title>Rookie – Schach-Trainer</title>
+	<title>{t('meta.title')}</title>
 </svelte:head>
 
 <div class="home">
 	<header class="top">
 		<div>
-			<span class="eyebrow">Dein Training</span>
-			<h1>{greeting}!</h1>
+			<span class="eyebrow">{t('home.eyebrow')}</span>
+			<h1>{t(`home.${greeting}`)}!</h1>
 		</div>
-		<span class="streak" class:lit={todayDone} title="Trainingsserie in Tagen">
+		<span class="streak" class:lit={todayDone} title={t('home.streak')}>
 			<Flame size={18} strokeWidth={2.4} />
 			<b>{streak}</b>
-			<span class="sr-only">Tage in Folge</span>
+			<span class="sr-only">{t('home.streak')}</span>
 		</span>
 	</header>
 
 	{#if backupDue}
 		<a class="banner card" href={resolve('/settings')}>
 			<ShieldAlert size={20} />
-			<span><b>Zeit für eine Sicherung.</b> Safari kann Daten nach längerer Pause löschen.</span>
+			<span><b>{t('home.backup')}</b> {t('home.backupText')}</span>
 			<ArrowRight size={18} />
 		</a>
 	{/if}
@@ -147,9 +149,12 @@
 		<a class="resume card pressable" href={resolve('/play')}>
 			<BotAvatar bot={botById(resume.botId)} size={44} />
 			<span class="resume-text">
-				<b>Partie fortsetzen</b>
+				<b>{t('home.resume')}</b>
 				<span
-					>gegen {botById(resume.botId).name} · Zug {Math.floor(resume.moves.length / 2) + 1}</span
+					>{t('home.resumeVs', {
+						bot: botById(resume.botId).name,
+						n: Math.floor(resume.moves.length / 2) + 1
+					})}</span
 				>
 			</span>
 			<span class="resume-go"><Play size={18} /></span>
@@ -158,21 +163,24 @@
 
 	<section class="hero card">
 		<div class="hero-text">
-			<span class="eyebrow on-dark">Puzzle des Tages</span>
+			<span class="eyebrow on-dark">{t('home.daily')}</span>
 			{#if daily?.done}
-				<h2>Erledigt <Check size={28} strokeWidth={3} /></h2>
-				<p>Morgen wartet ein neues Rätsel auf dich.</p>
+				<h2>{t('home.done')} <Check size={28} strokeWidth={3} /></h2>
+				<p>{t('home.doneText')}</p>
 				<a href={resolve('/puzzles')} class="btn hero-btn"
-					>Mehr Puzzles <ArrowRight size={18} strokeWidth={2.4} /></a
+					>{t('home.morePuzzles')} <ArrowRight size={18} strokeWidth={2.4} /></a
 				>
 			{:else}
 				<h2>
-					{daily ? (daily.color === 'white' ? 'Weiß' : 'Schwarz') : 'Du'} am Zug – {daily?.theme ??
-						'finde den besten Zug'}
+					{t('home.toMove', {
+						side: daily ? colorName(daily.color) : t('common.you'),
+						theme: daily?.theme ? themeName(daily.theme) : t('home.findBest')
+					})}
 				</h2>
-				<p>Jeden Tag ein neues Rätsel. Schaffst du es ohne Tipp?</p>
+				<p>{t('home.dailyText')}</p>
 				<a href={dailyHref} class="btn hero-btn">
-					Lösen <ArrowRight size={18} strokeWidth={2.4} />
+					{t('home.solve')}
+					<ArrowRight size={18} strokeWidth={2.4} />
 				</a>
 			{/if}
 		</div>
@@ -184,7 +192,7 @@
 						orientation={daily.color}
 						viewOnly
 						coordinates={false}
-						label="Puzzle des Tages"
+						label={t('home.daily')}
 					/>
 				</div>
 			{:else}
@@ -197,12 +205,12 @@
 		<section class="goal card">
 			<GoalRing value={Math.min(solvedToday, goal)} max={goal} />
 			<div>
-				<h3>Tagesziel</h3>
+				<h3>{t('home.goal')}</h3>
 				<p>
 					{#if solvedToday >= goal}
-						Geschafft! {solvedToday} Puzzles heute.
+						{t('home.goalDone', { n: solvedToday })}
 					{:else}
-						Noch {goal - solvedToday} Puzzle{goal - solvedToday === 1 ? '' : 's'} bis zum Ziel.
+						{t('home.goalLeft', { n: goal - solvedToday })}
 					{/if}
 				</p>
 			</div>
@@ -211,15 +219,15 @@
 		<a class="due card pressable" href={reviewHref} class:none={due === 0}>
 			<span class="due-ico"><Repeat size={22} /></span>
 			<div>
-				<h3>{due === 0 ? 'Alles wiederholt' : `${due} Wiederholung${due === 1 ? '' : 'en'}`}</h3>
+				<h3>{t('home.reviews', { n: due })}</h3>
 				<p>
-					{due === 0 ? 'Fehler kommen automatisch zurück.' : 'Jetzt fällig – festigt dein Wissen.'}
+					{t('home.reviewsText', { n: due })}
 				</p>
 			</div>
 		</a>
 	</div>
 
-	<h2 class="section-title">Was möchtest du trainieren?</h2>
+	<h2 class="section-title">{t('home.train')}</h2>
 	<div class="modes">
 		{#each modes as m, i (m.href)}
 			<a
@@ -230,8 +238,8 @@
 				style:--i={i}
 			>
 				<span class="mode-icon"><m.icon size={24} strokeWidth={2.1} /></span>
-				<span class="mode-title">{m.title}</span>
-				<span class="mode-text">{m.text}</span>
+				<span class="mode-title">{t(m.title)}</span>
+				<span class="mode-text">{t(m.text)}</span>
 				<span class="mode-arrow"><ArrowRight size={18} /></span>
 			</a>
 		{/each}

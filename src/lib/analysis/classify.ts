@@ -1,4 +1,5 @@
 import { scoreToCp, winChance, type Score } from '#lib/engine/uci.js';
+import { t } from '#lib/i18n/i18n.svelte.js';
 
 export type Judgement = 'blunder' | 'mistake' | 'inaccuracy' | 'good' | 'best';
 
@@ -17,13 +18,9 @@ export const MARK: Record<Judgement, '??' | '?' | '?!' | '' | '!'> = {
 	best: ''
 };
 
-export const JUDGEMENT_DE: Record<Judgement, string> = {
-	blunder: 'Patzer',
-	mistake: 'Fehler',
-	inaccuracy: 'Ungenauigkeit',
-	good: 'Guter Zug',
-	best: 'Bester Zug'
-};
+export function judgementLabel(j: Judgement): string {
+	return t(`judgement.${j}`);
+}
 
 /** Gewinnchance (0..1) aus Sicht von Weiß */
 export function whiteWin(e: Score): number {

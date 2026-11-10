@@ -8,6 +8,7 @@ import type { PageRouteId } from '$app/types';
 
 export interface NavItem {
 	href: PageRouteId;
+	/** i18n-Schlüssel */
 	label: string;
 	icon: Component;
 	/** CSS-Variable der Bereichsfarbe */
@@ -15,11 +16,11 @@ export interface NavItem {
 }
 
 export const navItems: NavItem[] = [
-	{ href: '/', label: 'Start', icon: House, color: 'var(--accent)' },
-	{ href: '/play', label: 'Spielen', icon: ChessKnight, color: 'var(--c-play)' },
-	{ href: '/puzzles', label: 'Puzzles', icon: Puzzle, color: 'var(--c-puzzle)' },
-	{ href: '/learn', label: 'Lernen', icon: GraduationCap, color: 'var(--c-learn)' },
-	{ href: '/profile', label: 'Profil', icon: CircleUserRound, color: 'var(--c-analysis)' }
+	{ href: '/', label: 'nav.home', icon: House, color: 'var(--accent)' },
+	{ href: '/play', label: 'nav.play', icon: ChessKnight, color: 'var(--c-play)' },
+	{ href: '/puzzles', label: 'nav.puzzles', icon: Puzzle, color: 'var(--c-puzzle)' },
+	{ href: '/learn', label: 'nav.learn', icon: GraduationCap, color: 'var(--c-learn)' },
+	{ href: '/profile', label: 'nav.profile', icon: CircleUserRound, color: 'var(--c-analysis)' }
 ];
 
 /** Ist `href` der aktive Bereich für `pathname`? */

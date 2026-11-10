@@ -107,7 +107,7 @@ describe('Wiederholung (FSRS)', () => {
 
 	it('formatiert Abstände', () => {
 		const now = Date.now();
-		expect(formatInterval(now + 86400000, now)).toBe('morgen');
-		expect(formatInterval(now + 5 * 86400000, now)).toBe('in 5 Tagen');
+		expect(formatInterval(now + 86400000, now)).toBe('tomorrow');
+		expect(formatInterval(now + 5 * 86400000, now)).toBe('in 5 days');
 	});
 });

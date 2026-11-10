@@ -2,6 +2,7 @@
 	import { tick } from 'svelte';
 	import type { PlayedMove } from '#lib/chess/game.js';
 	import { figurine } from '#lib/chess/notation.js';
+	import { t } from '#lib/i18n/i18n.svelte.js';
 
 	interface Props {
 		moves: PlayedMove[];
@@ -55,9 +56,9 @@
 	{#if /^[♔♕♖♗♘]/.test(f)}<span class="fig">{f[0]}</span>{f.slice(1)}{:else}{f}{/if}
 {/snippet}
 
-<div class="moves" bind:this={box} role="list" aria-label="Zugliste">
+<div class="moves" bind:this={box} role="list" aria-label={t('moves.list')}>
 	{#if rows.length === 0}
-		<p class="empty">Noch keine Züge</p>
+		<p class="empty">{t('moves.none')}</p>
 	{/if}
 	{#each rows as r (r.no)}
 		<div class="row" role="listitem">

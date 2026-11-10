@@ -6,6 +6,7 @@
 	import { pwaInfo } from 'virtual:pwa-info';
 	import TabBar from '#lib/ui/TabBar.svelte';
 	import Sidebar from '#lib/ui/Sidebar.svelte';
+	import { i18n } from '#lib/i18n/i18n.svelte.js';
 	import type { LayoutProps } from './$types';
 
 	let { children }: LayoutProps = $props();
@@ -13,6 +14,7 @@
 	const webManifest = $derived(pwaInfo ? pwaInfo.webManifest.linkTag : '');
 
 	onMount(async () => {
+		i18n.init();
 		if (pwaInfo) {
 			const { registerSW } = await import('virtual:pwa-register');
 			registerSW({ immediate: true });

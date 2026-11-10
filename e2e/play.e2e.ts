@@ -2,9 +2,9 @@ import { expect, test } from '@playwright/test';
 
 test('Partie gegen Bauer Bruno: Zug, Antwort, Zurück, Aufgeben', async ({ page }) => {
 	await page.goto('/play');
-	await page.getByRole('button', { name: /Bauer Bruno/ }).click();
-	await page.getByRole('button', { name: 'Partie starten' }).click();
-	await expect(page.getByText('Du bist am Zug')).toBeVisible();
+	await page.getByRole('button', { name: /Pawn Pete/ }).click();
+	await page.getByRole('button', { name: 'Start game' }).click();
+	await expect(page.getByText('Your move')).toBeVisible();
 
 	const board = page.locator('.cg-host');
 	const box = (await board.boundingBox())!;
@@ -21,11 +21,11 @@ test('Partie gegen Bauer Bruno: Zug, Antwort, Zurück, Aufgeben', async ({ page 
 	await expect(page.locator('.moves .row').first().locator('.mv')).toHaveCount(2, {
 		timeout: 15000
 	});
-	await expect(page.getByText('Du bist am Zug')).toBeVisible();
+	await expect(page.getByText('Your move')).toBeVisible();
 
 	// Zurück
-	await page.getByRole('button', { name: /Zurück/ }).click();
-	await expect(page.locator('.moves')).toContainText('Noch keine Züge');
+	await page.getByRole('button', { name: /Undo/ }).click();
+	await expect(page.locator('.moves')).toContainText('No moves yet');
 
 	// Aufgeben
 	await page.mouse.click(at(3, 1).x, at(3, 1).y);
@@ -34,7 +34,7 @@ test('Partie gegen Bauer Bruno: Zug, Antwort, Zurück, Aufgeben', async ({ page 
 		timeout: 15000
 	});
 	page.once('dialog', (d) => d.accept());
-	await page.getByRole('button', { name: /Aufgeben/ }).click();
-	await expect(page.getByRole('dialog', { name: 'Ergebnis' })).toBeVisible();
-	await expect(page.getByRole('heading', { name: 'Verloren' })).toBeVisible();
+	await page.getByRole('button', { name: /Resign/ }).click();
+	await expect(page.getByRole('dialog', { name: 'Result' })).toBeVisible();
+	await expect(page.getByRole('heading', { name: 'You lost' })).toBeVisible();
 });

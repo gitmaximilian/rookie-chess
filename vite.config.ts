@@ -45,10 +45,10 @@ export default defineConfig({
 				kit: { adapterFallback: '404.html', trailingSlash: 'never' },
 				maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
 				manifest: {
-					name: 'Rookie – Schach-Trainer',
+					name: 'Rookie – Chess Trainer',
 					short_name: 'Rookie',
-					description: 'Kostenloser Schach-Trainer: Spielen, Puzzles, Eröffnungen und Endspiele.',
-					lang: 'de',
+					description: 'Free chess trainer: play, puzzles, openings and endgames.',
+					lang: 'en',
 					start_url: '/',
 					scope: '/',
 					display: 'standalone',

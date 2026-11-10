@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de">
+<html lang="en">
 	<head>
 		<meta charset="utf-8" />
 		<meta
@@ -15,7 +15,7 @@
 		<meta name="apple-mobile-web-app-title" content="Rookie" />
 		<meta
 			name="description"
-			content="Kostenloser Schach-Trainer: Spielen, Puzzles, Eröffnungen und Endspiele – offline auf iPhone, iPad und Mac."
+			content="Free chess trainer: play, puzzles, openings and endgames – offline on iPhone, iPad and Mac."
 		/>
 		<link rel="apple-touch-icon" href="/apple-touch-icon-180x180.png" />
 		<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
@@ -23,6 +23,8 @@
 			try {
 				var t = localStorage.getItem('rookie:theme');
 				if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+				var l = localStorage.getItem('rookie:lang');
+				if (l === 'de' || l === 'en') document.documentElement.lang = l;
 			} catch (e) {}
 		</script>
 		%sveltekit.head%

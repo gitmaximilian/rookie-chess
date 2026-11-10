@@ -7,38 +7,39 @@
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import PageHeader from '#lib/ui/PageHeader.svelte';
 	import ComingSoon from '#lib/ui/ComingSoon.svelte';
+	import { t } from '#lib/i18n/i18n.svelte.js';
 </script>
 
-<svelte:head><title>Profil – Rookie</title></svelte:head>
+<svelte:head><title>{t('profile.title')} – Rookie</title></svelte:head>
 
 <PageHeader
-	eyebrow="Du"
-	title="Profil"
-	subtitle="Dein Fortschritt, deine Partien, deine Einstellungen."
+	eyebrow={t('profile.eyebrow')}
+	title={t('profile.title')}
+	subtitle={t('profile.subtitle')}
 />
 <div class="stack">
 	<ComingSoon
 		icon={ChartLine}
 		color="var(--c-analysis)"
 		soft="var(--c-analysis-soft)"
-		title="Statistik folgt"
-		phase="Kommt bald"
+		title={t('profile.ratingHistory')}
+		phase={t('common.comingSoon')}
 	>
-		Rating-Verlauf, Trainingsserie und deine schwächsten Themen – alles auf einen Blick.
+		{t('profile.noHistory')}
 	</ComingSoon>
 	<a href={resolve('/settings')} class="row card pressable">
 		<span class="ico"><Settings size={20} /></span>
-		<span class="txt">Einstellungen &amp; Datensicherung</span>
+		<span class="txt">{t('profile.settings')}</span>
 		<ChevronRight size={18} />
 	</a>
 	<a href={resolve('/about')} class="row card pressable">
 		<span class="ico"><Info size={20} /></span>
-		<span class="txt">Über Rookie &amp; Lizenzen</span>
+		<span class="txt">{t('profile.about')}</span>
 		<ChevronRight size={18} />
 	</a>
 	<a href="https://maximilianauer.at/legal/" rel="noopener" class="row card pressable">
 		<span class="ico"><Scale size={20} /></span>
-		<span class="txt">Impressum &amp; Datenschutz</span>
+		<span class="txt">{t('profile.legal')}</span>
 		<ChevronRight size={18} />
 	</a>
 </div>

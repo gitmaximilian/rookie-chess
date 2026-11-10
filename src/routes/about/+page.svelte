@@ -1,78 +1,87 @@
 <script lang="ts">
 	import PageHeader from '#lib/ui/PageHeader.svelte';
 
+	import { t } from '#lib/i18n/i18n.svelte.js';
+
 	const credits = [
-		{
-			name: 'Stockfish',
-			what: 'Schach-Engine',
-			license: 'GPL-3.0',
-			url: 'https://stockfishchess.org'
-		},
+		{ name: 'Stockfish', key: 'stockfish', license: 'GPL-3.0', url: 'https://stockfishchess.org' },
 		{
 			name: 'stockfish.js',
-			what: 'WebAssembly-Version',
+			key: 'stockfishjs',
 			license: 'GPL-3.0',
 			url: 'https://github.com/nmrugg/stockfish.js'
 		},
 		{
 			name: 'chessground',
-			what: 'Schachbrett',
+			key: 'chessground',
 			license: 'GPL-3.0',
 			url: 'https://github.com/lichess-org/chessground'
 		},
 		{
 			name: 'chessops',
-			what: 'Schachregeln & PGN',
+			key: 'chessops',
 			license: 'GPL-3.0',
 			url: 'https://github.com/niklasf/chessops'
 		},
 		{
-			name: 'Lichess-Puzzle-Datenbank',
-			what: 'Taktik-Aufgaben',
+			name: 'Lichess puzzle database',
+			key: 'puzzles',
 			license: 'CC0',
 			url: 'https://database.lichess.org'
 		},
-		{ name: 'Lucide', what: 'Icons', license: 'ISC', url: 'https://lucide.dev' },
+		{
+			name: 'Lichess chess-openings',
+			key: 'openings',
+			license: 'CC0',
+			url: 'https://github.com/lichess-org/chess-openings'
+		},
+		{
+			name: 'Lichess tablebase',
+			key: 'tablebase',
+			license: 'AGPL-3.0',
+			url: 'https://tablebase.lichess.ovh'
+		},
+		{ name: 'Lucide', key: 'lucide', license: 'ISC', url: 'https://lucide.dev' },
 		{
 			name: 'Bricolage Grotesque',
-			what: 'Schrift',
+			key: 'font',
 			license: 'OFL-1.1',
 			url: 'https://github.com/ateliertriay/bricolage'
 		},
-		{ name: 'Dexie', what: 'Lokale Datenbank', license: 'Apache-2.0', url: 'https://dexie.org' },
+		{ name: 'Dexie', key: 'dexie', license: 'Apache-2.0', url: 'https://dexie.org' },
 		{
 			name: 'ts-fsrs',
-			what: 'Wiederholungs-Algorithmus',
+			key: 'fsrs',
 			license: 'MIT',
 			url: 'https://github.com/open-spaced-repetition/ts-fsrs'
 		}
 	];
 </script>
 
-<svelte:head><title>Über – Rookie</title></svelte:head>
+<svelte:head><title>{t('about.title')} – Rookie</title></svelte:head>
 
-<PageHeader
-	eyebrow="Open Source"
-	title="Über Rookie"
-	subtitle="Ein kostenloser Schach-Trainer. Keine Werbung, kein Tracking, keine Anmeldung."
-/>
+<PageHeader eyebrow={t('about.eyebrow')} title={t('about.title')} subtitle={t('about.subtitle')} />
 
 <div class="wrap">
 	<section class="card block">
-		<h2>Lizenz</h2>
-		<p>
-			Rookie steht unter der <b>GNU General Public License v3</b>. Du darfst den Code nutzen,
-			verändern und weitergeben – solange er offen bleibt. Alle Daten bleiben auf deinem Gerät.
+		<h2>{t('about.licence')}</h2>
+		<p>{t('about.licenceText')}</p>
+		<p class="src">
+			<a
+				href="https://github.com/gitmaximilian/rookie-chess"
+				target="_blank"
+				rel="noopener noreferrer">{t('about.source')} →</a
+			>
 		</p>
 	</section>
 
 	<section class="card block">
-		<h2>Danke an</h2>
+		<h2>{t('about.thanks')}</h2>
 		<ul>
 			{#each credits as c (c.name)}
 				<li>
 					<a href={c.url} target="_blank" rel="noopener noreferrer">{c.name}</a>
-					<span class="what">{c.what}</span>
+					<span class="what">{t(`about.credits.${c.key}`)}</span>
 					<span class="lic">{c.license}</span>
 				</li>
 			{/each}
@@ -96,6 +105,13 @@
 	}
 	p {
 		color: var(--text-2);
+	}
+	.src {
+		margin-top: 0.6rem;
+		font-weight: 600;
+	}
+	.src a:hover {
+		color: var(--accent);
 	}
 	ul {
 		list-style: none;

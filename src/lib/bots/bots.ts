@@ -1,11 +1,13 @@
 import type { PvLine } from '#lib/engine/uci.js';
 import { scoreToCp } from '#lib/engine/uci.js';
+import { t } from '#lib/i18n/i18n.svelte.js';
 
 export interface Bot {
 	id: string;
-	name: string;
+	/** übersetzt (Getter) */
+	readonly name: string;
 	elo: number;
-	tagline: string;
+	readonly tagline: string;
 	/** lucide-Icon-Name einer Schachfigur */
 	piece: 'pawn' | 'knight' | 'bishop' | 'rook' | 'queen' | 'king';
 	/** Farbton (CSS) */
@@ -23,9 +25,13 @@ export interface Bot {
 export const BOTS: Bot[] = [
 	{
 		id: 'bruno',
-		name: 'Bauer Bruno',
+		get name() {
+			return t('bots.bruno.name');
+		},
 		elo: 400,
-		tagline: 'Schlägt alles, was sich bewegt – und vergisst seinen König.',
+		get tagline() {
+			return t('bots.bruno.tag');
+		},
 		piece: 'pawn',
 		hue: 28,
 		nodes: 40,
@@ -36,9 +42,13 @@ export const BOTS: Bot[] = [
 	},
 	{
 		id: 'pia',
-		name: 'Pia Pferdchen',
+		get name() {
+			return t('bots.pia.name');
+		},
 		elo: 600,
-		tagline: 'Springt gern herum. Manchmal ins Leere.',
+		get tagline() {
+			return t('bots.pia.tag');
+		},
 		piece: 'knight',
 		hue: 340,
 		nodes: 100,
@@ -49,9 +59,13 @@ export const BOTS: Bot[] = [
 	},
 	{
 		id: 'leo',
-		name: 'Leo Läufer',
+		get name() {
+			return t('bots.leo.name');
+		},
 		elo: 800,
-		tagline: 'Mag lange Diagonalen und kurze Partien.',
+		get tagline() {
+			return t('bots.leo.tag');
+		},
 		piece: 'bishop',
 		hue: 200,
 		nodes: 250,
@@ -62,9 +76,13 @@ export const BOTS: Bot[] = [
 	},
 	{
 		id: 'tina',
-		name: 'Tina Turm',
+		get name() {
+			return t('bots.tina.name');
+		},
 		elo: 1000,
-		tagline: 'Solide wie eine Burgmauer. Fast immer.',
+		get tagline() {
+			return t('bots.tina.tag');
+		},
 		piece: 'rook',
 		hue: 160,
 		nodes: 600,
@@ -75,9 +93,13 @@ export const BOTS: Bot[] = [
 	},
 	{
 		id: 'kai',
-		name: 'Kai Kombinator',
+		get name() {
+			return t('bots.kai.name');
+		},
 		elo: 1150,
-		tagline: 'Sucht immer die Gabel. Findet sie auch oft.',
+		get tagline() {
+			return t('bots.kai.tag');
+		},
 		piece: 'knight',
 		hue: 255,
 		nodes: 1500,
@@ -88,9 +110,13 @@ export const BOTS: Bot[] = [
 	},
 	{
 		id: 'rita',
-		name: 'Rita Rochade',
+		get name() {
+			return t('bots.rita.name');
+		},
 		elo: 1300,
-		tagline: 'Bringt den König in Sicherheit, dann geht’s los.',
+		get tagline() {
+			return t('bots.rita.tag');
+		},
 		piece: 'king',
 		hue: 45,
 		nodes: 4000,
@@ -101,9 +127,13 @@ export const BOTS: Bot[] = [
 	},
 	{
 		id: 'sven',
-		name: 'Sven Springer',
+		get name() {
+			return t('bots.sven.name');
+		},
 		elo: 1450,
-		tagline: 'Taktisch hellwach. Unterschätz ihn nicht.',
+		get tagline() {
+			return t('bots.sven.tag');
+		},
 		piece: 'knight',
 		hue: 0,
 		nodes: 12000,
@@ -114,9 +144,13 @@ export const BOTS: Bot[] = [
 	},
 	{
 		id: 'doris',
-		name: 'Dame Doris',
+		get name() {
+			return t('bots.doris.name');
+		},
 		elo: 1650,
-		tagline: 'Die Chefin am Brett. Wer sie schlägt, ist kein Rookie mehr.',
+		get tagline() {
+			return t('bots.doris.tag');
+		},
 		piece: 'queen',
 		hue: 290,
 		nodes: 40000,

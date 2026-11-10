@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { whiteWin } from '#lib/analysis/classify.js';
 	import { formatScore, type Score } from '#lib/engine/uci.js';
+	import { t } from '#lib/i18n/i18n.svelte.js';
 
 	let { score, orientation = 'white' }: { score: Score | null; orientation?: 'white' | 'black' } =
 		$props();
@@ -9,7 +10,12 @@
 	const label = $derived(score ? formatScore(score) : '');
 </script>
 
-<div class="bar" class:flip={orientation === 'black'} role="img" aria-label="Bewertung {label}">
+<div
+	class="bar"
+	class:flip={orientation === 'black'}
+	role="img"
+	aria-label={t('eval.label', { v: label })}
+>
 	<div class="white" style:height="{white * 100}%"></div>
 	<span class="lbl" class:top={white < 0.5}>{label.replace('+', '')}</span>
 </div>

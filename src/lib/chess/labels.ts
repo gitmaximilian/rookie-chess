@@ -1,27 +1,13 @@
+import { t } from '#lib/i18n/i18n.svelte.js';
 import type { GameEnd } from './game.js';
 import type { Color } from 'chessops/types';
 
 export function colorName(c: Color): string {
-	return c === 'white' ? 'Weiß' : 'Schwarz';
+	return t(c === 'white' ? 'common.white' : 'common.black');
 }
 
 export function endReason(e: GameEnd): string {
-	switch (e.kind) {
-		case 'checkmate':
-			return 'durch Schachmatt';
-		case 'resign':
-			return 'durch Aufgabe';
-		case 'timeout':
-			return 'durch Zeitüberschreitung';
-		case 'stalemate':
-			return 'Patt – kein legaler Zug, aber kein Schach';
-		case 'insufficient':
-			return 'zu wenig Material zum Mattsetzen';
-		case 'threefold':
-			return 'dreifache Stellungswiederholung';
-		case 'fifty':
-			return '50-Züge-Regel';
-	}
+	return t(`end.${e.kind}`);
 }
 
 export type Verdict = 'win' | 'loss' | 'draw';

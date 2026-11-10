@@ -2,9 +2,10 @@
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import { navItems, isActive } from '#lib/nav.js';
+	import { t } from '#lib/i18n/i18n.svelte.js';
 </script>
 
-<nav class="tabbar" aria-label="Hauptnavigation">
+<nav class="tabbar" aria-label={t('nav.main')}>
 	{#each navItems as item (item.href)}
 		{@const active = isActive(item.href, page.url.pathname)}
 		<a
@@ -17,7 +18,7 @@
 			<span class="icon-wrap">
 				<item.icon size={23} strokeWidth={active ? 2.3 : 1.9} />
 			</span>
-			<span class="label">{item.label}</span>
+			<span class="label">{t(item.label)}</span>
 		</a>
 	{/each}
 </nav>

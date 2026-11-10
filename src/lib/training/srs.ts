@@ -1,5 +1,6 @@
 import { fsrs, createEmptyCard, Rating, type Card, type Grade } from 'ts-fsrs';
 import { db, type ReviewCardRow } from '#lib/db/db.js';
+import { t } from '#lib/i18n/i18n.svelte.js';
 
 const scheduler = fsrs({ enable_fuzz: true, request_retention: 0.9 });
 
@@ -68,11 +69,11 @@ export async function countDue(kind?: ReviewCardRow['kind'], now = Date.now()): 
 /** Lesbarer Abstand bis zur nächsten Wiederholung */
 export function formatInterval(due: number, now = Date.now()): string {
 	const min = Math.round((due - now) / 60000);
-	if (min < 60) return min <= 1 ? 'gleich' : `in ${min} Min.`;
+	if (min < 60) return min <= 1 ? t('srs.soon') : t('srs.minutes', { n: min });
 	const h = Math.round(min / 60);
-	if (h < 24) return `in ${h} Std.`;
+	if (h < 24) return t('srs.hours', { n: h });
 	const d = Math.round(h / 24);
-	if (d < 30) return d === 1 ? 'morgen' : `in ${d} Tagen`;
+	if (d < 30) return d === 1 ? t('srs.tomorrow') : t('srs.days', { n: d });
 	const m = Math.round(d / 30);
-	return m === 1 ? 'in einem Monat' : `in ${m} Monaten`;
+	return m === 1 ? t('srs.month') : t('srs.months', { n: m });
 }

@@ -10,16 +10,16 @@ test('PGN analysieren: Patzer wird erkannt und erklärt', async ({ page }) => {
 	test.setTimeout(90_000);
 	await page.goto('/analysis');
 	await page.getByRole('textbox').fill(LEGAL);
-	await page.getByRole('button', { name: 'Analysieren' }).click();
+	await page.getByRole('button', { name: 'Analyse' }).click();
 	await expect(page).toHaveURL(/analysis\?game=\d+/);
 	await expect(page.locator('.summary')).toBeVisible({ timeout: 60_000 });
 	await page.getByRole('button', { name: /xd1/ }).click();
-	await expect(page.locator('.badge')).toHaveText('Patzer');
-	await expect(page.getByText('Matt zugelassen')).toBeVisible();
+	await expect(page.locator('.badge')).toHaveText('Blunder');
+	await expect(page.getByText('Allowed mate')).toBeVisible();
 	// Tastatur-Navigation
 	await page.keyboard.press('Home');
-	await expect(page.getByText('Ausgangsstellung')).toBeVisible();
+	await expect(page.getByText('Starting position')).toBeVisible();
 	// Partie erscheint in der Liste
-	await page.getByRole('link', { name: 'Partien' }).click();
-	await expect(page.getByText('gegen Saint Brie')).toBeVisible();
+	await page.getByRole('link', { name: 'Games' }).click();
+	await expect(page.getByText('vs Saint Brie')).toBeVisible();
 });

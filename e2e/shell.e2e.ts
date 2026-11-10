@@ -2,19 +2,19 @@ import { expect, test } from '@playwright/test';
 
 test('Startseite zeigt Begrüßung, Hero und Bereiche', async ({ page }) => {
 	await page.goto('/');
-	await expect(page.locator('h1')).toContainText(/Guten|Hallo/);
-	await expect(page.getByText('Puzzle des Tages')).toBeVisible();
-	await expect(page.getByRole('link', { name: /Spielen/ }).first()).toBeVisible();
+	await expect(page.locator('h1')).toContainText(/Good|Hello/);
+	await expect(page.getByText('Puzzle of the day')).toBeVisible();
+	await expect(page.getByRole('link', { name: /Play/ }).first()).toBeVisible();
 });
 
 test('Navigation zwischen allen Bereichen', async ({ page, isMobile }) => {
 	await page.goto('/');
-	const nav = page.getByRole('navigation', { name: 'Hauptnavigation' }).locator('visible=true');
+	const nav = page.getByRole('navigation', { name: 'Main navigation' }).locator('visible=true');
 	for (const [label, heading] of [
-		['Spielen', 'Spielen'],
+		['Play', 'Play'],
 		['Puzzles', 'Puzzles'],
-		['Lernen', 'Lernen'],
-		['Profil', 'Profil']
+		['Learn', 'Learn'],
+		['Profile', 'Profile']
 	]) {
 		await nav.getByRole('link', { name: label }).click();
 		await expect(page.locator('h1')).toHaveText(heading);
@@ -41,13 +41,13 @@ test('App startet offline nach dem ersten Besuch', async ({ page, context, brows
 	await page.goto('/puzzles');
 	await expect(page.locator('h1')).toHaveText('Puzzles');
 	await page.goto('/');
-	await expect(page.getByText('Puzzle des Tages')).toBeVisible();
+	await expect(page.getByText('Puzzle of the day')).toBeVisible();
 	await context.setOffline(false);
 });
 
 test('Impressum verweist auf maximilianauer.at', async ({ page }) => {
 	await page.goto('/profile');
-	await expect(page.getByRole('link', { name: /Impressum/ }).first()).toHaveAttribute(
+	await expect(page.getByRole('link', { name: /Legal notice/ }).first()).toHaveAttribute(
 		'href',
 		'https://maximilianauer.at/legal/'
 	);

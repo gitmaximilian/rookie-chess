@@ -1,4 +1,5 @@
 import { db, TABLES, setSetting } from './db.js';
+import { t } from '#lib/i18n/i18n.svelte.js';
 
 export const BACKUP_FORMAT = 'rookie-backup';
 export const BACKUP_VERSION = 1;
@@ -26,14 +27,14 @@ export function parseBackup(text: string): Backup {
 	try {
 		data = JSON.parse(text);
 	} catch {
-		throw new Error('Die Datei ist kein gültiges JSON.');
+		throw new Error(t('settings.badJson'));
 	}
 	const b = data as Partial<Backup>;
 	if (b?.format !== BACKUP_FORMAT || typeof b.version !== 'number' || !b.tables) {
-		throw new Error('Das ist keine Rookie-Sicherung.');
+		throw new Error(t('settings.notBackup'));
 	}
 	if (b.version > BACKUP_VERSION) {
-		throw new Error('Die Sicherung stammt aus einer neueren Rookie-Version.');
+		throw new Error(t('settings.newer'));
 	}
 	return b as Backup;
 }

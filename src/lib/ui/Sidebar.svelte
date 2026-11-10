@@ -2,6 +2,7 @@
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import { navItems, isActive } from '#lib/nav.js';
+	import { t } from '#lib/i18n/i18n.svelte.js';
 	import Logo from './Logo.svelte';
 </script>
 
@@ -11,7 +12,7 @@
 		<span>Rookie</span>
 	</a>
 
-	<nav aria-label="Hauptnavigation">
+	<nav aria-label={t('nav.main')}>
 		{#each navItems as item (item.href)}
 			{@const active = isActive(item.href, page.url.pathname)}
 			<a
@@ -22,14 +23,14 @@
 				aria-current={active ? 'page' : undefined}
 			>
 				<span class="icon"><item.icon size={20} strokeWidth={active ? 2.3 : 1.9} /></span>
-				{item.label}
+				{t(item.label)}
 			</a>
 		{/each}
 	</nav>
 
 	<p class="foot">
-		Kostenlos &amp; Open Source<br />
-		<a href="https://maximilianauer.at/legal/" rel="noopener">Impressum &amp; Datenschutz</a>
+		{t('nav.foot')}<br />
+		<a href="https://maximilianauer.at/legal/" rel="noopener">{t('nav.legal')}</a>
 	</p>
 </aside>
 

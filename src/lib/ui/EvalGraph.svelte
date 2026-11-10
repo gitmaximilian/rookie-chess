@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { whiteWin, type PlyEval } from '#lib/analysis/classify.js';
 	import type { MoveReview } from '#lib/analysis/run.js';
+	import { t } from '#lib/i18n/i18n.svelte.js';
 
 	interface Props {
 		evals: PlyEval[];
@@ -45,7 +46,7 @@
 	class="graph"
 	role="slider"
 	tabindex="0"
-	aria-label="Bewertungsverlauf"
+	aria-label={t('analysis.graph')}
 	aria-valuemin={0}
 	aria-valuemax={total - 1}
 	aria-valuenow={current}

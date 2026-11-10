@@ -1,4 +1,5 @@
 import { createEmptyCard } from 'ts-fsrs';
+import { t } from '#lib/i18n/i18n.svelte.js';
 import { engine } from '#lib/engine/engine.js';
 import { toWhite } from '#lib/engine/uci.js';
 import { Game, turnFromFen } from '#lib/chess/game.js';
@@ -111,7 +112,10 @@ export async function createMistakePuzzles(row: GameRow, evals: PlyEval[]): Prom
 			rating: 0,
 			themes: [],
 			source: 'mistake',
-			note: `${r.explanation?.title ?? 'Fehler'} gegen ${row.opponent} – finde den besseren Zug.`
+			note: t('puzzles.mistakeNote', {
+				what: r.explanation?.title ?? t('judgement.mistake'),
+				opp: row.opponent
+			})
 		};
 		// Nur der erste Lösungszug ist sicher; Folgezüge nur bei Matt/klaren Varianten behalten
 		if (!(before.mate !== undefined)) puzzle.moves = ['', before.best];
@@ -123,7 +127,7 @@ export async function createMistakePuzzles(row: GameRow, evals: PlyEval[]): Prom
 			played: game.moves[r.ply - 1].uci,
 			ply: r.ply,
 			date: Date.now(),
-			label: r.explanation?.title ?? 'Fehler'
+			label: r.explanation?.title ?? t('judgement.mistake')
 		});
 		const card = createEmptyCard(new Date());
 		await db.reviewCards.put({

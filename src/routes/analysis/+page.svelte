@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
 	import { page } from '$app/state';
-	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
@@ -29,7 +28,8 @@
 		createMistakePuzzles,
 		type MoveReview
 	} from '#lib/analysis/run.js';
-	import { accuracy, MARK, JUDGEMENT_DE, type PlyEval } from '#lib/analysis/classify.js';
+	import { accuracy, MARK, judgementLabel, type PlyEval } from '#lib/analysis/classify.js';
+	import { t, intlLocale } from '#lib/i18n/i18n.svelte.js';
 	import { formatScore } from '#lib/engine/uci.js';
 	import { openingFor, onOpeningsLoaded } from '#lib/data/openings.js';
 
@@ -96,7 +96,9 @@
 		return { white: side('white'), black: side('black') };
 	});
 
-	const gameId = $derived(browser ? Number(page.url.searchParams.get('game')) || null : null);
+	const gameId = $derived(
+		typeof window !== 'undefined' ? Number(page.url.searchParams.get('game')) || null : null
+	);
 
 	onDestroy(() => abort?.abort());
 
@@ -174,7 +176,7 @@
 		pgnError = '';
 		try {
 			const g = Game.fromPgn(pgnText);
-			if (g.ply < 2) throw new Error('Die Partie hat zu wenige Züge.');
+			if (g.ply < 2) throw new Error(t('analysis.tooFew'));
 			const headers = Object.fromEntries(
 				[...pgnText.matchAll(/\[(\w+)\s+"([^"]*)"\]/g)].map((m) => [m[1], m[2]])
 			);
@@ -187,13 +189,13 @@
 					? headers.Result
 					: '*') as GameRow['result'],
 				myColor: 'white',
-				opponent: headers.Black || headers.White || 'Unbekannt',
+				opponent: headers.Black || headers.White || t('analysis.unknown'),
 				source: 'pgn'
 			})) as number;
 			pgnText = '';
 			goto(resolve(`/analysis?game=${id}`));
 		} catch (e) {
-			pgnError = e instanceof Error ? e.message : 'PGN konnte nicht gelesen werden.';
+			pgnError = e instanceof Error ? e.message : t('analysis.pgnError');
 		}
 	}
 
@@ -201,7 +203,7 @@
 		try {
 			pgnText = await navigator.clipboard.readText();
 		} catch {
-			pgnError = 'Kein Zugriff auf die Zwischenablage – bitte einfügen (⌘V).';
+			pgnError = t('analysis.clipboard');
 		}
 	}
 
@@ -216,7 +218,7 @@
 	}
 
 	async function remove(id: number) {
-		if (!confirm('Partie löschen?')) return;
+		if (!confirm(t('analysis.deleteConfirm'))) return;
 		await db.games.delete(id);
 		games = games.filter((g) => g.id !== id);
 	}
@@ -226,38 +228,30 @@
 		if (g.result === '1/2-1/2') return 'draw';
 		return (g.result === '1-0') === (g.myColor === 'white') ? 'win' : 'loss';
 	}
-
-	const RESULT_DE = { win: 'Sieg', loss: 'Niederlage', draw: 'Remis', open: 'Offen' };
-	const SOURCE_DE: Record<GameRow['source'], string> = {
-		bot: 'Bot',
-		lichess: 'Lichess',
-		chesscom: 'Chess.com',
-		pgn: 'PGN'
-	};
 </script>
 
-<svelte:head><title>Analyse – Rookie</title></svelte:head>
+<svelte:head><title>{t('analysis.eyebrow')} – Rookie</title></svelte:head>
 <svelte:window onkeydown={onKey} />
 
 {#if !gameId}
 	<PageHeader
-		eyebrow="Analyse"
-		title="Deine Partien"
-		subtitle="Jede Partie wird von Stockfish analysiert – mit Erklärungen in einfachem Deutsch."
+		eyebrow={t('analysis.eyebrow')}
+		title={t('analysis.title')}
+		subtitle={t('analysis.subtitle')}
 	/>
 
 	<div class="list-layout">
 		<section class="games">
 			{#if loading}
-				<p class="muted">Lade …</p>
+				<p class="muted">{t('common.loading')}</p>
 			{:else if games.length === 0}
 				<div class="card empty">
-					<h2>Noch keine Partien</h2>
-					<p>Spiel gegen einen Bot, importiere deine Online-Partien oder füge ein PGN ein.</p>
+					<h2>{t('analysis.empty')}</h2>
+					<p>{t('analysis.emptyText')}</p>
 					<div class="row-btns">
-						<a class="btn" href={resolve('/play')}>Partie spielen</a>
+						<a class="btn" href={resolve('/play')}>{t('analysis.playGame')}</a>
 						<a class="btn secondary" href={resolve('/import')}
-							><CloudDownload size={18} /> Importieren</a
+							><CloudDownload size={18} /> {t('analysis.import')}</a
 						>
 					</div>
 				</div>
@@ -266,22 +260,25 @@
 					{@const res = resultFor(g)}
 					<div class="game card">
 						<a class="game-main" href={resolve(`/analysis?game=${g.id}`)}>
-							<span class="res {res}">{RESULT_DE[res]}</span>
+							<span class="res {res}">{t(`analysis.result.${res}`)}</span>
 							<span class="g-text">
-								<b>gegen {g.opponent}</b>
+								<b>{t('analysis.vs', { name: g.opponent })}</b>
 								<span>
-									{SOURCE_DE[g.source]} · {new Date(g.date).toLocaleDateString('de-AT', {
-										day: 'numeric',
-										month: 'short',
-										year: 'numeric'
-									})}
-									· {Math.ceil(g.moves.length / 2)} Züge
-									{#if g.analysis?.done}· analysiert{/if}
+									{t(`analysis.source.${g.source}`)} · {new Date(g.date).toLocaleDateString(
+										intlLocale(),
+										{
+											day: 'numeric',
+											month: 'short',
+											year: 'numeric'
+										}
+									)}
+									· {t('common.moves', { n: Math.ceil(g.moves.length / 2) })}
+									{#if g.analysis?.done}· {t('analysis.analysed')}{/if}
 								</span>
 							</span>
 							<ChevronRight size={18} />
 						</a>
-						<button class="del" onclick={() => remove(g.id!)} aria-label="Partie löschen"
+						<button class="del" onclick={() => remove(g.id!)} aria-label={t('analysis.deleteGame')}
 							><Trash2 size={16} /></button
 						>
 					</div>
@@ -290,8 +287,8 @@
 		</section>
 
 		<aside class="card pgn">
-			<h2>PGN einfügen</h2>
-			<p class="muted">Partie aus einem anderen Programm? Einfach hier einfügen.</p>
+			<h2>{t('analysis.pastePgn')}</h2>
+			<p class="muted">{t('analysis.pasteText')}</p>
 			<textarea
 				bind:value={pgnText}
 				rows="7"
@@ -299,22 +296,22 @@
 				spellcheck="false"></textarea>
 			{#if pgnError}<p class="err">{pgnError}</p>{/if}
 			<div class="row-btns">
-				<button class="btn" onclick={importPgn} disabled={!pgnText.trim()}>Analysieren</button>
+				<button class="btn" onclick={importPgn} disabled={!pgnText.trim()}>{t('analysis.analyse')}</button>
 				<button class="btn secondary" onclick={pasteFromClipboard}
-					><ClipboardPaste size={18} /> Einfügen</button
+					><ClipboardPaste size={18} /> {t('analysis.paste')}</button
 				>
 			</div>
 			<a class="link" href={resolve('/import')}
-				><CloudDownload size={16} /> Partien von Lichess oder Chess.com laden</a
+				><CloudDownload size={16} /> {t('analysis.importLink')}</a
 			>
 		</aside>
 	</div>
 {:else if !loading && !row}
-	<PageHeader title="Partie nicht gefunden" />
-	<a class="btn" href={resolve('/analysis')}>Zu deinen Partien</a>
+	<PageHeader title={t('analysis.notFound')} />
+	<a class="btn" href={resolve('/analysis')}>{t('analysis.toGames')}</a>
 {:else if game && row}
 	<div class="top-line">
-		<a class="back" href={resolve('/analysis')}><ArrowLeft size={18} /> Partien</a>
+		<a class="back" href={resolve('/analysis')}><ArrowLeft size={18} /> {t('analysis.games')}</a>
 		{#if opening}<span class="opening" title={opening.eco}>{opening.name}</span>{/if}
 	</div>
 
@@ -323,17 +320,25 @@
 			<div class="board-row">
 				<EvalBar score={evalHere} {orientation} />
 				<div class="board-wrap">
-					<Board {fen} {orientation} {lastMove} viewOnly {shapes} label="Analyse-Brett" />
+					<Board {fen} {orientation} {lastMove} viewOnly {shapes} label={t('analysis.board')} />
 				</div>
 			</div>
 			<div class="nav">
-				<button onclick={() => go(0)} aria-label="Anfang"><ChevronsLeft size={22} /></button>
-				<button onclick={() => go(ply - 1)} aria-label="Zurück"><ChevronLeft size={22} /></button>
-				<button onclick={() => go(ply + 1)} aria-label="Vor"><ChevronRight size={22} /></button>
-				<button onclick={() => go(total - 1)} aria-label="Ende"><ChevronsRight size={22} /></button>
+				<button onclick={() => go(0)} aria-label={t('analysis.nav.first')}
+					><ChevronsLeft size={22} /></button
+				>
+				<button onclick={() => go(ply - 1)} aria-label={t('analysis.nav.prev')}
+					><ChevronLeft size={22} /></button
+				>
+				<button onclick={() => go(ply + 1)} aria-label={t('analysis.nav.next')}
+					><ChevronRight size={22} /></button
+				>
+				<button onclick={() => go(total - 1)} aria-label={t('analysis.nav.last')}
+					><ChevronsRight size={22} /></button
+				>
 				<button
 					onclick={() => (orientation = orientation === 'white' ? 'black' : 'white')}
-					aria-label="Brett drehen"><RefreshCw size={19} /></button
+					aria-label={t('analysis.nav.flip')}><RefreshCw size={19} /></button
 				>
 			</div>
 		</div>
@@ -342,12 +347,12 @@
 			{#if analysing || progress < 1}
 				<div class="card progress">
 					<div class="p-head">
-						<span>Stockfish analysiert …</span>
+						<span>{t('analysis.running')}</span>
 						<b>{Math.round(progress * 100)} %</b>
 					</div>
 					<div class="p-track"><div class="p-fill" style:width="{progress * 100}%"></div></div>
 					{#if !analysing}
-						<button class="btn small" onclick={runAnalysis}>Fortsetzen</button>
+						<button class="btn small" onclick={runAnalysis}>{t('analysis.resume')}</button>
 					{/if}
 				</div>
 			{/if}
@@ -360,8 +365,8 @@
 
 			<div class="card move-card" class:has={!!currentReview}>
 				{#if ply === 0}
-					<p class="m-title">Ausgangsstellung</p>
-					<p class="muted">Mit ← → durch die Partie. Fehler sind in der Kurve markiert.</p>
+					<p class="m-title">{t('analysis.start')}</p>
+					<p class="muted">{t('analysis.startText')}</p>
 				{:else if currentReview}
 					{@const mv = game.moves[ply - 1]}
 					<div class="m-head">
@@ -369,46 +374,49 @@
 							>{Math.ceil(ply / 2)}{ply % 2 === 1 ? '.' : '…'} {figurine(mv.san)}</span
 						>
 						<span class="badge {currentReview.judgement}"
-							>{JUDGEMENT_DE[currentReview.judgement]}</span
+							>{judgementLabel(currentReview.judgement)}</span
 						>
 						{#if evalHere}<span class="m-eval">{formatScore(evalHere)}</span>{/if}
 					</div>
 					{#if currentReview.mover !== row.myColor && currentReview.explanation}
-						<p class="who">Zug von {row.opponent}</p>
+						<p class="who">{t('analysis.opponentMove', { name: row.opponent })}</p>
 					{/if}
 					{#if currentReview.explanation}
 						<p class="m-title">{currentReview.explanation.title}</p>
 						<p class="m-text">{currentReview.explanation.text}</p>
 					{:else if currentReview.judgement === 'best'}
-						<p class="m-text">Genau der Zug, den auch Stockfish spielt.</p>
+						<p class="m-text">{t('analysis.best')}</p>
 					{:else}
-						<p class="m-text">Ein solider Zug.</p>
+						<p class="m-text">{t('analysis.solid')}</p>
 					{/if}
 				{:else}
-					<p class="muted">Analyse läuft …</p>
+					<p class="muted">{t('analysis.running')}</p>
 				{/if}
 				{#if evalHere?.best && ply < total - 1}
 					<p class="m-next">
-						Bester Zug hier: <b>{figurine(sanForUci(fen, evalHere.best))}</b>
+						{t('analysis.bestHere')} <b>{figurine(sanForUci(fen, evalHere.best))}</b>
 					</p>
 				{/if}
 			</div>
 
 			{#if reviews.length && !analysing}
 				<div class="card summary">
-					{#each [['white', 'Weiß'], ['black', 'Schwarz']] as [c, label] (c)}
+					{#each [['white', 'common.white'], ['black', 'common.black']] as [c, label] (c)}
 						{@const s = summary[c as 'white' | 'black']}
 						<div class="sum-row" class:me={row.myColor === c}>
-							<span class="sum-name">{row.myColor === c ? 'Du' : label}</span>
+							<span class="sum-name">{row.myColor === c ? t('common.you') : t(label)}</span>
 							<span class="acc">{s.acc}<small>%</small></span>
-							<span class="cnt b" title="Patzer">{s.blunder}</span>
-							<span class="cnt m" title="Fehler">{s.mistake}</span>
-							<span class="cnt i" title="Ungenauigkeiten">{s.inaccuracy}</span>
+							<span class="cnt b" title={t('analysis.legend.blunder')}>{s.blunder}</span>
+							<span class="cnt m" title={t('analysis.legend.mistake')}>{s.mistake}</span>
+							<span class="cnt i" title={t('analysis.legend.inaccuracy')}>{s.inaccuracy}</span>
 						</div>
 					{/each}
 					<div class="legend">
-						<span class="b">??</span> Patzer <span class="m">?</span> Fehler
-						<span class="i">?!</span> Ungenau
+						<span class="b">??</span>
+						{t('analysis.legend.blunder')} <span class="m">?</span>
+						{t('analysis.legend.mistake')}
+						<span class="i">?!</span>
+						{t('analysis.legend.inaccuracy')}
 					</div>
 				</div>
 			{/if}
@@ -417,8 +425,8 @@
 				<a class="card practice" href={resolve('/puzzles?mode=mistakes')}>
 					<Sparkles size={20} />
 					<span
-						><b>{mistakesCreated} neue Übung{mistakesCreated === 1 ? '' : 'en'}</b> aus deinen Fehlern
-						– jetzt trainieren</span
+						><b>{t('analysis.practice', { n: mistakesCreated })}</b>
+						{t('analysis.practiceText')}</span
 					>
 					<ChevronRight size={18} />
 				</a>
@@ -428,7 +436,9 @@
 				<MoveList moves={game.moves} current={ply} {marks} onSelect={go} />
 			</div>
 
-			<button class="link" onclick={downloadPgn}><Download size={16} /> PGN herunterladen</button>
+			<button class="link" onclick={downloadPgn}
+				><Download size={16} /> {t('analysis.downloadPgn')}</button
+			>
 		</aside>
 	</div>
 {/if}

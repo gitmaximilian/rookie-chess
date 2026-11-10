@@ -17,7 +17,8 @@
 	import { PuzzleRun, pickPuzzle, dailyPuzzle, type Puzzle } from '#lib/training/puzzles.js';
 	import { applyPuzzleResult, getPuzzleRating, isProvisional } from '#lib/training/rating.js';
 	import { review, dueCards, formatInterval } from '#lib/training/srs.js';
-	import { THEMES, themeName } from '#lib/data/themes.js';
+	import { THEMES, themeName, themeAbout } from '#lib/data/themes.js';
+	import { t } from '#lib/i18n/i18n.svelte.js';
 	import { db, bumpActivity, today, getSetting, setSetting } from '#lib/db/db.js';
 	import { sound } from '#lib/ui/sound.js';
 	import { engine } from '#lib/engine/engine.js';
@@ -49,6 +50,7 @@
 	let nextReview = $state<string | null>(null);
 	let errorMsg = $state('');
 	let dailyDone = $state(false);
+	let praiseIdx = $state(0);
 
 	const fen = $derived.by(() => {
 		void v;
@@ -144,7 +146,7 @@
 			v++;
 			status = 'solving';
 		} catch (e) {
-			errorMsg = e instanceof Error ? e.message : 'Unbekannter Fehler';
+			errorMsg = e instanceof Error ? e.message : 'Error';
 			status = 'error';
 		}
 	}
@@ -244,6 +246,7 @@
 	async function finish(solved: boolean) {
 		if (!run) return;
 		const clean = solved && run.mistakes === 0 && !usedSolution;
+		praiseIdx = Math.floor(Math.random() * 4);
 		status = clean ? 'solved' : 'failed';
 		if (clean) {
 			feedback = 'good';
@@ -311,14 +314,14 @@
 	const coreThemes = THEMES.filter((t) => t.core);
 	const prompt = $derived(
 		status === 'intro'
-			? 'Gegner zieht …'
+			? t('puzzles.opponentMoves')
 			: status === 'solved'
-				? 'Gelöst!'
+				? t('puzzles.solved')
 				: status === 'failed'
-					? 'Nicht ganz – so geht’s'
+					? t('puzzles.failed')
 					: orientation === 'white'
-						? 'Weiß am Zug – finde den besten Zug'
-						: 'Schwarz am Zug – finde den besten Zug'
+						? t('puzzles.whiteToMove')
+						: t('puzzles.blackToMove')
 	);
 
 	function onKey(e: KeyboardEvent) {
@@ -334,18 +337,18 @@
 	}
 </script>
 
-<svelte:head><title>Puzzles – Rookie</title></svelte:head>
+<svelte:head><title>{t('puzzles.title')} – Rookie</title></svelte:head>
 <svelte:window onkeydown={onKey} />
 
 <div class="wrap">
 	<header class="top">
 		<div>
-			<span class="eyebrow">Taktik</span>
-			<h1>Puzzles</h1>
+			<span class="eyebrow">{t('puzzles.eyebrow')}</span>
+			<h1>{t('puzzles.title')}</h1>
 		</div>
 		<div class="stats">
-			<div class="rating card" title="Dein Puzzle-Rating">
-				<span class="r-label">Rating</span>
+			<div class="rating card" title={t('puzzles.ratingTitle')}>
+				<span class="r-label">{t('puzzles.rating')}</span>
 				<span class="r-val">
 					{rating ? Math.round(rating.rating) : '–'}{#if rating && isProvisional(rating)}<span
 							class="prov">?</span
@@ -357,39 +360,44 @@
 					>
 				{/if}
 			</div>
-			<div class="mini card" title="Serie in dieser Sitzung">
+			<div class="mini card" title={t('puzzles.streakTitle')}>
 				<Flame size={16} /><b>{streak}</b>
 			</div>
 		</div>
 	</header>
 
-	<nav class="modes" aria-label="Puzzle-Modus">
+	<nav class="modes" aria-label={t('puzzles.modes')}>
 		<button class="chip" class:on={mode === 'rated'} onclick={() => setMode('rated')}
-			><Target size={15} /> Für dich</button
+			><Target size={15} /> {t('puzzles.forYou')}</button
 		>
 		<button class="chip" class:on={mode === 'daily'} onclick={() => setMode('daily')}>
-			<CalendarDays size={15} /> Des Tages {#if dailyDone}<Check size={14} />{/if}
+			<CalendarDays size={15} />
+			{t('puzzles.daily')}
+			{#if dailyDone}<Check size={14} />{/if}
 		</button>
 		<button class="chip" class:on={mode === 'review'} onclick={() => setMode('review')}>
-			<Repeat size={15} /> Wiederholen {#if dueCount}<span class="count">{dueCount}</span>{/if}
+			<Repeat size={15} />
+			{t('puzzles.review')}
+			{#if dueCount}<span class="count">{dueCount}</span>{/if}
 		</button>
 		<button class="chip" class:on={mode === 'mistakes'} onclick={() => setMode('mistakes')}>
-			<Sparkles size={15} /> Meine Fehler {#if mistakeCount}<span class="count">{mistakeCount}</span
-				>{/if}
+			<Sparkles size={15} />
+			{t('puzzles.mistakes')}
+			{#if mistakeCount}<span class="count">{mistakeCount}</span>{/if}
 		</button>
 		<span class="sep" aria-hidden="true"></span>
-		{#each showAllThemes ? THEMES : coreThemes as t (t.key)}
+		{#each showAllThemes ? THEMES : coreThemes as th (th.key)}
 			<button
 				class="chip theme"
-				class:on={mode === 'theme' && theme === t.key}
-				onclick={() => setMode('theme', t.key)}
-				title={t.about}
+				class:on={mode === 'theme' && theme === th.key}
+				onclick={() => setMode('theme', th.key)}
+				title={themeAbout(th.key)}
 			>
-				{t.name}
+				{themeName(th.key)}
 			</button>
 		{/each}
 		<button class="chip ghost" onclick={() => (showAllThemes = !showAllThemes)}>
-			{showAllThemes ? 'Weniger' : 'Alle Themen …'}
+			{showAllThemes ? t('puzzles.fewer') : t('puzzles.allThemes')}
 		</button>
 	</nav>
 
@@ -407,7 +415,7 @@
 				flash={feedback}
 				isPromotion={(f, t) => run?.game.isPromotion(f as never, t as never) ?? false}
 				{onMove}
-				label="Puzzle-Brett"
+				label={t('puzzles.board')}
 			/>
 		</div>
 
@@ -415,20 +423,18 @@
 			{#if status === 'empty'}
 				<div class="empty">
 					<Check size={28} />
-					<h2>{mode === 'review' ? 'Alles wiederholt!' : 'Noch nichts hier'}</h2>
+					<h2>{mode === 'review' ? t('puzzles.allDone') : t('puzzles.nothing')}</h2>
 					<p>
-						{mode === 'review'
-							? 'Keine Puzzles sind gerade fällig. Falsch gelöste kommen automatisch wieder.'
-							: 'Spiele Partien oder importiere deine Partien – Rookie macht aus deinen Fehlern eigene Puzzles.'}
+						{mode === 'review' ? t('puzzles.allDoneText') : t('puzzles.nothingText')}
 					</p>
-					<button class="btn" onclick={() => setMode('rated')}>Neue Puzzles</button>
+					<button class="btn" onclick={() => setMode('rated')}>{t('puzzles.newPuzzles')}</button>
 				</div>
 			{:else if status === 'error'}
 				<div class="empty">
 					<X size={28} />
-					<h2>Puzzles nicht geladen</h2>
-					<p>{errorMsg}. Bist du offline? Gespeicherte Puzzle-Pakete funktionieren trotzdem.</p>
-					<button class="btn" onclick={next}>Nochmal versuchen</button>
+					<h2>{t('puzzles.loadError')}</h2>
+					<p>{t('puzzles.loadErrorText', { msg: errorMsg })}</p>
+					<button class="btn" onclick={next}>{t('common.retry')}</button>
 				</div>
 			{:else}
 				<div
@@ -445,16 +451,16 @@
 				{#if puzzle}
 					<div class="meta">
 						{#if puzzle.source === 'mistake'}
-							<span class="tag mistake">Aus deiner Partie</span>
+							<span class="tag mistake">{t('puzzles.fromGame')}</span>
 							{#if puzzle.note}<p class="note">{puzzle.note}</p>{/if}
 						{:else}
-							<span class="tag">Puzzle-Rating {puzzle.rating}</span>
+							<span class="tag">{t('puzzles.puzzleRating', { r: puzzle.rating })}</span>
 						{/if}
 						{#if status === 'solved' || status === 'failed'}
 							<div class="themes">
-								{#each puzzle.themes.filter( (t) => THEMES.some((x) => x.key === t && x.key !== 'short' && x.key !== 'long' && x.key !== 'crushing' && x.key !== 'middlegame') ) as t (t)}
-									<button class="theme-tag" onclick={() => setMode('theme', t)}
-										>{themeName(t)}</button
+								{#each puzzle.themes.filter( (k) => THEMES.some((x) => x.key === k && !['short', 'long', 'crushing', 'middlegame'].includes(k)) ) as k (k)}
+									<button class="theme-tag" onclick={() => setMode('theme', k)}
+										>{themeName(k)}</button
 									>
 								{/each}
 							</div>
@@ -466,49 +472,48 @@
 					<div class="result" class:good={status === 'solved'}>
 						{#if status === 'solved'}
 							<p class="big">
-								{usedHint
-									? 'Gut gemacht – mit kleinem Tipp.'
-									: ['Stark!', 'Sauber gelöst!', 'Genau so!', 'Perfekt!'][
-											Math.floor(Math.random() * 4)
-										]}
+								{usedHint ? t('puzzles.withHint') : t('puzzles.praise').split('|')[praiseIdx]}
 							</p>
 						{:else}
-							<p class="big">Kein Problem – genau so lernst du.</p>
+							<p class="big">{t('puzzles.noProblem')}</p>
 						{/if}
 						{#if nextReview}
-							<p class="sub"><Repeat size={14} /> Kommt {nextReview} zur Wiederholung.</p>
+							<p class="sub"><Repeat size={14} /> {t('puzzles.reviewIn', { when: nextReview })}</p>
 						{/if}
 					</div>
 					<div class="actions">
-						<button class="btn grow" onclick={next}>Weiter <ArrowRight size={18} /></button>
+						<button class="btn grow" onclick={next}
+							>{t('common.next')} <ArrowRight size={18} /></button
+						>
 						{#if status === 'failed'}
-							<button class="btn secondary" onclick={retry} title="Nochmal versuchen"
+							<button class="btn secondary" onclick={retry} title={t('common.retry')}
 								><RotateCcw size={18} /></button
 							>
 						{/if}
 					</div>
-					<p class="kbd">Enter oder → für das nächste Puzzle</p>
+					<p class="kbd">{t('common.enterNext')}</p>
 				{:else}
 					<div class="actions">
 						<button class="btn secondary grow" onclick={hint} disabled={status !== 'solving'}>
 							<Lightbulb size={18} />
-							{usedHint ? 'Noch ein Tipp' : 'Tipp'}
+							{usedHint ? t('common.moreHint') : t('common.hint')}
 						</button>
 						<button
 							class="btn secondary grow"
 							onclick={showSolution}
 							disabled={status !== 'solving'}
 						>
-							<Eye size={18} /> Lösung
+							<Eye size={18} />
+							{t('common.solution')}
 						</button>
 					</div>
 					{#if run && run.mistakes > 0}
-						<p class="try-again">Nicht ganz. Versuch’s nochmal!</p>
+						<p class="try-again">{t('puzzles.tryAgain')}</p>
 					{/if}
 				{/if}
 
 				<div class="today">
-					<span>Heute gelöst</span>
+					<span>{t('puzzles.today')}</span>
 					<b>{solvedToday}</b>
 				</div>
 			{/if}

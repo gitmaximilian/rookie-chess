@@ -16,6 +16,8 @@
 	import { db, getSetting, setSetting, TABLES } from '#lib/db/db.js';
 	import { getThemePref, setThemePref, type ThemePref } from '#lib/ui/theme.js';
 	import { sound } from '#lib/ui/sound.js';
+	import Languages from '@lucide/svelte/icons/languages';
+	import { t, i18n, LOCALES } from '#lib/i18n/i18n.svelte.js';
 
 	let themePref = $state<ThemePref>('system');
 	let soundOn = $state(true);
@@ -66,17 +68,17 @@
 	async function persist() {
 		persisted = await requestPersistence();
 		message = persisted
-			? { kind: 'ok', text: 'Dein Browser hebt die Daten jetzt dauerhaft auf.' }
+			? { kind: 'ok', text: t('settings.protectOk') }
 			: {
 					kind: 'err',
-					text: 'Der Browser hat abgelehnt. Tipp: Rookie zum Home-Bildschirm hinzufügen – dann ist der Schutz meist automatisch aktiv.'
+					text: t('settings.protectFail')
 				};
 	}
 
 	async function exportNow() {
 		await downloadBackup();
 		lastBackup = Date.now();
-		message = { kind: 'ok', text: 'Sicherung heruntergeladen. Leg sie z. B. in iCloud Drive ab.' };
+		message = { kind: 'ok', text: t('settings.saved') };
 	}
 
 	async function onFile(e: Event) {
@@ -84,14 +86,14 @@
 		if (!file) return;
 		try {
 			const backup = parseBackup(await file.text());
-			if (!confirm('Alle aktuellen Daten durch die Sicherung ersetzen?')) return;
+			if (!confirm(t('settings.importConfirm'))) return;
 			await importAll(backup);
-			message = { kind: 'ok', text: 'Sicherung eingespielt. Willkommen zurück!' };
+			message = { kind: 'ok', text: t('settings.imported') };
 			setTimeout(() => location.reload(), 900);
 		} catch (err) {
 			message = {
 				kind: 'err',
-				text: err instanceof Error ? err.message : 'Import fehlgeschlagen.'
+				text: err instanceof Error ? err.message : t('settings.importFail')
 			};
 		} finally {
 			fileInput.value = '';
@@ -99,8 +101,8 @@
 	}
 
 	async function resetAll() {
-		if (!confirm('Wirklich ALLE Daten löschen? Das kann nicht rückgängig gemacht werden.')) return;
-		if (!confirm('Letzte Chance: Hast du eine Sicherung? Jetzt alles löschen?')) return;
+		if (!confirm(t('settings.reset1'))) return;
+		if (!confirm(t('settings.reset2'))) return;
 		await db.transaction(
 			'rw',
 			TABLES.map((t) => db.table(t)),
@@ -114,9 +116,9 @@
 	const backupAge = $derived(lastBackup ? Math.floor((Date.now() - lastBackup) / 86400000) : null);
 </script>
 
-<svelte:head><title>Einstellungen – Rookie</title></svelte:head>
+<svelte:head><title>{t('settings.title')} – Rookie</title></svelte:head>
 
-<PageHeader eyebrow="Profil" title="Einstellungen" />
+<PageHeader eyebrow={t('settings.eyebrow')} title={t('settings.title')} />
 
 <div class="stack">
 	{#if message}
@@ -124,15 +126,16 @@
 	{/if}
 
 	<section class="card block">
-		<h2>Darstellung</h2>
-		<div class="seg" role="radiogroup" aria-label="Erscheinungsbild">
+		<h2>{t('settings.appearance')}</h2>
+		<div class="seg" role="radiogroup" aria-label={t('settings.appearance')}>
 			<button
 				role="radio"
 				aria-checked={themePref === 'system'}
 				class:on={themePref === 'system'}
 				onclick={() => pickTheme('system')}
 			>
-				<Monitor size={17} /> Automatisch
+				<Monitor size={17} />
+				{t('settings.auto')}
 			</button>
 			<button
 				role="radio"
@@ -140,7 +143,8 @@
 				class:on={themePref === 'light'}
 				onclick={() => pickTheme('light')}
 			>
-				<Sun size={17} /> Hell
+				<Sun size={17} />
+				{t('settings.light')}
 			</button>
 			<button
 				role="radio"
@@ -148,22 +152,39 @@
 				class:on={themePref === 'dark'}
 				onclick={() => pickTheme('dark')}
 			>
-				<Moon size={17} /> Dunkel
+				<Moon size={17} />
+				{t('settings.dark')}
 			</button>
+		</div>
+		<div class="lang">
+			<span class="lang-label"><Languages size={18} /> {t('settings.language')}</span>
+			<div class="seg" role="radiogroup" aria-label={t('settings.language')}>
+				{#each LOCALES as l (l.id)}
+					<button
+						role="radio"
+						aria-checked={i18n.locale === l.id}
+						class:on={i18n.locale === l.id}
+						onclick={() => i18n.set(l.id)}
+						lang={l.id}
+					>
+						{l.label}
+					</button>
+				{/each}
+			</div>
 		</div>
 		<button class="row" onclick={toggleSound}>
 			<span class="ico"
 				>{#if soundOn}<Volume2 size={19} />{:else}<VolumeX size={19} />{/if}</span
 			>
-			<span class="txt">Töne</span>
+			<span class="txt">{t('settings.sound')}</span>
 			<span class="switch" class:on={soundOn} aria-hidden="true"><span></span></span>
 		</button>
 	</section>
 
 	<section class="card block">
-		<h2><Target size={18} /> Tagesziel</h2>
-		<p class="hint">Wie viele Puzzles möchtest du pro Tag lösen?</p>
-		<div class="seg" role="radiogroup" aria-label="Tagesziel">
+		<h2><Target size={18} /> {t('settings.goal')}</h2>
+		<p class="hint">{t('settings.goalText')}</p>
+		<div class="seg" role="radiogroup" aria-label={t('settings.goal')}>
 			{#each [3, 5, 10, 20] as n (n)}
 				<button
 					role="radio"
@@ -176,30 +197,27 @@
 	</section>
 
 	<section class="card block">
-		<h2>Deine Daten</h2>
-		<p class="hint">
-			Alles bleibt auf diesem Gerät – kein Konto, keine Cloud. Mit einer Sicherung kannst du deinen
-			Fortschritt auf ein anderes Gerät mitnehmen (z. B. vom iPhone auf den Mac).
-		</p>
+		<h2>{t('settings.data')}</h2>
+		<p class="hint">{t('settings.dataText')}</p>
 		<p class="facts">
-			{counts.games} Partien · {counts.attempts} Puzzle-Versuche · {counts.cards} Wiederholungskarten
+			{t('settings.facts', { g: counts.games, a: counts.attempts, c: counts.cards })}
 		</p>
 
 		<div class="status" class:ok={persisted} class:warn={persisted === false}>
 			{#if persisted}
 				<ShieldCheck size={20} />
-				<span>Daten sind vor automatischem Löschen geschützt.</span>
+				<span>{t('settings.protected')}</span>
 			{:else}
 				<ShieldAlert size={20} />
-				<span>Safari kann Daten nach längerer Nichtnutzung löschen.</span>
-				<button class="btn small" onclick={persist}>Schützen</button>
+				<span>{t('settings.unprotected')}</span>
+				<button class="btn small" onclick={persist}>{t('settings.protect')}</button>
 			{/if}
 		</div>
 
 		<div class="actions">
-			<button class="btn" onclick={exportNow}><Download size={18} /> Sicherung speichern</button>
+			<button class="btn" onclick={exportNow}><Download size={18} /> {t('settings.save')}</button>
 			<button class="btn secondary" onclick={() => fileInput.click()}
-				><Upload size={18} /> Sicherung laden</button
+				><Upload size={18} /> {t('settings.load')}</button
 			>
 			<input
 				bind:this={fileInput}
@@ -211,21 +229,21 @@
 		</div>
 		<p class="hint small">
 			{#if backupAge === null}
-				Noch keine Sicherung erstellt.
+				{t('settings.never')}
 			{:else if backupAge === 0}
-				Letzte Sicherung: heute.
+				{t('settings.todayBackup')}
 			{:else}
-				Letzte Sicherung: vor {backupAge} {backupAge === 1 ? 'Tag' : 'Tagen'}.
+				{t('settings.ago', { n: backupAge })}
 			{/if}
 		</p>
 	</section>
 
 	<section class="card block danger-zone">
-		<h2>Zurücksetzen</h2>
-		<p class="hint">
-			Löscht alle Partien, Puzzles, Wiederholungen und Einstellungen auf diesem Gerät.
-		</p>
-		<button class="btn danger" onclick={resetAll}><Trash2 size={18} /> Alle Daten löschen</button>
+		<h2>{t('settings.reset')}</h2>
+		<p class="hint">{t('settings.resetText')}</p>
+		<button class="btn danger" onclick={resetAll}
+			><Trash2 size={18} /> {t('settings.resetBtn')}</button
+		>
 	</section>
 </div>
 
@@ -295,6 +313,21 @@
 		background: var(--surface);
 		color: var(--text);
 		box-shadow: var(--shadow-1);
+	}
+
+	.lang {
+		display: flex;
+		flex-direction: column;
+		gap: 0.45rem;
+	}
+
+	.lang-label {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		font-size: 0.88rem;
+		font-weight: 650;
+		color: var(--text-2);
 	}
 
 	.row {

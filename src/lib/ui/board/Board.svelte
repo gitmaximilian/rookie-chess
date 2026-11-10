@@ -11,6 +11,7 @@
 	import 'chessground/assets/chessground.cburnett.css';
 	import './board.css';
 	import { onDestroy, onMount } from 'svelte';
+	import { t } from '#lib/i18n/i18n.svelte.js';
 	import { Chessground } from 'chessground';
 	import type { Api } from 'chessground/api';
 	import type { Key, Color } from 'chessground/types';
@@ -50,7 +51,7 @@
 		isPromotion,
 		onMove,
 		flash = '',
-		label = 'Schachbrett'
+		label
 	}: Props = $props();
 
 	let el: HTMLDivElement;
@@ -162,29 +163,34 @@
 	}
 
 	const promoRoles = [
-		{ r: 'q', name: 'queen', label: 'Dame' },
-		{ r: 'r', name: 'rook', label: 'Turm' },
-		{ r: 'b', name: 'bishop', label: 'Läufer' },
-		{ r: 'n', name: 'knight', label: 'Springer' }
+		{ r: 'q', name: 'queen' },
+		{ r: 'r', name: 'rook' },
+		{ r: 'b', name: 'bishop' },
+		{ r: 'n', name: 'knight' }
 	] as const;
 </script>
 
 <div class="board-shell" class:flash-good={flash === 'good'} class:flash-bad={flash === 'bad'}>
 	<div class="board-sizer">
-		<div bind:this={el} class="cg-host" role="application" aria-label={label}></div>
+		<div
+			bind:this={el}
+			class="cg-host"
+			role="application"
+			aria-label={label ?? t('board.label')}
+		></div>
 	</div>
 
 	{#if promo}
 		<div class="promo-backdrop" role="presentation" onclick={cancelPromo}></div>
-		<div class="promo" role="dialog" aria-label="Umwandlung wählen">
-			<p>Umwandeln in …</p>
+		<div class="promo" role="dialog" aria-label={t('board.promoteDialog')}>
+			<p>{t('board.promote')}</p>
 			<div class="promo-row">
 				{#each promoRoles as p (p.r)}
 					<button
 						class="promo-btn cg-wrap"
 						onclick={() => choose(p.r)}
-						aria-label={p.label}
-						title={p.label}
+						aria-label={t(`board.roles.${p.r}`)}
+						title={t(`board.roles.${p.r}`)}
 					>
 						<piece class="{p.name} {promo.color}"></piece>
 					</button>

@@ -25,11 +25,12 @@
 	import { engine } from '#lib/engine/engine.js';
 	import { db, getSetting, setSetting, bumpActivity } from '#lib/db/db.js';
 	import { sound } from '#lib/ui/sound.js';
+	import { t } from '#lib/i18n/i18n.svelte.js';
 	import type { Color } from 'chessops/types';
 
 	type TimeControl = { id: string; label: string; base: number; inc: number } | null;
 	const TIME_CONTROLS: NonNullable<TimeControl>[] = [
-		{ id: '10', label: '10 Min', base: 600_000, inc: 0 },
+		{ id: '10', label: '10 min', base: 600_000, inc: 0 },
 		{ id: '15+10', label: '15 + 10', base: 900_000, inc: 10_000 }
 	];
 
@@ -292,7 +293,7 @@
 
 	function resign() {
 		if (ended) return;
-		if (!confirm('Partie wirklich aufgeben?')) return;
+		if (!confirm(t('play.resignConfirm'))) return;
 		botAbort?.abort();
 		thinking = false;
 		game.resign(myColor);
@@ -312,11 +313,11 @@
 			savedGameId = (await db.games.add({
 				date: Date.now(),
 				pgn: game.toPgn({
-					Event: 'Rookie – Partie gegen Bot',
+					Event: t('play.event'),
 					Site: 'chess.maximilianauer.at',
 					Date: new Date().toISOString().slice(0, 10).replaceAll('-', '.'),
-					White: myColor === 'white' ? 'Du' : bot.name,
-					Black: myColor === 'black' ? 'Du' : bot.name,
+					White: myColor === 'white' ? t('common.you') : bot.name,
+					Black: myColor === 'black' ? t('common.you') : bot.name,
 					WhiteElo: myColor === 'white' ? '?' : String(bot.elo),
 					BlackElo: myColor === 'black' ? '?' : String(bot.elo)
 				}),
@@ -354,7 +355,7 @@
 	}
 
 	const verdictText = $derived(
-		verdict === 'win' ? 'Gewonnen!' : verdict === 'loss' ? 'Verloren' : 'Remis'
+		t(verdict === 'win' ? 'play.won' : verdict === 'loss' ? 'play.lost' : 'play.draw')
 	);
 
 	const pieceGlyph: Record<string, string> = {
@@ -385,19 +386,15 @@
 	}
 </script>
 
-<svelte:head><title>Spielen – Rookie</title></svelte:head>
+<svelte:head><title>{t('play.title')} – Rookie</title></svelte:head>
 <svelte:window onkeydown={onKey} />
 
 {#if phase === 'setup'}
-	<PageHeader
-		eyebrow="Gegen den Computer"
-		title="Spielen"
-		subtitle="Wähle einen Gegner, der zu dir passt."
-	/>
+	<PageHeader eyebrow={t('play.eyebrow')} title={t('play.title')} subtitle={t('play.subtitle')} />
 
 	<div class="setup">
 		<section>
-			<h2 class="sec">Gegner</h2>
+			<h2 class="sec">{t('play.opponent')}</h2>
 			<div class="bots">
 				{#each BOTS as b, i (b.id)}
 					<button
@@ -426,52 +423,52 @@
 			<div class="chosen">
 				<BotAvatar bot={botById(botId)} size={64} />
 				<div>
-					<span class="eyebrow">Dein Gegner</span>
+					<span class="eyebrow">{t('play.yourOpponent')}</span>
 					<h3>{botById(botId).name}</h3>
 				</div>
 			</div>
 
 			<div class="opt">
-				<span class="opt-label">Deine Farbe</span>
-				<div class="seg" role="radiogroup" aria-label="Farbe">
-					{#each [['white', 'Weiß'], ['random', 'Zufall'], ['black', 'Schwarz']] as [val, lab] (val)}
+				<span class="opt-label">{t('play.yourColor')}</span>
+				<div class="seg" role="radiogroup" aria-label={t('play.yourColor')}>
+					{#each [['white', 'common.white'], ['random', 'play.random'], ['black', 'common.black']] as [val, lab] (val)}
 						<button
 							role="radio"
 							aria-checked={colorChoice === val}
 							class:on={colorChoice === val}
 							onclick={() => (colorChoice = val as typeof colorChoice)}
 						>
-							<span class="swatch {val}"></span>{lab}
+							<span class="swatch {val}"></span>{t(lab)}
 						</button>
 					{/each}
 				</div>
 			</div>
 
 			<div class="opt">
-				<span class="opt-label"><Timer size={15} /> Bedenkzeit</span>
-				<div class="seg" role="radiogroup" aria-label="Bedenkzeit">
+				<span class="opt-label"><Timer size={15} /> {t('play.timeControl')}</span>
+				<div class="seg" role="radiogroup" aria-label={t('play.timeControl')}>
 					<button
 						role="radio"
 						aria-checked={tcChoice === null}
 						class:on={tcChoice === null}
 						onclick={() => (tcChoice = null)}
 					>
-						Ohne Uhr
+						{t('play.noClock')}
 					</button>
-					{#each TIME_CONTROLS as t (t.id)}
+					{#each TIME_CONTROLS as tc (tc.id)}
 						<button
 							role="radio"
-							aria-checked={tcChoice === t.id}
-							class:on={tcChoice === t.id}
-							onclick={() => (tcChoice = t.id)}
+							aria-checked={tcChoice === tc.id}
+							class:on={tcChoice === tc.id}
+							onclick={() => (tcChoice = tc.id)}
 						>
-							{t.label}
+							{tc.label}
 						</button>
 					{/each}
 				</div>
 			</div>
 
-			<button class="btn big" onclick={start}>Partie starten</button>
+			<button class="btn big" onclick={start}>{t('play.start')}</button>
 		</aside>
 	</div>
 {:else if phase === 'playing'}
@@ -487,7 +484,7 @@
 						{#if (myColor === 'white' ? -material : material) > 0}<span class="adv"
 								>+{Math.abs(material)}</span
 							>{/if}
-						{#if thinking}<span class="status">denkt nach …</span>{/if}
+						{#if thinking}<span class="status">{t('play.thinking')}</span>{/if}
 					</span>
 				</div>
 				{#if clocks}
@@ -515,9 +512,10 @@
 			/>
 
 			<div class="player bottom">
-				<span class="me-avatar" aria-hidden="true">Du</span>
+				<span class="me-avatar" aria-hidden="true">{t('common.you')}</span>
 				<div class="pinfo">
-					<span class="pname">Du <span class="pelo">{colorName(myColor)}</span></span>
+					<span class="pname">{t('common.you')} <span class="pelo">{colorName(myColor)}</span></span
+					>
 					<span class="pcap">
 						{#each sortRoles(captured[myColor === 'white' ? 'black' : 'white']) as r, i (i)}<span
 								class="cap">{pieceGlyph[r]}</span
@@ -525,7 +523,7 @@
 						{#if (myColor === 'white' ? material : -material) > 0}<span class="adv"
 								>+{Math.abs(material)}</span
 							>{/if}
-						{#if myTurn}<span class="status yours">Du bist am Zug</span>{/if}
+						{#if myTurn}<span class="status yours">{t('play.yourTurn')}</span>{/if}
 					</span>
 				</div>
 				{#if clocks}
@@ -545,44 +543,51 @@
 				<MoveList {moves} />
 			</div>
 			<div class="controls">
-				<button class="ctl" onclick={hint} disabled={!myTurn || hintLoading} title="Hinweis (H)">
-					<Lightbulb size={20} /><span>Hinweis</span>
+				<button
+					class="ctl"
+					onclick={hint}
+					disabled={!myTurn || hintLoading}
+					title="{t('play.hint')} (H)"
+				>
+					<Lightbulb size={20} /><span>{t('play.hint')}</span>
 				</button>
 				<button
 					class="ctl"
 					onclick={undo}
 					disabled={!!ended || game.ply === 0}
-					title="Zug zurück (⌘Z)"
+					title="{t('play.undo')} (⌘Z)"
 				>
-					<Undo2 size={20} /><span>Zurück</span>
+					<Undo2 size={20} /><span>{t('play.undo')}</span>
 				</button>
 				<button
 					class="ctl"
 					onclick={() => (orientation = orientation === 'white' ? 'black' : 'white')}
-					title="Brett drehen (F)"
+					title="{t('common.flip')} (F)"
 				>
-					<RefreshCw size={20} /><span>Drehen</span>
+					<RefreshCw size={20} /><span>{t('common.flip')}</span>
 				</button>
 				{#if !ended}
-					<button class="ctl danger" onclick={resign} title="Aufgeben">
-						<Flag size={20} /><span>Aufgeben</span>
+					<button class="ctl danger" onclick={resign} title={t('play.resign')}>
+						<Flag size={20} /><span>{t('play.resign')}</span>
 					</button>
 				{:else}
 					<button class="ctl" onclick={() => (showResult = true)}>
-						<Trophy size={20} /><span>Ergebnis</span>
+						<Trophy size={20} /><span>{t('play.result')}</span>
 					</button>
 				{/if}
 			</div>
 			{#if hints || undos}
-				<p class="helpers">{hints} Hinweis{hints === 1 ? '' : 'e'} · {undos}× zurück</p>
+				<p class="helpers">{t('play.helpers', { h: hints, u: undos })}</p>
 			{/if}
-			<button class="link-btn" onclick={newSetup}><ArrowLeft size={16} /> Anderer Gegner</button>
+			<button class="link-btn" onclick={newSetup}
+				><ArrowLeft size={16} /> {t('play.otherOpponent')}</button
+			>
 		</aside>
 	</div>
 
 	{#if ended && showResult}
 		<div class="sheet-backdrop" role="presentation" onclick={() => (showResult = false)}></div>
-		<div class="sheet card {verdict}" role="dialog" aria-label="Ergebnis">
+		<div class="sheet card {verdict}" role="dialog" aria-label={t('play.result')}>
 			<div class="burst" aria-hidden="true">
 				{#if verdict === 'win'}
 					{#each Array.from({ length: 14 }, (_x, k) => k) as k (k)}<span style:--k={k}
@@ -593,16 +598,17 @@
 			<h2>{verdictText}</h2>
 			<p class="reason">{endReason(ended)}</p>
 			{#if verdict === 'win' && hints === 0 && undos === 0}
-				<p class="badge">Ganz ohne Hilfe – stark!</p>
+				<p class="badge">{t('play.noHelp')}</p>
 			{/if}
 			<div class="sheet-actions">
-				<button class="btn" onclick={rematch}>Revanche</button>
+				<button class="btn" onclick={rematch}>{t('play.rematch')}</button>
 				{#if savedGameId}
 					<a class="btn secondary" href={resolve(`/analysis?game=${savedGameId}`)}>
-						<ChartLine size={18} /> Analysieren
+						<ChartLine size={18} />
+						{t('play.analyse')}
 					</a>
 				{/if}
-				<button class="btn secondary" onclick={newSetup}>Neuer Gegner</button>
+				<button class="btn secondary" onclick={newSetup}>{t('play.newOpponent')}</button>
 			</div>
 		</div>
 	{/if}

@@ -32,7 +32,7 @@ describe('Backup', () => {
 	});
 
 	it('lehnt fremde Dateien ab', () => {
-		expect(() => parseBackup('{"foo":1}')).toThrow('keine Rookie-Sicherung');
-		expect(() => parseBackup('kein json')).toThrow('kein gültiges JSON');
+		expect(() => parseBackup('{"foo":1}')).toThrow('not a Rookie backup');
+		expect(() => parseBackup('kein json')).toThrow('not valid JSON');
 	});
 });

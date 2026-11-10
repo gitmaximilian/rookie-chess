@@ -19,7 +19,7 @@
 		/>
 	</svg>
 	<span class="num">{value}/{max}</span>
-	<span class="sr-only">{value} von {max} geschafft</span>
+	<span class="sr-only">{value} / {max}</span>
 </div>
 
 <style>
