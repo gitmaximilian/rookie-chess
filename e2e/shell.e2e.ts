@@ -45,13 +45,10 @@ test('App startet offline nach dem ersten Besuch', async ({ page, context, brows
 	await context.setOffline(false);
 });
 
-test('Impressum & Datenschutz ist erreichbar', async ({ page }) => {
+test('Impressum verweist auf maximilianauer.at', async ({ page }) => {
 	await page.goto('/profile');
-	await page
-		.getByRole('link', { name: /Impressum/ })
-		.first()
-		.click();
-	await expect(page.locator('h1')).toHaveText('Impressum & Datenschutz');
-	await expect(page.getByRole('heading', { name: /Offenlegung/ })).toBeVisible();
-	await expect(page.getByRole('heading', { name: 'Datenschutzerklärung' })).toBeVisible();
+	await expect(page.getByRole('link', { name: /Impressum/ }).first()).toHaveAttribute(
+		'href',
+		'https://maximilianauer.at/legal/'
+	);
 });

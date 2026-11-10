@@ -29,7 +29,7 @@
 
 	<p class="foot">
 		Kostenlos &amp; Open Source<br />
-		<a href={resolve('/legal')}>Impressum &amp; Datenschutz</a>
+		<a href="https://maximilianauer.at/legal/" rel="noopener">Impressum &amp; Datenschutz</a>
 	</p>
 </aside>
 
