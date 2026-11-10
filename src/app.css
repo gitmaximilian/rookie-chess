@@ -1,0 +1,303 @@
+/* ───────────────────────── Design-Tokens ───────────────────────── */
+:root {
+	/* Flächen – warmes Papier statt klinischem Weiß */
+	--bg: #f6f3ee;
+	--bg-tint: #efe9df;
+	--surface: #ffffff;
+	--surface-2: #f1ece4;
+	--surface-glass: rgb(255 255 255 / 0.72);
+	--line: rgb(28 26 23 / 0.08);
+	--line-strong: rgb(28 26 23 / 0.14);
+
+	/* Text */
+	--text: #1c1a17;
+	--text-2: #6b655c;
+	--text-3: #9a9388;
+
+	/* Akzent – „Glut“: warm, lebendig, gut lesbar */
+	--accent: #e2583e;
+	--accent-strong: #c9452c;
+	--accent-soft: #fbe4dc;
+	--on-accent: #ffffff;
+
+	/* Modus-Farben (jeder Bereich hat seine Persönlichkeit) */
+	--c-play: #e2583e;
+	--c-play-soft: #fbe4dc;
+	--c-puzzle: #6d5bf0;
+	--c-puzzle-soft: #e8e4ff;
+	--c-learn: #13907f;
+	--c-learn-soft: #d8f1ec;
+	--c-analysis: #d4900f;
+	--c-analysis-soft: #fbefd3;
+
+	/* Status */
+	--good: #2b9a66;
+	--warn: #d99a1c;
+	--bad: #d64545;
+
+	/* Form */
+	--radius-s: 10px;
+	--radius-m: 14px;
+	--radius-l: 22px;
+	--radius-xl: 28px;
+	--shadow-1: 0 1px 2px rgb(28 26 23 / 0.04), 0 2px 8px rgb(28 26 23 / 0.04);
+	--shadow-2: 0 2px 6px rgb(28 26 23 / 0.05), 0 12px 32px rgb(28 26 23 / 0.08);
+
+	/* Typografie */
+	--font-display: 'Bricolage Grotesque Variable', ui-rounded, system-ui, sans-serif;
+	--font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', system-ui, sans-serif;
+	--font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+
+	/* Bewegung */
+	--ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+	--ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+	--dur-fast: 140ms;
+	--dur: 260ms;
+
+	/* Layout */
+	--tabbar-h: 64px;
+	--sidebar-w: 248px;
+	--safe-top: env(safe-area-inset-top, 0px);
+	--safe-bottom: env(safe-area-inset-bottom, 0px);
+	--safe-left: env(safe-area-inset-left, 0px);
+	--safe-right: env(safe-area-inset-right, 0px);
+
+	color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root:not([data-theme='light']) {
+		--bg: #121110;
+		--bg-tint: #1a1816;
+		--surface: #1c1a18;
+		--surface-2: #26231f;
+		--surface-glass: rgb(28 26 24 / 0.72);
+		--line: rgb(243 239 232 / 0.08);
+		--line-strong: rgb(243 239 232 / 0.14);
+		--text: #f3efe8;
+		--text-2: #a8a196;
+		--text-3: #77716a;
+		--accent: #ff7a5c;
+		--accent-strong: #ff9479;
+		--accent-soft: rgb(255 122 92 / 0.16);
+		--on-accent: #1a0f0b;
+		--c-play: #ff7a5c;
+		--c-play-soft: rgb(255 122 92 / 0.15);
+		--c-puzzle: #9c8dff;
+		--c-puzzle-soft: rgb(156 141 255 / 0.15);
+		--c-learn: #3cc7b2;
+		--c-learn-soft: rgb(60 199 178 / 0.14);
+		--c-analysis: #f2b544;
+		--c-analysis-soft: rgb(242 181 68 / 0.14);
+		--shadow-1: 0 1px 2px rgb(0 0 0 / 0.3);
+		--shadow-2: 0 2px 6px rgb(0 0 0 / 0.3), 0 12px 32px rgb(0 0 0 / 0.35);
+		color-scheme: dark;
+	}
+}
+
+:root[data-theme='dark'] {
+	--bg: #121110;
+	--bg-tint: #1a1816;
+	--surface: #1c1a18;
+	--surface-2: #26231f;
+	--surface-glass: rgb(28 26 24 / 0.72);
+	--line: rgb(243 239 232 / 0.08);
+	--line-strong: rgb(243 239 232 / 0.14);
+	--text: #f3efe8;
+	--text-2: #a8a196;
+	--text-3: #77716a;
+	--accent: #ff7a5c;
+	--accent-strong: #ff9479;
+	--accent-soft: rgb(255 122 92 / 0.16);
+	--on-accent: #1a0f0b;
+	--c-play: #ff7a5c;
+	--c-play-soft: rgb(255 122 92 / 0.15);
+	--c-puzzle: #9c8dff;
+	--c-puzzle-soft: rgb(156 141 255 / 0.15);
+	--c-learn: #3cc7b2;
+	--c-learn-soft: rgb(60 199 178 / 0.14);
+	--c-analysis: #f2b544;
+	--c-analysis-soft: rgb(242 181 68 / 0.14);
+	--shadow-1: 0 1px 2px rgb(0 0 0 / 0.3);
+	--shadow-2: 0 2px 6px rgb(0 0 0 / 0.3), 0 12px 32px rgb(0 0 0 / 0.35);
+	color-scheme: dark;
+}
+
+/* ───────────────────────── Basis ───────────────────────── */
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+html {
+	-webkit-text-size-adjust: 100%;
+	text-size-adjust: 100%;
+	background: var(--bg);
+}
+
+body {
+	margin: 0;
+	min-height: 100dvh;
+	background: var(--bg);
+	color: var(--text);
+	font-family: var(--font-body);
+	font-size: 1rem;
+	line-height: 1.5;
+	-webkit-font-smoothing: antialiased;
+	-webkit-tap-highlight-color: transparent;
+	/* verhindert Doppeltipp-Zoom, Pinch bleibt erlaubt */
+	touch-action: manipulation;
+	overscroll-behavior-y: none;
+}
+
+h1,
+h2,
+h3,
+h4 {
+	font-family: var(--font-display);
+	font-weight: 680;
+	letter-spacing: -0.02em;
+	line-height: 1.1;
+	margin: 0;
+	text-wrap: balance;
+}
+
+p {
+	margin: 0;
+	text-wrap: pretty;
+}
+
+a {
+	color: inherit;
+	text-decoration: none;
+}
+
+button {
+	font: inherit;
+	color: inherit;
+}
+
+:focus-visible {
+	outline: 2.5px solid var(--accent);
+	outline-offset: 3px;
+	border-radius: 6px;
+}
+
+::selection {
+	background: var(--accent-soft);
+}
+
+.sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}
+
+/* ───────────────────────── Bausteine ───────────────────────── */
+.card {
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: var(--radius-l);
+	box-shadow: var(--shadow-1);
+}
+
+.pressable {
+	transition:
+		transform var(--dur-fast) var(--ease-out),
+		box-shadow var(--dur) var(--ease-out),
+		background-color var(--dur) var(--ease-out);
+	cursor: pointer;
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+.pressable:active {
+	transform: scale(0.97);
+}
+
+@media (hover: hover) {
+	.pressable:hover {
+		box-shadow: var(--shadow-2);
+		transform: translateY(-2px);
+	}
+	.pressable:hover:active {
+		transform: scale(0.98);
+	}
+}
+
+.btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	min-height: 44px;
+	padding: 0 1.15rem;
+	border-radius: 999px;
+	border: none;
+	font-weight: 600;
+	background: var(--accent);
+	color: var(--on-accent);
+	cursor: pointer;
+	transition:
+		transform var(--dur-fast) var(--ease-out),
+		background-color var(--dur) var(--ease-out);
+}
+
+.btn:active {
+	transform: scale(0.96);
+}
+
+.btn.secondary {
+	background: var(--surface-2);
+	color: var(--text);
+}
+
+.eyebrow {
+	font-size: 0.78rem;
+	font-weight: 650;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--text-3);
+}
+
+/* ───────────────────────── Seitenwechsel ───────────────────────── */
+@keyframes vt-out {
+	to {
+		opacity: 0;
+		transform: translateY(-6px);
+	}
+}
+@keyframes vt-in {
+	from {
+		opacity: 0;
+		transform: translateY(10px);
+	}
+}
+
+::view-transition-old(main) {
+	animation: 160ms var(--ease-out) both vt-out;
+}
+::view-transition-new(main) {
+	animation: 320ms var(--ease-out) both vt-in;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+	}
+	::view-transition-old(main),
+	::view-transition-new(main) {
+		animation: none;
+	}
+}
