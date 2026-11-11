@@ -15,12 +15,13 @@
 	import { downloadBackup, importAll, parseBackup, requestPersistence } from '#lib/db/backup.js';
 	import { db, getSetting, setSetting, TABLES } from '#lib/db/db.js';
 	import { getThemePref, setThemePref, type ThemePref } from '#lib/ui/theme.js';
-	import { sound } from '#lib/ui/sound.js';
+	import { sound, SOUND_STYLES, type SoundStyle } from '#lib/ui/sound.js';
 	import Languages from '@lucide/svelte/icons/languages';
 	import { t, i18n, LOCALES } from '#lib/i18n/i18n.svelte.js';
 
 	let themePref = $state<ThemePref>('system');
 	let soundOn = $state(true);
+	let soundStyle = $state<SoundStyle>('wood');
 	let goal = $state(5);
 	let persisted = $state<boolean | null>(null);
 	let lastBackup = $state<number | null>(null);
@@ -35,6 +36,7 @@
 	onMount(async () => {
 		themePref = getThemePref();
 		soundOn = sound.enabled;
+		soundStyle = sound.style;
 		goal = await getSetting('dailyGoal', 5);
 		lastBackup = await getSetting<number | null>('lastBackupAt', null);
 		try {
@@ -57,7 +59,15 @@
 	function toggleSound() {
 		soundOn = !soundOn;
 		sound.setEnabled(soundOn);
-		if (soundOn) sound.good();
+		if (soundOn) sound.move();
+	}
+
+	function pickSound(st: SoundStyle) {
+		soundStyle = st;
+		sound.setStyle(st);
+		// Hörprobe: normaler Zug, dann Schlagzug
+		sound.move();
+		setTimeout(() => sound.move(true), 380);
 	}
 
 	async function saveGoal(n: number) {
@@ -179,6 +189,18 @@
 			<span class="txt">{t('settings.sound')}</span>
 			<span class="switch" class:on={soundOn} aria-hidden="true"><span></span></span>
 		</button>
+		{#if soundOn}
+			<div class="seg" role="radiogroup" aria-label={t('settings.soundStyle')}>
+				{#each SOUND_STYLES as st (st)}
+					<button
+						role="radio"
+						aria-checked={soundStyle === st}
+						class:on={soundStyle === st}
+						onclick={() => pickSound(st)}>{t(`settings.soundStyles.${st}`)}</button
+					>
+				{/each}
+			</div>
+		{/if}
 	</section>
 
 	<section class="card block">

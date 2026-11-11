@@ -371,6 +371,8 @@ export const de: Shape<typeof en> = {
 		dark: 'Dunkel',
 		language: 'Sprache',
 		sound: 'Töne',
+		soundStyle: 'Klangstil',
+		soundStyles: { wood: 'Holz', soft: 'Sanft', chime: 'Glocke' },
 		goal: 'Tagesziel',
 		goalText: 'Wie viele Puzzles möchtest du pro Tag lösen?',
 		data: 'Deine Daten',

@@ -336,6 +336,8 @@ export const en = {
 		dark: 'Dark',
 		language: 'Language',
 		sound: 'Sounds',
+		soundStyle: 'Sound style',
+		soundStyles: { wood: 'Wood', soft: 'Soft', chime: 'Chime' },
 		goal: 'Daily goal',
 		goalText: 'How many puzzles do you want to solve per day?',
 		data: 'Your data',

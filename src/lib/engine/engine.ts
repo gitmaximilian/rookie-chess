@@ -36,36 +36,69 @@ class EngineService {
 		this.worker?.postMessage(cmd);
 	}
 
-	private waitFor(pred: (line: string) => boolean): Promise<string> {
+	/** Wartet auf eine Engine-Zeile; mit `timeout` → null, wenn sie nicht kommt */
+	private waitFor(pred: (line: string) => boolean, timeout?: number): Promise<string | null> {
 		return new Promise((resolve) => {
+			let timer: ReturnType<typeof setTimeout> | undefined;
 			const l: Listener = (line) => {
 				if (pred(line)) {
 					this.listeners.delete(l);
+					clearTimeout(timer);
 					resolve(line);
 				}
 			};
 			this.listeners.add(l);
+			if (timeout)
+				timer = setTimeout(() => {
+					this.listeners.delete(l);
+					resolve(null);
+				}, timeout);
 		});
+	}
+
+	/**
+	 * Engine hängt (iOS friert Worker beim App-Wechsel ein, Multi-Thread-WASM kann blockieren):
+	 * Worker beenden, beim nächsten Auftrag neu starten – dann nur noch Single-Thread.
+	 */
+	private reset() {
+		this.worker?.terminate();
+		this.worker = null;
+		this.listeners.clear();
+		this.ready = null;
+		this.current = null;
+		if (this.multiThreaded) {
+			this.multiThreaded = false;
+			try {
+				localStorage.setItem(SINGLE_KEY, '1');
+			} catch {
+				/* privat/gesperrt – egal */
+			}
+		}
 	}
 
 	init(): Promise<void> {
 		if (this.ready) return this.ready;
 		this.ready = (async () => {
 			const canThread =
-				typeof SharedArrayBuffer !== 'undefined' && self.crossOriginIsolated === true;
+				typeof SharedArrayBuffer !== 'undefined' &&
+				self.crossOriginIsolated === true &&
+				!isAppleMobile() &&
+				!singleOnly();
 			this.multiThreaded = canThread && (await this.boot('stockfish-19-lite.js'));
 			// Rückfall: Single-Thread läuft überall
 			if (!this.multiThreaded) await this.boot('stockfish-19-lite-single.js');
 			if (this.multiThreaded) {
 				// Akku & Wärme schonen: höchstens 2 Threads auf Mobilgeräten, 4 sonst
 				const cores = navigator.hardwareConcurrency || 2;
-				const mobile = /iPhone|iPad|Android/.test(navigator.userAgent);
+				const mobile = /Android/.test(navigator.userAgent);
 				const threads = Math.max(1, Math.min(mobile ? 2 : 4, cores - 1));
 				this.send(`setoption name Threads value ${threads}`);
 			}
 			this.send('setoption name Hash value 16');
-			await this.isReady();
+			if (!(await this.isReady())) throw new Error('engine not ready');
 		})();
+		// fehlgeschlagener Start: beim nächsten Auftrag neu versuchen
+		this.ready.catch(() => this.reset());
 		return this.ready;
 	}
 
@@ -97,17 +130,22 @@ class EngineService {
 		});
 	}
 
-	private isReady(): Promise<void> {
-		const p = this.waitFor((l) => l === 'readyok');
+	/** true, wenn die Engine innerhalb von 6 s antwortet */
+	private async isReady(): Promise<boolean> {
+		const p = this.waitFor((l) => l === 'readyok', 6000);
 		this.send('isready');
-		return p.then(() => undefined);
+		return (await p) !== null;
 	}
 
 	newGame(): Promise<void> {
 		return this.enqueue(async () => {
-			await this.init();
-			this.send('ucinewgame');
-			await this.isReady();
+			try {
+				await this.init();
+				this.send('ucinewgame');
+				if (!(await this.isReady())) this.reset();
+			} catch {
+				this.reset();
+			}
 		});
 	}
 
@@ -127,13 +165,21 @@ class EngineService {
 	}
 
 	private async run(opts: AnalyseOptions): Promise<AnalyseResult> {
-		await this.init();
-		if (opts.signal?.aborted) return { bestmove: null, lines: [] };
+		const empty = { bestmove: null, lines: [] };
+		try {
+			await this.init();
+		} catch {
+			return empty;
+		}
+		if (opts.signal?.aborted) return empty;
 
 		const multipv = opts.multipv ?? 1;
 		this.send(`setoption name MultiPV value ${multipv}`);
 		this.send(`setoption name Skill Level value ${opts.skill ?? 20}`);
-		await this.isReady();
+		if (!(await this.isReady())) {
+			this.reset();
+			return empty;
+		}
 
 		const lines = new Map<number, PvLine>();
 		let lastEmit = 0;
@@ -151,15 +197,34 @@ class EngineService {
 					return;
 				}
 				if (line.startsWith('bestmove')) {
-					this.listeners.delete(onLine);
-					this.current = null;
-					opts.signal?.removeEventListener('abort', abort);
 					const bm = line.split(' ')[1];
-					const res = { bestmove: bm && bm !== '(none)' ? bm : null, lines: sorted() };
-					opts.onInfo?.(res.lines);
-					resolve(res);
+					done(bm && bm !== '(none)' ? bm : null);
 				}
 			};
+			let finished = false;
+			const done = (bestmove: string | null) => {
+				if (finished) return;
+				finished = true;
+				clearTimeout(watchdog);
+				this.listeners.delete(onLine);
+				this.current = null;
+				opts.signal?.removeEventListener('abort', abort);
+				const res = { bestmove, lines: sorted() };
+				opts.onInfo?.(res.lines);
+				resolve(res);
+			};
+			// Watchdog: keine Antwort in vernünftiger Zeit → stoppen, notfalls Engine neu starten
+			const budget =
+				(opts.movetime ?? 0) + (opts.depth && !opts.nodes ? 30_000 : opts.nodes ? 10_000 : 30_000);
+			const watchdog = setTimeout(() => {
+				this.send('stop');
+				setTimeout(() => {
+					if (finished) return;
+					this.reset();
+					const best = sorted()[0]?.pv[0] ?? null;
+					done(best);
+				}, 1500);
+			}, budget);
 			const sorted = () => [...lines.values()].sort((a, b) => a.multipv - b.multipv);
 			const abort = () => this.send('stop');
 			this.current = { stop: abort };
@@ -177,6 +242,22 @@ class EngineService {
 			this.send(`go ${limits || 'depth 12'}`);
 		});
 	}
+}
+
+const SINGLE_KEY = 'rookie.engine.single';
+
+function singleOnly(): boolean {
+	try {
+		return localStorage.getItem(SINGLE_KEY) === '1';
+	} catch {
+		return false;
+	}
+}
+
+/** iPhone/iPad (auch iPadOS mit Desktop-UA): Multi-Thread-WASM ist dort unzuverlässig */
+function isAppleMobile(): boolean {
+	const ua = navigator.userAgent;
+	return /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
 }
 
 export const engine = new EngineService();

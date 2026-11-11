@@ -237,13 +237,18 @@
 		const t0 = performance.now();
 		const fenNow = game.fen;
 		try {
-			const res = await engine.analyse({
-				fen: fenNow,
-				nodes: bot.nodes,
-				multipv: bot.multipv,
-				skill: bot.skill,
-				signal
-			});
+			const ask = () =>
+				engine.analyse({
+					fen: fenNow,
+					nodes: bot.nodes,
+					multipv: bot.multipv,
+					skill: bot.skill,
+					signal
+				});
+			let res = await ask();
+			// Engine war hängen geblieben und wurde neu gestartet → ein zweiter Versuch;
+			// klappt auch der nicht, wählt chooseBotMove einen legalen Zug ohne Engine
+			if (!res.lines.length && !signal.aborted) res = await ask();
 			if (signal.aborted || game.fen !== fenNow) return;
 			const choice = chooseBotMove(bot, res.lines, game.legalUcis(), game.captureUcis());
 			const wait = thinkDelay(bot, game.ply) - (performance.now() - t0);
@@ -471,6 +476,16 @@
 			<button class="btn big" onclick={start}>{t('play.start')}</button>
 		</aside>
 	</div>
+
+	<!-- Mobil: Start immer erreichbar, ohne nach unten zu scrollen -->
+	<div class="start-bar" style:--h={botById(botId).hue}>
+		<BotAvatar bot={botById(botId)} size={40} />
+		<span class="sb-text">
+			<b>{botById(botId).name}</b>
+			<span>≈ {botById(botId).elo}</span>
+		</span>
+		<button class="btn" onclick={start}>{t('play.start')}</button>
+	</div>
 {:else if phase === 'playing'}
 	<div class="arena">
 		<div class="board-col">
@@ -631,6 +646,99 @@
 			position: sticky;
 			top: 2rem;
 		}
+		.start-bar {
+			display: none !important;
+		}
+	}
+
+	/* schmal: Farbe/Bedenkzeit oben, Start in der schwebenden Leiste unten */
+	@media (max-width: 999px) {
+		.setup {
+			padding-bottom: 5.5rem;
+		}
+		.options {
+			order: -1;
+			padding: 1rem;
+			gap: 0.85rem;
+		}
+		.options .chosen,
+		.options :global(.btn.big) {
+			display: none;
+		}
+	}
+
+	@media (max-width: 599px) {
+		.bots {
+			grid-template-columns: 1fr 1fr !important;
+			gap: 0.5rem !important;
+		}
+		.bot {
+			flex-direction: column;
+			gap: 0.55rem !important;
+			padding: 0.75rem !important;
+		}
+		.bot-tag {
+			display: -webkit-box;
+			-webkit-line-clamp: 2;
+			line-clamp: 2;
+			-webkit-box-orient: vertical;
+			overflow: hidden;
+			font-size: 0.78rem;
+		}
+	}
+
+	.start-bar {
+		position: fixed;
+		z-index: 40;
+		left: max(0.75rem, var(--safe-left));
+		right: max(0.75rem, var(--safe-right));
+		bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 0.6rem);
+		display: flex;
+		align-items: center;
+		gap: 0.7rem;
+		padding: 0.55rem 0.55rem 0.55rem 0.7rem;
+		border-radius: 20px;
+		background: var(--surface-glass);
+		backdrop-filter: saturate(180%) blur(20px);
+		-webkit-backdrop-filter: saturate(180%) blur(20px);
+		border: 1px solid var(--line-strong);
+		box-shadow: var(--shadow-2);
+		animation: rise 360ms var(--ease-out) both;
+	}
+
+	@media (min-width: 768px) {
+		.start-bar {
+			left: calc(var(--sidebar-w) + 1.5rem);
+			right: 1.5rem;
+			bottom: calc(1rem + var(--safe-bottom));
+			max-width: 560px;
+		}
+	}
+
+	.sb-text {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		line-height: 1.2;
+	}
+
+	.sb-text b {
+		font-size: 0.98rem;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.sb-text span {
+		font-size: 0.8rem;
+		font-weight: 650;
+		color: hsl(var(--h) 60% var(--hue-text-l));
+	}
+
+	.start-bar .btn {
+		padding-inline: 1.4rem;
+		height: 46px;
 	}
 
 	.sec {
