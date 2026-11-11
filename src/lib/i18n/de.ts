@@ -577,7 +577,21 @@ export const de: Shape<typeof en> = {
 		toGames: 'Partien ansehen',
 		privacy:
 			'Es werden nur öffentliche Partien direkt von Lichess bzw. Chess.com geladen – nichts wird woandershin gesendet.',
-		stop: 'Stopp'
+		stop: 'Stopp',
+		accounts: 'Verknüpfte Konten',
+		accountsText:
+			'Einmal Benutzernamen verknüpfen – Rookie holt dann bei jedem Öffnen der App deine neuen Partien automatisch und analysiert sie im Hintergrund.',
+		noPassword:
+			'Deine Partien auf Lichess und Chess.com sind öffentlich – du brauchst kein Login und kein Passwort, nur deinen Benutzernamen.',
+		link: 'Verknüpfen',
+		unlink: 'Trennen',
+		syncNow: 'Jetzt abrufen',
+		syncing: 'Wird abgerufen …',
+		lastSync: (p: P) => `Zuletzt abgerufen ${p.when}`,
+		notSynced: 'Noch nicht abgerufen',
+		synced: (p: P) => `${p.n} neue ${p.n === 1 ? 'Partie' : 'Partien'} importiert · Ansehen`,
+		syncError: 'Abruf fehlgeschlagen – prüfe den Benutzernamen oder deine Verbindung.',
+		once: 'Einmalig importieren'
 	},
 	profile: {
 		eyebrow: 'Du',

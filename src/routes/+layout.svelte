@@ -7,14 +7,39 @@
 	import TabBar from '#lib/ui/TabBar.svelte';
 	import Sidebar from '#lib/ui/Sidebar.svelte';
 	import { i18n, t } from '#lib/i18n/i18n.svelte.js';
+	import { page } from '$app/state';
+	import { resolve } from '$app/paths';
+	import {
+		autoSync,
+		busyRoute,
+		pauseBackground,
+		analyseInBackground,
+		syncState
+	} from '#lib/import/sync.svelte.js';
 	import type { LayoutProps } from './$types';
 
 	let { children }: LayoutProps = $props();
 	let needRefresh = $state(false);
 	let updateSW: ((reload?: boolean) => Promise<void>) | null = null;
 
+	let newGames = $state(0);
+
+	async function sync() {
+		await autoSync(page.url.pathname);
+		if (syncState.lastNew > 0) {
+			newGames = syncState.lastNew;
+			syncState.lastNew = 0;
+			setTimeout(() => (newGames = 0), 6000);
+		}
+	}
+
 	onMount(async () => {
 		i18n.init();
+		// verknüpfte Konten: neue Partien holen, wenn die App geöffnet wird oder zurückkehrt
+		setTimeout(sync, 2500);
+		document.addEventListener('visibilitychange', () => {
+			if (document.visibilityState === 'visible') void sync();
+		});
 		if (pwaInfo) {
 			const { registerSW } = await import('virtual:pwa-register');
 			// Kein automatisches Neuladen mitten in einer Partie – nur ein dezenter Hinweis
@@ -29,6 +54,8 @@
 	// wodurch die Tab-Leiste kurz verschwindet. Hier bewegt sich nur der Inhalt.
 	let mainEl: HTMLElement;
 	afterNavigate(({ from, to, type }) => {
+		if (to && busyRoute(to.url.pathname)) pauseBackground();
+		else if (type !== 'enter') void analyseInBackground();
 		if (type === 'enter' || !from || from.url.pathname === to?.url.pathname) return;
 		if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 		mainEl?.animate(
@@ -52,6 +79,14 @@
 </main>
 
 <TabBar />
+
+{#if newGames > 0}
+	<div role="status">
+		<a class="update synced" href={resolve('/analysis')} onclick={() => (newGames = 0)}>
+			{t('import.synced', { n: newGames })}
+		</a>
+	</div>
+{/if}
 
 {#if needRefresh}
 	<div class="update" role="status">
@@ -97,6 +132,10 @@
 		color: #fff;
 		font-weight: 650;
 		cursor: pointer;
+	}
+
+	.update.synced {
+		padding: 0.6rem 1.1rem;
 	}
 
 	.update .x {

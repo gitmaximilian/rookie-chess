@@ -21,6 +21,11 @@ export interface GameRow {
 	/** Externe ID (Import), verhindert Duplikate */
 	externalId?: string;
 	analysis?: GameAnalysis;
+	/** Online-Partien: Wertungszahlen zum Zeitpunkt der Partie */
+	myRating?: number;
+	oppRating?: number;
+	/** bullet | blitz | rapid | classical | daily */
+	speed?: string;
 }
 
 export interface GameAnalysis {

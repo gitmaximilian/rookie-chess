@@ -544,7 +544,21 @@ export const en = {
 		toGames: 'View games',
 		privacy:
 			'Only public games are loaded directly from Lichess or Chess.com – nothing is sent anywhere else.',
-		stop: 'Stop'
+		stop: 'Stop',
+		accounts: 'Linked accounts',
+		accountsText:
+			'Link your username once – Rookie then fetches your new games automatically whenever you open the app and analyses them in the background.',
+		noPassword:
+			'Your games on Lichess and Chess.com are public, so no login or password is needed – just your username.',
+		link: 'Link',
+		unlink: 'Unlink',
+		syncNow: 'Sync now',
+		syncing: 'Syncing …',
+		lastSync: (p: P) => `Last synced ${p.when}`,
+		notSynced: 'Not synced yet',
+		synced: (p: P) => `${p.n} new ${s(p.n, 'game', 'games')} imported · View`,
+		syncError: 'Sync failed – check the username or your connection.',
+		once: 'Import once'
 	},
 	profile: {
 		eyebrow: 'You',
