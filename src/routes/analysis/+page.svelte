@@ -451,6 +451,16 @@
 		font-size: 0.92rem;
 	}
 
+	/* reserviert Platz, solange die Partien aus IndexedDB laden (kein Layout-Sprung) */
+	.games {
+		min-height: 13rem;
+	}
+
+	/* reserviert Platz, solange die Partien aus IndexedDB laden (kein Layout-Sprung) */
+	.games {
+		min-height: 13rem;
+	}
+
 	.list-layout {
 		display: grid;
 		gap: 1rem;
@@ -764,7 +774,7 @@
 	}
 	.badge.inaccuracy {
 		background: color-mix(in srgb, var(--warn) 25%, transparent);
-		color: color-mix(in srgb, var(--warn) 70%, var(--text));
+		color: color-mix(in srgb, var(--warn) 45%, var(--text));
 	}
 	.badge.best {
 		background: color-mix(in srgb, var(--good) 15%, transparent);

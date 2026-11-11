@@ -45,7 +45,7 @@
 		justify-content: center;
 		gap: 2px;
 		color: var(--text-3);
-		font-size: 0.68rem;
+		font-size: 0.75rem;
 		font-weight: 600;
 		letter-spacing: 0.01em;
 		transition: color var(--dur) var(--ease-out);

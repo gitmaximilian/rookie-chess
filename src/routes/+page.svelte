@@ -301,7 +301,7 @@
 		align-items: center;
 		gap: 0.75rem;
 		padding: 0.85rem 1rem;
-		color: color-mix(in srgb, var(--warn) 70%, var(--text));
+		color: color-mix(in srgb, var(--warn) 45%, var(--text));
 		background: color-mix(in srgb, var(--warn) 12%, var(--surface));
 		font-size: 0.92rem;
 	}

@@ -404,7 +404,7 @@
 	}
 
 	.status.warn {
-		color: color-mix(in srgb, var(--warn) 75%, var(--text));
+		color: color-mix(in srgb, var(--warn) 45%, var(--text));
 		background: color-mix(in srgb, var(--warn) 14%, transparent);
 	}
 

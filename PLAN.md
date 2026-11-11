@@ -213,3 +213,5 @@ Abweichungen vom Plan:
 - Lichess Opening Explorer verlangt inzwischen Login → ersetzt durch ein Offline-Eröffnungsbuch aus lichess chess-openings (CC0).
 - Push-Erinnerungen (optional, Cloudflare Worker) noch nicht umgesetzt.
 - Service Worker aktualisiert nicht mehr automatisch, sondern zeigt „Neue Version verfügbar · Neu laden“.
+
+Lighthouse (Nov. 2026, mobil, hell und dunkel): Barrierefreiheit 100, Best Practices 100, SEO 100, Performance 89–95.

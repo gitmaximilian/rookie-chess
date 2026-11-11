@@ -684,7 +684,7 @@
 	.bot-elo {
 		font-size: 0.8rem;
 		font-weight: 650;
-		color: hsl(var(--h) 60% 45%);
+		color: hsl(var(--h) 60% var(--hue-text-l));
 	}
 
 	.bot-tag {

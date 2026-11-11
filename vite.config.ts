@@ -38,6 +38,8 @@ export default defineConfig({
 				},
 				adapter: adapter({ fallback: '404.html' }),
 				// absolute Pfade: Seiten funktionieren auch, wenn der Service Worker sie unter anderer URL ausliefert
+				// kleine CSS-Dateien direkt ins HTML: weniger blockierende Requests beim ersten Laden
+				inlineStyleThreshold: 12000,
 				paths: { relative: false }
 			},
 			{

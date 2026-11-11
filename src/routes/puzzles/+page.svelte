@@ -651,7 +651,7 @@
 	.chip.on {
 		background: var(--c-puzzle);
 		border-color: var(--c-puzzle);
-		color: #fff;
+		color: var(--on-accent);
 	}
 
 	.chip.theme.on {
@@ -670,7 +670,7 @@
 		padding: 0 0.4rem;
 		border-radius: 999px;
 		background: var(--accent);
-		color: #fff;
+		color: var(--on-accent);
 		line-height: 1.5;
 	}
 
@@ -751,7 +751,7 @@
 
 	.turn-pill.failed {
 		background: color-mix(in srgb, var(--warn) 18%, transparent);
-		color: color-mix(in srgb, var(--warn) 70%, var(--text));
+		color: color-mix(in srgb, var(--warn) 45%, var(--text));
 	}
 
 	.meta {

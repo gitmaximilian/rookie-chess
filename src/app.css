@@ -11,21 +11,22 @@
 
 	/* Text */
 	--text: #1c1a17;
-	--text-2: #6b655c;
-	--text-3: #9a9388;
+	--text-2: #57524a;
+	--text-3: #736d64;
+	--hue-text-l: 30%;
 
 	/* Akzent – „Glut“: warm, lebendig, gut lesbar */
-	--accent: #e2583e;
-	--accent-strong: #c9452c;
+	--accent: #c0432a;
+	--accent-strong: #ad3a23;
 	--accent-soft: #fbe4dc;
 	--on-accent: #ffffff;
 
 	/* Modus-Farben (jeder Bereich hat seine Persönlichkeit) */
-	--c-play: #e2583e;
+	--c-play: #c0432a;
 	--c-play-soft: #fbe4dc;
-	--c-puzzle: #6d5bf0;
+	--c-puzzle: #5f4ee6;
 	--c-puzzle-soft: #e8e4ff;
-	--c-learn: #13907f;
+	--c-learn: #0e7a6b;
 	--c-learn-soft: #d8f1ec;
 	--c-analysis: #d4900f;
 	--c-analysis-soft: #fbefd3;
@@ -33,7 +34,7 @@
 	/* Status */
 	--good: #2b9a66;
 	--warn: #d99a1c;
-	--bad: #d64545;
+	--bad: #b83535;
 
 	/* Form */
 	--radius-s: 10px;
@@ -76,11 +77,13 @@
 		--line-strong: rgb(243 239 232 / 0.14);
 		--text: #f3efe8;
 		--text-2: #a8a196;
-		--text-3: #77716a;
+		--text-3: #958e83;
+		--hue-text-l: 72%;
 		--accent: #ff7a5c;
 		--accent-strong: #ff9479;
 		--accent-soft: rgb(255 122 92 / 0.16);
 		--on-accent: #1a0f0b;
+		--bad: #f07a7a;
 		--c-play: #ff7a5c;
 		--c-play-soft: rgb(255 122 92 / 0.15);
 		--c-puzzle: #9c8dff;
@@ -105,11 +108,13 @@
 	--line-strong: rgb(243 239 232 / 0.14);
 	--text: #f3efe8;
 	--text-2: #a8a196;
-	--text-3: #77716a;
+	--text-3: #958e83;
+	--hue-text-l: 72%;
 	--accent: #ff7a5c;
 	--accent-strong: #ff9479;
 	--accent-soft: rgb(255 122 92 / 0.16);
 	--on-accent: #1a0f0b;
+	--bad: #f07a7a;
 	--c-play: #ff7a5c;
 	--c-play-soft: rgb(255 122 92 / 0.15);
 	--c-puzzle: #9c8dff;
