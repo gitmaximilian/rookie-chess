@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Dock from '#lib/ui/Dock.svelte';
 	import { onMount, onDestroy } from 'svelte';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
@@ -518,20 +519,22 @@
 				viewOnly
 				shapes={studyShapes}
 			/>
-			<div class="stepper">
-				<button
-					class="step-btn"
-					onclick={() => studyStep(-1)}
-					disabled={si === 0}
-					aria-label={t('course.prev')}><ChevronLeft size={22} /></button
-				>
-				<span class="step-count">{t('course.moveOf', { n: si, m: study.ucis.length })}</span>
-				<button
-					class="btn step-next"
-					onclick={() => studyStep(1)}
-					disabled={si >= study.ucis.length}>{t('course.next')} <ChevronRight size={18} /></button
-				>
-			</div>
+			<Dock order={2}>
+				<div class="stepper">
+					<button
+						class="step-btn"
+						onclick={() => studyStep(-1)}
+						disabled={si === 0}
+						aria-label={t('course.prev')}><ChevronLeft size={22} /></button
+					>
+					<span class="step-count">{t('course.moveOf', { n: si, m: study.ucis.length })}</span>
+					<button
+						class="btn step-next"
+						onclick={() => studyStep(1)}
+						disabled={si >= study.ucis.length}>{t('course.next')} <ChevronRight size={18} /></button
+					>
+				</div>
+			</Dock>
 		</div>
 
 		<aside class="panel card">
@@ -556,33 +559,39 @@
 					></button>
 				{/each}
 			</div>
-			{#if si === 0}
-				<div class="study-card">
-					<p>{t('course.studyIntro')}</p>
-				</div>
-			{:else}
-				{@const own = isOwnPly(course, si - 1)}
-				{@const mistake = study.kind === 'trap' && si - 1 === study.trap!.mistake}
-				<div class="study-card" class:own class:mistake>
-					<span class="who"
-						>{mistake ? t('course.theMistake') : own ? t('course.you') : t('course.opponent')}</span
-					>
-					<b class="s-san">{Math.ceil(si / 2)}{si % 2 === 1 ? '.' : '…'} {figurine(studySan)}</b>
-					{#if studyNote}<p>{studyNote}</p>{/if}
-				</div>
-			{/if}
-			{#if si >= study.ucis.length}
-				{#if study.kind === 'line'}
-					<div class="done-box">
-						<p class="muted">{t('course.studyDoneText')}</p>
-						<button class="btn" onclick={() => startLine(study!.line!)}
-							><Dumbbell size={17} /> {t('course.studyDone')}</button
-						>
+			<Dock order={1}>
+				{#if si === 0}
+					<div class="study-card">
+						<p>{t('course.studyIntro')}</p>
 					</div>
 				{:else}
-					<button class="btn secondary" onclick={toOverview}>{t('course.backToCourse')}</button>
+					{@const own = isOwnPly(course, si - 1)}
+					{@const mistake = study.kind === 'trap' && si - 1 === study.trap!.mistake}
+					<div class="study-card" class:own class:mistake>
+						<span class="who"
+							>{mistake
+								? t('course.theMistake')
+								: own
+									? t('course.you')
+									: t('course.opponent')}</span
+						>
+						<b class="s-san">{Math.ceil(si / 2)}{si % 2 === 1 ? '.' : '…'} {figurine(studySan)}</b>
+						{#if studyNote}<p>{studyNote}</p>{/if}
+					</div>
 				{/if}
-			{/if}
+				{#if si >= study.ucis.length}
+					{#if study.kind === 'line'}
+						<div class="done-box">
+							<p class="muted">{t('course.studyDoneText')}</p>
+							<button class="btn" onclick={() => startLine(study!.line!)}
+								><Dumbbell size={17} /> {t('course.studyDone')}</button
+							>
+						</div>
+					{:else}
+						<button class="btn secondary" onclick={toOverview}>{t('course.backToCourse')}</button>
+					{/if}
+				{/if}
+			</Dock>
 		</aside>
 	</div>
 {:else if view === 'quiz'}
@@ -608,44 +617,46 @@
 		</div>
 		<aside class="panel card">
 			<p class="crumb">{loc(course.name)} · {t('course.quizTitle')}</p>
-			{#if qState === 'done'}
-				<div class="done">
-					<span class="done-ico"><Check size={26} /></span>
-					<h2>{t('course.quizDone', { n: qScore, m: quiz.length })}</h2>
-					<div class="row-btns">
-						<button class="btn" onclick={startQuiz}
-							><Shuffle size={17} /> {t('course.quizAgain')}</button
-						>
-						<button class="btn secondary" onclick={toOverview}>{t('course.backToCourse')}</button>
+			<Dock>
+				{#if qState === 'done'}
+					<div class="done">
+						<span class="done-ico"><Check size={26} /></span>
+						<h2>{t('course.quizDone', { n: qScore, m: quiz.length })}</h2>
+						<div class="row-btns">
+							<button class="btn" onclick={startQuiz}
+								><Shuffle size={17} /> {t('course.quizAgain')}</button
+							>
+							<button class="btn secondary" onclick={toOverview}>{t('course.backToCourse')}</button>
+						</div>
 					</div>
-				</div>
-			{:else if quiz[qi]}
-				{@const it = quiz[qi]}
-				<span class="step-count">{qi + 1} / {quiz.length}</span>
-				<p class="prompt waiting">{t('course.quizPrompt', { line: loc(it.line.name) })}</p>
-				{#if qState === 'right'}
-					<p class="ok-text">{t('course.quizCorrect')}</p>
-					{#if it.line.notes[it.ply]}<p class="muted">{loc(it.line.notes[it.ply])}</p>{/if}
-				{:else if qState === 'wrong'}
-					{#if qFeedback}<div class="fb {qFeedback.kind}">
-							<b>{qFeedback.title}</b>
-							<p>{qFeedback.text}</p>
-						</div>{/if}
-					<p>
-						{t('course.quizWrong', { san: figurine(sanForUci(it.fen, it.uci)) })}
-					</p>
-					{#if it.line.notes[it.ply]}<p class="muted">{loc(it.line.notes[it.ply])}</p>{/if}
+				{:else if quiz[qi]}
+					{@const it = quiz[qi]}
+					<span class="step-count">{qi + 1} / {quiz.length}</span>
+					<p class="prompt waiting">{t('course.quizPrompt', { line: loc(it.line.name) })}</p>
+					{#if qState === 'right'}
+						<p class="ok-text">{t('course.quizCorrect')}</p>
+						{#if it.line.notes[it.ply]}<p class="muted">{loc(it.line.notes[it.ply])}</p>{/if}
+					{:else if qState === 'wrong'}
+						{#if qFeedback}<div class="fb {qFeedback.kind}">
+								<b>{qFeedback.title}</b>
+								<p>{qFeedback.text}</p>
+							</div>{/if}
+						<p>
+							{t('course.quizWrong', { san: figurine(sanForUci(it.fen, it.uci)) })}
+						</p>
+						{#if it.line.notes[it.ply]}<p class="muted">{loc(it.line.notes[it.ply])}</p>{/if}
+					{/if}
+					{#if qState !== 'await'}
+						<button
+							class="btn"
+							onclick={() => {
+								qi++;
+								loadQuiz();
+							}}>{t('common.next')} <ArrowRight size={17} /></button
+						>
+					{/if}
 				{/if}
-				{#if qState !== 'await'}
-					<button
-						class="btn"
-						onclick={() => {
-							qi++;
-							loadQuiz();
-						}}>{t('common.next')} <ArrowRight size={17} /></button
-					>
-				{/if}
-			{/if}
+			</Dock>
 		</aside>
 	</div>
 {:else}
@@ -700,38 +711,40 @@
 					</div>
 				</div>
 			{:else}
-				<div class="prompt" class:waiting={status === 'await'}>
-					{#if status === 'checking'}
-						{t('course.checking')}
-					{:else if status === 'await'}
-						{t('course.yourMove')}
-					{:else}
-						{t('course.watch')}
-					{/if}
-				</div>
-
-				{#if status === 'await'}
-					<div class="row-btns">
-						{#if hintLevel < 3}
-							<button class="btn secondary" onclick={hint}
-								><Lightbulb size={17} /> {t('course.hint')}</button
-							>
-						{/if}
-						{#if hintLevel < 3}
-							<button class="btn ghost" onclick={() => (hintLevel = 3)}
-								><Eye size={17} /> {t('course.showMove')}</button
-							>
+				<Dock>
+					<div class="prompt" class:waiting={status === 'await'}>
+						{#if status === 'checking'}
+							{t('course.checking')}
+						{:else if status === 'await'}
+							{t('course.yourMove')}
+						{:else}
+							{t('course.watch')}
 						{/if}
 					</div>
-					{#if hintLevel >= 1}
-						<p class="hint-text">
-							<Lightbulb size={15} />
-							{hintLevel >= 3
-								? figurine(sanForUci(fen, expected))
-								: t('course.hintPiece', { piece: hintPiece })}
-						</p>
+
+					{#if status === 'await'}
+						<div class="row-btns">
+							{#if hintLevel < 3}
+								<button class="btn secondary" onclick={hint}
+									><Lightbulb size={17} /> {t('course.hint')}</button
+								>
+							{/if}
+							{#if hintLevel < 3}
+								<button class="btn ghost" onclick={() => (hintLevel = 3)}
+									><Eye size={17} /> {t('course.showMove')}</button
+								>
+							{/if}
+						</div>
+						{#if hintLevel >= 1}
+							<p class="hint-text">
+								<Lightbulb size={15} />
+								{hintLevel >= 3
+									? figurine(sanForUci(fen, expected))
+									: t('course.hintPiece', { piece: hintPiece })}
+							</p>
+						{/if}
 					{/if}
-				{/if}
+				</Dock>
 			{/if}
 
 			<ol class="log">
@@ -942,6 +955,24 @@
 
 	.state.trap.avoid {
 		background: var(--bad);
+	}
+
+	:global(.docked) .stepper {
+		margin-top: 0;
+	}
+
+	/* feste Höhe: das Brett springt nicht, wenn die Erklärung länger oder kürzer ist */
+	:global(.docked) .study-card {
+		height: 7.2rem;
+		overflow-y: auto;
+		padding: 0.6rem 0.8rem;
+		gap: 0.2rem;
+		font-size: 0.92rem;
+		animation: none;
+	}
+
+	:global(.docked) .s-san {
+		font-size: 1.1rem;
 	}
 
 	.stepper {
@@ -1311,6 +1342,15 @@
 		from {
 			transform: scale(0.5);
 			opacity: 0;
+		}
+	}
+	/* Handy: Brett so groß, dass es neben der Aktionsleiste ganz sichtbar bleibt */
+	@media (max-width: 767px) {
+		.board-col {
+			max-width: min(
+				100%,
+				calc(100dvh - var(--dock-h) - var(--tabbar-h) - var(--safe-bottom) - var(--safe-top) - 75px)
+			);
 		}
 	}
 </style>

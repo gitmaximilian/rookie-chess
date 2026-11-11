@@ -18,3 +18,18 @@ test('Puzzle des Tages ist per Link erreichbar', async ({ page }) => {
 	await page.goto('/puzzles?mode=daily');
 	await expect(page.getByRole('button', { name: /Daily/ })).toHaveClass(/on/);
 });
+
+test('Handy: Hinweis und Lösung ohne Scrollen sichtbar, Brett frei', async ({ page, isMobile }) => {
+	test.skip(!isMobile, 'nur auf dem Handy');
+	await page.goto('/puzzles');
+	const hint = page.getByRole('button', { name: /Hint/ });
+	await expect(hint).toBeVisible({ timeout: 20_000 });
+	const vh = page.viewportSize()!.height;
+	const hb = (await hint.boundingBox())!;
+	expect(hb.y + hb.height).toBeLessThanOrEqual(vh);
+	await expect(page.locator('.dock-root')).toBeVisible();
+	const board = (await page.locator('cg-board').boundingBox())!;
+	const dockBox = (await page.locator('.dock-root').boundingBox())!;
+	expect(board.y + board.height).toBeLessThanOrEqual(dockBox.y + 2);
+	expect(await page.evaluate(() => window.scrollY)).toBe(0);
+});

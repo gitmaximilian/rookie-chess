@@ -305,3 +305,53 @@ button {
 		background-position: -50% 0;
 	}
 }
+
+/* ── Mobile Aktionsleiste (siehe lib/ui/dock.ts) ── */
+:root {
+	--dock-h: 0px;
+}
+
+.dock-root {
+	position: fixed;
+	left: max(0.6rem, var(--safe-left));
+	right: max(0.6rem, var(--safe-right));
+	bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 0.5rem);
+	z-index: 45;
+	display: flex;
+	flex-direction: column;
+	gap: 0.45rem;
+	padding: 0.55rem;
+	border-radius: 20px;
+	background: var(--surface);
+	border: 1px solid var(--line);
+	box-shadow: 0 8px 28px rgb(0 0 0 / 0.16);
+	max-height: 46dvh;
+	overflow-y: auto;
+	animation: dock-in 260ms var(--ease-out) both;
+}
+
+.dock-root:empty {
+	display: none;
+}
+
+@keyframes dock-in {
+	from {
+		opacity: 0;
+		transform: translateY(12px);
+	}
+}
+
+/* Platz schaffen, damit nichts dauerhaft unter der Leiste verschwindet */
+@media (max-width: 767px) {
+	body > main,
+	main {
+		padding-bottom: calc(var(--tabbar-h) + var(--safe-bottom) + var(--dock-h) + 2rem) !important;
+	}
+}
+
+.dock-item {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	min-width: 0;
+}

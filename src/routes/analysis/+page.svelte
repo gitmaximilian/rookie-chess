@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Dock from '#lib/ui/Dock.svelte';
 	import { onDestroy, onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
@@ -538,73 +539,78 @@
 					{/if}
 				</div>
 			</div>
-			<div class="nav">
-				<button onclick={() => go(0)} aria-label={t('analysis.nav.first')}
-					><ChevronsLeft size={22} /></button
-				>
-				<button onclick={() => go(ply - 1)} aria-label={t('analysis.nav.prev')}
-					><ChevronLeft size={22} /></button
-				>
-				<button onclick={() => go(ply + 1)} aria-label={t('analysis.nav.next')}
-					><ChevronRight size={22} /></button
-				>
-				<button onclick={() => go(total - 1)} aria-label={t('analysis.nav.last')}
-					><ChevronsRight size={22} /></button
-				>
-				<button
-					onclick={() => (orientation = orientation === 'white' ? 'black' : 'white')}
-					aria-label={t('analysis.nav.flip')}><RefreshCw size={19} /></button
-				>
-			</div>
+			<Dock order={2}>
+				<div class="nav">
+					<button onclick={() => go(0)} aria-label={t('analysis.nav.first')}
+						><ChevronsLeft size={22} /></button
+					>
+					<button onclick={() => go(ply - 1)} aria-label={t('analysis.nav.prev')}
+						><ChevronLeft size={22} /></button
+					>
+					<button onclick={() => go(ply + 1)} aria-label={t('analysis.nav.next')}
+						><ChevronRight size={22} /></button
+					>
+					<button onclick={() => go(total - 1)} aria-label={t('analysis.nav.last')}
+						><ChevronsRight size={22} /></button
+					>
+					<button
+						onclick={() => (orientation = orientation === 'white' ? 'black' : 'white')}
+						aria-label={t('analysis.nav.flip')}><RefreshCw size={19} /></button
+					>
+				</div>
+			</Dock>
 		</div>
 
 		<aside class="side">
 			{#if retry}
-				<div class="card retry" role="status">
-					{#if retry.status === 'done'}
-						<p class="m-title"><Target size={18} /> {t('retry.doneTitle')}</p>
-						<p class="m-text">{t('retry.doneText', { n: retry.found, m: myMistakes.length })}</p>
-						<div class="row-btns">
-							<button class="btn" onclick={() => (retry = null)}>{t('retry.close')}</button>
-							<a class="btn secondary" href={resolve('/puzzles?mode=mistakes')}
-								><Sparkles size={17} /> {t('analysis.practiceText')}</a
+				<Dock>
+					<div class="card retry" role="status">
+						{#if retry.status === 'done'}
+							<p class="m-title"><Target size={18} /> {t('retry.doneTitle')}</p>
+							<p class="m-text">{t('retry.doneText', { n: retry.found, m: myMistakes.length })}</p>
+							<div class="row-btns">
+								<button class="btn" onclick={() => (retry = null)}>{t('retry.close')}</button>
+								<a class="btn secondary" href={resolve('/puzzles?mode=mistakes')}
+									><Sparkles size={17} /> {t('analysis.practiceText')}</a
+								>
+							</div>
+						{:else if retryItem}
+							{@const mv = game.moves[retryItem.ply - 1]}
+							<span class="r-step"
+								>{t('retry.step', { i: retry.idx + 1, n: myMistakes.length })}</span
 							>
-						</div>
-					{:else if retryItem}
-						{@const mv = game.moves[retryItem.ply - 1]}
-						<span class="r-step">{t('retry.step', { i: retry.idx + 1, n: myMistakes.length })}</span
-						>
-						<p class="m-title">
-							{t('retry.prompt', {
-								move: `${Math.ceil(retryItem.ply / 2)}${retryItem.ply % 2 === 1 ? '.' : '…'} ${figurine(mv.san)}`
-							})}
-						</p>
-						{#if retry.status === 'checking'}
-							<p class="muted">{t('course.checking')}</p>
-						{:else if retry.status === 'solved'}
-							<p class="ok">{t('retry.solved')}</p>
-							{#if retryItem.explanation}<p class="m-text">
-									<b>{retryItem.explanation.title}:</b>
-									{retryItem.explanation.text}
-								</p>{/if}
-							<button class="btn" onclick={() => void nextRetry()}>{t('common.next')}</button>
-						{:else if retry.status === 'shown'}
-							{#if retry.fb}<p class="bad"><b>{retry.fb.title}</b> {retry.fb.text}</p>{/if}
-							<p class="m-text">
-								<Lightbulb size={15} />
-								{t('retry.best', { san: figurine(sanForUci(retryFen, retryBest)) })}
+							<p class="m-title">
+								{t('retry.prompt', {
+									move: `${Math.ceil(retryItem.ply / 2)}${retryItem.ply % 2 === 1 ? '.' : '…'} ${figurine(mv.san)}`
+								})}
 							</p>
-							{#if retryItem.explanation}<p class="m-text muted">
-									{retryItem.explanation.text}
-								</p>{/if}
-							<button class="btn" onclick={() => void nextRetry()}>{t('common.next')}</button>
-						{:else}
-							<p class="muted">{t('retry.hint')}</p>
-							{#if retry.fb}<p class="bad"><b>{retry.fb.title}</b> {retry.fb.text}</p>{/if}
+							{#if retry.status === 'checking'}
+								<p class="muted">{t('course.checking')}</p>
+							{:else if retry.status === 'solved'}
+								<p class="ok">{t('retry.solved')}</p>
+								{#if retryItem.explanation}<p class="m-text">
+										<b>{retryItem.explanation.title}:</b>
+										{retryItem.explanation.text}
+									</p>{/if}
+								<button class="btn" onclick={() => void nextRetry()}>{t('common.next')}</button>
+							{:else if retry.status === 'shown'}
+								{#if retry.fb}<p class="bad"><b>{retry.fb.title}</b> {retry.fb.text}</p>{/if}
+								<p class="m-text">
+									<Lightbulb size={15} />
+									{t('retry.best', { san: figurine(sanForUci(retryFen, retryBest)) })}
+								</p>
+								{#if retryItem.explanation}<p class="m-text muted">
+										{retryItem.explanation.text}
+									</p>{/if}
+								<button class="btn" onclick={() => void nextRetry()}>{t('common.next')}</button>
+							{:else}
+								<p class="muted">{t('retry.hint')}</p>
+								{#if retry.fb}<p class="bad"><b>{retry.fb.title}</b> {retry.fb.text}</p>{/if}
+							{/if}
+							<button class="link-btn" onclick={() => (retry = null)}>{t('retry.close')}</button>
 						{/if}
-						<button class="link-btn" onclick={() => (retry = null)}>{t('retry.close')}</button>
-					{/if}
-				</div>
+					</div>
+				</Dock>
 			{:else if myMistakes.length && progress >= 1 && !analysing}
 				<button class="card retry-cta" onclick={startRetry}>
 					<span class="rc-ico"><Target size={20} /></span>
@@ -635,6 +641,31 @@
 				</div>
 			{/if}
 
+			{#if !retry && ply > 0 && currentReview}
+				{@const mvc = game.moves[ply - 1]}
+				<Dock order={1} mobileOnly>
+					<div class="mini-move">
+						<div class="mm-head">
+							<b>{Math.ceil(ply / 2)}{ply % 2 === 1 ? '.' : '…'} {figurine(mvc.san)}</b>
+							<span class="badge {currentReview.judgement}"
+								>{judgementLabel(currentReview.judgement)}</span
+							>
+							{#if evalHere}<span class="m-eval">{formatScore(evalHere)}</span>{/if}
+						</div>
+						<p class="mm-text">
+							{#if currentReview.explanation}<b>{currentReview.explanation.title}:</b>
+								{currentReview.explanation.text}
+							{:else if currentReview.judgement === 'best'}{t('analysis.best')}
+							{:else}{t('analysis.solid')}{/if}
+							{#if evalHere?.best && ply < total - 1}
+								<span class="mm-best"
+									>{t('analysis.bestHere')} <b>{figurine(sanForUci(fen, evalHere.best))}</b></span
+								>
+							{/if}
+						</p>
+					</div>
+				</Dock>
+			{/if}
 			<div class="card move-card" class:has={!!currentReview}>
 				{#if ply === 0}
 					<p class="m-title">{t('analysis.start')}</p>
@@ -1330,10 +1361,68 @@
 		flex: 1;
 	}
 
+	.mini-move {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		padding: 0.1rem 0.25rem;
+	}
+
+	.mm-head {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.mm-head b {
+		font-family: var(--font-display);
+		font-size: 1.05rem;
+	}
+
+	.mm-text {
+		font-size: 0.86rem;
+		line-height: 1.4;
+		color: var(--text-2);
+		display: -webkit-box;
+		-webkit-line-clamp: 4;
+		line-clamp: 4;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+
+	.mm-text b {
+		color: var(--text);
+	}
+
+	.mm-best {
+		display: block;
+		margin-top: 0.15rem;
+	}
+
+	:global(.docked) .nav {
+		margin: 0;
+	}
+
+	:global(.docked) .retry {
+		box-shadow: none;
+		border: none;
+		background: none;
+		padding: 0.2rem 0.3rem;
+	}
+
 	.moves-card {
 		padding: 0.5rem;
 		max-height: 260px;
 		display: flex;
 		flex-direction: column;
+	}
+	/* Handy: Brett so groß, dass es neben der Aktionsleiste ganz sichtbar bleibt */
+	@media (max-width: 767px) {
+		.board-col {
+			max-width: min(
+				100%,
+				calc(100dvh - var(--dock-h) - var(--tabbar-h) - var(--safe-bottom) - var(--safe-top) - 80px)
+			);
+		}
 	}
 </style>

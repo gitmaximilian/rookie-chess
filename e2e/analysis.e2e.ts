@@ -14,8 +14,8 @@ test('PGN analysieren: Patzer wird erkannt und erklärt', async ({ page }) => {
 	await expect(page).toHaveURL(/analysis\?game=\d+/);
 	await expect(page.locator('.summary')).toBeVisible({ timeout: 60_000 });
 	await page.getByRole('button', { name: /xd1/ }).click();
-	await expect(page.locator('.badge')).toHaveText('Blunder');
-	await expect(page.getByText('Allowed mate')).toBeVisible();
+	await expect(page.locator('.move-card .badge')).toHaveText('Blunder');
+	await expect(page.locator('.move-card').getByText('Allowed mate')).toBeVisible();
 	// Tastatur-Navigation
 	await page.keyboard.press('Home');
 	await expect(page.getByText('Starting position')).toBeVisible();

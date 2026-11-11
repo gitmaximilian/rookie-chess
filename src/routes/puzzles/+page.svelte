@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Dock from '#lib/ui/Dock.svelte';
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
@@ -474,47 +475,54 @@
 				{/if}
 
 				{#if status === 'solved' || status === 'failed'}
-					<div class="result" class:good={status === 'solved'}>
-						{#if status === 'solved'}
-							<p class="big">
-								{usedHint ? t('puzzles.withHint') : t('puzzles.praise').split('|')[praiseIdx]}
-							</p>
-						{:else}
-							<p class="big">{t('puzzles.noProblem')}</p>
-						{/if}
-						{#if nextReview}
-							<p class="sub"><Repeat size={14} /> {t('puzzles.reviewIn', { when: nextReview })}</p>
-						{/if}
-					</div>
-					<div class="actions">
-						<button class="btn grow" onclick={next}
-							>{t('common.next')} <ArrowRight size={18} /></button
-						>
-						{#if status === 'failed'}
-							<button class="btn secondary" onclick={retry} title={t('common.retry')}
-								><RotateCcw size={18} /></button
+					<Dock class="pz-dock">
+						<div class="result" class:good={status === 'solved'}>
+							{#if status === 'solved'}
+								<p class="big">
+									{usedHint ? t('puzzles.withHint') : t('puzzles.praise').split('|')[praiseIdx]}
+								</p>
+							{:else}
+								<p class="big">{t('puzzles.noProblem')}</p>
+							{/if}
+							{#if nextReview}
+								<p class="sub">
+									<Repeat size={14} />
+									{t('puzzles.reviewIn', { when: nextReview })}
+								</p>
+							{/if}
+						</div>
+						<div class="actions">
+							<button class="btn grow" onclick={next}
+								>{t('common.next')} <ArrowRight size={18} /></button
 							>
-						{/if}
-					</div>
+							{#if status === 'failed'}
+								<button class="btn secondary" onclick={retry} title={t('common.retry')}
+									><RotateCcw size={18} /></button
+								>
+							{/if}
+						</div>
+					</Dock>
 					<p class="kbd">{t('common.enterNext')}</p>
 				{:else}
-					<div class="actions">
-						<button class="btn secondary grow" onclick={hint} disabled={status !== 'solving'}>
-							<Lightbulb size={18} />
-							{usedHint ? t('common.moreHint') : t('common.hint')}
-						</button>
-						<button
-							class="btn secondary grow"
-							onclick={showSolution}
-							disabled={status !== 'solving'}
-						>
-							<Eye size={18} />
-							{t('common.solution')}
-						</button>
-					</div>
-					{#if run && run.mistakes > 0}
-						<p class="try-again">{t('puzzles.tryAgain')}</p>
-					{/if}
+					<Dock class="pz-dock">
+						{#if run && run.mistakes > 0}
+							<p class="try-again">{t('puzzles.tryAgain')}</p>
+						{/if}
+						<div class="actions">
+							<button class="btn secondary grow" onclick={hint} disabled={status !== 'solving'}>
+								<Lightbulb size={18} />
+								{usedHint ? t('common.moreHint') : t('common.hint')}
+							</button>
+							<button
+								class="btn secondary grow"
+								onclick={showSolution}
+								disabled={status !== 'solving'}
+							>
+								<Eye size={18} />
+								{t('common.solution')}
+							</button>
+						</div>
+					</Dock>
 				{/if}
 
 				<div class="today">
@@ -897,6 +905,17 @@
 		from {
 			opacity: 0;
 			transform: translateY(6px);
+		}
+	}
+	/* Handy: Brett so groß, dass es neben der Aktionsleiste ganz sichtbar bleibt */
+	@media (max-width: 767px) {
+		.board-col {
+			max-width: min(
+				100%,
+				calc(
+					100dvh - var(--dock-h) - var(--tabbar-h) - var(--safe-bottom) - var(--safe-top) - 190px
+				)
+			);
 		}
 	}
 </style>
