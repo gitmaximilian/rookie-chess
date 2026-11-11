@@ -25,6 +25,9 @@
 				if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
 				var l = localStorage.getItem('rookie:lang');
 				if (l === 'de' || l === 'en') document.documentElement.lang = l;
+				var b = JSON.parse(localStorage.getItem('rookie:board') || '{}');
+				if (b.theme) document.documentElement.setAttribute('data-board', b.theme);
+				if (b.pieces) document.documentElement.setAttribute('data-pieces', b.pieces);
 			} catch (e) {}
 		</script>
 		%sveltekit.head%

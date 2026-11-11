@@ -10,6 +10,8 @@
 	import 'chessground/assets/chessground.base.css';
 	import 'chessground/assets/chessground.cburnett.css';
 	import './board.css';
+	import './pieces.css';
+	import { boardPrefs, animationMs } from './prefs.svelte.js';
 	import { onDestroy, onMount } from 'svelte';
 	import { t } from '#lib/i18n/i18n.svelte.js';
 	import { Chessground } from 'chessground';
@@ -93,13 +95,15 @@
 			turnColor,
 			lastMove: lastMove as Key[] | undefined,
 			check: check ? turnColor : false,
-			coordinates,
+			coordinates: coordinates && boardPrefs.coordinates,
 			viewOnly,
+			animation: { enabled: boardPrefs.animation !== 'off', duration: animationMs() },
+			highlight: { lastMove: boardPrefs.highlightLast, check: true },
 			movable: {
 				free: false,
 				color: canMove ? (movableColor ?? turnColor) : undefined,
 				dests: (canMove ? dests : new Map()) as Map<Key, Key[]>,
-				showDests: true
+				showDests: boardPrefs.showDests
 			},
 			drawable: { autoShapes: toDrawShapes(shapes) }
 		};
@@ -108,8 +112,6 @@
 	onMount(() => {
 		cg = Chessground(el, {
 			...config(),
-			animation: { enabled: true, duration: 220 },
-			highlight: { lastMove: true, check: true },
 			premovable: { enabled: false },
 			draggable: { enabled: true, showGhost: true, distance: 3 },
 			blockTouchScroll: true,
@@ -143,7 +145,11 @@
 			movableColor,
 			viewOnly,
 			shapes,
-			coordinates
+			coordinates,
+			boardPrefs.coordinates,
+			boardPrefs.animation,
+			boardPrefs.showDests,
+			boardPrefs.highlightLast
 		];
 		if (cg) cg.set(config());
 	});

@@ -41,6 +41,30 @@
 			license: 'AGPL-3.0',
 			url: 'https://tablebase.lichess.ovh'
 		},
+		{
+			name: 'Merida (A. H. Marroquin), cburnett (C. M. L. Burnett)',
+			key: 'pieces',
+			license: 'GPL-2.0+',
+			url: 'https://github.com/lichess-org/lila/blob/master/COPYING.md'
+		},
+		{
+			name: 'Chessnut (Alexis Luengas)',
+			key: 'pieces',
+			license: 'Apache-2.0',
+			url: 'https://github.com/LexLuengas/chessnut-pieces'
+		},
+		{
+			name: 'Fantasy, Spatial (Maurizio Monge)',
+			key: 'pieces',
+			license: 'MIT',
+			url: 'https://github.com/maurimo/chess-art'
+		},
+		{
+			name: 'mpchess (Maxime Chupin)',
+			key: 'pieces',
+			license: 'GPL-3.0+',
+			url: 'https://github.com/chupinmaxime'
+		},
 		{ name: 'Lucide', key: 'lucide', license: 'ISC', url: 'https://lucide.dev' },
 		{
 			name: 'Bricolage Grotesque',

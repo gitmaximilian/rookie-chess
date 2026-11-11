@@ -16,6 +16,18 @@
 	import { db, getSetting, setSetting, TABLES } from '#lib/db/db.js';
 	import { getThemePref, setThemePref, type ThemePref } from '#lib/ui/theme.js';
 	import { sound, SOUND_STYLES, type SoundStyle } from '#lib/ui/sound.js';
+	import Board from '#lib/ui/board/Board.svelte';
+	import {
+		boardPrefs,
+		setBoardPref,
+		BOARD_THEMES,
+		PIECE_SETS,
+		ANIMATIONS
+	} from '#lib/ui/board/prefs.svelte.js';
+	import Palette from '@lucide/svelte/icons/palette';
+
+	// Vorschau: eine lebendige Stellung mit letztem Zug
+	const PREVIEW_FEN = 'r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4';
 	import Languages from '@lucide/svelte/icons/languages';
 	import { t, i18n, LOCALES } from '#lib/i18n/i18n.svelte.js';
 
@@ -203,6 +215,81 @@
 		{/if}
 	</section>
 
+	<section class="card block board-prefs">
+		<h2><Palette size={18} /> {t('settings.boardTitle')}</h2>
+		<div class="bp-grid">
+			<div class="preview">
+				<Board
+					fen={PREVIEW_FEN}
+					lastMove={['b8', 'c6']}
+					viewOnly
+					label={t('settings.boardTitle')}
+				/>
+			</div>
+			<div class="bp-opts">
+				<span class="opt-label">{t('settings.boardTheme')}</span>
+				<div class="swatches" role="radiogroup" aria-label={t('settings.boardTheme')}>
+					{#each BOARD_THEMES as th (th)}
+						<button
+							role="radio"
+							aria-checked={boardPrefs.theme === th}
+							aria-label={t(`settings.themes.${th}`)}
+							title={t(`settings.themes.${th}`)}
+							class="swatch-btn"
+							class:on={boardPrefs.theme === th}
+							data-board-preview={th}
+							onclick={() => setBoardPref('theme', th)}
+						>
+							<span class="sq a"></span><span class="sq b"></span><span class="sq b"></span><span
+								class="sq a"
+							></span>
+						</button>
+					{/each}
+				</div>
+
+				<span class="opt-label">{t('settings.pieceSet')}</span>
+				<div class="sets" role="radiogroup" aria-label={t('settings.pieceSet')}>
+					{#each PIECE_SETS as ps (ps)}
+						<button
+							role="radio"
+							aria-checked={boardPrefs.pieces === ps}
+							aria-label={ps}
+							title={ps}
+							class="set-btn"
+							class:on={boardPrefs.pieces === ps}
+							onclick={() => setBoardPref('pieces', ps)}
+						>
+							{#if ps === 'cburnett'}
+								<span class="cg-wrap mini"><piece class="knight white"></piece></span>
+							{:else}
+								<img src="/pieces/{ps}/wN.svg" alt="" width="34" height="34" />
+							{/if}
+						</button>
+					{/each}
+				</div>
+
+				<span class="opt-label">{t('settings.animation')}</span>
+				<div class="seg" role="radiogroup" aria-label={t('settings.animation')}>
+					{#each ANIMATIONS as an (an)}
+						<button
+							role="radio"
+							aria-checked={boardPrefs.animation === an}
+							class:on={boardPrefs.animation === an}
+							onclick={() => setBoardPref('animation', an)}>{t(`settings.anim.${an}`)}</button
+						>
+					{/each}
+				</div>
+
+				{#each [['coordinates', 'settings.coords'], ['showDests', 'settings.showDests'], ['highlightLast', 'settings.highlightLast']] as const as [key, label] (key)}
+					<button class="row toggle" onclick={() => setBoardPref(key, !boardPrefs[key])}>
+						<span class="txt">{t(label)}</span>
+						<span class="switch" class:on={boardPrefs[key]} aria-hidden="true"><span></span></span>
+					</button>
+				{/each}
+			</div>
+		</div>
+	</section>
+
 	<section class="card block">
 		<h2><Target size={18} /> {t('settings.goal')}</h2>
 		<p class="hint">{t('settings.goalText')}</p>
@@ -305,6 +392,132 @@
 		font-size: 0.85rem;
 		font-weight: 600;
 		color: var(--text-3);
+	}
+
+	.bp-grid {
+		display: grid;
+		gap: 1.1rem;
+	}
+
+	@media (min-width: 760px) {
+		.bp-grid {
+			grid-template-columns: 260px 1fr;
+			align-items: start;
+		}
+	}
+
+	.preview {
+		width: 100%;
+		max-width: 300px;
+		margin: 0 auto;
+		border-radius: 12px;
+		overflow: hidden;
+	}
+
+	.bp-opts {
+		display: flex;
+		flex-direction: column;
+		gap: 0.55rem;
+	}
+
+	.opt-label {
+		font-size: 0.85rem;
+		font-weight: 650;
+		color: var(--text-2);
+		margin-top: 0.3rem;
+	}
+
+	.swatches,
+	.sets {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+	}
+
+	.swatch-btn {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		width: 44px;
+		height: 44px;
+		padding: 0;
+		border-radius: 10px;
+		overflow: hidden;
+		border: 2px solid transparent;
+		cursor: pointer;
+		box-shadow: var(--shadow-1);
+	}
+
+	.swatch-btn .a {
+		background: var(--pv-light);
+	}
+
+	.swatch-btn .b {
+		background: var(--pv-dark);
+	}
+
+	.swatch-btn.on,
+	.set-btn.on {
+		border-color: var(--accent);
+		box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+	}
+
+	[data-board-preview='wood'] {
+		--pv-light: #f0e6d4;
+		--pv-dark: #b98a5f;
+	}
+	[data-board-preview='brown'] {
+		--pv-light: #f0d9b5;
+		--pv-dark: #b58863;
+	}
+	[data-board-preview='green'] {
+		--pv-light: #eeeed2;
+		--pv-dark: #769656;
+	}
+	[data-board-preview='blue'] {
+		--pv-light: #dee3e6;
+		--pv-dark: #8ca2ad;
+	}
+	[data-board-preview='slate'] {
+		--pv-light: #c9cdd2;
+		--pv-dark: #6e7681;
+	}
+	[data-board-preview='purple'] {
+		--pv-light: #e5dcf5;
+		--pv-dark: #9378c4;
+	}
+	[data-board-preview='coral'] {
+		--pv-light: #f5e3d7;
+		--pv-dark: #d9826a;
+	}
+
+	.set-btn {
+		display: grid;
+		place-items: center;
+		width: 48px;
+		height: 48px;
+		border-radius: 12px;
+		border: 2px solid var(--line);
+		background: var(--surface-2);
+		cursor: pointer;
+	}
+
+	.mini {
+		position: relative;
+		display: block;
+		width: 34px;
+		height: 34px;
+	}
+
+	.mini :global(piece) {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		background-size: cover;
+	}
+
+	.toggle {
+		margin-top: 0.1rem;
 	}
 
 	.seg {

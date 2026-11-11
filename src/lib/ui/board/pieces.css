@@ -1,0 +1,181 @@
+/* Generiert: Figurensätze aus lichess-org/lila (Lizenzen siehe Über Rookie) */
+:root[data-pieces='merida'] .cg-wrap piece.king.white {
+	background-image: url('/pieces/merida/wK.svg');
+}
+:root[data-pieces='merida'] .cg-wrap piece.queen.white {
+	background-image: url('/pieces/merida/wQ.svg');
+}
+:root[data-pieces='merida'] .cg-wrap piece.rook.white {
+	background-image: url('/pieces/merida/wR.svg');
+}
+:root[data-pieces='merida'] .cg-wrap piece.bishop.white {
+	background-image: url('/pieces/merida/wB.svg');
+}
+:root[data-pieces='merida'] .cg-wrap piece.knight.white {
+	background-image: url('/pieces/merida/wN.svg');
+}
+:root[data-pieces='merida'] .cg-wrap piece.pawn.white {
+	background-image: url('/pieces/merida/wP.svg');
+}
+:root[data-pieces='merida'] .cg-wrap piece.king.black {
+	background-image: url('/pieces/merida/bK.svg');
+}
+:root[data-pieces='merida'] .cg-wrap piece.queen.black {
+	background-image: url('/pieces/merida/bQ.svg');
+}
+:root[data-pieces='merida'] .cg-wrap piece.rook.black {
+	background-image: url('/pieces/merida/bR.svg');
+}
+:root[data-pieces='merida'] .cg-wrap piece.bishop.black {
+	background-image: url('/pieces/merida/bB.svg');
+}
+:root[data-pieces='merida'] .cg-wrap piece.knight.black {
+	background-image: url('/pieces/merida/bN.svg');
+}
+:root[data-pieces='merida'] .cg-wrap piece.pawn.black {
+	background-image: url('/pieces/merida/bP.svg');
+}
+:root[data-pieces='chessnut'] .cg-wrap piece.king.white {
+	background-image: url('/pieces/chessnut/wK.svg');
+}
+:root[data-pieces='chessnut'] .cg-wrap piece.queen.white {
+	background-image: url('/pieces/chessnut/wQ.svg');
+}
+:root[data-pieces='chessnut'] .cg-wrap piece.rook.white {
+	background-image: url('/pieces/chessnut/wR.svg');
+}
+:root[data-pieces='chessnut'] .cg-wrap piece.bishop.white {
+	background-image: url('/pieces/chessnut/wB.svg');
+}
+:root[data-pieces='chessnut'] .cg-wrap piece.knight.white {
+	background-image: url('/pieces/chessnut/wN.svg');
+}
+:root[data-pieces='chessnut'] .cg-wrap piece.pawn.white {
+	background-image: url('/pieces/chessnut/wP.svg');
+}
+:root[data-pieces='chessnut'] .cg-wrap piece.king.black {
+	background-image: url('/pieces/chessnut/bK.svg');
+}
+:root[data-pieces='chessnut'] .cg-wrap piece.queen.black {
+	background-image: url('/pieces/chessnut/bQ.svg');
+}
+:root[data-pieces='chessnut'] .cg-wrap piece.rook.black {
+	background-image: url('/pieces/chessnut/bR.svg');
+}
+:root[data-pieces='chessnut'] .cg-wrap piece.bishop.black {
+	background-image: url('/pieces/chessnut/bB.svg');
+}
+:root[data-pieces='chessnut'] .cg-wrap piece.knight.black {
+	background-image: url('/pieces/chessnut/bN.svg');
+}
+:root[data-pieces='chessnut'] .cg-wrap piece.pawn.black {
+	background-image: url('/pieces/chessnut/bP.svg');
+}
+:root[data-pieces='fantasy'] .cg-wrap piece.king.white {
+	background-image: url('/pieces/fantasy/wK.svg');
+}
+:root[data-pieces='fantasy'] .cg-wrap piece.queen.white {
+	background-image: url('/pieces/fantasy/wQ.svg');
+}
+:root[data-pieces='fantasy'] .cg-wrap piece.rook.white {
+	background-image: url('/pieces/fantasy/wR.svg');
+}
+:root[data-pieces='fantasy'] .cg-wrap piece.bishop.white {
+	background-image: url('/pieces/fantasy/wB.svg');
+}
+:root[data-pieces='fantasy'] .cg-wrap piece.knight.white {
+	background-image: url('/pieces/fantasy/wN.svg');
+}
+:root[data-pieces='fantasy'] .cg-wrap piece.pawn.white {
+	background-image: url('/pieces/fantasy/wP.svg');
+}
+:root[data-pieces='fantasy'] .cg-wrap piece.king.black {
+	background-image: url('/pieces/fantasy/bK.svg');
+}
+:root[data-pieces='fantasy'] .cg-wrap piece.queen.black {
+	background-image: url('/pieces/fantasy/bQ.svg');
+}
+:root[data-pieces='fantasy'] .cg-wrap piece.rook.black {
+	background-image: url('/pieces/fantasy/bR.svg');
+}
+:root[data-pieces='fantasy'] .cg-wrap piece.bishop.black {
+	background-image: url('/pieces/fantasy/bB.svg');
+}
+:root[data-pieces='fantasy'] .cg-wrap piece.knight.black {
+	background-image: url('/pieces/fantasy/bN.svg');
+}
+:root[data-pieces='fantasy'] .cg-wrap piece.pawn.black {
+	background-image: url('/pieces/fantasy/bP.svg');
+}
+:root[data-pieces='spatial'] .cg-wrap piece.king.white {
+	background-image: url('/pieces/spatial/wK.svg');
+}
+:root[data-pieces='spatial'] .cg-wrap piece.queen.white {
+	background-image: url('/pieces/spatial/wQ.svg');
+}
+:root[data-pieces='spatial'] .cg-wrap piece.rook.white {
+	background-image: url('/pieces/spatial/wR.svg');
+}
+:root[data-pieces='spatial'] .cg-wrap piece.bishop.white {
+	background-image: url('/pieces/spatial/wB.svg');
+}
+:root[data-pieces='spatial'] .cg-wrap piece.knight.white {
+	background-image: url('/pieces/spatial/wN.svg');
+}
+:root[data-pieces='spatial'] .cg-wrap piece.pawn.white {
+	background-image: url('/pieces/spatial/wP.svg');
+}
+:root[data-pieces='spatial'] .cg-wrap piece.king.black {
+	background-image: url('/pieces/spatial/bK.svg');
+}
+:root[data-pieces='spatial'] .cg-wrap piece.queen.black {
+	background-image: url('/pieces/spatial/bQ.svg');
+}
+:root[data-pieces='spatial'] .cg-wrap piece.rook.black {
+	background-image: url('/pieces/spatial/bR.svg');
+}
+:root[data-pieces='spatial'] .cg-wrap piece.bishop.black {
+	background-image: url('/pieces/spatial/bB.svg');
+}
+:root[data-pieces='spatial'] .cg-wrap piece.knight.black {
+	background-image: url('/pieces/spatial/bN.svg');
+}
+:root[data-pieces='spatial'] .cg-wrap piece.pawn.black {
+	background-image: url('/pieces/spatial/bP.svg');
+}
+:root[data-pieces='mpchess'] .cg-wrap piece.king.white {
+	background-image: url('/pieces/mpchess/wK.svg');
+}
+:root[data-pieces='mpchess'] .cg-wrap piece.queen.white {
+	background-image: url('/pieces/mpchess/wQ.svg');
+}
+:root[data-pieces='mpchess'] .cg-wrap piece.rook.white {
+	background-image: url('/pieces/mpchess/wR.svg');
+}
+:root[data-pieces='mpchess'] .cg-wrap piece.bishop.white {
+	background-image: url('/pieces/mpchess/wB.svg');
+}
+:root[data-pieces='mpchess'] .cg-wrap piece.knight.white {
+	background-image: url('/pieces/mpchess/wN.svg');
+}
+:root[data-pieces='mpchess'] .cg-wrap piece.pawn.white {
+	background-image: url('/pieces/mpchess/wP.svg');
+}
+:root[data-pieces='mpchess'] .cg-wrap piece.king.black {
+	background-image: url('/pieces/mpchess/bK.svg');
+}
+:root[data-pieces='mpchess'] .cg-wrap piece.queen.black {
+	background-image: url('/pieces/mpchess/bQ.svg');
+}
+:root[data-pieces='mpchess'] .cg-wrap piece.rook.black {
+	background-image: url('/pieces/mpchess/bR.svg');
+}
+:root[data-pieces='mpchess'] .cg-wrap piece.bishop.black {
+	background-image: url('/pieces/mpchess/bB.svg');
+}
+:root[data-pieces='mpchess'] .cg-wrap piece.knight.black {
+	background-image: url('/pieces/mpchess/bN.svg');
+}
+:root[data-pieces='mpchess'] .cg-wrap piece.pawn.black {
+	background-image: url('/pieces/mpchess/bP.svg');
+}

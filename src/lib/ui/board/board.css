@@ -9,6 +9,49 @@
 	--sq-coord-dark: #f0e6d4;
 }
 
+/* Brettfarben (Einstellungen → Brett & Figuren) */
+:root[data-board='brown'] {
+	--sq-light: #f0d9b5;
+	--sq-dark: #b58863;
+	--sq-coord-light: #b58863;
+	--sq-coord-dark: #f0d9b5;
+}
+:root[data-board='green'] {
+	--sq-light: #eeeed2;
+	--sq-dark: #769656;
+	--sq-last: rgb(246 246 105 / 0.55);
+	--sq-coord-light: #769656;
+	--sq-coord-dark: #eeeed2;
+}
+:root[data-board='blue'] {
+	--sq-light: #dee3e6;
+	--sq-dark: #8ca2ad;
+	--sq-last: rgb(155 199 0 / 0.41);
+	--sq-coord-light: #8ca2ad;
+	--sq-coord-dark: #dee3e6;
+}
+:root[data-board='slate'] {
+	--sq-light: #c9cdd2;
+	--sq-dark: #6e7681;
+	--sq-last: rgb(120 170 230 / 0.45);
+	--sq-coord-light: #6e7681;
+	--sq-coord-dark: #c9cdd2;
+}
+:root[data-board='purple'] {
+	--sq-light: #e5dcf5;
+	--sq-dark: #9378c4;
+	--sq-last: rgb(255 214 102 / 0.5);
+	--sq-coord-light: #9378c4;
+	--sq-coord-dark: #e5dcf5;
+}
+:root[data-board='coral'] {
+	--sq-light: #f5e3d7;
+	--sq-dark: #d9826a;
+	--sq-last: rgb(255 230 120 / 0.5);
+	--sq-coord-light: #d9826a;
+	--sq-coord-dark: #f5e3d7;
+}
+
 .cg-wrap {
 	width: 100%;
 	height: 100%;
