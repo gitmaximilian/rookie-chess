@@ -8,7 +8,19 @@ export default defineConfig({
 	},
 	testDir: 'e2e',
 	testMatch: '**/*.e2e.{ts,js}',
-	use: { baseURL: 'http://localhost:4173' },
+	use: {
+		baseURL: 'http://localhost:4173',
+		// Installations-Hinweis in den üblichen Tests ausblenden (eigener Test: install.e2e.ts)
+		storageState: {
+			cookies: [],
+			origins: [
+				{
+					origin: 'http://localhost:4173',
+					localStorage: [{ name: 'rookie:installDismissed', value: '9999999999999' }]
+				}
+			]
+		}
+	},
 	projects: [
 		// Safari-Engine wie auf iPhone und Mac
 		{ name: 'iphone', use: { ...devices['iPhone 15'] } },

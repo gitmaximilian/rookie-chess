@@ -16,6 +16,8 @@ A chess trainer for beginners as a Progressive Web App for iPhone, iPad and Mac 
 - **Opening courses** – 14 openings and defences with explained lines; guided learning with hints, Stockfish explains wrong moves; learned lines go into your repertoire for spaced repetition
 - **Linked accounts** – link your Lichess / Chess.com username once, new games are imported and analysed automatically
 - **Profile & statistics** – rating history, activity, results by colour/time control/opponent strength, openings, accuracy by game phase, typical mistakes, personal insights
+- **Optional account** – passkey sign-in (no email, no password), progress synced across devices; export and delete at any time
+- **Install prompt** on phones – one-tap install on Android, step-by-step guide on iPhone/iPad
 - Light/dark mode, English/German, 7 board themes, 6 piece sets, animation speed, 3 sound styles, backup export/import, works offline
 
 ## Development

@@ -851,6 +851,27 @@ export const de: Shape<typeof en> = {
 			giantKiller: (p: P) => `Gegen stärkere Gegner holst du ${p.pct} % – stark!`
 		}
 	},
+	install: {
+		title: 'Rookie als App installieren',
+		short: 'Vollbild und offline.',
+		pitch: 'Vollbild, offline, ein Tipp vom Home-Bildschirm.',
+		install: 'Installieren',
+		how: 'So geht’s',
+		later: 'Nicht jetzt',
+		gotIt: 'Verstanden',
+		guideTitle: 'Rookie zum Home-Bildschirm hinzufügen',
+		guideLead:
+			'Drei Tipps – ganz ohne App Store. Rookie öffnet sich danach wie eine normale App, auch offline.',
+		ios1: 'Tippe auf das Teilen-Symbol in der Leiste unten in Safari.',
+		ios1ipad: 'Tippe auf das Teilen-Symbol oben rechts in Safari.',
+		ios2: 'Scrolle nach unten und wähle „Zum Home-Bildschirm“.',
+		ios3: 'Tippe auf „Hinzufügen“ – fertig. Rookie liegt jetzt auf deinem Home-Bildschirm.',
+		iosNote: 'Du findest den Punkt nicht? Öffne diese Seite zuerst in Safari.',
+		other1: 'Öffne das Menü deines Browsers.',
+		other2: 'Wähle „App installieren“ oder „Zum Startbildschirm hinzufügen“.',
+		settingsRow: 'Als App installieren',
+		installed: 'Rookie ist als App installiert.'
+	},
 	about: {
 		eyebrow: 'Open Source',
 		title: 'Über Rookie',

@@ -18,6 +18,9 @@
 	import { sound, SOUND_STYLES, type SoundStyle } from '#lib/ui/sound.js';
 	import Board from '#lib/ui/board/Board.svelte';
 	import AccountCard from '#lib/ui/AccountCard.svelte';
+	import { install, startInstall } from '#lib/ui/install.svelte.js';
+	import Smartphone from '@lucide/svelte/icons/smartphone';
+	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import {
 		boardPrefs,
 		setBoardPref,
@@ -149,6 +152,15 @@
 	{/if}
 
 	<AccountCard />
+
+	{#if !install.standalone}
+		<button class="card install-row" onclick={startInstall}>
+			<span class="ir-ico"><Smartphone size={20} /></span>
+			<span class="ir-text"><b>{t('install.settingsRow')}</b><span>{t('install.pitch')}</span></span
+			>
+			<ChevronRight size={18} />
+		</button>
+	{/if}
 
 	<section class="card block">
 		<h2>{t('settings.appearance')}</h2>
@@ -395,6 +407,41 @@
 		font-size: 0.85rem;
 		font-weight: 600;
 		color: var(--text-3);
+	}
+
+	.install-row {
+		display: flex;
+		align-items: center;
+		gap: 0.85rem;
+		padding: 0.9rem 1rem;
+		border: none;
+		text-align: left;
+		font: inherit;
+		color: var(--text-2);
+		cursor: pointer;
+	}
+
+	.ir-ico {
+		display: grid;
+		place-items: center;
+		width: 38px;
+		height: 38px;
+		border-radius: 11px;
+		background: var(--accent-soft);
+		color: var(--accent);
+	}
+
+	.ir-text {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		color: var(--text);
+		line-height: 1.3;
+	}
+
+	.ir-text span {
+		font-size: 0.82rem;
+		color: var(--text-2);
 	}
 
 	.bp-grid {

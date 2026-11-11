@@ -803,6 +803,27 @@ export const en = {
 			giantKiller: (p: P) => `You score ${p.pct}% against stronger opponents – impressive!`
 		}
 	},
+	install: {
+		title: 'Install Rookie as an app',
+		short: 'Full screen and offline.',
+		pitch: 'Full screen, offline, one tap from your home screen.',
+		install: 'Install',
+		how: 'Show me how',
+		later: 'Not now',
+		gotIt: 'Got it',
+		guideTitle: 'Add Rookie to your home screen',
+		guideLead:
+			'Three taps – no App Store needed. Rookie then opens like a normal app, also offline.',
+		ios1: 'Tap the Share button in the bar at the bottom of Safari.',
+		ios1ipad: 'Tap the Share button at the top right of Safari.',
+		ios2: 'Scroll down and choose “Add to Home Screen”.',
+		ios3: 'Tap “Add” – done. Rookie is now on your home screen.',
+		iosNote: 'Can’t find the option? Open this page in Safari first.',
+		other1: 'Open your browser’s menu.',
+		other2: 'Choose “Install app” or “Add to Home screen”.',
+		settingsRow: 'Install as app',
+		installed: 'Rookie is installed as an app.'
+	},
 	about: {
 		eyebrow: 'Open source',
 		title: 'About Rookie',

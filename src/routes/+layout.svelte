@@ -10,6 +10,8 @@
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import { refreshAccount, syncNow, account } from '#lib/sync/sync.svelte.js';
+	import InstallPrompt from '#lib/ui/InstallPrompt.svelte';
+	import { initInstall } from '#lib/ui/install.svelte.js';
 	import {
 		autoSync,
 		busyRoute,
@@ -36,6 +38,7 @@
 
 	onMount(async () => {
 		i18n.init();
+		initInstall();
 		// verknüpfte Konten: neue Partien holen, wenn die App geöffnet wird oder zurückkehrt
 		setTimeout(sync, 2500);
 		// Konto: Stand beim Öffnen holen, beim Verlassen der App sichern
@@ -86,6 +89,8 @@
 </main>
 
 <TabBar />
+
+<InstallPrompt />
 
 {#if newGames > 0}
 	<div role="status">

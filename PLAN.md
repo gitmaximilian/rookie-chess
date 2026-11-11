@@ -216,4 +216,9 @@ Abweichungen vom Plan:
 
 Erweiterungen (Nov. 2026): Engine-Watchdog (Bots hängen nicht mehr), Start-Leiste mobil, neue Klänge, Konten verknüpfen mit Auto-Import, 14 Eröffnungskurse mit Feedback, Endspiel-Technik + Live-Coach, Schach-Grundlagen (15 Lektionen), ausführliche Statistik, Brett-/Figuren-/Animations-Einstellungen, Spielen mit Coach.
 
+Konto & Installation (Nov. 2026):
+
+- [x] Freiwilliges Konto mit Passkey, Synchronisation über Geräte (Cloudflare Pages Functions + D1, EU), Export und Löschung, Datenschutzhinweise
+- [x] Installations-Hinweis am Handy: Android mit Installations-Knopf, iPhone/iPad mit Schritt-für-Schritt-Anleitung; jederzeit erreichbar in den Einstellungen
+
 Lighthouse (Nov. 2026, mobil, hell und dunkel): Barrierefreiheit 100, Best Practices 100, SEO 100, Performance 89–95.
