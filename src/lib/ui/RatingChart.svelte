@@ -1,7 +1,10 @@
 <script lang="ts">
 	import { intlLocale } from '#lib/i18n/i18n.svelte.js';
 
-	let { points }: { points: { date: number; rating: number }[] } = $props();
+	let {
+		points,
+		color = 'var(--c-puzzle)'
+	}: { points: { date: number; rating: number }[]; color?: string } = $props();
 
 	// schmaler viewBox: Linie und Schrift bleiben auf dem iPhone gut lesbar
 	const W = 360;
@@ -38,7 +41,7 @@
 		new Date(d).toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short' });
 </script>
 
-<div class="chart">
+<div class="chart" style:--rc={color}>
 	<svg
 		bind:this={svg}
 		viewBox="0 0 {W} {H}"
@@ -49,8 +52,8 @@
 	>
 		<defs>
 			<linearGradient id="rc-fill" x1="0" y1="0" x2="0" y2="1">
-				<stop offset="0" stop-color="var(--c-puzzle)" stop-opacity="0.22" />
-				<stop offset="1" stop-color="var(--c-puzzle)" stop-opacity="0" />
+				<stop offset="0" stop-color="var(--rc)" stop-opacity="0.22" />
+				<stop offset="1" stop-color="var(--rc)" stop-opacity="0" />
 			</linearGradient>
 		</defs>
 		{#each ticks as tk (tk)}
@@ -101,14 +104,14 @@
 	.line {
 		vector-effect: non-scaling-stroke;
 		fill: none;
-		stroke: var(--c-puzzle);
+		stroke: var(--rc);
 		stroke-width: 2.5;
 		stroke-linejoin: round;
 		stroke-linecap: round;
 	}
 
 	.end {
-		fill: var(--c-puzzle);
+		fill: var(--rc);
 		stroke: var(--surface);
 		stroke-width: 2;
 	}

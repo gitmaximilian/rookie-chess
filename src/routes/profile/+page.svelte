@@ -14,6 +14,7 @@
 	import Star from '@lucide/svelte/icons/star';
 	import Target from '@lucide/svelte/icons/target';
 	import PageHeader from '#lib/ui/PageHeader.svelte';
+	import ProfileTabs from '#lib/ui/ProfileTabs.svelte';
 	import RatingChart from '#lib/ui/RatingChart.svelte';
 	import ActivityHeatmap from '#lib/ui/ActivityHeatmap.svelte';
 	import { db, getSetting, type ActivityRow } from '#lib/db/db.js';
@@ -79,6 +80,8 @@
 	title={t('profile.title')}
 	subtitle={t('profile.subtitle')}
 />
+
+<ProfileTabs active="overview" />
 
 <div class="wrap">
 	<div class="tiles">

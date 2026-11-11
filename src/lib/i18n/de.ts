@@ -699,6 +699,87 @@ export const de: Shape<typeof en> = {
 		less: 'weniger',
 		more: 'mehr'
 	},
+	stats: {
+		title: 'Statistik',
+		subtitle: 'Wie du spielst – Stärken, Schwächen und Fortschritt aus all deinen Partien.',
+		tabOverview: 'Übersicht',
+		tabStats: 'Statistik',
+		insights: 'Das fällt auf',
+		noInsights:
+			'Spiel oder importiere noch ein paar Partien – dann erscheinen hier persönliche Erkenntnisse.',
+		results: 'Ergebnisse',
+		games: (p: P) => `${p.n} ${p.n === 1 ? 'Partie' : 'Partien'}`,
+		score: (p: P) => `${p.pct} % Punkte`,
+		win: 'Siege',
+		draw: 'Remis',
+		loss: 'Niederlagen',
+		asWhite: 'Mit Weiß',
+		asBlack: 'Mit Schwarz',
+		bySource: 'Nach Gegner',
+		source: { bot: 'Bots', lichess: 'Lichess', chesscom: 'Chess.com', pgn: 'PGN' },
+		bySpeed: 'Nach Bedenkzeit',
+		speed: {
+			ultraBullet: 'UltraBullet',
+			bullet: 'Bullet',
+			blitz: 'Blitz',
+			rapid: 'Schnellschach',
+			classical: 'Klassisch',
+			daily: 'Täglich',
+			correspondence: 'Fernschach'
+		},
+		vsStrength: 'Gegen Gegner, die …',
+		strength: {
+			stronger: 'stärker sind (+100)',
+			equal: 'etwa gleich stark sind',
+			weaker: 'schwächer sind (−100)'
+		},
+		rating: 'Online-Wertung',
+		noRating:
+			'Verknüpfe dein Lichess- oder Chess.com-Konto, um hier deinen Wertungsverlauf zu sehen.',
+		linkAccount: 'Konto verknüpfen',
+		openings: 'Deine Eröffnungen',
+		noOpenings: 'Noch keine Partien.',
+		quality: 'Zugqualität',
+		fromAnalysed: (p: P) => `aus ${p.n} analysierten ${p.n === 1 ? 'Partie' : 'Partien'}`,
+		accuracy: 'Genauigkeit',
+		last10: 'letzte 10 Partien',
+		phases: 'Nach Partiephase',
+		phase: { opening: 'Eröffnung', middlegame: 'Mittelspiel', endgame: 'Endspiel' },
+		perGame: 'Pro Partie',
+		blunders: 'Patzer',
+		mistakes: 'Fehler',
+		inaccuracies: 'Ungenauigkeiten',
+		motifs: 'Deine häufigsten Fehler',
+		motif: {
+			'mate-missed': 'Matt übersehen',
+			'mate-allowed': 'Matt zugelassen',
+			hanging: 'Hängende Figuren',
+			fork: 'Gabeln zugelassen',
+			'missed-win': 'Gewinne verpasst',
+			positional: 'Stellungsfehler'
+		},
+		noAnalysis: 'Analysiere ein paar Partien, um Genauigkeit und deine typischen Fehler zu sehen.',
+		endings: 'So enden deine Partien',
+		ending: { mate: 'Schachmatt', resign: 'Aufgabe', time: 'Zeit', draw: 'Remis' },
+		avgMoves: (p: P) => `Im Schnitt ${p.n} Züge pro Partie`,
+		practise: 'Meine Fehler üben',
+		insight: {
+			betterWhite: (p: P) => `Mit Weiß holst du ${p.a} % der Punkte, mit Schwarz nur ${p.b} %.`,
+			betterBlack: (p: P) => `Mit Schwarz holst du ${p.a} % der Punkte, mit Weiß nur ${p.b} %.`,
+			bestOpening: (p: P) => `Deine beste Eröffnung: ${p.name} – ${p.pct} % aus ${p.n} Partien.`,
+			worstOpening: (p: P) =>
+				`${p.name} macht dir Probleme: nur ${p.pct} % aus ${p.n} Partien. Ein Kurs könnte helfen.`,
+			weakPhase: (p: P) =>
+				`Schwächste Partiephase: ${p.phase} – ${p.acc} % Genauigkeit (beste Phase: ${p.best} %).`,
+			motif: (p: P) => `Dein häufigster Fehler: ${p.motif} (${p.n}×).`,
+			time: (p: P) =>
+				`${p.pct} % deiner Niederlagen passieren auf Zeit – behalte die Uhr im Blick.`,
+			improving: (p: P) => `Deine Genauigkeit steigt: +${p.d} Punkte in den letzten 10 Partien.`,
+			declining: (p: P) =>
+				`Deine Genauigkeit ist in den letzten 10 Partien um ${p.d} Punkte gesunken.`,
+			giantKiller: (p: P) => `Gegen stärkere Gegner holst du ${p.pct} % – stark!`
+		}
+	},
 	about: {
 		eyebrow: 'Open Source',
 		title: 'Über Rookie',
