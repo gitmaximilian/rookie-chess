@@ -55,6 +55,13 @@
 	let mistakesCreated = $state<number | null>(null);
 	let abort: AbortController | null = null;
 	let loading = $state(true);
+	let listLimit = $state(100);
+	let gameCount = $state(0);
+
+	async function showMore() {
+		listLimit += 200;
+		games = await db.games.orderBy('date').reverse().limit(listLimit).toArray();
+	}
 
 	const total = $derived(game ? game.ply + 1 : 0);
 	const reviews = $derived<MoveReview[]>(row && evals.length > 1 ? reviewMoves(row, evals) : []);
@@ -219,7 +226,8 @@
 		if (!gameId) {
 			row = null;
 			game = null;
-			games = await db.games.orderBy('date').reverse().limit(200).toArray();
+			games = await db.games.orderBy('date').reverse().limit(listLimit).toArray();
+			gameCount = await db.games.count();
 			loading = false;
 			return;
 		}
@@ -392,6 +400,11 @@
 						>
 					</div>
 				{/each}
+				{#if gameCount > games.length}
+					<button class="btn secondary more" onclick={showMore}
+						>{t('analysis.showMore', { n: gameCount - games.length })}</button
+					>
+				{/if}
 			{/if}
 		</section>
 
@@ -642,6 +655,11 @@
 	/* reserviert Platz, solange die Partien aus IndexedDB laden (kein Layout-Sprung) */
 	.games {
 		min-height: 13rem;
+	}
+
+	.more {
+		align-self: center;
+		margin-top: 0.5rem;
 	}
 
 	.sk-list {

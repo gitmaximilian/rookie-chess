@@ -1,6 +1,15 @@
 import { db, getSetting, setSetting } from '#lib/db/db.js';
 import { analyseGame, createMistakePuzzles } from '#lib/analysis/run.js';
-import { fetchChessCom, fetchLichess, toGameRow, type Source } from './importers.js';
+import {
+	archiveEnd,
+	chessComArchives,
+	chessComMonth,
+	streamLichess,
+	toGameRow,
+	ImportError,
+	type ImportedGame,
+	type Source
+} from './importers.js';
 
 /**
  * Verknüpfte Konten: Rookie holt neue Partien automatisch, sobald die App geöffnet wird.
@@ -9,15 +18,23 @@ import { fetchChessCom, fetchLichess, toGameRow, type Source } from './importers
 export interface LinkedAccounts {
 	lichess?: string;
 	chesscom?: string;
-	/** letzter erfolgreicher Abruf je Quelle (ms) */
+	/** letzter erfolgreicher Abruf neuer Partien je Quelle (ms) */
 	lastSync?: Partial<Record<Source, number>>;
+	/** Nachladen der kompletten Historie – fortsetzbar, falls die App geschlossen wird */
+	backfill?: Partial<Record<Source, Backfill>>;
+}
+
+export interface Backfill {
+	done: boolean;
+	/** Lichess: nur Partien vor diesem Zeitpunkt fehlen noch */
+	until?: number;
+	/** Chess.com: bereits vollständig geladene Monatsarchive */
+	months?: string[];
 }
 
 const KEY = 'linkedAccounts';
 /** so oft höchstens automatisch abrufen */
 const AUTO_INTERVAL = 30 * 60 * 1000;
-/** beim ersten Verknüpfen so viele Partien holen */
-const FIRST_BATCH = 20;
 /** pro Sitzung höchstens so viele Partien im Hintergrund analysieren (Akku) */
 const ANALYSE_PER_SESSION = 8;
 
@@ -26,7 +43,11 @@ export const syncState = $state({
 	analysing: false,
 	/** zuletzt neu importierte Partien */
 	lastNew: 0,
-	error: '' as '' | 'notFound' | 'network'
+	/** während des laufenden Abrufs importiert (für die Fortschrittsanzeige) */
+	imported: 0,
+	/** gerade wird die ältere Historie nachgeladen */
+	history: false,
+	error: '' as '' | 'notFound' | 'network' | 'rateLimit'
 });
 
 export function getLinked(): Promise<LinkedAccounts> {
@@ -37,6 +58,7 @@ export async function link(source: Source, user: string): Promise<void> {
 	const acc = await getLinked();
 	acc[source] = user.trim();
 	if (acc.lastSync) delete acc.lastSync[source];
+	if (acc.backfill) delete acc.backfill[source];
 	await setSetting(KEY, acc);
 }
 
@@ -44,46 +66,114 @@ export async function unlink(source: Source): Promise<void> {
 	const acc = await getLinked();
 	delete acc[source];
 	if (acc.lastSync) delete acc.lastSync[source];
+	if (acc.backfill) delete acc.backfill[source];
 	await setSetting(KEY, acc);
 }
 
-/** Holt neue Partien aller verknüpften Konten; liefert die Anzahl neu gespeicherter Partien */
+async function patch(update: (acc: LinkedAccounts) => void): Promise<void> {
+	const acc = await getLinked();
+	update(acc);
+	await setSetting(KEY, acc);
+}
+
+/** Lädt neue Partien und – beim ersten Mal – die komplette Historie. Liefert die Anzahl neuer Partien. */
 export async function syncNow(fetcher: typeof fetch = fetch): Promise<number> {
 	if (syncState.running) return 0;
 	syncState.running = true;
 	syncState.error = '';
+	syncState.imported = 0;
 	let added = 0;
 	try {
 		const acc = await getLinked();
 		for (const source of ['lichess', 'chesscom'] as const) {
 			const user = acc[source];
 			if (!user) continue;
-			const since = acc.lastSync?.[source];
-			const startedAt = Date.now();
+			// bekannte Partien einmal laden – schneller als eine Abfrage pro Partie
+			const known = new Set(
+				(await db.games.where('source').equals(source).toArray()).map((g) => g.externalId)
+			);
+			const save = async (games: ImportedGame[]) => {
+				const rows = games
+					.filter((g) => !known.has(g.externalId))
+					.map((g) => toGameRow(g, user))
+					.filter((r) => r !== null);
+				if (!rows.length) return;
+				await db.games.bulkAdd(rows);
+				for (const r of rows) known.add(r.externalId);
+				added += rows.length;
+				syncState.imported += rows.length;
+			};
 			try {
-				const games =
-					source === 'lichess'
-						? await fetchLichess(user, since ? 100 : FIRST_BATCH, fetcher, since)
-						: await fetchChessCom(user, since ? 100 : FIRST_BATCH, fetcher, since);
-				for (const g of games) {
-					if (await db.games.where('externalId').equals(g.externalId).first()) continue;
-					const row = toGameRow(g, user);
-					if (!row) continue;
-					await db.games.add(row);
-					added++;
-				}
-				const fresh = await getLinked();
-				fresh.lastSync = { ...fresh.lastSync, [source]: startedAt };
-				await setSetting(KEY, fresh);
+				await syncSource(source, user, acc, save, fetcher);
 			} catch (e) {
-				syncState.error = (e as { code?: string }).code === 'notFound' ? 'notFound' : 'network';
+				const code = (e as ImportError).code;
+				syncState.error =
+					code === 'notFound' ? 'notFound' : code === 'rateLimit' ? 'rateLimit' : 'network';
 			}
 		}
 	} finally {
 		syncState.running = false;
+		syncState.history = false;
 		syncState.lastNew = added;
 	}
 	return added;
+}
+
+async function syncSource(
+	source: Source,
+	user: string,
+	acc: LinkedAccounts,
+	save: (g: ImportedGame[]) => Promise<void>,
+	fetcher: typeof fetch
+): Promise<void> {
+	const startedAt = Date.now();
+	const since = acc.lastSync?.[source];
+
+	// 1) Neue Partien seit dem letzten Abruf
+	if (since) {
+		if (source === 'lichess') await streamLichess(user, { since }, save, fetcher);
+		else {
+			const archives = await chessComArchives(user, fetcher);
+			for (const url of [...archives].reverse()) {
+				if (archiveEnd(url) < since) break;
+				await save((await chessComMonth(url, fetcher)).filter((g) => g.date > since));
+			}
+		}
+	}
+	// Grenze für künftige Abrufe – alles davor erledigt das Nachladen der Historie
+	await patch((a) => (a.lastSync = { ...a.lastSync, [source]: startedAt }));
+	const boundary = since ?? startedAt;
+
+	// 2) Komplette Historie (einmalig, fortsetzbar)
+	const bf: Backfill = acc.backfill?.[source] ?? { done: false };
+	if (bf.done) return;
+	syncState.history = true;
+	if (source === 'lichess') {
+		await streamLichess(
+			user,
+			{ until: bf.until ?? boundary },
+			async (games) => {
+				await save(games);
+				const oldest = Math.min(...games.map((g) => g.date));
+				await patch(
+					(a) => (a.backfill = { ...a.backfill, lichess: { done: false, until: oldest } })
+				);
+			},
+			fetcher
+		);
+	} else {
+		const archives = await chessComArchives(user, fetcher);
+		const months = new Set(bf.months ?? []);
+		for (const url of [...archives].reverse()) {
+			if (months.has(url)) continue;
+			await save(await chessComMonth(url, fetcher));
+			months.add(url);
+			await patch(
+				(a) => (a.backfill = { ...a.backfill, chesscom: { done: false, months: [...months] } })
+			);
+		}
+	}
+	await patch((a) => (a.backfill = { ...a.backfill, [source]: { done: true } }));
 }
 
 let bgAbort: AbortController | null = null;
@@ -124,10 +214,11 @@ export function pauseBackground(): void {
 export async function autoSync(path: string): Promise<void> {
 	const acc = await getLinked();
 	if (!acc.lichess && !acc.chesscom) return;
-	const last = Math.min(
-		...(['lichess', 'chesscom'] as const).filter((s) => acc[s]).map((s) => acc.lastSync?.[s] ?? 0)
-	);
-	if (Date.now() - last > AUTO_INTERVAL) await syncNow();
+	const linked = (['lichess', 'chesscom'] as const).filter((s) => acc[s]);
+	const last = Math.min(...linked.map((s) => acc.lastSync?.[s] ?? 0));
+	// unvollständige Historie (z. B. App während des Imports geschlossen) sofort fortsetzen
+	const historyOpen = linked.some((s) => !acc.backfill?.[s]?.done);
+	if (historyOpen || Date.now() - last > AUTO_INTERVAL) await syncNow();
 	if (!busyRoute(path)) void analyseInBackground();
 }
 

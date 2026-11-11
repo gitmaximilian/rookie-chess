@@ -81,6 +81,7 @@ test('Konto verknüpfen holt Partien automatisch', async ({ page }) => {
 	await page.getByRole('button', { name: 'Link', exact: true }).first().click();
 	await expect(page.getByText('rookietester', { exact: true })).toBeVisible();
 	await expect(page.getByText(/Last synced/)).toBeVisible();
+	await expect(page.getByText('Complete history imported')).toBeVisible();
 	expect(calls).toBe(1);
 	await page.getByRole('button', { name: 'Unlink' }).click();
 	await expect(page.getByLabel('Lichess Username')).toBeVisible();

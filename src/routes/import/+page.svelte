@@ -57,6 +57,16 @@
 		await refreshLinked();
 	}
 
+	// Fortschritt der Historie auch anzeigen, wenn der Abruf im Hintergrund (App-Start) läuft
+	$effect(() => {
+		if (!syncState.running) return;
+		const id = setInterval(refreshLinked, 2000);
+		return () => {
+			clearInterval(id);
+			void refreshLinked();
+		};
+	});
+
 	async function doSync() {
 		await syncNow();
 		await refreshLinked();
@@ -168,6 +178,9 @@
 					<div class="acc-text">
 						<b>{linked[src]}</b>
 						<span>{label} · {when(linked.lastSync?.[src])}</span>
+						<span class="hist" class:done={linked.backfill?.[src]?.done}>
+							{linked.backfill?.[src]?.done ? t('import.historyDone') : t('import.historyLoading')}
+						</span>
 					</div>
 					<button class="btn secondary small" onclick={() => doUnlink(src)}
 						>{t('import.unlink')}</button
@@ -193,7 +206,15 @@
 				{syncState.running ? t('import.syncing') : t('import.syncNow')}
 			</button>
 		{/if}
-		{#if syncState.error}<p class="err">{t('import.syncError')}</p>{/if}
+		{#if syncState.running && syncState.imported}
+			<p class="live" role="status">
+				{syncState.history
+					? t('import.historyProgress', { n: syncState.imported })
+					: t('import.newProgress', { n: syncState.imported })}
+			</p>
+		{/if}
+		{#if syncState.error === 'rateLimit'}<p class="err">{t('import.rateLimit')}</p>
+		{:else if syncState.error}<p class="err">{t('import.syncError')}</p>{/if}
 		<p class="privacy"><ShieldCheck size={15} /> {t('import.noPassword')}</p>
 	</section>
 
@@ -329,6 +350,22 @@
 	.acc-text span {
 		font-size: 0.8rem;
 		color: var(--text-2);
+	}
+
+	.hist {
+		font-size: 0.75rem;
+		color: var(--c-analysis);
+		font-weight: 650;
+	}
+
+	.hist.done {
+		color: var(--good);
+	}
+
+	.live {
+		font-size: 0.9rem;
+		font-weight: 650;
+		color: var(--c-puzzle);
 	}
 
 	.acc-form {

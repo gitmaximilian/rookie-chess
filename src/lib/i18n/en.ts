@@ -296,6 +296,7 @@ export const en = {
 		importLink: 'Load games from Lichess or Chess.com',
 		notFound: 'Game not found',
 		toGames: 'To your games',
+		showMore: (p: P) => `Show more (${p.n} older)`,
 		games: 'Games',
 		running: 'Stockfish is analysing …',
 		resume: 'Continue',
@@ -715,7 +716,7 @@ export const en = {
 		stop: 'Stop',
 		accounts: 'Linked accounts',
 		accountsText:
-			'Link your username once – Rookie then fetches your new games automatically whenever you open the app and analyses them in the background.',
+			'Link your username once – Rookie imports all your past games and then fetches every new game automatically whenever you open the app.',
 		noPassword:
 			'Your games on Lichess and Chess.com are public, so no login or password is needed – just your username.',
 		link: 'Link',
@@ -726,6 +727,12 @@ export const en = {
 		notSynced: 'Not synced yet',
 		synced: (p: P) => `${p.n} new ${s(p.n, 'game', 'games')} imported · View`,
 		syncError: 'Sync failed – check the username or your connection.',
+		historyDone: 'Complete history imported',
+		historyLoading: 'Loading your full history …',
+		historyProgress: (p: P) => `Importing your game history … ${p.n} games so far`,
+		newProgress: (p: P) => `${p.n} new ${s(p.n, 'game', 'games')} imported`,
+		rateLimit:
+			'The site is limiting requests right now – the import continues automatically next time you open Rookie.',
 		once: 'Import once'
 	},
 	profile: {

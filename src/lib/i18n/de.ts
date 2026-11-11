@@ -330,6 +330,7 @@ export const de: Shape<typeof en> = {
 		importLink: 'Partien von Lichess oder Chess.com laden',
 		notFound: 'Partie nicht gefunden',
 		toGames: 'Zu deinen Partien',
+		showMore: (p: P) => `Mehr anzeigen (${p.n} ältere)`,
 		games: 'Partien',
 		running: 'Stockfish analysiert …',
 		resume: 'Fortsetzen',
@@ -755,7 +756,7 @@ export const de: Shape<typeof en> = {
 		stop: 'Stopp',
 		accounts: 'Verknüpfte Konten',
 		accountsText:
-			'Einmal Benutzernamen verknüpfen – Rookie holt dann bei jedem Öffnen der App deine neuen Partien automatisch und analysiert sie im Hintergrund.',
+			'Einmal Benutzernamen verknüpfen – Rookie importiert alle deine bisherigen Partien und holt danach jede neue Partie automatisch, sobald du die App öffnest.',
 		noPassword:
 			'Deine Partien auf Lichess und Chess.com sind öffentlich – du brauchst kein Login und kein Passwort, nur deinen Benutzernamen.',
 		link: 'Verknüpfen',
@@ -766,6 +767,12 @@ export const de: Shape<typeof en> = {
 		notSynced: 'Noch nicht abgerufen',
 		synced: (p: P) => `${p.n} neue ${p.n === 1 ? 'Partie' : 'Partien'} importiert · Ansehen`,
 		syncError: 'Abruf fehlgeschlagen – prüfe den Benutzernamen oder deine Verbindung.',
+		historyDone: 'Komplette Historie importiert',
+		historyLoading: 'Lade deine komplette Historie …',
+		historyProgress: (p: P) => `Deine Partiehistorie wird importiert … bisher ${p.n} Partien`,
+		newProgress: (p: P) => `${p.n} neue ${p.n === 1 ? 'Partie' : 'Partien'} importiert`,
+		rateLimit:
+			'Die Seite bremst gerade Anfragen – der Import geht beim nächsten Öffnen von Rookie automatisch weiter.',
 		once: 'Einmalig importieren'
 	},
 	profile: {

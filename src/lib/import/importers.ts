@@ -17,7 +17,7 @@ export interface ImportedGame {
 }
 
 export class ImportError extends Error {
-	constructor(public code: 'notFound' | 'network' | 'none') {
+	constructor(public code: 'notFound' | 'network' | 'none' | 'rateLimit') {
 		super(code);
 	}
 }
@@ -180,4 +180,115 @@ export function toGameRow(g: ImportedGame, user: string): GameRow | null {
 		oppRating: myColor === 'white' ? g.blackRating : g.whiteRating,
 		speed: g.speed
 	};
+}
+
+// ───────────────────── Komplette Historie (Datenstrom) ─────────────────────
+
+/**
+ * Lichess: alle Partien eines Spielers als Datenstrom (neueste zuerst).
+ * `since`/`until` begrenzen den Zeitraum (ms). `onBatch` bekommt Pakete von Partien,
+ * sobald sie ankommen – so bleibt der Speicher klein und Fortschritt sichtbar.
+ * Wirft ImportError('rateLimit') bei HTTP 429.
+ */
+export async function streamLichess(
+	user: string,
+	opts: { since?: number; until?: number; signal?: AbortSignal },
+	onBatch: (games: ImportedGame[]) => Promise<void>,
+	fetcher: typeof fetch = fetch,
+	batchSize = 50
+): Promise<void> {
+	const q = new URLSearchParams({
+		pgnInJson: 'true',
+		moves: 'true',
+		clocks: 'false',
+		evals: 'false',
+		opening: 'false'
+	});
+	if (opts.since) q.set('since', String(opts.since));
+	if (opts.until) q.set('until', String(opts.until));
+	let res: Response;
+	try {
+		res = await fetcher(`https://lichess.org/api/games/user/${encodeURIComponent(user)}?${q}`, {
+			headers: { Accept: 'application/x-ndjson' },
+			signal: opts.signal
+		});
+	} catch {
+		throw new ImportError('network');
+	}
+	if (res.status === 404) throw new ImportError('notFound');
+	if (res.status === 429) throw new ImportError('rateLimit');
+	if (!res.ok) throw new ImportError('network');
+
+	let batch: ImportedGame[] = [];
+	const flush = async () => {
+		if (batch.length) await onBatch(batch);
+		batch = [];
+	};
+	const handle = async (line: string) => {
+		const g = parseLichessNdjson(line)[0];
+		if (g) batch.push(g);
+		if (batch.length >= batchSize) await flush();
+	};
+
+	if (!res.body) {
+		for (const line of (await res.text()).split('\n')) await handle(line);
+		return flush();
+	}
+	const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
+	let rest = '';
+	try {
+		for (;;) {
+			const { done, value } = await reader.read();
+			if (done) break;
+			rest += value;
+			const lines = rest.split('\n');
+			rest = lines.pop() ?? '';
+			for (const line of lines) await handle(line);
+		}
+	} catch (e) {
+		if (opts.signal?.aborted) throw e;
+		throw new ImportError('network');
+	}
+	if (rest.trim()) await handle(rest);
+	await flush();
+}
+
+/** Chess.com: Liste der Monatsarchive (älteste zuerst) */
+export async function chessComArchives(
+	user: string,
+	fetcher: typeof fetch = fetch
+): Promise<string[]> {
+	let res: Response;
+	try {
+		res = await fetcher(
+			`https://api.chess.com/pub/player/${encodeURIComponent(user.toLowerCase())}/games/archives`
+		);
+	} catch {
+		throw new ImportError('network');
+	}
+	if (res.status === 404) throw new ImportError('notFound');
+	if (res.status === 429) throw new ImportError('rateLimit');
+	if (!res.ok) throw new ImportError('network');
+	return ((await res.json()).archives ?? []) as string[];
+}
+
+export async function chessComMonth(
+	url: string,
+	fetcher: typeof fetch = fetch
+): Promise<ImportedGame[]> {
+	let res: Response;
+	try {
+		res = await fetcher(url);
+	} catch {
+		throw new ImportError('network');
+	}
+	if (res.status === 429) throw new ImportError('rateLimit');
+	if (!res.ok) throw new ImportError('network');
+	return parseChessComMonth(await res.json());
+}
+
+/** Monat eines Archiv-Links als Zeitpunkt (Monatsende, UTC) */
+export function archiveEnd(url: string): number {
+	const m = url.match(/(\d{4})\/(\d{2})$/);
+	return m ? Date.UTC(+m[1], +m[2], 1) : 0;
 }
