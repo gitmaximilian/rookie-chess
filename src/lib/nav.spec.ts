@@ -12,7 +12,7 @@ describe('isActive', () => {
 		expect(isActive('/learn', '/learnx')).toBe(false);
 	});
 
-	it('hat genau fünf Tabs fürs iPhone', () => {
-		expect(navItems).toHaveLength(5);
+	it('hat sechs Tabs (Partien ist eigener Tab)', () => {
+		expect(navItems).toHaveLength(6);
 	});
 });

@@ -9,6 +9,7 @@ export const en = {
 	},
 	nav: {
 		home: 'Home',
+		games: 'Games',
 		play: 'Play',
 		puzzles: 'Puzzles',
 		learn: 'Learn',
@@ -72,6 +73,7 @@ export const en = {
 		}
 	},
 	home: {
+		allGames: 'All games',
 		eyebrow: 'Your training',
 		morning: 'Good morning',
 		hello: 'Hello',
@@ -279,7 +281,7 @@ export const en = {
 	},
 	analysis: {
 		eyebrow: 'Analysis',
-		title: 'Your games',
+		title: 'My games',
 		subtitle: 'Every game is analysed by Stockfish – with explanations in plain language.',
 		empty: 'No games yet',
 		emptyText: 'Play a bot, import your online games or paste a PGN.',
@@ -297,6 +299,15 @@ export const en = {
 		notFound: 'Game not found',
 		toGames: 'To your games',
 		showMore: (p: P) => `Show more (${p.n} older)`,
+		filter: {
+			all: 'All',
+			lichess: 'Lichess',
+			chesscom: 'Chess.com',
+			bot: 'Bots',
+			friend: 'Friends',
+			mistakes: 'With mistakes'
+		},
+		notYet: 'not analysed',
 		games: 'Games',
 		running: 'Stockfish is analysing …',
 		resume: 'Continue',
@@ -864,7 +875,8 @@ export const en = {
 	},
 	onboarding: {
 		welcome: 'Welcome to Rookie',
-		intro: 'Three quick questions so Rookie can start at the right level.',
+		intro:
+			'A few quick questions so Rookie starts at the right level – and can import your online games.',
 		skip: 'Skip',
 		back: 'Back',
 		step: (p: P) => `Question ${p.i} of ${p.n}`,
@@ -888,6 +900,13 @@ export const en = {
 			play: { t: 'Play games', d: 'Against a bot that suits you.' },
 			openings: { t: 'Learn openings', d: 'Real openings with explanations.' }
 		},
+		onlineQ: 'Do you play on Lichess or Chess.com?',
+		onlineText:
+			'Enter your username and Rookie imports all your games – past and future – analyses them and shows your Elo. No password needed.',
+		lichessName: 'Lichess username',
+		chesscomName: 'Chess.com username',
+		linkGo: 'Link and start',
+		noOnline: 'I don’t play online – start',
 		done: 'Let’s go!'
 	},
 	plan: {
@@ -988,6 +1007,29 @@ export const en = {
 		doneTitle: 'All mistakes replayed',
 		doneText: (p: P) => `You found ${p.n} of ${p.m} better moves on the first try.`,
 		close: 'Back to the analysis'
+	},
+	accounts: {
+		ctaTitle: 'Link Lichess or Chess.com',
+		ctaText:
+			'All your games – past and future – land here automatically, analysed by Stockfish, with your Elo.',
+		noRating: 'No rated games yet',
+		manage: 'Manage',
+		elo: 'Your Elo'
+	},
+	board2: {
+		title: 'Analysis board',
+		open: 'Analysis board',
+		hint: 'Move both sides freely. Stockfish evaluates every position live – tap a line to play its first move. Keys: ← → to step, space = best move.',
+		depth: (p: P) => `depth ${p.n}`,
+		thinking: 'Stockfish is thinking …',
+		gameOver: 'Game over in this position.',
+		load: 'Load FEN/PGN',
+		loadPlaceholder: 'Paste a FEN or a PGN …',
+		loadGo: 'Load',
+		loadError: 'Couldn’t read that – please paste a valid FEN or PGN.',
+		reset: 'New',
+		copied: 'Copied!',
+		fromHere: 'Open in analysis board'
 	},
 	about: {
 		eyebrow: 'Open source',

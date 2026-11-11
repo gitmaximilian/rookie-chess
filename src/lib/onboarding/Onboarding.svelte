@@ -5,6 +5,7 @@
 	import Logo from '#lib/ui/Logo.svelte';
 	import { setSetting } from '#lib/db/db.js';
 	import { firstRoute, saveProfile, type Focus, type Level, type Rules } from './profile.js';
+	import { link, syncNow, analyseInBackground } from '#lib/import/sync.svelte.js';
 	import { t } from '#lib/i18n/i18n.svelte.js';
 
 	let { onclose }: { onclose: () => void } = $props();
@@ -12,9 +13,14 @@
 	let step = $state(0);
 	let rules = $state<Rules>('yes');
 	let level = $state<Level>('unknown');
+	let focus = $state<Focus>('play');
+	let lichess = $state('');
+	let chesscom = $state('');
 
 	// wer die Regeln nicht kennt, bekommt keine Frage zur Spielstärke
-	const steps = $derived(rules === 'no' ? ['rules', 'focus'] : ['rules', 'level', 'focus']);
+	const steps = $derived(
+		rules === 'no' ? ['rules', 'focus'] : ['rules', 'level', 'focus', 'online']
+	);
 	const current = $derived(steps[step]);
 
 	const RULES: Rules[] = ['no', 'some', 'yes'];
@@ -33,7 +39,20 @@
 	}
 
 	async function pickFocus(f: Focus) {
-		const p = { rules, level, focus: f, date: Date.now() };
+		focus = f;
+		// wer online spielt, kann gleich sein Konto verknüpfen
+		if (steps.includes('online')) {
+			step++;
+			return;
+		}
+		await finish();
+	}
+
+	async function finish() {
+		if (lichess.trim()) await link('lichess', lichess);
+		if (chesscom.trim()) await link('chesscom', chesscom);
+		if (lichess.trim() || chesscom.trim()) void syncNow().then(() => void analyseInBackground());
+		const p = { rules, level, focus, date: Date.now() };
 		await saveProfile(p);
 		try {
 			localStorage.setItem('rookie:onboarded', '1');
@@ -97,6 +116,32 @@
 							<b>{t(`onboarding.level.${l}.t`)}</b><span>{t(`onboarding.level.${l}.d`)}</span>
 						</button>
 					{/each}
+				{:else if current === 'online'}
+					<h2>{t('onboarding.onlineQ')}</h2>
+					<p class="sub">{t('onboarding.onlineText')}</p>
+					<label class="inp"
+						><span class="logo">L</span><input
+							bind:value={lichess}
+							placeholder={t('onboarding.lichessName')}
+							autocomplete="off"
+							autocapitalize="off"
+							spellcheck="false"
+						/></label
+					>
+					<label class="inp"
+						><span class="logo cc">C</span><input
+							bind:value={chesscom}
+							placeholder={t('onboarding.chesscomName')}
+							autocomplete="off"
+							autocapitalize="off"
+							spellcheck="false"
+						/></label
+					>
+					<button class="btn big" onclick={() => void finish()}
+						>{lichess.trim() || chesscom.trim()
+							? t('onboarding.linkGo')
+							: t('onboarding.noOnline')}</button
+					>
 				{:else}
 					<h2>{t('onboarding.focusQ')}</h2>
 					{#each FOCUS as f, i (f)}
@@ -240,6 +285,51 @@
 	.opt span {
 		font-size: 0.88rem;
 		color: var(--text-2);
+	}
+
+	.sub {
+		color: var(--text-2);
+		line-height: 1.45;
+		margin-top: -0.2rem;
+	}
+
+	.inp {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+		padding: 0.5rem;
+		border-radius: 14px;
+		background: var(--surface);
+		border: 1.5px solid var(--line);
+	}
+
+	.inp input {
+		flex: 1;
+		min-width: 0;
+		height: 40px;
+		border: none;
+		background: none;
+		color: var(--text);
+		font: inherit;
+		font-size: 16px;
+		outline: none;
+	}
+
+	.logo {
+		flex: none;
+		display: grid;
+		place-items: center;
+		width: 36px;
+		height: 36px;
+		border-radius: 10px;
+		font-family: var(--font-display);
+		font-weight: 800;
+		color: #fff;
+		background: #3a3632;
+	}
+
+	.logo.cc {
+		background: #5d8a3a;
 	}
 
 	@keyframes rise {

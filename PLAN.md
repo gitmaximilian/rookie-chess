@@ -230,6 +230,9 @@ Lernen & Motivation (Nov. 2026):
 - [x] Puzzle-Sturm, Spiel gegen Freunde an einem Gerät, 22 Erfolge
 - [x] 10 Endspiel-Lektionen (neu: Dame gegen Bauer, Turm gegen Bauer, zwei Läufer)
 - [x] UX: Feedback direkt unter dem Brett, Lernpfade, Sprungleiste in Einstellungen, Lade-Platzhalter
+- [x] Analysebrett mit Stockfish live (beide Farben, 3 Varianten, FEN/PGN laden)
+- [x] „Meine Partien“ als eigener Tab und ganz oben auf der Startseite, Elo je Plattform und Tempo
+- [x] Lichess/Chess.com verknüpfen im Einstieg und auf der Startseite, komplette Historie
 - [ ] Tägliche Erinnerung per Push (bewusst zurückgestellt)
 
 Lighthouse (Nov. 2026, mobil, hell und dunkel): Barrierefreiheit 100, Best Practices 100, SEO 100, Performance 89–95.

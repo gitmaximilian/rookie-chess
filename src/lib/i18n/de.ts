@@ -17,6 +17,7 @@ export const de: Shape<typeof en> = {
 	},
 	nav: {
 		home: 'Start',
+		games: 'Partien',
 		play: 'Spielen',
 		puzzles: 'Puzzles',
 		learn: 'Lernen',
@@ -80,6 +81,7 @@ export const de: Shape<typeof en> = {
 		}
 	},
 	home: {
+		allGames: 'Alle Partien',
 		eyebrow: 'Dein Training',
 		morning: 'Guten Morgen',
 		hello: 'Hallo',
@@ -313,7 +315,7 @@ export const de: Shape<typeof en> = {
 	},
 	analysis: {
 		eyebrow: 'Analyse',
-		title: 'Deine Partien',
+		title: 'Meine Partien',
 		subtitle: 'Jede Partie wird von Stockfish analysiert – mit Erklärungen in einfachem Deutsch.',
 		empty: 'Noch keine Partien',
 		emptyText: 'Spiel gegen einen Bot, importiere deine Online-Partien oder füge ein PGN ein.',
@@ -331,6 +333,15 @@ export const de: Shape<typeof en> = {
 		notFound: 'Partie nicht gefunden',
 		toGames: 'Zu deinen Partien',
 		showMore: (p: P) => `Mehr anzeigen (${p.n} ältere)`,
+		filter: {
+			all: 'Alle',
+			lichess: 'Lichess',
+			chesscom: 'Chess.com',
+			bot: 'Bots',
+			friend: 'Freunde',
+			mistakes: 'Mit Fehlern'
+		},
+		notYet: 'noch nicht analysiert',
 		games: 'Partien',
 		running: 'Stockfish analysiert …',
 		resume: 'Fortsetzen',
@@ -912,7 +923,8 @@ export const de: Shape<typeof en> = {
 	},
 	onboarding: {
 		welcome: 'Willkommen bei Rookie',
-		intro: 'Drei kurze Fragen, damit Rookie auf dem richtigen Niveau startet.',
+		intro:
+			'Ein paar kurze Fragen, damit Rookie auf dem richtigen Niveau startet – und deine Online-Partien importieren kann.',
 		skip: 'Überspringen',
 		back: 'Zurück',
 		step: (p: P) => `Frage ${p.i} von ${p.n}`,
@@ -936,6 +948,13 @@ export const de: Shape<typeof en> = {
 			play: { t: 'Partien spielen', d: 'Gegen einen Bot, der zu dir passt.' },
 			openings: { t: 'Eröffnungen lernen', d: 'Echte Eröffnungen mit Erklärungen.' }
 		},
+		onlineQ: 'Spielst du auf Lichess oder Chess.com?',
+		onlineText:
+			'Gib deinen Benutzernamen ein, und Rookie importiert alle deine Partien – vergangene und künftige –, analysiert sie und zeigt deine Elo. Kein Passwort nötig.',
+		lichessName: 'Lichess-Benutzername',
+		chesscomName: 'Chess.com-Benutzername',
+		linkGo: 'Verknüpfen und loslegen',
+		noOnline: 'Ich spiele nicht online – loslegen',
 		done: 'Los geht’s!'
 	},
 	plan: {
@@ -1037,6 +1056,29 @@ export const de: Shape<typeof en> = {
 		doneTitle: 'Alle Fehler nachgespielt',
 		doneText: (p: P) => `Du hast ${p.n} von ${p.m} besseren Zügen auf Anhieb gefunden.`,
 		close: 'Zurück zur Analyse'
+	},
+	accounts: {
+		ctaTitle: 'Lichess oder Chess.com verknüpfen',
+		ctaText:
+			'Alle deine Partien – vergangene und künftige – landen automatisch hier, analysiert von Stockfish, mit deiner Elo.',
+		noRating: 'Noch keine gewerteten Partien',
+		manage: 'Verwalten',
+		elo: 'Deine Elo'
+	},
+	board2: {
+		title: 'Analysebrett',
+		open: 'Analysebrett',
+		hint: 'Zieh frei mit beiden Farben. Stockfish bewertet jede Stellung live – tippe auf eine Variante, um ihren ersten Zug zu spielen. Tasten: ← → blättern, Leertaste = bester Zug.',
+		depth: (p: P) => `Tiefe ${p.n}`,
+		thinking: 'Stockfish rechnet …',
+		gameOver: 'In dieser Stellung ist die Partie vorbei.',
+		load: 'FEN/PGN laden',
+		loadPlaceholder: 'FEN oder PGN einfügen …',
+		loadGo: 'Laden',
+		loadError: 'Das konnte ich nicht lesen – bitte eine gültige FEN oder PGN einfügen.',
+		reset: 'Neu',
+		copied: 'Kopiert!',
+		fromHere: 'Im Analysebrett öffnen'
 	},
 	about: {
 		eyebrow: 'Open Source',

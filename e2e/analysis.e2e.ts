@@ -20,6 +20,6 @@ test('PGN analysieren: Patzer wird erkannt und erklärt', async ({ page }) => {
 	await page.keyboard.press('Home');
 	await expect(page.getByText('Starting position')).toBeVisible();
 	// Partie erscheint in der Liste
-	await page.getByRole('link', { name: 'Games' }).click();
+	await page.getByRole('main').getByRole('link', { name: 'Games' }).click();
 	await expect(page.getByText('vs Saint Brie')).toBeVisible();
 });

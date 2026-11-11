@@ -29,9 +29,9 @@
 		inset: auto 0 0 0;
 		z-index: 50;
 		display: grid;
-		grid-template-columns: repeat(5, 1fr);
+		grid-template-columns: repeat(6, 1fr);
 		height: calc(var(--tabbar-h) + var(--safe-bottom));
-		padding: 6px max(8px, var(--safe-left)) var(--safe-bottom) max(8px, var(--safe-right));
+		padding: 6px max(4px, var(--safe-left)) var(--safe-bottom) max(4px, var(--safe-right));
 		background: var(--surface-glass);
 		backdrop-filter: saturate(180%) blur(20px);
 		-webkit-backdrop-filter: saturate(180%) blur(20px);
@@ -57,7 +57,7 @@
 		position: relative;
 		display: grid;
 		place-items: center;
-		width: 52px;
+		width: 46px;
 		height: 30px;
 		border-radius: 999px;
 		transition: transform var(--dur) var(--ease-spring);

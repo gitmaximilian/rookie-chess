@@ -17,6 +17,7 @@
 	import PageHeader from '#lib/ui/PageHeader.svelte';
 	import ProfileTabs from '#lib/ui/ProfileTabs.svelte';
 	import Achievements from '#lib/ui/Achievements.svelte';
+	import LinkedAccounts from '#lib/ui/LinkedAccounts.svelte';
 	import RatingChart from '#lib/ui/RatingChart.svelte';
 	import ActivityHeatmap from '#lib/ui/ActivityHeatmap.svelte';
 	import { db, getSetting, type ActivityRow } from '#lib/db/db.js';
@@ -96,6 +97,8 @@
 <ProfileTabs active="overview" />
 
 <div class="wrap">
+	<LinkedAccounts />
+
 	<div class="tiles">
 		{#each tiles as tile, i (tile.label)}
 			<div class="tile card" style:--c={tile.c} style:--i={i}>

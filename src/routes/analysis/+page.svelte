@@ -35,6 +35,9 @@
 	import { feedbackFor, type MoveFeedback } from '#lib/openings/feedback.js';
 	import { getSetting, setSetting } from '#lib/db/db.js';
 	import { notifyProgress } from '#lib/ui/progress.js';
+	import { quality } from '#lib/import/ratings.js';
+	import LinkedAccounts from '#lib/ui/LinkedAccounts.svelte';
+	import LayoutGrid from '@lucide/svelte/icons/layout-grid';
 	import Target from '@lucide/svelte/icons/target';
 	import Lightbulb from '@lucide/svelte/icons/lightbulb';
 
@@ -58,10 +61,46 @@
 	let listLimit = $state(100);
 	let gameCount = $state(0);
 
+	type Filter = 'all' | 'lichess' | 'chesscom' | 'bot' | 'friend' | 'mistakes';
+	let filter = $state<Filter>('all');
+	const FILTERS: Filter[] = ['all', 'lichess', 'chesscom', 'bot', 'friend', 'mistakes'];
+
+	async function loadList() {
+		if (filter === 'all' || filter === 'mistakes') {
+			const rows = await db.games
+				.orderBy('date')
+				.reverse()
+				.limit(filter === 'mistakes' ? 1000 : listLimit)
+				.toArray();
+			games =
+				filter === 'mistakes'
+					? rows
+							.filter((g) => {
+								const q = quality(g);
+								return q && q.blunders + q.mistakes > 0;
+							})
+							.slice(0, listLimit)
+					: rows;
+			gameCount = filter === 'all' ? await db.games.count() : games.length;
+		} else {
+			const rows = (await db.games.where('source').equals(filter).sortBy('date')).reverse();
+			gameCount = rows.length;
+			games = rows.slice(0, listLimit);
+		}
+	}
+
+	async function setFilter(f: Filter) {
+		filter = f;
+		listLimit = 100;
+		await loadList();
+	}
+
 	async function showMore() {
 		listLimit += 200;
-		games = await db.games.orderBy('date').reverse().limit(listLimit).toArray();
+		await loadList();
 	}
+
+	const qualities = $derived(new Map(games.map((g) => [g.id, quality(g)])));
 
 	const total = $derived(game ? game.ply + 1 : 0);
 	const reviews = $derived<MoveReview[]>(row && evals.length > 1 ? reviewMoves(row, evals) : []);
@@ -226,8 +265,7 @@
 		if (!gameId) {
 			row = null;
 			game = null;
-			games = await db.games.orderBy('date').reverse().limit(listLimit).toArray();
-			gameCount = await db.games.count();
+			await loadList();
 			loading = false;
 			return;
 		}
@@ -355,6 +393,22 @@
 		subtitle={t('analysis.subtitle')}
 	/>
 
+	<div class="hub">
+		<LinkedAccounts />
+		<div class="hub-actions">
+			<a class="btn board-btn" href={resolve('/analysis/board')}
+				><LayoutGrid size={18} /> {t('board2.open')}</a
+			>
+		</div>
+		<nav class="filters" aria-label={t('analysis.games')}>
+			{#each FILTERS as f (f)}
+				<button class="chip" class:on={filter === f} onclick={() => setFilter(f)}
+					>{t(`analysis.filter.${f}`)}</button
+				>
+			{/each}
+		</nav>
+	</div>
+
 	<div class="list-layout">
 		<section class="games">
 			{#if loading}
@@ -390,9 +444,19 @@
 										}
 									)}
 									· {t('common.moves', { n: Math.ceil(g.moves.length / 2) })}
-									{#if g.analysis?.done}· {t('analysis.analysed')}{/if}
+									{#if g.myRating}· {g.myRating}{/if}
 								</span>
 							</span>
+							{#if qualities.get(g.id)}
+								{@const q = qualities.get(g.id)!}
+								<span class="q">
+									<b class:hi={q.accuracy >= 80} class:lo={q.accuracy < 65}>{q.accuracy}%</b>
+									{#if q.blunders}<span class="qb">{q.blunders}??</span>{/if}
+									{#if q.mistakes}<span class="qm">{q.mistakes}?</span>{/if}
+								</span>
+							{:else if !g.analysis?.done}
+								<span class="q pending">{t('analysis.notYet')}</span>
+							{/if}
 							<ChevronRight size={18} />
 						</a>
 						<button class="del" onclick={() => remove(g.id!)} aria-label={t('analysis.deleteGame')}
@@ -437,6 +501,11 @@
 	<div class="top-line">
 		<a class="back" href={resolve('/analysis')}><ArrowLeft size={18} /> {t('analysis.games')}</a>
 		{#if opening}<span class="opening" title={opening.eco}>{opening.name}</span>{/if}
+		<a
+			class="btn secondary small to-board"
+			href={resolve(`/analysis/board?game=${row.id}&ply=${ply}`)}
+			><LayoutGrid size={16} /> {t('board2.fromHere')}</a
+		>
 	</div>
 
 	<div class="arena">
@@ -655,6 +724,89 @@
 	/* reserviert Platz, solange die Partien aus IndexedDB laden (kein Layout-Sprung) */
 	.games {
 		min-height: 13rem;
+	}
+
+	.hub {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+		max-width: 1100px;
+		margin-bottom: 1rem;
+	}
+
+	.hub-actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+	}
+
+	.filters {
+		display: flex;
+		gap: 0.4rem;
+		overflow-x: auto;
+		scrollbar-width: none;
+		padding-bottom: 2px;
+	}
+
+	.filters::-webkit-scrollbar {
+		display: none;
+	}
+
+	.chip {
+		flex: none;
+		height: 34px;
+		padding: 0 0.85rem;
+		border-radius: 999px;
+		border: 1px solid var(--line);
+		background: var(--surface);
+		color: var(--text-2);
+		font: inherit;
+		font-size: 0.86rem;
+		font-weight: 650;
+		cursor: pointer;
+	}
+
+	.chip.on {
+		background: var(--text);
+		border-color: var(--text);
+		color: var(--bg);
+	}
+
+	.q {
+		flex: none;
+		display: flex;
+		flex-direction: column;
+		align-items: flex-end;
+		gap: 0.1rem;
+		font-variant-numeric: tabular-nums;
+		font-size: 0.75rem;
+	}
+
+	.q b {
+		font-size: 0.98rem;
+		color: color-mix(in srgb, var(--warn) 45%, var(--text));
+	}
+
+	.q b.hi {
+		color: var(--good);
+	}
+
+	.q b.lo {
+		color: var(--bad);
+	}
+
+	.qb {
+		color: var(--bad);
+		font-weight: 700;
+	}
+
+	.qm {
+		color: color-mix(in srgb, var(--warn) 45%, var(--text));
+		font-weight: 700;
+	}
+
+	.q.pending {
+		color: var(--text-3);
 	}
 
 	.more {
