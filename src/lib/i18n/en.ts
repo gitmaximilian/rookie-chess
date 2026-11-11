@@ -554,6 +554,30 @@ export const en = {
 			s3: 'Walk diagonally – that’s the fastest way.',
 			s4: 'Capture the pawn or block its promotion square.'
 		},
+		kqkp: {
+			title: 'Queen vs pawn',
+			subtitle: 'Stop the pawn on the 7th rank',
+			s1: 'The pawn is about to promote. You must win time with checks.',
+			s2: 'Check from the side or diagonally until the king has to step in front of its own pawn.',
+			s3: 'King in front of the pawn = the pawn is blocked. Now you have a free move: bring your king closer.',
+			s4: 'Repeat: check, force the king in front, step closer – until king and queen mate together or win the pawn.'
+		},
+		krkp: {
+			title: 'Rook vs pawn',
+			subtitle: 'The rook stops the pawn',
+			s1: 'Put your rook behind the pawn – from behind it controls every square the pawn wants to reach.',
+			s2: 'Bring your king towards the pawn as fast as possible.',
+			s3: 'Rook and king together win the pawn. If the enemy king defends it, attack with your king.',
+			s4: 'Pawn gone? Then it is the normal rook mate you already know.'
+		},
+		kbbk: {
+			title: 'Mate with two bishops',
+			subtitle: 'King + two bishops vs king',
+			s1: 'Two bishops on neighbouring diagonals form a wall the king cannot cross.',
+			s2: 'Keep the bishops side by side, close to your king, and shrink the box step by step.',
+			s3: 'Drive the king to the edge, then into any corner – your king must help.',
+			s4: 'In the corner: one bishop covers the escape square, the other gives mate.'
+		},
 		lucena: {
 			title: 'Lucena position',
 			subtitle: 'Winning a rook endgame: building a bridge',

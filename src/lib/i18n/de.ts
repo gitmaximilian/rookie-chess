@@ -595,6 +595,30 @@ export const de: Shape<typeof en> = {
 			s3: 'Lauf diagonal – so kommst du am schnellsten heran.',
 			s4: 'Schlag den Bauern oder blockiere sein Umwandlungsfeld.'
 		},
+		kqkp: {
+			title: 'Dame gegen Bauer',
+			subtitle: 'Den Bauern auf der 7. Reihe stoppen',
+			s1: 'Der Bauer steht kurz vor der Umwandlung. Du musst mit Schachs Zeit gewinnen.',
+			s2: 'Gib von der Seite oder schräg Schach, bis der König vor seinen eigenen Bauern ziehen muss.',
+			s3: 'König vor dem Bauern = Bauer blockiert. Jetzt hast du einen freien Zug: Hol deinen König heran.',
+			s4: 'Wiederholen: Schach, König davor zwingen, näher kommen – bis König und Dame matt setzen oder den Bauern gewinnen.'
+		},
+		krkp: {
+			title: 'Turm gegen Bauer',
+			subtitle: 'Der Turm stoppt den Bauern',
+			s1: 'Stell den Turm hinter den Bauern – von hinten kontrolliert er jedes Feld, das der Bauer erreichen will.',
+			s2: 'Bring deinen König so schnell wie möglich zum Bauern.',
+			s3: 'Turm und König gemeinsam gewinnen den Bauern. Deckt der gegnerische König ihn, greif mit deinem König an.',
+			s4: 'Bauer weg? Dann folgt das normale Turmmatt, das du schon kennst.'
+		},
+		kbbk: {
+			title: 'Matt mit zwei Läufern',
+			subtitle: 'König + zwei Läufer gegen König',
+			s1: 'Zwei Läufer auf benachbarten Diagonalen bilden eine Mauer, die der König nicht überqueren kann.',
+			s2: 'Halte die Läufer nebeneinander, nahe bei deinem König, und verkleinere den Käfig Schritt für Schritt.',
+			s3: 'Treib den König an den Rand, dann in eine beliebige Ecke – dein König muss mithelfen.',
+			s4: 'In der Ecke: Ein Läufer deckt das Fluchtfeld, der andere setzt matt.'
+		},
 		lucena: {
 			title: 'Lucena-Stellung',
 			subtitle: 'Turmendspiel gewinnen: der Brückenbau',
