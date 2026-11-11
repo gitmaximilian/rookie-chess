@@ -1,7 +1,17 @@
 import { expect, test } from '@playwright/test';
 
 // ohne die „schon abgelehnt“-Markierung aus der globalen Konfiguration
-test.use({ storageState: { cookies: [], origins: [] } });
+test.use({
+	storageState: {
+		cookies: [],
+		origins: [
+			{
+				origin: 'http://localhost:4173',
+				localStorage: [{ name: 'rookie:onboarded', value: '1' }]
+			}
+		]
+	}
+});
 
 test('iPhone: Installations-Hinweis mit Anleitung; „Nicht jetzt“ merkt sich die Wahl', async ({
 	page

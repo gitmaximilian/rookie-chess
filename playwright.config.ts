@@ -16,7 +16,10 @@ export default defineConfig({
 			origins: [
 				{
 					origin: 'http://localhost:4173',
-					localStorage: [{ name: 'rookie:installDismissed', value: '9999999999999' }]
+					localStorage: [
+						{ name: 'rookie:installDismissed', value: '9999999999999' },
+						{ name: 'rookie:onboarded', value: '1' }
+					]
 				}
 			]
 		}

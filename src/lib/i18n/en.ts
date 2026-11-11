@@ -824,6 +824,34 @@ export const en = {
 		settingsRow: 'Install as app',
 		installed: 'Rookie is installed as an app.'
 	},
+	onboarding: {
+		welcome: 'Welcome to Rookie',
+		intro: 'Three quick questions so Rookie can start at the right level.',
+		skip: 'Skip',
+		back: 'Back',
+		step: (p: P) => `Question ${p.i} of ${p.n}`,
+		rulesQ: 'Do you know the rules of chess?',
+		rules: {
+			no: { t: 'Not yet', d: 'I’d like to learn how the pieces move.' },
+			some: { t: 'A little', d: 'I know the moves, but not every rule.' },
+			yes: { t: 'Yes', d: 'I know the rules and have played before.' }
+		},
+		levelQ: 'How strong do you play?',
+		level: {
+			new: { t: 'Just started', d: 'I often lose pieces without noticing.' },
+			casual: { t: 'I win sometimes', d: 'Against friends or online, roughly 800–1200.' },
+			club: { t: 'Experienced', d: 'Rated 1200 or more.' },
+			unknown: { t: 'No idea', d: 'Rookie will find out with puzzles.' }
+		},
+		focusQ: 'What would you like to do first?',
+		focus: {
+			rules: { t: 'Learn the basics', d: 'Step by step, with little games.' },
+			tactics: { t: 'Get better at tactics', d: 'Puzzles at the right level.' },
+			play: { t: 'Play games', d: 'Against a bot that suits you.' },
+			openings: { t: 'Learn openings', d: 'Real openings with explanations.' }
+		},
+		done: 'Let’s go!'
+	},
 	about: {
 		eyebrow: 'Open source',
 		title: 'About Rookie',

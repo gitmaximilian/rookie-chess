@@ -11,6 +11,8 @@
 	import { resolve } from '$app/paths';
 	import { refreshAccount, syncNow, account } from '#lib/sync/sync.svelte.js';
 	import InstallPrompt from '#lib/ui/InstallPrompt.svelte';
+	import Onboarding from '#lib/onboarding/Onboarding.svelte';
+	import { needsOnboarding } from '#lib/onboarding/profile.js';
 	import { initInstall } from '#lib/ui/install.svelte.js';
 	import {
 		autoSync,
@@ -26,6 +28,7 @@
 	let updateSW: ((reload?: boolean) => Promise<void>) | null = null;
 
 	let newGames = $state(0);
+	let onboarding = $state(false);
 
 	async function sync() {
 		await autoSync(page.url.pathname);
@@ -39,6 +42,14 @@
 	onMount(async () => {
 		i18n.init();
 		initInstall();
+		// Einstieg nur für ganz neue Nutzer (Test-/Sync-Umgebungen können ihn per localStorage abschalten)
+		let seen = false;
+		try {
+			seen = localStorage.getItem('rookie:onboarded') === '1';
+		} catch {
+			/* egal */
+		}
+		if (!seen && (await needsOnboarding())) onboarding = true;
 		// verknüpfte Konten: neue Partien holen, wenn die App geöffnet wird oder zurückkehrt
 		setTimeout(sync, 2500);
 		// Konto: Stand beim Öffnen holen, beim Verlassen der App sichern
@@ -90,7 +101,7 @@
 
 <TabBar />
 
-<InstallPrompt />
+{#if onboarding}<Onboarding onclose={() => (onboarding = false)} />{:else}<InstallPrompt />{/if}
 
 {#if newGames > 0}
 	<div role="status">

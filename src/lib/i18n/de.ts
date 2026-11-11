@@ -872,6 +872,34 @@ export const de: Shape<typeof en> = {
 		settingsRow: 'Als App installieren',
 		installed: 'Rookie ist als App installiert.'
 	},
+	onboarding: {
+		welcome: 'Willkommen bei Rookie',
+		intro: 'Drei kurze Fragen, damit Rookie auf dem richtigen Niveau startet.',
+		skip: 'Überspringen',
+		back: 'Zurück',
+		step: (p: P) => `Frage ${p.i} von ${p.n}`,
+		rulesQ: 'Kennst du die Schachregeln?',
+		rules: {
+			no: { t: 'Noch nicht', d: 'Ich möchte lernen, wie die Figuren ziehen.' },
+			some: { t: 'Ein bisschen', d: 'Ich kenne die Züge, aber nicht jede Regel.' },
+			yes: { t: 'Ja', d: 'Ich kenne die Regeln und habe schon gespielt.' }
+		},
+		levelQ: 'Wie stark spielst du?',
+		level: {
+			new: { t: 'Gerade angefangen', d: 'Ich verliere oft Figuren, ohne es zu merken.' },
+			casual: { t: 'Ich gewinne manchmal', d: 'Gegen Freunde oder online, etwa 800–1200.' },
+			club: { t: 'Erfahren', d: 'Wertung 1200 oder mehr.' },
+			unknown: { t: 'Keine Ahnung', d: 'Rookie findet es mit Puzzles heraus.' }
+		},
+		focusQ: 'Womit möchtest du anfangen?',
+		focus: {
+			rules: { t: 'Grundlagen lernen', d: 'Schritt für Schritt, mit kleinen Spielen.' },
+			tactics: { t: 'Taktik verbessern', d: 'Puzzles auf deinem Niveau.' },
+			play: { t: 'Partien spielen', d: 'Gegen einen Bot, der zu dir passt.' },
+			openings: { t: 'Eröffnungen lernen', d: 'Echte Eröffnungen mit Erklärungen.' }
+		},
+		done: 'Los geht’s!'
+	},
 	about: {
 		eyebrow: 'Open Source',
 		title: 'Über Rookie',

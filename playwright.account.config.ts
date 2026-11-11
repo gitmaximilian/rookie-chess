@@ -12,6 +12,20 @@ export default defineConfig({
 		reuseExistingServer: false,
 		timeout: 120_000
 	},
-	use: { baseURL: 'http://localhost:8789' },
+	use: {
+		baseURL: 'http://localhost:8789',
+		storageState: {
+			cookies: [],
+			origins: [
+				{
+					origin: 'http://localhost:8789',
+					localStorage: [
+						{ name: 'rookie:installDismissed', value: '9999999999999' },
+						{ name: 'rookie:onboarded', value: '1' }
+					]
+				}
+			]
+		}
+	},
 	projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }]
 });
