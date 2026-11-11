@@ -123,3 +123,156 @@ export function opponentIdea(fenBefore: string, uci: string): string {
 	if (g.isCheck) return t('coach.oppCheck');
 	return autoNote(fenBefore, uci);
 }
+
+// ───────────────────────── Drohungen erkennen ─────────────────────────
+
+export interface Threat {
+	kind: 'mate' | 'material';
+	/** Zug, den der Gegner androht (UCI) */
+	uci: string;
+	san: string;
+	/** bedrohte Figur bei Materialdrohung */
+	role?: Role;
+	mateIn?: number;
+}
+
+/**
+ * „Was würde der Gegner tun, wenn ich jetzt passe?“ – klassische Trainerfrage.
+ * Nullzug: gleiche Stellung, aber der Gegner ist am Zug. Nicht bei Schach.
+ */
+export async function findThreat(fen: string, signal?: AbortSignal): Promise<Threat | null> {
+	const g = new Game(fen);
+	if (g.isCheck || g.end()) return null;
+	const parts = fen.split(' ');
+	parts[1] = parts[1] === 'w' ? 'b' : 'w';
+	parts[3] = '-';
+	const nullFen = parts.join(' ');
+	let ng: Game;
+	try {
+		ng = new Game(nullFen);
+	} catch {
+		return null;
+	}
+	// eigener König stünde im Schach → ungültige Nullzug-Stellung
+	if (ng.legalUcis().length === 0) return null;
+	const res = await engine.analyse({ fen: nullFen, depth: 10, multipv: 1, signal });
+	if (signal?.aborted) return null;
+	const top = res.lines[0];
+	const uci = res.bestmove;
+	if (!top || !uci) return null;
+	const san = figurine(sanForUci(nullFen, uci));
+	if (top.mate !== undefined && top.mate > 0 && top.mate <= 3)
+		return { kind: 'mate', uci, san, mateIn: top.mate };
+	// Materialdrohung: der Zug schlägt etwas und die Bewertung kippt deutlich
+	const target = ng.pieceAt(uci.slice(2, 4));
+	if (!target || VALUE[target] < 3) return null;
+	const now = await evalFen(fen, signal);
+	if (signal?.aborted) return null;
+	const me = g.turn;
+	const nowCp = (me === 'white' ? 1 : -1) * scoreCp(now);
+	const threatCp = -(top.mate !== undefined ? (top.mate > 0 ? 10000 : -10000) : (top.cp ?? 0));
+	if (nowCp - threatCp < 150) return null;
+	return { kind: 'material', uci, san, role: target };
+}
+
+function scoreCp(e: PlyEval): number {
+	if (e.mate !== undefined) return e.mate > 0 ? 10000 : -10000;
+	return e.cp ?? 0;
+}
+
+// ───────────────────────── Eröffnungsprinzipien ─────────────────────────
+
+/**
+ * Freundlicher Hinweis auf Eröffnungsgrundsätze – auch wenn der Zug nach Engine „okay“ ist.
+ * `history` = alle bisherigen Züge (UCI) ab Grundstellung, ohne den aktuellen.
+ */
+export function principleTip(fenBefore: string, uci: string, history: string[]): string {
+	const pos = positionFromFen(fenBefore);
+	const mover = pos.turn;
+	const moveNo = Math.floor(history.length / 2) + 1;
+	if (moveNo > 10) return '';
+	const mv = parseUci(uci) as NormalMove;
+	const piece = pos.board.get(mv.from);
+	if (!piece) return '';
+	const captures = pos.board.get(mv.to) !== undefined;
+	const fromSq = makeSquare(mv.from);
+	const toSq = makeSquare(mv.to);
+	const myMoves = history.filter((_, i) => (i % 2 === 0) === (mover === 'white'));
+
+	if (piece.role === 'queen' && moveNo <= 5 && !captures) return t('coach.tip.queenEarly');
+	if (piece.role === 'king' && Math.abs(mv.to - mv.from) !== 2 && !captures)
+		return t('coach.tip.kingWalk');
+	if (piece.role === 'knight' && /^[ah]/.test(toSq) && moveNo <= 8) return t('coach.tip.rimKnight');
+	if (piece.role === 'pawn' && fromSq[0] === 'f' && moveNo <= 6 && !captures)
+		return t('coach.tip.fPawn');
+	// gleiche Figur zweimal, obwohl noch Leichtfiguren auf der Grundreihe stehen
+	const back = mover === 'white' ? '1' : '8';
+	const undeveloped = ['b', 'c', 'f', 'g'].filter((f) => {
+		const p = pos.board.get(squareIndex(`${f}${back}`));
+		return p && p.color === mover && (p.role === 'knight' || p.role === 'bishop');
+	}).length;
+	if (
+		!captures &&
+		moveNo <= 8 &&
+		undeveloped >= 2 &&
+		piece.role !== 'pawn' &&
+		myMoves.some((m) => m.slice(2, 4) === fromSq)
+	)
+		return t('coach.tip.samePiece');
+	if (moveNo >= 9 && piece.role !== 'king') {
+		const castled = myMoves.some(
+			(m) => /^e1(g1|c1|h1|a1)$|^e8(g8|c8|h8|a8)$/.test(m) && m[1] === back
+		);
+		const kingHome = pos.board.get(squareIndex(`e${back}`))?.role === 'king';
+		if (!castled && kingHome && moveNo === 9) return t('coach.tip.castle');
+	}
+	return '';
+}
+
+function squareIndex(sq: string): number {
+	return sq.charCodeAt(0) - 97 + (Number(sq[1]) - 1) * 8;
+}
+
+// ───────────────────────── Hinweis in Stufen ─────────────────────────
+
+/** Stufe 1: Idee ohne Zug · Stufe 2: welche Figur · Stufe 3: Zug als Pfeil */
+export async function coachHint(
+	fen: string,
+	signal?: AbortSignal
+): Promise<{ idea: string; piece: string; uci: string } | null> {
+	const e = await evalFen(fen, signal);
+	if (signal?.aborted || !e.best) return null;
+	const uci = e.best;
+	const g = new Game(fen);
+	const role = g.pieceAt(uci.slice(0, 2));
+	const captured = g.pieceAt(uci.slice(2, 4));
+	const after = new Game(fen);
+	after.play(uci);
+	let idea: string;
+	if (after.end()?.kind === 'checkmate') idea = t('coach.hint.mate');
+	else if (e.mate !== undefined && Math.abs(e.mate) <= 4 && e.mate > 0 === (g.turn === 'white'))
+		idea = t('coach.hint.mateSoon');
+	else if (captured) idea = t('coach.hint.capture');
+	else if (after.isCheck) idea = t('coach.hint.check');
+	else if (role === 'king' && Math.abs(uci.charCodeAt(0) - uci.charCodeAt(2)) >= 2)
+		idea = t('coach.hint.castle');
+	else if (threats(fen).length) idea = t('coach.hint.defend');
+	else if ((role === 'knight' || role === 'bishop') && /[18]$/.test(uci.slice(0, 2)))
+		idea = t('coach.hint.develop');
+	else if (role === 'pawn' && /^[de]/.test(uci) && Number(fen.split(' ')[5] ?? 1) <= 10)
+		idea = t('coach.hint.centre');
+	else idea = t('coach.hint.improve');
+	return {
+		idea,
+		piece: role
+			? t('coach.hint.piece', { piece: t(`pieces.Poss.${role}`), sq: uci.slice(0, 2) })
+			: '',
+		uci
+	};
+}
+
+/** Antwort des Gegners auf einen Fehler (erster Zug der besten Variante) */
+export async function punishment(fenAfter: string, signal?: AbortSignal): Promise<string | null> {
+	const e = await evalFen(fenAfter, signal);
+	return e.best ?? null;
+}

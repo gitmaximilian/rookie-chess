@@ -7,8 +7,11 @@
 	import Info from '@lucide/svelte/icons/info';
 	import PageHeader from '#lib/ui/PageHeader.svelte';
 	import ProfileTabs from '#lib/ui/ProfileTabs.svelte';
-	import RatingChart from '#lib/ui/RatingChart.svelte';
-	import { db } from '#lib/db/db.js';
+	import RatingHistory from '#lib/ui/RatingHistory.svelte';
+	import Download from '@lucide/svelte/icons/download';
+	import { gamesCsv, statsJson, download } from '#lib/training/statsExport.js';
+	import { getPuzzleRating } from '#lib/training/rating.js';
+	import { db, type GameRow } from '#lib/db/db.js';
 	import { loadOpenings, openingFor } from '#lib/data/openings.js';
 	import {
 		computeStats,
@@ -21,7 +24,8 @@
 
 	let stats = $state<GameStats | null>(null);
 	let list = $state<Insight[]>([]);
-	let series = $state(0);
+	let puzzleHist = $state<{ date: number; rating: number }[]>([]);
+	let rows: GameRow[] = [];
 
 	onMount(async () => {
 		try {
@@ -30,9 +34,32 @@
 			/* offline ohne Eröffnungsnamen */
 		}
 		const games = await db.games.toArray();
+		rows = games;
 		stats = computeStats(games, (m) => openingFor(m)?.name ?? null);
 		list = findInsights(stats);
+		puzzleHist = (await db.ratings.orderBy('date').toArray()).map((r) => ({
+			date: r.date,
+			rating: Math.round(r.rating)
+		}));
 	});
+
+	const stamp = () => new Date().toISOString().slice(0, 10);
+	function exportCsv() {
+		download(
+			`rookie-games-${stamp()}.csv`,
+			gamesCsv(rows, (m) => openingFor(m)?.name ?? null),
+			'text/csv;charset=utf-8'
+		);
+	}
+	async function exportJson() {
+		if (!stats) return;
+		const pr = await getPuzzleRating();
+		download(
+			`rookie-stats-${stamp()}.json`,
+			JSON.stringify(statsJson(stats, stats.ratingSeries, Math.round(pr.rating)), null, 2),
+			'application/json'
+		);
+	}
 
 	function insightText(i: Insight): string {
 		const p = { ...i.params };
@@ -66,13 +93,13 @@
 {/snippet}
 
 {#snippet wdlRow(label: string, w: WDL)}
-	<li class="row">
-		<div class="row-head">
-			<b>{label}</b>
-			<span>{t('stats.games', { n: w.n })} · <b>{t('stats.score', { pct: w.score })}</b></span>
-		</div>
-		{@render wdlBar(w)}
-	</li>
+	{#if w.n}<li class="row">
+			<div class="row-head">
+				<b>{label}</b>
+				<span>{t('stats.games', { n: w.n })} · <b>{t('stats.score', { pct: w.score })}</b></span>
+			</div>
+			{@render wdlBar(w)}
+		</li>{/if}
 {/snippet}
 
 <PageHeader
@@ -90,6 +117,12 @@
 	</div>
 {:else}
 	<div class="wrap">
+		<!-- Online-Wertung -->
+		<section class="card block">
+			<h2>{t('stats.rating')}</h2>
+			<RatingHistory online={stats.ratingSeries} puzzle={puzzleHist} />
+		</section>
+
 		<!-- Erkenntnisse -->
 		<section class="card block insights">
 			<h2><Sparkles size={18} /> {t('stats.insights')}</h2>
@@ -158,31 +191,6 @@
 				{/if}
 			</section>
 		</div>
-
-		<!-- Online-Wertung -->
-		<section class="card block">
-			<h2>{t('stats.rating')}</h2>
-			{#if stats.ratingSeries.length}
-				{#if stats.ratingSeries.length > 1}
-					<div class="chips">
-						{#each stats.ratingSeries as s, i (s.key)}
-							<button class="chip" class:on={series === i} onclick={() => (series = i)}
-								>{t(`stats.source.${s.source}`)} · {speedName(s.speed)}</button
-							>
-						{/each}
-					</div>
-				{/if}
-				{@const cur = stats.ratingSeries[series] ?? stats.ratingSeries[0]}
-				<div class="big">
-					<span class="big-n">{cur.points.at(-1)!.rating}</span>
-					<span class="muted">{t(`stats.source.${cur.source}`)} · {speedName(cur.speed)}</span>
-				</div>
-				<RatingChart points={cur.points} color="var(--c-play)" />
-			{:else}
-				<p class="muted">{t('stats.noRating')}</p>
-				<a class="btn secondary small-btn" href={resolve('/import')}>{t('stats.linkAccount')}</a>
-			{/if}
-		</section>
 
 		<!-- Eröffnungen -->
 		<section class="card block">
@@ -297,6 +305,20 @@
 					</li>
 				{/each}
 			</ul>
+		</section>
+
+		<!-- Export -->
+		<section class="card block export">
+			<h2><Download size={18} /> {t('stats.export')}</h2>
+			<p class="muted">{t('stats.exportText')}</p>
+			<div class="row-btns">
+				<button class="btn secondary" onclick={exportCsv} disabled={!stats.total.n}
+					><Download size={17} /> {t('stats.exportCsv')}</button
+				>
+				<button class="btn secondary" onclick={() => void exportJson()}
+					><Download size={17} /> {t('stats.exportJson')}</button
+				>
+			</div>
 		</section>
 	</div>
 {/if}
@@ -626,6 +648,19 @@
 
 	.small-btn {
 		align-self: flex-start;
+		margin-top: 0.9rem;
+	}
+
+	.export {
+		display: flex;
+		flex-direction: column;
+		gap: 0.7rem;
+	}
+
+	.export .row-btns {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
 	}
 
 	@keyframes rise {

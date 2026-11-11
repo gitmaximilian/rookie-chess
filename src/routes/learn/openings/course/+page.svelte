@@ -9,6 +9,15 @@
 	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import Eye from '@lucide/svelte/icons/eye';
+	import BookOpen from '@lucide/svelte/icons/book-open';
+	import Dumbbell from '@lucide/svelte/icons/dumbbell';
+	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
+	import ChevronRight from '@lucide/svelte/icons/chevron-right';
+	import Shuffle from '@lucide/svelte/icons/shuffle';
+	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
+	import Target from '@lucide/svelte/icons/target';
+	import Compass from '@lucide/svelte/icons/compass';
+	import { depthFor, type Trap } from '#lib/openings/depth.js';
 	import Board, { type Shape } from '#lib/ui/board/Board.svelte';
 	import { Game, sanForUci } from '#lib/chess/game.js';
 	import { figurine } from '#lib/chess/notation.js';
@@ -36,7 +45,175 @@
 
 	let course = $state.raw<Course>(COURSES[0]);
 	let progress = $state<CourseProgress>({});
-	let view = $state<'overview' | 'learn' | 'done'>('overview');
+	let view = $state<'overview' | 'learn' | 'done' | 'study' | 'quiz'>('overview');
+	const depth = $derived(depthFor(course.id));
+
+	// ── Lernen (Zug für Zug mit Erklärung) ──
+	let study = $state.raw<{
+		kind: 'line' | 'trap';
+		line?: CourseLine;
+		trap?: Trap;
+		ucis: string[];
+		notes: Record<number, { en: string; de: string }>;
+	} | null>(null);
+	let si = $state(0);
+	const studyGame = $derived(study ? Game.fromUciMoves(study.ucis.slice(0, si)) : null);
+	const studyNote = $derived.by(() => {
+		if (!study || si === 0) return '';
+		const before = Game.fromUciMoves(study.ucis.slice(0, si - 1)).fen;
+		return loc(study.notes[si - 1]) || autoNote(before, study.ucis[si - 1]);
+	});
+	const studySan = $derived.by(() => {
+		if (!study || si === 0) return '';
+		const before = Game.fromUciMoves(study.ucis.slice(0, si - 1)).fen;
+		return sanForUci(before, study.ucis[si - 1]);
+	});
+	const studyShapes = $derived.by((): Shape[] => {
+		if (!study) return [];
+		const out: Shape[] = [];
+		const isMistake = study.kind === 'trap' && si - 1 === study.trap!.mistake;
+		if (si > 0 && isMistake) {
+			const u = study.ucis[si - 1];
+			out.push({ orig: u.slice(0, 2), dest: u.slice(2, 4), brush: 'bad' });
+		}
+		const nx = study.ucis[si];
+		if (nx) out.push({ orig: nx.slice(0, 2), dest: nx.slice(2, 4), brush: 'info' });
+		return out;
+	});
+
+	function startStudy(l: CourseLine) {
+		stopTimers();
+		study = { kind: 'line', line: l, ucis: lineUcis(l), notes: l.notes };
+		si = 0;
+		view = 'study';
+	}
+
+	function startTrap(tr: Trap) {
+		stopTimers();
+		study = {
+			kind: 'trap',
+			trap: tr,
+			ucis: lineUcis({ id: tr.id, name: tr.name, moves: tr.moves, notes: tr.notes }),
+			notes: tr.notes
+		};
+		si = 0;
+		view = 'study';
+	}
+
+	function studyStep(d: number) {
+		if (!study) return;
+		const n = Math.max(0, Math.min(study.ucis.length, si + d));
+		if (n === si) return;
+		si = n;
+		if (d > 0) {
+			const g = Game.fromUciMoves(study.ucis.slice(0, si));
+			const mv = g.moves.at(-1);
+			if (mv) sound.move(!!mv.captured, g.isCheck);
+		}
+	}
+
+	function onStudyKey(e: KeyboardEvent) {
+		if (view !== 'study') return;
+		if (e.key === 'ArrowRight' || e.key === ' ') {
+			e.preventDefault();
+			studyStep(1);
+		} else if (e.key === 'ArrowLeft') {
+			e.preventDefault();
+			studyStep(-1);
+		}
+	}
+
+	// ── Quiz: gemischte Stellungen aus allen (gelernten) Varianten ──
+	interface QuizItem {
+		fen: string;
+		uci: string;
+		line: CourseLine;
+		ply: number;
+	}
+	let quiz = $state.raw<QuizItem[]>([]);
+	let qi = $state(0);
+	let qScore = $state(0);
+	let qState = $state<'await' | 'right' | 'wrong' | 'done'>('await');
+	let qGame = $state.raw<Game | null>(null);
+	let qv = $state(0);
+	let qFeedback = $state<MoveFeedback | null>(null);
+	const learnedLines = $derived(course.lines.filter((l) => progress[course.id]?.[l.id]));
+
+	function startQuiz() {
+		stopTimers();
+		const pool: QuizItem[] = [];
+		// nur lokal zum Aussortieren doppelter Stellungen
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity
+		const seen = new Set<string>();
+		for (const l of learnedLines.length ? learnedLines : course.lines) {
+			const u = lineUcis(l);
+			const g = new Game();
+			u.forEach((m, i) => {
+				// die ersten Züge sind trivial – erst ab dem 3. eigenen Zug abfragen
+				if (isOwnPly(course, i) && i >= 4 && !seen.has(g.fen)) {
+					seen.add(g.fen);
+					pool.push({ fen: g.fen, uci: m, line: l, ply: i });
+				}
+				g.play(m);
+			});
+		}
+		for (let i = pool.length - 1; i > 0; i--) {
+			const j = Math.floor(Math.random() * (i + 1));
+			[pool[i], pool[j]] = [pool[j], pool[i]];
+		}
+		quiz = pool.slice(0, 10);
+		qi = 0;
+		qScore = 0;
+		loadQuiz();
+		view = 'quiz';
+	}
+
+	function loadQuiz() {
+		const it = quiz[qi];
+		if (!it) {
+			qState = 'done';
+			void bumpActivity('reviews');
+			notifyProgress();
+			return;
+		}
+		qGame = new Game(it.fen);
+		qState = 'await';
+		qFeedback = null;
+		qv++;
+	}
+
+	async function onQuizMove(uci: string) {
+		const it = quiz[qi];
+		if (!it || qState !== 'await' || !qGame) return;
+		if (uci === it.uci || uci + 'q' === it.uci) {
+			const mv = qGame.play(it.uci);
+			sound.move(!!mv?.captured, qGame.isCheck);
+			qScore++;
+			qState = 'right';
+			flash = 'good';
+			setTimeout(() => (flash = ''), 500);
+		} else {
+			sound.bad();
+			qState = 'wrong';
+			flash = 'bad';
+			setTimeout(() => (flash = ''), 500);
+			abort = new AbortController();
+			qFeedback = await feedbackFor(it.fen, uci, abort.signal).catch(() => null);
+		}
+		qv++;
+	}
+
+	const quizShapes = $derived.by((): Shape[] => {
+		void qv;
+		const it = quiz[qi];
+		if (!it || qState !== 'wrong') return [];
+		return [{ orig: it.uci.slice(0, 2), dest: it.uci.slice(2, 4), brush: 'good' }];
+	});
+
+	function stopTimers() {
+		if (timer) clearTimeout(timer);
+		abort?.abort();
+	}
 
 	// ── Lernen ──
 	let line = $state.raw<CourseLine | null>(null);
@@ -207,13 +384,14 @@
 	}
 
 	function toOverview() {
-		if (timer) clearTimeout(timer);
-		abort?.abort();
+		stopTimers();
+		study = null;
 		view = 'overview';
 	}
 </script>
 
 <svelte:head><title>{loc(course.name)} – Rookie</title></svelte:head>
+<svelte:window onkeydown={onStudyKey} />
 
 {#if view === 'overview'}
 	<a class="back" href={resolve('/learn/openings')}><ArrowLeft size={18} /> {t('openings.title')}</a
@@ -235,7 +413,15 @@
 					<li style:--i={i}><span class="num">{i + 1}</span>{loc(idea)}</li>
 				{/each}
 			</ol>
-			<button class="btn big" onclick={() => startLine(firstOpen())}
+			<div class="how">
+				<b>{t('course.howItWorks')}</b>
+				<ol>
+					<li><BookOpen size={15} /> {t('course.step1')}</li>
+					<li><Dumbbell size={15} /> {t('course.step2')}</li>
+					<li><Shuffle size={15} /> {t('course.step3')}</li>
+				</ol>
+			</div>
+			<button class="btn big" onclick={() => startStudy(firstOpen())}
 				><Play size={18} /> {t('course.start')}</button
 			>
 		</section>
@@ -256,13 +442,211 @@
 							<b>{loc(l.name)}</b>
 							<span class="l-moves">{l.moves.split(' ').slice(0, 6).join(' ')} …</span>
 						</span>
-						<button class="btn small" class:secondary={!!done} onclick={() => startLine(l)}
-							>{done ? t('course.repeat') : t('course.learn')}</button
-						>
+						<span class="l-btns">
+							<button
+								class="btn small secondary"
+								onclick={() => startStudy(l)}
+								aria-label="{t('course.study')}: {loc(l.name)}"><BookOpen size={15} /></button
+							>
+							<button class="btn small" class:secondary={!!done} onclick={() => startLine(l)}
+								>{done ? t('course.repeat') : t('course.practise')}</button
+							>
+						</span>
 					</li>
 				{/each}
 			</ul>
+			<button class="btn secondary quiz-btn" onclick={startQuiz}
+				><Shuffle size={17} /> {t('course.quizTitle')}</button
+			>
+			<p class="muted small">{t('course.quizText')}</p>
 		</section>
+
+		{#if depth.plans.length}
+			<section class="card block">
+				<h2><Compass size={18} /> {t('course.plans')}</h2>
+				<p class="muted">{t('course.plansText')}</p>
+				<ul class="plain">
+					{#each depth.plans as pl, i (i)}<li>{loc(pl)}</li>{/each}
+				</ul>
+				{#if depth.pitfalls.length}
+					<h3><TriangleAlert size={16} /> {t('course.pitfalls')}</h3>
+					<ul class="plain warn">
+						{#each depth.pitfalls as pf, i (i)}<li>{loc(pf)}</li>{/each}
+					</ul>
+				{/if}
+			</section>
+		{/if}
+
+		{#if depth.traps.length}
+			<section class="card block">
+				<h2><Target size={18} /> {t('course.traps')}</h2>
+				<p class="muted">{t('course.trapsText')}</p>
+				<ul class="lines">
+					{#each depth.traps as tr (tr.id)}
+						<li>
+							<span class="state trap {tr.kind}"
+								>{#if tr.kind === 'set'}<Target size={14} />{:else}<TriangleAlert
+										size={14}
+									/>{/if}</span
+							>
+							<span class="l-text">
+								<b>{loc(tr.name)}</b>
+								<span class="l-moves"
+									>{tr.kind === 'set' ? t('course.trapSet') : t('course.trapAvoid')}</span
+								>
+							</span>
+							<button class="btn small secondary" onclick={() => startTrap(tr)}
+								><BookOpen size={15} /> {t('course.study')}</button
+							>
+						</li>
+					{/each}
+				</ul>
+			</section>
+		{/if}
+	</div>
+{:else if view === 'study' && study && studyGame}
+	<button class="back" onclick={toOverview}
+		><ArrowLeft size={18} /> {t('course.backToCourse')}</button
+	>
+	<div class="arena">
+		<div class="board-col">
+			<Board
+				fen={studyGame.fen}
+				orientation={course.color}
+				turnColor={studyGame.turn}
+				lastMove={studyGame.lastMove}
+				viewOnly
+				shapes={studyShapes}
+			/>
+			<div class="stepper">
+				<button
+					class="step-btn"
+					onclick={() => studyStep(-1)}
+					disabled={si === 0}
+					aria-label={t('course.prev')}><ChevronLeft size={22} /></button
+				>
+				<span class="step-count">{t('course.moveOf', { n: si, m: study.ucis.length })}</span>
+				<button
+					class="btn step-next"
+					onclick={() => studyStep(1)}
+					disabled={si >= study.ucis.length}>{t('course.next')} <ChevronRight size={18} /></button
+				>
+			</div>
+		</div>
+
+		<aside class="panel card">
+			<p class="crumb">
+				{loc(course.name)} · {study.kind === 'line' ? loc(study.line!.name) : loc(study.trap!.name)}
+			</p>
+			{#if study.kind === 'trap'}
+				<span class="trap-tag {study.trap!.kind}"
+					>{study.trap!.kind === 'set' ? t('course.trapSet') : t('course.trapAvoid')}</span
+				>
+			{/if}
+			<div class="dots" aria-hidden="true">
+				{#each study.ucis as u, i (i + u)}
+					<button
+						class="dot"
+						class:on={i < si}
+						class:own={isOwnPly(course, i)}
+						class:bad={study.kind === 'trap' && i === study.trap!.mistake}
+						tabindex="-1"
+						aria-label={t('course.moveOf', { n: i + 1, m: study.ucis.length })}
+						onclick={() => (si = i + 1)}
+					></button>
+				{/each}
+			</div>
+			{#if si === 0}
+				<div class="study-card">
+					<p>{t('course.studyIntro')}</p>
+				</div>
+			{:else}
+				{@const own = isOwnPly(course, si - 1)}
+				{@const mistake = study.kind === 'trap' && si - 1 === study.trap!.mistake}
+				<div class="study-card" class:own class:mistake>
+					<span class="who"
+						>{mistake ? t('course.theMistake') : own ? t('course.you') : t('course.opponent')}</span
+					>
+					<b class="s-san">{Math.ceil(si / 2)}{si % 2 === 1 ? '.' : '…'} {figurine(studySan)}</b>
+					{#if studyNote}<p>{studyNote}</p>{/if}
+				</div>
+			{/if}
+			{#if si >= study.ucis.length}
+				{#if study.kind === 'line'}
+					<div class="done-box">
+						<p class="muted">{t('course.studyDoneText')}</p>
+						<button class="btn" onclick={() => startLine(study!.line!)}
+							><Dumbbell size={17} /> {t('course.studyDone')}</button
+						>
+					</div>
+				{:else}
+					<button class="btn secondary" onclick={toOverview}>{t('course.backToCourse')}</button>
+				{/if}
+			{/if}
+		</aside>
+	</div>
+{:else if view === 'quiz'}
+	<button class="back" onclick={toOverview}
+		><ArrowLeft size={18} /> {t('course.backToCourse')}</button
+	>
+	<div class="arena">
+		<div class="board-col">
+			{#key qv}
+				<Board
+					fen={qGame?.fen ?? quiz[0]?.fen ?? ''}
+					orientation={course.color}
+					turnColor={qGame?.turn}
+					lastMove={qGame?.lastMove}
+					dests={qState === 'await' && qGame ? qGame.dests() : new Map()}
+					movableColor={course.color}
+					shapes={quizShapes}
+					{flash}
+					isPromotion={(f, to) => qGame?.isPromotion(f as never, to as never) ?? false}
+					onMove={(u) => void onQuizMove(u)}
+				/>
+			{/key}
+		</div>
+		<aside class="panel card">
+			<p class="crumb">{loc(course.name)} · {t('course.quizTitle')}</p>
+			{#if qState === 'done'}
+				<div class="done">
+					<span class="done-ico"><Check size={26} /></span>
+					<h2>{t('course.quizDone', { n: qScore, m: quiz.length })}</h2>
+					<div class="row-btns">
+						<button class="btn" onclick={startQuiz}
+							><Shuffle size={17} /> {t('course.quizAgain')}</button
+						>
+						<button class="btn secondary" onclick={toOverview}>{t('course.backToCourse')}</button>
+					</div>
+				</div>
+			{:else if quiz[qi]}
+				{@const it = quiz[qi]}
+				<span class="step-count">{qi + 1} / {quiz.length}</span>
+				<p class="prompt waiting">{t('course.quizPrompt', { line: loc(it.line.name) })}</p>
+				{#if qState === 'right'}
+					<p class="ok-text">{t('course.quizCorrect')}</p>
+					{#if it.line.notes[it.ply]}<p class="muted">{loc(it.line.notes[it.ply])}</p>{/if}
+				{:else if qState === 'wrong'}
+					{#if qFeedback}<div class="fb {qFeedback.kind}">
+							<b>{qFeedback.title}</b>
+							<p>{qFeedback.text}</p>
+						</div>{/if}
+					<p>
+						{t('course.quizWrong', { san: figurine(sanForUci(it.fen, it.uci)) })}
+					</p>
+					{#if it.line.notes[it.ply]}<p class="muted">{loc(it.line.notes[it.ply])}</p>{/if}
+				{/if}
+				{#if qState !== 'await'}
+					<button
+						class="btn"
+						onclick={() => {
+							qi++;
+							loadQuiz();
+						}}>{t('common.next')} <ArrowRight size={17} /></button
+					>
+				{/if}
+			{/if}
+		</aside>
 	</div>
 {:else}
 	<button class="back" onclick={toOverview}
@@ -413,13 +797,14 @@
 
 	.grid {
 		display: grid;
+		grid-template-columns: minmax(0, 1fr);
 		gap: 0.75rem;
 		max-width: 1040px;
 	}
 
 	@media (min-width: 860px) {
 		.grid {
-			grid-template-columns: 1fr 1fr;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
 			align-items: start;
 		}
 	}
@@ -469,6 +854,220 @@
 		color: var(--c-learn);
 		font-weight: 750;
 		font-size: 0.85rem;
+	}
+
+	.how {
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+		padding: 0.75rem 0.9rem;
+		border-radius: 12px;
+		background: var(--surface-2);
+		font-size: 0.88rem;
+	}
+
+	.how ol {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+		color: var(--text-2);
+		line-height: 1.4;
+	}
+
+	.how li {
+		display: flex;
+		gap: 0.45rem;
+		align-items: flex-start;
+	}
+
+	.how li :global(svg) {
+		flex: none;
+		margin-top: 2px;
+		color: var(--c-learn);
+	}
+
+	.block h2 {
+		display: flex;
+		align-items: center;
+		gap: 0.45rem;
+	}
+
+	.block h3 {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		font-size: 0.98rem;
+		margin-top: 0.3rem;
+	}
+
+	.plain {
+		margin: 0;
+		padding-left: 1.1rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		line-height: 1.45;
+	}
+
+	.plain.warn li::marker {
+		color: var(--bad);
+	}
+
+	.small {
+		font-size: 0.8rem;
+	}
+
+	.quiz-btn {
+		align-self: flex-start;
+		margin-top: 0.3rem;
+	}
+
+	.l-btns {
+		display: flex;
+		gap: 0.35rem;
+		flex: none;
+	}
+
+	.state.trap {
+		color: #fff;
+		border-color: transparent;
+	}
+
+	.state.trap.set {
+		background: var(--c-learn);
+	}
+
+	.state.trap.avoid {
+		background: var(--bad);
+	}
+
+	.stepper {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+		margin-top: 0.6rem;
+	}
+
+	.step-btn {
+		display: grid;
+		place-items: center;
+		width: 48px;
+		height: 46px;
+		border-radius: 14px;
+		border: 1px solid var(--line);
+		background: var(--surface);
+		color: var(--text);
+		cursor: pointer;
+	}
+
+	.step-btn:disabled {
+		opacity: 0.4;
+	}
+
+	.step-count {
+		flex: 1;
+		font-size: 0.85rem;
+		font-weight: 650;
+		color: var(--text-2);
+		font-variant-numeric: tabular-nums;
+	}
+
+	.step-next {
+		min-width: 130px;
+		justify-content: center;
+	}
+
+	.trap-tag {
+		align-self: flex-start;
+		font-size: 0.75rem;
+		font-weight: 700;
+		padding: 0.2rem 0.6rem;
+		border-radius: 999px;
+		color: #fff;
+		background: var(--c-learn);
+	}
+
+	.trap-tag.avoid {
+		background: var(--bad);
+	}
+
+	.dots {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 4px;
+	}
+
+	.dot {
+		width: 12px;
+		height: 12px;
+		padding: 0;
+		border-radius: 4px;
+		border: 1px solid var(--line-strong);
+		background: transparent;
+		cursor: pointer;
+	}
+
+	.dot.own {
+		border-color: var(--c-learn);
+	}
+
+	.dot.on {
+		background: var(--text-3);
+		border-color: var(--text-3);
+	}
+
+	.dot.on.own {
+		background: var(--c-learn);
+		border-color: var(--c-learn);
+	}
+
+	.dot.bad {
+		border-color: var(--bad);
+	}
+
+	.dot.on.bad {
+		background: var(--bad);
+	}
+
+	.study-card {
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+		padding: 0.85rem 1rem;
+		border-radius: 14px;
+		background: var(--surface-2);
+		border-left: 3px solid var(--text-3);
+		line-height: 1.5;
+		animation: rise 300ms var(--ease-out) both;
+	}
+
+	.study-card.own {
+		border-left-color: var(--c-learn);
+	}
+
+	.study-card.mistake {
+		border-left-color: var(--bad);
+		background: color-mix(in srgb, var(--bad) 9%, var(--surface));
+	}
+
+	.s-san {
+		font-family: var(--font-display);
+		font-size: 1.25rem;
+	}
+
+	.done-box {
+		display: flex;
+		flex-direction: column;
+		gap: 0.6rem;
+		align-items: flex-start;
+	}
+
+	.ok-text {
+		font-weight: 750;
+		color: var(--good);
 	}
 
 	.lines {

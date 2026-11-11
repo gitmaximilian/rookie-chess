@@ -14,6 +14,8 @@ export interface ImportedGame {
 	whiteRating?: number;
 	blackRating?: number;
 	speed?: string;
+	/** gewertete Partie? (undefined = unbekannt) */
+	rated?: boolean;
 }
 
 export class ImportError extends Error {
@@ -41,6 +43,7 @@ export function parseLichessNdjson(text: string): ImportedGame[] {
 			createdAt?: number;
 			pgn?: string;
 			speed?: string;
+			rated?: boolean;
 			players?: {
 				white?: { user?: { name?: string }; rating?: number };
 				black?: { user?: { name?: string }; rating?: number };
@@ -62,7 +65,8 @@ export function parseLichessNdjson(text: string): ImportedGame[] {
 			result: result(header(g.pgn, 'Result')),
 			whiteRating: g.players?.white?.rating,
 			blackRating: g.players?.black?.rating,
-			speed: g.speed
+			speed: g.speed,
+			rated: g.rated
 		});
 	}
 	return out;
@@ -74,6 +78,7 @@ interface ChessComGame {
 	end_time: number;
 	rules: string;
 	time_class?: string;
+	rated?: boolean;
 	white: { username: string; rating?: number };
 	black: { username: string; rating?: number };
 }
@@ -92,7 +97,8 @@ export function parseChessComMonth(json: { games?: ChessComGame[] }): ImportedGa
 			result: result(header(g.pgn!, 'Result')),
 			whiteRating: g.white.rating,
 			blackRating: g.black.rating,
-			speed: g.time_class
+			speed: g.time_class,
+			rated: g.rated
 		}));
 }
 
@@ -178,7 +184,8 @@ export function toGameRow(g: ImportedGame, user: string): GameRow | null {
 		externalId: g.externalId,
 		myRating: myColor === 'white' ? g.whiteRating : g.blackRating,
 		oppRating: myColor === 'white' ? g.blackRating : g.whiteRating,
-		speed: g.speed
+		speed: g.speed,
+		...(g.rated === undefined ? {} : { rated: g.rated })
 	};
 }
 

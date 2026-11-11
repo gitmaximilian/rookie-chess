@@ -45,8 +45,14 @@
 	$effect(() => {
 		void current;
 		tick().then(() => {
-			const el = box?.querySelector('.cur');
-			el?.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' });
+			// nur die Zugliste selbst scrollen – nie die Seite (scrollIntoView zog am iPhone die Seite mit)
+			const el = box?.querySelector<HTMLElement>('.cur');
+			if (!box || !el || box.scrollHeight <= box.clientHeight) return;
+			const top = el.offsetTop;
+			const bottom = top + el.offsetHeight;
+			if (top < box.scrollTop) box.scrollTo({ top, behavior: 'smooth' });
+			else if (bottom > box.scrollTop + box.clientHeight)
+				box.scrollTo({ top: bottom - box.clientHeight, behavior: 'smooth' });
 		});
 	});
 </script>
@@ -93,6 +99,7 @@
 
 <style>
 	.moves {
+		position: relative;
 		display: grid;
 		grid-template-columns: 1fr;
 		max-height: 100%;

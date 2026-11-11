@@ -28,6 +28,8 @@ export interface GameRow {
 	oppRating?: number;
 	/** bullet | blitz | rapid | classical | daily */
 	speed?: string;
+	/** gewertete Online-Partie (fehlt bei älteren Importen) */
+	rated?: boolean;
 }
 
 export interface GameAnalysis {

@@ -1042,13 +1042,13 @@
 	.top-line {
 		display: flex;
 		align-items: center;
-		justify-content: space-between;
-		gap: 1rem;
+		gap: 0.6rem;
 		margin-bottom: 0.75rem;
 		max-width: 1100px;
 	}
 
 	.back {
+		flex: none;
 		display: inline-flex;
 		align-items: center;
 		gap: 0.3rem;
@@ -1057,6 +1057,8 @@
 	}
 
 	.opening {
+		flex: 0 1 auto;
+		min-width: 0;
 		font-size: 0.85rem;
 		font-weight: 600;
 		color: var(--c-learn);
@@ -1066,7 +1068,12 @@
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
-		max-width: 60%;
+	}
+
+	.to-board {
+		flex: none;
+		margin-left: auto;
+		white-space: nowrap;
 	}
 
 	.arena {

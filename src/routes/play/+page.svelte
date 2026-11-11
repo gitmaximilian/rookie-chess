@@ -14,7 +14,7 @@
 	import BotAvatar from '#lib/ui/BotAvatar.svelte';
 	import MoveList from '#lib/ui/MoveList.svelte';
 	import { BOTS, botById, chooseBotMove, thinkDelay, type Bot } from '#lib/bots/bots.js';
-	import { Game, INITIAL_FEN, type GameEnd } from '#lib/chess/game.js';
+	import { Game, INITIAL_FEN, sanForUci, type GameEnd } from '#lib/chess/game.js';
 	import {
 		endReason,
 		verdictFor,
@@ -23,7 +23,17 @@
 		colorName
 	} from '#lib/chess/labels.js';
 	import { engine } from '#lib/engine/engine.js';
-	import { assessMove, threats, opponentIdea, type CoachNote } from '#lib/coach/coach.js';
+	import {
+		assessMove,
+		threats,
+		opponentIdea,
+		findThreat,
+		principleTip,
+		coachHint,
+		punishment,
+		type CoachNote,
+		type Threat
+	} from '#lib/coach/coach.js';
 	import GraduationCap from '@lucide/svelte/icons/graduation-cap';
 	import Users from '@lucide/svelte/icons/users';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
@@ -84,6 +94,57 @@
 	let coachBusy = $state(false);
 	let coachPending = $state(false);
 	let coachAbort: AbortController | null = null;
+	let coachTip = $state('');
+	let coachThreat = $state<Threat | null>(null);
+	let threatShown = $state(false);
+	let coachHelp = $state<{ idea: string; piece: string; uci: string; level: number } | null>(null);
+	let helpBusy = $state(false);
+	let retryNote = $state<{ better: string; shown: boolean } | null>(null);
+	let threatAbort: AbortController | null = null;
+
+	function clearCoach() {
+		coachTip = '';
+		coachThreat = null;
+		threatShown = false;
+		coachHelp = null;
+	}
+
+	async function askCoach() {
+		if (!myTurn || helpBusy) return;
+		if (coachHelp) {
+			coachHelp = { ...coachHelp, level: Math.min(3, coachHelp.level + 1) };
+			if (coachHelp.level >= 3) {
+				hintShapes = [
+					{ orig: coachHelp.uci.slice(0, 2), dest: coachHelp.uci.slice(2, 4), brush: 'hint' }
+				];
+				hints++;
+				persist();
+			} else hintShapes = [{ orig: coachHelp.uci.slice(0, 2), brush: 'hint' }];
+			return;
+		}
+		helpBusy = true;
+		const fenNow = game.fen;
+		const h = await coachHint(fenNow);
+		helpBusy = false;
+		if (!h || game.fen !== fenNow) return;
+		coachHelp = { ...h, level: 1 };
+	}
+
+	function showThreat() {
+		if (!coachThreat) return;
+		threatShown = true;
+		hintShapes = [
+			{ orig: coachThreat.uci.slice(0, 2), dest: coachThreat.uci.slice(2, 4), brush: 'bad' }
+		];
+	}
+
+	function showBetter() {
+		if (!retryNote) return;
+		retryNote = { ...retryNote, shown: true };
+		hintShapes = [
+			{ orig: retryNote.better.slice(0, 2), dest: retryNote.better.slice(2, 4), brush: 'good' }
+		];
+	}
 
 	const fen = $derived.by(() => {
 		void v;
@@ -254,22 +315,45 @@
 		coachOpp = null;
 		coachAbort = new AbortController();
 		const fenNow = game.fen;
+		clearCoach();
+		retryNote = null;
+		const history = game.moves.slice(0, -1).map((m) => m.uci);
 		const note = await assessMove(fenBefore, uci, coachAbort.signal);
-		coachBusy = false;
-		if (coachAbort.signal.aborted || game.fen !== fenNow) return;
-		coachNote = note;
-		if (note?.serious) {
-			coachPending = true;
-			sound.bad();
-			hintShapes = [{ orig: uci.slice(0, 2), dest: uci.slice(2, 4), brush: 'bad' }];
+		if (coachAbort.signal.aborted || game.fen !== fenNow) {
+			coachBusy = false;
 			return;
 		}
+		coachNote = note;
+		if (note?.serious) {
+			// zeigen, wie der Gegner den Fehler bestraft
+			const reply = await punishment(fenNow, coachAbort.signal);
+			coachBusy = false;
+			if (coachAbort.signal.aborted || game.fen !== fenNow) return;
+			coachPending = true;
+			sound.bad();
+			hintShapes = [
+				{ orig: uci.slice(0, 2), dest: uci.slice(2, 4), brush: 'bad' },
+				...(reply
+					? [{ orig: reply.slice(0, 2), dest: reply.slice(2, 4), brush: 'bad' as const }]
+					: [])
+			];
+			if (reply && coachNote)
+				coachNote = {
+					...coachNote,
+					text: `${coachNote.text} ${t('coach.punish', { san: figurine(sanForUci(fenNow, reply)) })}`
+				};
+			return;
+		}
+		coachBusy = false;
+		coachTip = note && note.judgement !== 'inaccuracy' ? principleTip(fenBefore, uci, history) : '';
 		afterMove();
 	}
 
 	function coachTakeback() {
 		if (!coachPending) return;
+		const better = coachNote?.better;
 		game.undo(1);
+		retryNote = better ? { better, shown: false } : null;
 		undos++;
 		coachPending = false;
 		coachNote = null;
@@ -329,6 +413,7 @@
 							? t('coach.threat', { piece: t(`pieces.poss.${danger.role}`), sq: danger.square })
 							: ''
 					};
+					void detectThreat(game.fen);
 				}
 			}
 			v++;
@@ -337,6 +422,15 @@
 		} finally {
 			if (!signal.aborted) thinking = false;
 		}
+	}
+
+	async function detectThreat(fenNow: string) {
+		threatAbort?.abort();
+		threatAbort = new AbortController();
+		const th = await findThreat(fenNow, threatAbort.signal).catch(() => null);
+		if (threatAbort.signal.aborted || game.fen !== fenNow) return;
+		// hängende Figur wird schon gemeldet – Materialdrohung nur, wenn es etwas anderes ist
+		coachThreat = th && (th.kind === 'mate' || !coachOpp?.warn) ? th : null;
 	}
 
 	async function hint() {
@@ -361,6 +455,9 @@
 		coachPending = false;
 		coachNote = null;
 		coachOpp = null;
+		clearCoach();
+		retryNote = null;
+		threatAbort?.abort();
 		thinking = false;
 		// bis ich wieder am Zug bin
 		const n = game.turn === myColor ? 2 : 1;
@@ -661,6 +758,30 @@
 						</p>
 						{#if coachOpp.warn}<p class="cb-warn">{coachOpp.warn}</p>{/if}
 					{/if}
+					{#if coachThreat && myTurn}
+						<p class="cb-warn">
+							{coachThreat.kind === 'mate'
+								? t('coach.threatMate', { n: coachThreat.mateIn ?? 1 })
+								: t('coach.threatMaterial', {
+										piece: t(`pieces.Poss.${coachThreat.role ?? 'pawn'}`)
+									})}
+						</p>
+						{#if !threatShown}
+							<button class="cb-link" onclick={showThreat}>{t('coach.showThreat')}</button>
+						{:else}
+							<p class="cb-text">{coachThreat.san}</p>
+						{/if}
+					{/if}
+					{#if retryNote && myTurn}
+						<p class="cb-text">{t('coach.retry')}</p>
+						{#if retryNote.shown}
+							<p class="cb-title j-good">
+								{t('coach.betterWas', { san: figurine(sanForUci(fen, retryNote.better)) })}
+							</p>
+						{:else}
+							<button class="cb-link" onclick={showBetter}>{t('coach.showBetter')}</button>
+						{/if}
+					{/if}
 					{#if coachNote}
 						<p class="cb-title j-{coachNote.judgement}">{coachNote.title}</p>
 						<p class="cb-text">{coachNote.text}</p>
@@ -674,8 +795,30 @@
 								>
 							</div>
 						{/if}
-					{:else if !coachOpp}
+					{:else if !coachOpp && !retryNote}
 						<p class="cb-text">{t('coach.welcome')}</p>
+					{/if}
+					{#if coachTip && !coachPending}<p class="cb-tip">{coachTip}</p>{/if}
+					{#if coachHelp && myTurn}
+						<div class="cb-help">
+							<p><Lightbulb size={15} /> {coachHelp.idea}</p>
+							{#if coachHelp.level >= 2}<p>{coachHelp.piece}</p>{/if}
+						</div>
+					{/if}
+					{#if myTurn && !coachPending}
+						<button
+							class="btn secondary small cb-ask"
+							onclick={() => void askCoach()}
+							disabled={helpBusy}
+							><Lightbulb size={16} />
+							{!coachHelp
+								? t('coach.hint.ask')
+								: coachHelp.level === 1
+									? t('coach.hint.more')
+									: coachHelp.level === 2
+										? t('coach.hint.show')
+										: t('coach.hint.ask')}</button
+						>
 					{/if}
 				</div>
 			{/if}
@@ -946,6 +1089,48 @@
 	.cb-title.j-mistake,
 	.cb-title.j-blunder {
 		color: var(--bad);
+	}
+
+	.cb-link {
+		align-self: flex-start;
+		border: none;
+		background: none;
+		padding: 0;
+		font: inherit;
+		font-size: 0.85rem;
+		font-weight: 700;
+		color: var(--accent);
+		cursor: pointer;
+	}
+
+	.cb-tip {
+		font-size: 0.86rem;
+		line-height: 1.45;
+		padding: 0.5rem 0.65rem;
+		border-radius: 10px;
+		background: var(--c-learn-soft);
+		color: var(--text);
+	}
+
+	.cb-help {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		padding: 0.5rem 0.65rem;
+		border-radius: 10px;
+		background: var(--surface-2);
+		font-size: 0.88rem;
+		line-height: 1.45;
+	}
+
+	.cb-help p {
+		display: flex;
+		gap: 0.35rem;
+		align-items: flex-start;
+	}
+
+	.cb-ask {
+		align-self: flex-start;
 	}
 
 	.cb-actions {

@@ -17,3 +17,16 @@ describe('Coach: Bedrohungen', () => {
 		]);
 	});
 });
+
+describe('Eröffnungsprinzipien', () => {
+	const START = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+	it('warnt vor früher Dame, Randspringer und f-Bauer', async () => {
+		const { principleTip } = await import('./coach');
+		const afterE4E5 = 'rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2';
+		expect(principleTip(afterE4E5, 'd1h5', ['e2e4', 'e7e5'])).toMatch(/queen|Dame/i);
+		expect(principleTip(START, 'g1h3', [])).toMatch(/rim|Rand/i);
+		expect(principleTip(START, 'f2f3', [])).toMatch(/f-pawn|f-Bauer/i);
+		expect(principleTip(START, 'e2e4', [])).toBe('');
+		expect(principleTip(START, 'g1f3', [])).toBe('');
+	});
+});

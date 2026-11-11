@@ -3,6 +3,7 @@ import type { GameRow } from '#lib/db/db.js';
 import { accuracy, type PlyEval } from '#lib/analysis/classify.js';
 import { reviewMoves } from '#lib/analysis/run.js';
 import type { Explanation } from '#lib/analysis/explain.js';
+import { ratingSeriesFrom, type RatingSeries } from '#lib/import/ratings.js';
 
 export type Outcome = 'w' | 'd' | 'l';
 
@@ -57,12 +58,7 @@ export interface GameStats {
 	bySource: { key: string; wdl: WDL }[];
 	bySpeed: { key: string; wdl: WDL }[];
 	vsStrength: { key: 'stronger' | 'equal' | 'weaker'; wdl: WDL }[];
-	ratingSeries: {
-		key: string;
-		source: string;
-		speed: string;
-		points: { date: number; rating: number }[];
-	}[];
+	ratingSeries: RatingSeries[];
 	openings: OpeningStat[];
 	endings: Record<Ending, number>;
 	lossEndings: Record<Ending, number>;
@@ -126,20 +122,7 @@ export function computeStats(
 		.map((key) => ({ key, wdl: wdl(rated.filter((g) => strength(g) === key)) }))
 		.filter((x) => x.wdl.n > 0);
 
-	const ratingSeries = [
-		...groupBy(
-			games.filter((g) => g.myRating && g.speed),
-			(g) => `${g.source}:${g.speed}`
-		)
-	]
-		.map(([key, gs]) => ({
-			key,
-			source: gs[0].source,
-			speed: gs[0].speed!,
-			points: gs.sort((a, b) => a.date - b.date).map((g) => ({ date: g.date, rating: g.myRating! }))
-		}))
-		.filter((s) => s.points.length >= 2)
-		.sort((a, b) => b.points.length - a.points.length);
+	const ratingSeries = ratingSeriesFrom(games).filter((s) => s.points.length >= 2);
 
 	const openings = [
 		...groupBy(finished, (g) => {

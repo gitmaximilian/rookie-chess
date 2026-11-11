@@ -7,7 +7,21 @@ test('Kurs: Variante lernen mit Feedback, danach im Repertoire trainieren', asyn
 	await page.getByRole('link', { name: /Italian Game/ }).click();
 	await expect(page.getByRole('heading', { name: 'Italian Game' })).toBeVisible();
 	await expect(page.getByText('Key ideas')).toBeVisible();
+	await expect(page.getByText('Middlegame plans')).toBeVisible();
+	await expect(page.getByText('Légal’s mate')).toBeVisible();
 	await page.getByRole('button', { name: /Start learning/ }).click();
+
+	// Lernmodus: Zug für Zug mit Erklärung
+	await expect(page.getByText(/Press “Next”/)).toBeVisible();
+	await page.getByRole('button', { name: /^Next/ }).click();
+	await expect(page.getByText(/Take the centre/)).toBeVisible();
+	await expect(page.getByText('Move 1 of 15')).toBeVisible();
+	await page.keyboard.press('ArrowRight');
+	await expect(page.getByText('Move 2 of 15')).toBeVisible();
+	await page.getByRole('button', { name: /Course overview/ }).click();
+
+	// Üben
+	await page.getByRole('button', { name: 'Practise' }).first().click();
 
 	// falscher erster Zug → Feedback, Brett bleibt in der Grundstellung
 	await expect(page.getByText(/Your move/)).toBeVisible();

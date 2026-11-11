@@ -154,6 +154,41 @@ export const en = {
 		event: 'Rookie – game vs bot'
 	},
 	coach: {
+		tip: {
+			queenEarly:
+				'Tip: bringing the queen out this early lets your opponent chase her while developing. Knights and bishops first!',
+			kingWalk: 'Tip: walking the king in the opening is risky – castle instead to keep him safe.',
+			rimKnight:
+				'Tip: “a knight on the rim is dim” – from the edge it controls only half as many squares.',
+			fPawn: 'Tip: moving the f-pawn early weakens your king (the e1–h4 / e8–h5 diagonal).',
+			samePiece:
+				'Tip: try not to move the same piece twice in the opening while others are still at home.',
+			castle: 'Tip: it’s move 9 and your king is still in the centre – think about castling soon.'
+		},
+		hint: {
+			ask: 'Ask coach',
+			more: 'More help',
+			show: 'Show move',
+			mate: 'There’s checkmate in one! Look at every check.',
+			mateSoon: 'You have a forced mate – look for checks that leave the king no squares.',
+			capture: 'You can win material here. Which enemy piece is not defended enough?',
+			check: 'A check is strong here – look at all checking moves.',
+			castle: 'Time to bring your king to safety.',
+			defend: 'One of your pieces is in danger – take care of it first.',
+			develop: 'Develop a piece that is still at home.',
+			centre: 'Grab space in the centre with a pawn.',
+			improve: 'No tactic right now – improve your worst-placed piece.',
+			piece: (p: P) => `Piece to move: ${p.piece} on ${p.sq}.`
+		},
+		threatMate: (p: P) =>
+			`Danger: your opponent threatens mate in ${p.n}! What would they play if it were their move?`,
+		threatMaterial: (p: P) =>
+			`Watch out: ${p.piece} is under attack – your opponent threatens to win material. Defend it or move it.`,
+		showThreat: 'Show threat',
+		punish: (p: P) => `Your opponent could now answer ${p.san}.`,
+		retry: 'Taken back – find a better move. Ask the coach if you need help.',
+		showBetter: 'Show better move',
+		betterWas: (p: P) => `Better was ${p.san}.`,
 		title: 'Coach',
 		toggle: 'Play with coach',
 		toggleText: 'Feedback on every move, warnings and explanations.',
@@ -660,6 +695,37 @@ export const en = {
 		}
 	},
 	course: {
+		study: 'Study',
+		studyLine: 'Study line',
+		practise: 'Practise',
+		howItWorks: 'How you learn',
+		step1: 'Study – go through the line move by move, every move is explained.',
+		step2: 'Practise – play the moves yourself, with hints and engine feedback.',
+		step3: 'Quiz & review – mixed positions and spaced repetition make it stick.',
+		studyIntro: 'Press “Next” to play through the line. Read why each move is played.',
+		moveOf: (p: P) => `Move ${p.n} of ${p.m}`,
+		next: 'Next',
+		prev: 'Back',
+		nextMove: 'Next move',
+		studyDone: 'Now play it yourself',
+		studyDoneText: 'You’ve seen the whole line. Practise it now while it’s fresh.',
+		plans: 'Middlegame plans',
+		plansText: 'What to do after the opening moves are over.',
+		pitfalls: 'Typical mistakes',
+		traps: 'Traps',
+		trapsText: 'Know the tricks – set them yourself and never fall for them.',
+		trapSet: 'Trap you can set',
+		trapAvoid: 'Trap to avoid',
+		theMistake: 'The mistake',
+		quiz: 'Quiz',
+		quizTitle: 'Opening quiz',
+		quizText: '10 mixed positions from this course – find your move.',
+		quizPrompt: (p: P) => `${p.line}: what do you play?`,
+		quizCorrect: 'Correct!',
+		quizWrong: (p: P) => `The course move is ${p.san}.`,
+		quizDone: (p: P) => `${p.n} of ${p.m} correct`,
+		quizAgain: 'New quiz',
+		quizLocked: 'Study a line first to unlock the quiz.',
 		courses: 'Opening courses',
 		coursesText: 'Learn real openings step by step – with an explanation for every important move.',
 		forWhite: 'For White',
@@ -774,6 +840,39 @@ export const en = {
 		more: 'more'
 	},
 	stats: {
+		hist: {
+			range: 'Time range',
+			m1: '1M',
+			m3: '3M',
+			y1: '1Y',
+			all: 'All',
+			puzzles: 'Puzzles',
+			fewInRange: 'Few games in this period – showing your last games.',
+			peak: 'Peak',
+			low: 'Lowest',
+			games: 'Games',
+			wShort: 'W',
+			dShort: 'D',
+			lShort: 'L',
+			performance: 'Performance',
+			avgOpp: (p: P) => `avg. opponent ${p.n}`,
+			bestWin: 'Best win',
+			streak: 'Win streak',
+			streakSub: 'in a row',
+			months: 'Month by month',
+			month: 'Month',
+			end: 'Rating',
+			score: 'Score',
+			allMonths: (p: P) => `Show all ${p.n} months`,
+			less: 'Show less',
+			vs: (p: P) => `vs ${p.name}`,
+			res: { w: 'Win', d: 'Draw', l: 'Loss' }
+		},
+		export: 'Export',
+		exportCsv: 'Games (CSV)',
+		exportJson: 'Statistics (JSON)',
+		exportText:
+			'Download all your games with ratings, openings and accuracy – e.g. for Excel or Numbers.',
 		title: 'Statistics',
 		subtitle: 'How you play – strengths, weaknesses and progress, from all your games.',
 		tabOverview: 'Overview',
@@ -1029,7 +1128,7 @@ export const en = {
 		loadError: 'Couldn’t read that – please paste a valid FEN or PGN.',
 		reset: 'New',
 		copied: 'Copied!',
-		fromHere: 'Open in analysis board'
+		fromHere: 'Analysis board'
 	},
 	summary: {
 		title: 'Overview',

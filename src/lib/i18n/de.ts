@@ -165,6 +165,42 @@ export const de: Shape<typeof en> = {
 		event: 'Rookie – Partie gegen Bot'
 	},
 	coach: {
+		tip: {
+			queenEarly:
+				'Tipp: Die Dame so früh herauszubringen, lässt den Gegner sie mit Tempo jagen. Erst Springer und Läufer!',
+			kingWalk: 'Tipp: Königswanderungen in der Eröffnung sind gefährlich – lieber rochieren.',
+			rimKnight:
+				'Tipp: „Springer am Rand bringt Kummer und Schand“ – am Rand kontrolliert er nur halb so viele Felder.',
+			fPawn: 'Tipp: Ein früher f-Bauernzug schwächt deinen König (Diagonale e1–h4 / e8–h5).',
+			samePiece:
+				'Tipp: Ziehe in der Eröffnung möglichst nicht zweimal dieselbe Figur, solange andere noch zu Hause stehen.',
+			castle: 'Tipp: Schon Zug 9 und dein König steht noch in der Mitte – denk bald an die Rochade.'
+		},
+		hint: {
+			ask: 'Coach fragen',
+			more: 'Mehr Hilfe',
+			show: 'Zug zeigen',
+			mate: 'Hier gibt es Matt in einem Zug! Schau dir jedes Schach an.',
+			mateSoon: 'Du hast ein erzwungenes Matt – suche Schachs, die dem König keine Felder lassen.',
+			capture:
+				'Hier kannst du Material gewinnen. Welche gegnerische Figur ist nicht genug gedeckt?',
+			check: 'Ein Schach ist hier stark – prüfe alle Schachgebote.',
+			castle: 'Zeit, den König in Sicherheit zu bringen.',
+			defend: 'Eine deiner Figuren ist in Gefahr – kümmere dich zuerst darum.',
+			develop: 'Entwickle eine Figur, die noch zu Hause steht.',
+			centre: 'Besetze mit einem Bauern das Zentrum.',
+			improve: 'Gerade keine Taktik – verbessere deine schlechteste Figur.',
+			piece: (p: P) => `Die Figur: ${p.piece} auf ${p.sq}.`
+		},
+		threatMate: (p: P) =>
+			`Achtung: Dein Gegner droht Matt in ${p.n}! Was würde er spielen, wenn er am Zug wäre?`,
+		threatMaterial: (p: P) =>
+			`Achtung: ${p.piece} ist bedroht – dein Gegner droht Material zu gewinnen. Decke oder ziehe weg.`,
+		showThreat: 'Drohung zeigen',
+		punish: (p: P) => `Dein Gegner könnte jetzt ${p.san} antworten.`,
+		retry: 'Zurückgenommen – finde einen besseren Zug. Frag den Coach, wenn du Hilfe brauchst.',
+		showBetter: 'Besseren Zug zeigen',
+		betterWas: (p: P) => `Besser war ${p.san}.`,
 		title: 'Coach',
 		toggle: 'Mit Coach spielen',
 		toggleText: 'Rückmeldung zu jedem Zug, Warnungen und Erklärungen.',
@@ -698,6 +734,39 @@ export const de: Shape<typeof en> = {
 		}
 	},
 	course: {
+		study: 'Lernen',
+		studyLine: 'Variante lernen',
+		practise: 'Üben',
+		howItWorks: 'So lernst du',
+		step1: 'Lernen – geh die Variante Zug für Zug durch, jeder Zug wird erklärt.',
+		step2: 'Üben – spiel die Züge selbst, mit Hinweisen und Engine-Feedback.',
+		step3:
+			'Quiz & Wiederholung – gemischte Stellungen und Wiederholung nach Plan festigen das Wissen.',
+		studyIntro:
+			'Tippe auf „Weiter“, um die Variante durchzuspielen. Lies, warum jeder Zug gespielt wird.',
+		moveOf: (p: P) => `Zug ${p.n} von ${p.m}`,
+		next: 'Weiter',
+		prev: 'Zurück',
+		nextMove: 'Nächster Zug',
+		studyDone: 'Jetzt selbst spielen',
+		studyDoneText: 'Du hast die ganze Variante gesehen. Übe sie jetzt, solange sie frisch ist.',
+		plans: 'Pläne fürs Mittelspiel',
+		plansText: 'Was du tust, wenn die Eröffnungszüge vorbei sind.',
+		pitfalls: 'Typische Fehler',
+		traps: 'Fallen',
+		trapsText: 'Kenne die Tricks – stell sie selbst und tapp nie hinein.',
+		trapSet: 'Falle, die du stellen kannst',
+		trapAvoid: 'Falle, die du vermeiden musst',
+		theMistake: 'Der Fehler',
+		quiz: 'Quiz',
+		quizTitle: 'Eröffnungsquiz',
+		quizText: '10 gemischte Stellungen aus diesem Kurs – finde deinen Zug.',
+		quizPrompt: (p: P) => `${p.line}: Was spielst du?`,
+		quizCorrect: 'Richtig!',
+		quizWrong: (p: P) => `Der Kurszug ist ${p.san}.`,
+		quizDone: (p: P) => `${p.n} von ${p.m} richtig`,
+		quizAgain: 'Neues Quiz',
+		quizLocked: 'Lerne zuerst eine Variante, um das Quiz freizuschalten.',
 		courses: 'Eröffnungskurse',
 		coursesText:
 			'Lerne echte Eröffnungen Schritt für Schritt – mit einer Erklärung zu jedem wichtigen Zug.',
@@ -814,6 +883,39 @@ export const de: Shape<typeof en> = {
 		more: 'mehr'
 	},
 	stats: {
+		hist: {
+			range: 'Zeitraum',
+			m1: '1M',
+			m3: '3M',
+			y1: '1J',
+			all: 'Alle',
+			puzzles: 'Puzzles',
+			fewInRange: 'Wenige Partien in diesem Zeitraum – es werden deine letzten Partien gezeigt.',
+			peak: 'Höchstwert',
+			low: 'Tiefstwert',
+			games: 'Partien',
+			wShort: 'S',
+			dShort: 'R',
+			lShort: 'N',
+			performance: 'Leistung',
+			avgOpp: (p: P) => `Ø Gegner ${p.n}`,
+			bestWin: 'Bester Sieg',
+			streak: 'Siegesserie',
+			streakSub: 'in Folge',
+			months: 'Monat für Monat',
+			month: 'Monat',
+			end: 'Wertung',
+			score: 'Punkte',
+			allMonths: (p: P) => `Alle ${p.n} Monate zeigen`,
+			less: 'Weniger zeigen',
+			vs: (p: P) => `gegen ${p.name}`,
+			res: { w: 'Sieg', d: 'Remis', l: 'Niederlage' }
+		},
+		export: 'Exportieren',
+		exportCsv: 'Partien (CSV)',
+		exportJson: 'Statistik (JSON)',
+		exportText:
+			'Lade alle Partien mit Wertung, Eröffnung und Genauigkeit herunter – z. B. für Excel oder Numbers.',
 		title: 'Statistik',
 		subtitle: 'Wie du spielst – Stärken, Schwächen und Fortschritt aus all deinen Partien.',
 		tabOverview: 'Übersicht',
@@ -1078,7 +1180,7 @@ export const de: Shape<typeof en> = {
 		loadError: 'Das konnte ich nicht lesen – bitte eine gültige FEN oder PGN einfügen.',
 		reset: 'Neu',
 		copied: 'Kopiert!',
-		fromHere: 'Im Analysebrett öffnen'
+		fromHere: 'Analysebrett'
 	},
 	summary: {
 		title: 'Überblick',

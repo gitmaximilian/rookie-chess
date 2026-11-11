@@ -1,8 +1,10 @@
 import { expect, test } from '@playwright/test';
 
-const PGN = (r: string) => `[White "me"]
+const PGN = (r: string) => `[Event "Rated Blitz game"]
+[White "me"]
 [Black "opp"]
 [Result "${r}"]
+[WhiteRatingDiff "+4"]
 
 1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. c3 Nf6 ${r}`;
 
@@ -41,6 +43,12 @@ test('Statistik zeigt Ergebnisse, Wertungsverlauf und Eröffnungen', async ({ pa
 	await expect(page.getByRole('heading', { name: 'Statistics', level: 1 })).toBeVisible();
 	await expect(page.getByText('3 games').first()).toBeVisible();
 	await expect(page.getByText('50% score').first()).toBeVisible();
-	await expect(page.locator('.big-n').nth(1)).toHaveText('1505');
+	// Wertung nach der letzten Partie (Lichess: vorher + RatingDiff)
+	await expect(page.locator('.rh .cur')).toHaveText('1509');
+	await expect(page.getByText('Peak').first()).toBeVisible();
 	await expect(page.getByText('Italian Game').first()).toBeVisible();
+
+	const dl = page.waitForEvent('download');
+	await page.getByRole('button', { name: /Games \(CSV\)/ }).click();
+	expect((await dl).suggestedFilename()).toMatch(/^rookie-games-.*\.csv$/);
 });
