@@ -2,7 +2,7 @@
 	import '@fontsource-variable/bricolage-grotesque';
 	import '../app.css';
 	import { onMount } from 'svelte';
-	import { onNavigate } from '$app/navigation';
+	import { afterNavigate } from '$app/navigation';
 	import { pwaInfo } from 'virtual:pwa-info';
 	import TabBar from '#lib/ui/TabBar.svelte';
 	import Sidebar from '#lib/ui/Sidebar.svelte';
@@ -25,16 +25,19 @@
 		}
 	});
 
-	// Weiche Seitenwechsel (Safari 18+, sonst ohne Animation)
-	onNavigate((navigation) => {
-		if (!document.startViewTransition) return;
-		if (navigation.from?.url.pathname === navigation.to?.url.pathname) return;
-		return new Promise((resolve) => {
-			document.startViewTransition(async () => {
-				resolve();
-				await navigation.complete;
-			});
-		});
+	// Weicher Seitenwechsel ohne View Transitions: Safari fotografiert dabei die Seite,
+	// wodurch die Tab-Leiste kurz verschwindet. Hier bewegt sich nur der Inhalt.
+	let mainEl: HTMLElement;
+	afterNavigate(({ from, to, type }) => {
+		if (type === 'enter' || !from || from.url.pathname === to?.url.pathname) return;
+		if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+		mainEl?.animate(
+			[
+				{ opacity: 0, transform: 'translateY(10px)' },
+				{ opacity: 1, transform: 'none' }
+			],
+			{ duration: 300, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' }
+		);
 	});
 </script>
 
@@ -44,7 +47,7 @@
 
 <Sidebar />
 
-<main>
+<main bind:this={mainEl}>
 	{@render children()}
 </main>
 
@@ -111,7 +114,6 @@
 	}
 
 	main {
-		view-transition-name: main;
 		min-height: 100dvh;
 		padding: calc(var(--safe-top) + 1.25rem) max(1.1rem, var(--safe-right))
 			calc(var(--tabbar-h) + var(--safe-bottom) + 1.5rem) max(1.1rem, var(--safe-left));

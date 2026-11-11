@@ -273,26 +273,6 @@ button {
 }
 
 /* ───────────────────────── Seitenwechsel ───────────────────────── */
-@keyframes vt-out {
-	to {
-		opacity: 0;
-		transform: translateY(-6px);
-	}
-}
-@keyframes vt-in {
-	from {
-		opacity: 0;
-		transform: translateY(10px);
-	}
-}
-
-::view-transition-old(main) {
-	animation: 160ms var(--ease-out) both vt-out;
-}
-::view-transition-new(main) {
-	animation: 320ms var(--ease-out) both vt-in;
-}
-
 @media (prefers-reduced-motion: reduce) {
 	*,
 	*::before,
@@ -300,9 +280,5 @@ button {
 		animation-duration: 0.01ms !important;
 		animation-iteration-count: 1 !important;
 		transition-duration: 0.01ms !important;
-	}
-	::view-transition-old(main),
-	::view-transition-new(main) {
-		animation: none;
 	}
 }
