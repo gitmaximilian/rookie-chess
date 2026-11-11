@@ -20,6 +20,8 @@ async function authenticator(page: Page) {
 async function newDevice(ctx: BrowserContext) {
 	const page = await ctx.newPage();
 	await page.goto('/settings');
+	// erst klicken, wenn die Seite interaktiv ist und den Kontostatus kennt
+	await expect(page.locator('.account[data-status="out"]')).toBeVisible();
 	return page;
 }
 

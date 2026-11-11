@@ -55,7 +55,7 @@
 		});
 </script>
 
-<section class="card block account">
+<section class="card block account" data-status={account.status}>
 	<h2>
 		{#if account.status === 'offline'}<CloudOff size={18} />{:else}<Cloud size={18} />{/if}
 		{t('account.title')}
