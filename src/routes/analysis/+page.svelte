@@ -245,7 +245,9 @@
 	<div class="list-layout">
 		<section class="games">
 			{#if loading}
-				<p class="muted">{t('common.loading')}</p>
+				<div class="sk-list" aria-busy="true" aria-label={t('common.loading')}>
+					{#each [0, 1, 2] as i (i)}<div class="skeleton" style:height="64px"></div>{/each}
+				</div>
 			{:else if games.length === 0}
 				<div class="card empty">
 					<h2>{t('analysis.empty')}</h2>
@@ -456,6 +458,12 @@
 	/* reserviert Platz, solange die Partien aus IndexedDB laden (kein Layout-Sprung) */
 	.games {
 		min-height: 13rem;
+	}
+
+	.sk-list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
 	}
 
 	/* reserviert Platz, solange die Partien aus IndexedDB laden (kein Layout-Sprung) */

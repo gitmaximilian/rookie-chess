@@ -82,7 +82,13 @@
 />
 <ProfileTabs active="stats" />
 
-{#if stats}
+{#if !stats}
+	<div class="wrap" aria-busy="true">
+		<div class="skeleton" style:height="140px"></div>
+		<div class="skeleton" style:height="220px"></div>
+		<div class="skeleton" style:height="220px"></div>
+	</div>
+{:else}
 	<div class="wrap">
 		<!-- Erkenntnisse -->
 		<section class="card block insights">

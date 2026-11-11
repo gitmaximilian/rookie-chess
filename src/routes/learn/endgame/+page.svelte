@@ -248,6 +248,9 @@
 				{onMove}
 				label={t('endgame.board')}
 			/>
+			{#if coach && !theoryStep && status !== 'done'}
+				<p class="coach {coach.kind}" role="status">{coach.text}</p>
+			{/if}
 		</div>
 
 		<aside class="panel card">
@@ -328,9 +331,6 @@
 				<div class="meter" aria-hidden="true">
 					<div class="fill" style:width="{(playerMoves / lesson.maxMoves) * 100}%"></div>
 				</div>
-				{#if coach}
-					<p class="coach {coach.kind}" role="status">{coach.text}</p>
-				{/if}
 				<div class="actions">
 					<button class="btn secondary grow" onclick={hint} disabled={status !== 'playing'}>
 						<Lightbulb size={18} />
@@ -405,12 +405,14 @@
 	}
 
 	.coach {
+		margin-top: 0.55rem;
 		padding: 0.65rem 0.8rem;
 		border-radius: 12px;
 		font-size: 0.92rem;
 		line-height: 1.4;
+		border: 1px solid var(--line);
 		border-left: 3px solid var(--line-strong);
-		background: var(--surface-2);
+		background: var(--surface);
 		animation: fade 260ms var(--ease-out);
 	}
 

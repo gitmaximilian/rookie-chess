@@ -279,6 +279,18 @@
 				{flash}
 				onMove={(u) => void onMove(u)}
 			/>
+			{#if feedback}
+				<div class="fb strip {feedback.kind}" role="status">
+					<b>{feedback.title}</b>
+					<p>{feedback.text}</p>
+				</div>
+			{:else if log[0] && view === 'learn'}
+				<div class="strip note {log[0].who}" role="status">
+					<span class="who">{log[0].who === 'you' ? t('course.you') : t('course.opponent')}</span>
+					<b>{figurine(log[0].san)}</b>
+					{#if log[0].text}<p>{log[0].text}</p>{/if}
+				</div>
+			{/if}
 		</div>
 
 		<aside class="panel card">
@@ -312,13 +324,6 @@
 					{/if}
 				</div>
 
-				{#if feedback}
-					<div class="fb {feedback.kind}" role="status">
-						<b>{feedback.title}</b>
-						<p>{feedback.text}</p>
-					</div>
-				{/if}
-
 				{#if status === 'await'}
 					<div class="row-btns">
 						{#if hintLevel < 3}
@@ -344,7 +349,7 @@
 			{/if}
 
 			<ol class="log">
-				{#each log as e, i (log.length - i)}
+				{#each view === 'learn' ? log.slice(1) : log as e, i (log.length - i)}
 					<li class={e.who} class:latest={i === 0}>
 						<span class="who">{e.who === 'you' ? t('course.you') : t('course.opponent')}</span>
 						<b>{figurine(e.san)}</b>
@@ -557,6 +562,29 @@
 
 	.prompt.waiting {
 		color: var(--text);
+	}
+
+	.strip {
+		margin-top: 0.55rem;
+		padding: 0.65rem 0.85rem;
+		border-radius: 14px;
+		line-height: 1.4;
+		animation: rise 260ms var(--ease-out) both;
+	}
+
+	.strip p {
+		margin-top: 0.15rem;
+		font-size: 0.92rem;
+	}
+
+	.strip.note {
+		background: var(--surface);
+		border: 1px solid var(--line);
+		border-left: 3px solid var(--line-strong);
+	}
+
+	.strip.note.you {
+		border-left-color: var(--c-learn);
 	}
 
 	.fb {

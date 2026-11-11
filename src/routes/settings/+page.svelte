@@ -151,7 +151,13 @@
 		<div class="msg {message.kind}" role="status">{message.text}</div>
 	{/if}
 
-	<AccountCard />
+	<nav class="jump" aria-label={t('settings.title')}>
+		{#each [['s-account', 'account.title'], ['s-look', 'settings.appearance'], ['s-board', 'settings.boardTitle'], ['s-goal', 'settings.goal'], ['s-data', 'settings.data']] as [id, label] (id)}
+			<a href="#{id}">{t(label)}</a>
+		{/each}
+	</nav>
+
+	<div id="s-account" class="anchor"><AccountCard /></div>
 
 	{#if !install.standalone}
 		<button class="card install-row" onclick={startInstall}>
@@ -162,7 +168,7 @@
 		</button>
 	{/if}
 
-	<section class="card block">
+	<section class="card block" id="s-look">
 		<h2>{t('settings.appearance')}</h2>
 		<div class="seg" role="radiogroup" aria-label={t('settings.appearance')}>
 			<button
@@ -230,7 +236,7 @@
 		{/if}
 	</section>
 
-	<section class="card block board-prefs">
+	<section class="card block board-prefs" id="s-board">
 		<h2><Palette size={18} /> {t('settings.boardTitle')}</h2>
 		<div class="bp-grid">
 			<div class="preview">
@@ -305,7 +311,7 @@
 		</div>
 	</section>
 
-	<section class="card block">
+	<section class="card block" id="s-goal">
 		<h2><Target size={18} /> {t('settings.goal')}</h2>
 		<p class="hint">{t('settings.goalText')}</p>
 		<div class="seg" role="radiogroup" aria-label={t('settings.goal')}>
@@ -320,7 +326,7 @@
 		</div>
 	</section>
 
-	<section class="card block">
+	<section class="card block" id="s-data">
 		<h2>{t('settings.data')}</h2>
 		<p class="hint">{t('settings.dataText')}</p>
 		<p class="facts">
@@ -407,6 +413,47 @@
 		font-size: 0.85rem;
 		font-weight: 600;
 		color: var(--text-3);
+	}
+
+	.jump {
+		position: sticky;
+		top: calc(var(--safe-top) + 0.4rem);
+		z-index: 5;
+		display: flex;
+		gap: 0.4rem;
+		overflow-x: auto;
+		scrollbar-width: none;
+		padding: 0.35rem;
+		margin: -0.2rem 0 0.2rem;
+		border-radius: 999px;
+		background: var(--surface-glass);
+		backdrop-filter: saturate(180%) blur(16px);
+		-webkit-backdrop-filter: saturate(180%) blur(16px);
+		border: 1px solid var(--line);
+	}
+
+	.jump::-webkit-scrollbar {
+		display: none;
+	}
+
+	.jump a {
+		flex: none;
+		padding: 0.4rem 0.85rem;
+		border-radius: 999px;
+		font-size: 0.85rem;
+		font-weight: 650;
+		color: var(--text-2);
+		white-space: nowrap;
+	}
+
+	.jump a:hover {
+		background: var(--surface-2);
+		color: var(--text);
+	}
+
+	.anchor,
+	section[id] {
+		scroll-margin-top: 4.5rem;
 	}
 
 	.install-row {

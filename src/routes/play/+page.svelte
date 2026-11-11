@@ -637,9 +637,6 @@
 					</span>
 				{/if}
 			</div>
-		</div>
-
-		<aside class="side card">
 			{#if coachOn && !ended}
 				<div class="coach-box" class:warn={coachNote?.serious} role="status">
 					<div class="cb-head">
@@ -672,6 +669,9 @@
 					{/if}
 				</div>
 			{/if}
+		</div>
+
+		<aside class="side card">
 			<div class="side-moves">
 				<MoveList {moves} />
 			</div>
@@ -709,6 +709,11 @@
 					</button>
 				{/if}
 			</div>
+			{#if ended && savedGameId}
+				<a class="btn analyse-now" href={resolve(`/analysis?game=${savedGameId}`)}
+					><ChartLine size={18} /> {t('play.analyse')}</a
+				>
+			{/if}
 			{#if hints || undos}
 				<p class="helpers">{t('play.helpers', { h: hints, u: undos })}</p>
 			{/if}
@@ -748,6 +753,11 @@
 {/if}
 
 <style>
+	.analyse-now {
+		width: 100%;
+		justify-content: center;
+	}
+
 	/* ── Coach ── */
 	.coach-opt {
 		display: flex;
@@ -830,8 +840,9 @@
 	.coach-box {
 		display: flex;
 		flex-direction: column;
-		gap: 0.45rem;
-		padding: 0.85rem;
+		gap: 0.35rem;
+		margin-top: 0.5rem;
+		padding: 0.7rem 0.85rem;
 		border-radius: 14px;
 		background: var(--c-learn-soft);
 		border: 1px solid color-mix(in srgb, var(--c-learn) 30%, transparent);

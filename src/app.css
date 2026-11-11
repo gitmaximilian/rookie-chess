@@ -282,3 +282,26 @@ button {
 		transition-duration: 0.01ms !important;
 	}
 }
+
+/* Lade-Platzhalter, solange Daten aus IndexedDB kommen */
+.skeleton {
+	border-radius: var(--radius-m, 14px);
+	background: linear-gradient(
+			100deg,
+			transparent 30%,
+			color-mix(in srgb, var(--text) 6%, transparent) 50%,
+			transparent 70%
+		)
+		var(--surface-2);
+	background-size: 200% 100%;
+	animation: skeleton 1.2s ease-in-out infinite;
+}
+
+@keyframes skeleton {
+	from {
+		background-position: 150% 0;
+	}
+	to {
+		background-position: -50% 0;
+	}
+}
