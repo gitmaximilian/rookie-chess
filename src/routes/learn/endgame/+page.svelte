@@ -21,7 +21,9 @@
 		goalText,
 		type Lesson
 	} from '#lib/endgames/lessons.js';
-	import { probe, type TbResult } from '#lib/endgames/tablebase.js';
+	import { probe, rateMove, type TbResult } from '#lib/endgames/tablebase.js';
+	import BookOpen from '@lucide/svelte/icons/book-open';
+	import ArrowLeftIcon from '@lucide/svelte/icons/chevron-left';
 	import {
 		afterPlayerMove,
 		afterOpponentMove,
@@ -45,6 +47,14 @@
 	let offline = $state(false);
 	let earned = $state(0);
 	let best = $state(0);
+	// Theorie vor der Aufgabe
+	let theoryIdx = $state<number | null>(null);
+	// Coach: Rückmeldung zum letzten eigenen Zug
+	let coach = $state<{ kind: 'best' | 'good' | 'slow' | 'holds' | 'warn'; text: string } | null>(
+		null
+	);
+	let tbBefore: TbResult | null = null;
+	let hintStage = $state(0);
 
 	const fen = $derived.by(() => {
 		void v;
@@ -73,6 +83,8 @@
 		const id = page.url.searchParams.get('id') ?? LESSONS[0].id;
 		lesson = lessonById(id) ?? LESSONS[0];
 		best = (await db.endgames.get(lesson.id))?.stars ?? 0;
+		// Neue Lektion: erst die Technik zeigen
+		if (!best) theoryIdx = 0;
 		start(0);
 	});
 
@@ -86,10 +98,13 @@
 		shapes = [];
 		verdict = null;
 		earned = 0;
+		coach = null;
+		hintStage = 0;
 		status = 'playing';
 		const tb = await probe(game.fen);
 		offline = tb.source !== 'tablebase';
 		startDtm = tb.dtm;
+		tbBefore = tb;
 	}
 
 	async function onMove(uci: string) {
@@ -101,6 +116,7 @@
 		}
 		playerMoves++;
 		shapes = [];
+		hintStage = 0;
 		sound.move(!!mv.captured, game.isCheck);
 		v++;
 		status = 'thinking';
@@ -108,6 +124,7 @@
 		if (tb) offline = tb.source !== 'tablebase';
 		const res = afterPlayerMove(lesson, game, playerMoves, tb);
 		if (res.status !== 'continue') return finish(res);
+		coach = coachFor(uci);
 
 		// Gegner antwortet mit dem besten Zug
 		await new Promise((r) => setTimeout(r, 380));
@@ -122,6 +139,40 @@
 		const after = afterOpponentMove(lesson, game);
 		if (after.status !== 'continue') return finish(after);
 		status = 'playing';
+		tbBefore = await probe(game.fen);
+	}
+
+	/** Rückmeldung zum eigenen Zug: Tablebase-Vergleich plus Patt-Warnung */
+	function coachFor(uci: string): typeof coach {
+		if (!lesson || !tbBefore) return null;
+		const win = lesson.goal !== 'draw';
+		// Patt-Gefahr: gegnerischer König hat nur noch ein Feld und steht nicht im Schach
+		if (win && !game.isCheck && game.legalUcis().length === 1)
+			return { kind: 'warn', text: t('endgame.coach.stalemate') };
+		const r = rateMove(tbBefore, uci, win);
+		if (!r) return null;
+		const mate = lesson.goal === 'mate' && r.mine !== undefined;
+		switch (r.kind) {
+			case 'best':
+				return {
+					kind: 'best',
+					text: mate ? t('endgame.coach.bestMate', { n: r.mine! }) : t('endgame.coach.best')
+				};
+			case 'good':
+				return {
+					kind: 'good',
+					text: mate ? t('endgame.coach.goodMate', { n: r.mine! }) : t('endgame.coach.good')
+				};
+			case 'slow':
+				return {
+					kind: 'slow',
+					text: mate
+						? t('endgame.coach.slowMate', { san: r.better ?? '', n: r.best!, m: r.mine! })
+						: t('endgame.coach.slow', { san: r.better ?? '' })
+				};
+			default:
+				return { kind: 'holds', text: t('endgame.coach.holds') };
+		}
 	}
 
 	async function finish(res: Verdict) {
@@ -147,14 +198,20 @@
 		}
 	}
 
+	/** Tipp in zwei Stufen: erst die Figur, dann der Zug */
 	async function hint() {
 		if (status !== 'playing') return;
 		const tb = await probe(game.fen);
-		if (tb.best) {
-			shapes = [{ orig: tb.best.slice(0, 2), dest: tb.best.slice(2, 4), brush: 'hint' }];
-			hints++;
-		}
+		if (!tb.best) return;
+		hintStage = Math.min(2, hintStage + 1);
+		shapes =
+			hintStage === 1
+				? [{ orig: tb.best.slice(0, 2), brush: 'hint' }]
+				: [{ orig: tb.best.slice(0, 2), dest: tb.best.slice(2, 4), brush: 'hint' }];
+		hints++;
 	}
+
+	const theoryStep = $derived(lesson && theoryIdx !== null ? lesson.theory[theoryIdx] : null);
 
 	const msg = $derived(
 		verdict && verdict.status !== 'continue' ? t(verdict.message, verdict.params) : ''
@@ -178,14 +235,14 @@
 	<div class="arena">
 		<div class="board-col">
 			<Board
-				{fen}
+				fen={theoryStep ? theoryStep.fen : fen}
 				orientation={lesson.player}
-				turnColor={turn}
-				{lastMove}
-				{check}
-				{dests}
+				turnColor={theoryStep ? undefined : turn}
+				lastMove={theoryStep ? undefined : lastMove}
+				check={theoryStep ? false : check}
+				dests={theoryStep ? new Map() : dests}
 				movableColor={lesson.player}
-				{shapes}
+				shapes={theoryStep ? theoryStep.shapes : shapes}
 				flash={verdict?.status === 'success' ? 'good' : verdict?.status === 'fail' ? 'bad' : ''}
 				isPromotion={(f, to) => game.isPromotion(f as never, to as never)}
 				{onMove}
@@ -207,7 +264,36 @@
 				<Stars n={best} size={15} />
 			</div>
 
-			{#if status === 'done' && verdict}
+			{#if theoryStep && theoryIdx !== null}
+				<div class="theory">
+					<span class="t-step"
+						>{t('endgame.theoryStep', { i: theoryIdx + 1, n: lesson.theory.length })}</span
+					>
+					<div class="t-dots">
+						{#each lesson.theory.map((_, i) => i) as i (i)}<span class:on={i <= theoryIdx}
+							></span>{/each}
+					</div>
+					<p class="t-text">{lessonSteps(lesson)[theoryIdx]}</p>
+					<div class="actions">
+						{#if theoryIdx > 0}
+							<button
+								class="btn secondary"
+								onclick={() => (theoryIdx = theoryIdx! - 1)}
+								aria-label={t('common.back')}><ArrowLeftIcon size={18} /></button
+							>
+						{/if}
+						{#if theoryIdx < lesson.theory.length - 1}
+							<button class="btn grow" onclick={() => (theoryIdx = theoryIdx! + 1)}
+								>{t('common.next')} <ArrowRight size={18} /></button
+							>
+						{:else}
+							<button class="btn grow" onclick={() => (theoryIdx = null)}
+								>{t('endgame.startChallenge')} <ArrowRight size={18} /></button
+							>
+						{/if}
+					</div>
+				</div>
+			{:else if status === 'done' && verdict}
 				<div class="result {verdict.status}">
 					<h2>{verdict.status === 'success' ? t('endgame.success') : t('endgame.fail')}</h2>
 					{#if verdict.status === 'success'}<Stars n={earned} size={26} animate />{/if}
@@ -242,6 +328,9 @@
 				<div class="meter" aria-hidden="true">
 					<div class="fill" style:width="{(playerMoves / lesson.maxMoves) * 100}%"></div>
 				</div>
+				{#if coach}
+					<p class="coach {coach.kind}" role="status">{coach.text}</p>
+				{/if}
 				<div class="actions">
 					<button class="btn secondary grow" onclick={hint} disabled={status !== 'playing'}>
 						<Lightbulb size={18} />
@@ -257,19 +346,103 @@
 				<p class="offline"><WifiOff size={15} /> {t('endgame.offline')}</p>
 			{/if}
 
-			<div class="howto">
-				<h3>{t('endgame.howTo')}</h3>
-				<ol>
-					{#each lessonSteps(lesson) as step, i (i)}
-						<li>{step}</li>
-					{/each}
-				</ol>
-			</div>
+			{#if !theoryStep}
+				<button class="btn ghost" onclick={() => (theoryIdx = 0)}
+					><BookOpen size={17} /> {t('endgame.showTheory')}</button
+				>
+			{/if}
+
+			{#if !theoryStep}
+				<div class="howto">
+					<h3>{t('endgame.howTo')}</h3>
+					<ol>
+						{#each lessonSteps(lesson) as step, i (i)}
+							<li>{step}</li>
+						{/each}
+					</ol>
+				</div>
+			{/if}
 		</aside>
 	</div>
 {/if}
 
 <style>
+	.theory {
+		display: flex;
+		flex-direction: column;
+		gap: 0.7rem;
+	}
+
+	.t-step {
+		font-size: 0.78rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: var(--c-learn);
+	}
+
+	.t-dots {
+		display: flex;
+		gap: 5px;
+	}
+
+	.t-dots span {
+		flex: 1;
+		height: 4px;
+		border-radius: 999px;
+		background: var(--surface-2);
+		transition: background-color var(--dur) var(--ease-out);
+	}
+
+	.t-dots span.on {
+		background: var(--c-learn);
+	}
+
+	.t-text {
+		font-size: 1.05rem;
+		line-height: 1.5;
+		animation: fade 300ms var(--ease-out);
+	}
+
+	.coach {
+		padding: 0.65rem 0.8rem;
+		border-radius: 12px;
+		font-size: 0.92rem;
+		line-height: 1.4;
+		border-left: 3px solid var(--line-strong);
+		background: var(--surface-2);
+		animation: fade 260ms var(--ease-out);
+	}
+
+	.coach.best,
+	.coach.holds {
+		border-color: var(--good);
+	}
+
+	.coach.good {
+		border-color: var(--c-learn);
+	}
+
+	.coach.slow,
+	.coach.warn {
+		border-color: var(--warn);
+	}
+
+	.btn.ghost {
+		background: none;
+		color: var(--text-2);
+		box-shadow: none;
+		align-self: flex-start;
+		padding-inline: 0.2rem;
+	}
+
+	@keyframes fade {
+		from {
+			opacity: 0;
+			transform: translateY(4px);
+		}
+	}
+
 	.top-line {
 		display: flex;
 		align-items: center;

@@ -434,6 +434,21 @@ export const de: Shape<typeof en> = {
 		offline: 'Offline: Stockfish spielt den Gegner (ohne Tablebase).',
 		stars: (p) => `${p.n} von 3 Sternen`,
 		board: 'Endspiel-Brett',
+		theoryStep: (p: P) => `Technik · Schritt ${p.i} von ${p.n}`,
+		startChallenge: 'Selbst ausprobieren',
+		showTheory: 'Technik nochmal ansehen',
+		coach: {
+			best: 'Ausgezeichnet – der beste Zug.',
+			bestMate: (p: P) => `Ausgezeichnet – der schnellste Weg. Matt in ${p.n}.`,
+			good: 'Gut – weiter auf Kurs.',
+			goodMate: (p: P) => `Guter Zug – Matt in ${p.n}.`,
+			slow: (p: P) => `Immer noch gewonnen, aber ${p.san} war genauer.`,
+			slowMate: (p: P) =>
+				`Immer noch gewonnen, aber langsamer: ${p.san} setzt in ${p.n} statt ${p.m} Zügen matt.`,
+			holds: 'Gute Verteidigung – das Remis hält.',
+			stalemate:
+				'Vorsicht: Der König hat nur noch einen Zug. Nimm ihm nicht das letzte Feld – Patt!'
+		},
 		msg: {
 			mate: 'Schachmatt – perfekt!',
 			stalemateFail:

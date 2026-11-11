@@ -398,6 +398,19 @@ export const en = {
 		offline: 'Offline: Stockfish plays the opponent (no tablebase).',
 		stars: (p: P) => `${p.n} of 3 stars`,
 		board: 'Endgame board',
+		theoryStep: (p: P) => `Technique · step ${p.i} of ${p.n}`,
+		startChallenge: 'Try it yourself',
+		showTheory: 'Show the technique again',
+		coach: {
+			best: 'Excellent – the best move.',
+			bestMate: (p: P) => `Excellent – the fastest way. Mate in ${p.n}.`,
+			good: 'Good – still on track.',
+			goodMate: (p: P) => `Good move – mate in ${p.n}.`,
+			slow: (p: P) => `Still winning, but ${p.san} was more precise.`,
+			slowMate: (p: P) => `Still winning, but slower: ${p.san} mates in ${p.n} instead of ${p.m}.`,
+			holds: 'Good defence – the draw holds.',
+			stalemate: 'Careful: the king has only one move left. Don’t take its last square – stalemate!'
+		},
 		msg: {
 			mate: 'Checkmate – perfect!',
 			stalemateFail:
