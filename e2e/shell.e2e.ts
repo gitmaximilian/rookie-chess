@@ -52,3 +52,16 @@ test('Impressum verweist auf maximilianauer.at', async ({ page }) => {
 		'https://maximilianauer.at/legal/'
 	);
 });
+
+test('Unterseiten mit Parametern funktionieren auch über den Service Worker', async ({
+	page,
+	browserName
+}) => {
+	test.skip(browserName !== 'chromium', 'Service Worker nur in Playwright-Chromium testbar');
+	await page.goto('/learn');
+	await page.evaluate(async () => (await navigator.serviceWorker.ready).active?.state);
+	await page.waitForFunction(async () => (await caches.keys()).length > 0);
+	await page.goto('/learn/endgame?id=kqk');
+	await expect(page.getByRole('heading', { name: 'Mate with the queen' })).toBeVisible();
+	await expect(page.locator('.cg-host')).toBeVisible();
+});

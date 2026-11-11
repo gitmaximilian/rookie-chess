@@ -175,6 +175,8 @@
 		<div
 			bind:this={el}
 			class="cg-host"
+			data-fen={fen}
+			data-orientation={orientation}
 			role="application"
 			aria-label={label ?? t('board.label')}
 		></div>

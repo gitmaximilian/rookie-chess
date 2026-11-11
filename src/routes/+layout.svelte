@@ -11,8 +11,6 @@
 
 	let { children }: LayoutProps = $props();
 
-	const webManifest = $derived(pwaInfo ? pwaInfo.webManifest.linkTag : '');
-
 	onMount(async () => {
 		i18n.init();
 		if (pwaInfo) {
@@ -35,8 +33,7 @@
 </script>
 
 <svelte:head>
-	<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-	{@html webManifest}
+	{#if pwaInfo}<link rel="manifest" href="/manifest.webmanifest" />{/if}
 </svelte:head>
 
 <Sidebar />

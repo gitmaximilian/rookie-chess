@@ -36,7 +36,9 @@ export default defineConfig({
 					runes: ({ filename }) =>
 						filename.split(/[/\\]/).includes('node_modules') ? undefined : true
 				},
-				adapter: adapter({ fallback: '404.html' })
+				adapter: adapter({ fallback: '404.html' }),
+				// absolute Pfade: Seiten funktionieren auch, wenn der Service Worker sie unter anderer URL ausliefert
+				paths: { relative: false }
 			},
 			{
 				registerType: 'autoUpdate',
@@ -73,6 +75,8 @@ export default defineConfig({
 					globPatterns: ['**/*.{woff2,wasm}', '**/openings.json'],
 					globIgnores: ['**/*vietnamese*', '**/sw.js', '**/workbox-*.js'],
 					navigateFallback: '/',
+					// /learn/endgame?id=… usw. sollen die vorgerenderte Seite treffen
+					ignoreURLParametersMatching: [/.*/],
 					cleanupOutdatedCaches: true,
 					// Puzzle-Pakete erst bei Bedarf speichern (ab Phase 1)
 					runtimeCaching: [

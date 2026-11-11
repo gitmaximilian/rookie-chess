@@ -28,7 +28,7 @@ describe('Endspiel-Bewertung', () => {
 		p.play('g1g6');
 		const v = afterPlayerMove(kqk, p, 5, null);
 		expect(v.status).toBe('fail');
-		expect(v.status === 'fail' && v.message).toContain('Patt');
+		expect(v.status === 'fail' && v.message).toBe('endgame.msg.stalemateFail');
 	});
 
 	it('Tablebase „remis“ nach eigenem Zug verschenkt den Sieg', () => {
