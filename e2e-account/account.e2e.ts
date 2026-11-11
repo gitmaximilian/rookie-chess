@@ -71,7 +71,7 @@ test('Konto: erstellen, auf zweitem Gerät anmelden, Stand übernehmen, exportie
 	b.on('dialog', (d) => d.accept());
 	await b.getByRole('button', { name: 'Delete account' }).click();
 	await expect(b.getByText(/Account deleted/)).toBeVisible();
-	expect((await b.request.get('/api/me')).status()).toBe(401);
+	expect(await (await b.request.get('/api/me')).json()).toEqual({ signedIn: false });
 	expect((await a.request.get('/api/sync')).status()).toBe(401);
 	// lokale Daten bleiben
 	await b.reload();

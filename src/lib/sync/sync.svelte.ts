@@ -115,7 +115,11 @@ export async function refreshAccount(): Promise<void> {
 			return;
 		}
 		if (!res.ok) throw new Error();
-		const me = (await res.json()) as { created: number };
+		const me = (await res.json()) as { signedIn?: boolean; created: number };
+		if (me.signedIn === false) {
+			account.status = 'out';
+			return;
+		}
 		account.status = 'in';
 		account.created = me.created;
 		account.lastSync = Number(localStorage.getItem(LAST_SYNC_KEY) ?? 0);
