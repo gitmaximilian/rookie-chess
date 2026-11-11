@@ -35,7 +35,7 @@
 		<a class="all" href={resolve('/analysis')}>{t('home.allGames')} <ArrowRight size={15} /></a>
 	</div>
 
-	<LinkedAccounts compact />
+	<LinkedAccounts compact ctaOnly />
 
 	{#if games === null}
 		<div class="skeleton" style:height="120px"></div>

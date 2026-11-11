@@ -1031,6 +1031,21 @@ export const en = {
 		copied: 'Copied!',
 		fromHere: 'Open in analysis board'
 	},
+	summary: {
+		title: 'Overview',
+		link: 'Link account',
+		loading: 'Loading games …',
+		puzzle: 'Puzzles',
+		today: (p: P) => `today ${p.n}/${p.m}`,
+		strength: 'Strength',
+		strengthSub: 'estimated',
+		form: 'Form',
+		formSub: (p: P) => `${p.pct}% · ${p.n} ${s(p.n, 'game', 'games')}`,
+		formAria: (p: P) => `Last games: ${p.pct}% score`,
+		noGames: 'No games yet',
+		achievements: 'Badges',
+		achievementsSub: 'unlocked'
+	},
 	about: {
 		eyebrow: 'Open source',
 		title: 'About Rookie',

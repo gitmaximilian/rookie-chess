@@ -314,7 +314,12 @@ async function me(env: Env, userId: string): Promise<Response> {
 			.first<{ n: number }>()
 	]);
 	if (!user) return fail(401, 'auth');
-	return json({ signedIn: true, created: user.created, passkeys: creds?.n ?? 0, sync: data ?? null });
+	return json({
+		signedIn: true,
+		created: user.created,
+		passkeys: creds?.n ?? 0,
+		sync: data ?? null
+	});
 }
 
 async function getSync(env: Env, userId: string): Promise<Response> {

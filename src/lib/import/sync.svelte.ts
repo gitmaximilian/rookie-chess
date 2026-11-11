@@ -1,3 +1,4 @@
+/* eslint-disable svelte/prefer-svelte-reactivity -- Sets hier nur lokal während eines Abrufs, nicht als UI-Zustand */
 import { db, getSetting, setSetting } from '#lib/db/db.js';
 import { analyseGame, createMistakePuzzles } from '#lib/analysis/run.js';
 import {

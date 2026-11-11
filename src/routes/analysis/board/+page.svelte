@@ -15,7 +15,7 @@
 	import Board, { type Shape } from '#lib/ui/board/Board.svelte';
 	import EvalBar from '#lib/ui/EvalBar.svelte';
 	import MoveList from '#lib/ui/MoveList.svelte';
-	import { Game, INITIAL_FEN, positionFromFen } from '#lib/chess/game.js';
+	import { Game, positionFromFen } from '#lib/chess/game.js';
 	import { figurine } from '#lib/chess/notation.js';
 	import { engine } from '#lib/engine/engine.js';
 	import { toWhite, formatScore, type PvLine, type Score } from '#lib/engine/uci.js';

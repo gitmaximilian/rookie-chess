@@ -1080,6 +1080,21 @@ export const de: Shape<typeof en> = {
 		copied: 'Kopiert!',
 		fromHere: 'Im Analysebrett öffnen'
 	},
+	summary: {
+		title: 'Überblick',
+		link: 'Konto verknüpfen',
+		loading: 'Partien werden geladen …',
+		puzzle: 'Puzzles',
+		today: (p: P) => `heute ${p.n}/${p.m}`,
+		strength: 'Spielstärke',
+		strengthSub: 'geschätzt',
+		form: 'Form',
+		formSub: (p: P) => `${p.pct} % · ${p.n} ${p.n === 1 ? 'Partie' : 'Partien'}`,
+		formAria: (p: P) => `Letzte Partien: ${p.pct} % der Punkte`,
+		noGames: 'Noch keine Partien',
+		achievements: 'Erfolge',
+		achievementsSub: 'freigeschaltet'
+	},
 	about: {
 		eyebrow: 'Open Source',
 		title: 'Über Rookie',

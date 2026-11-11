@@ -17,7 +17,7 @@
 	import type { Source } from '#lib/import/importers.js';
 	import { t, intlLocale } from '#lib/i18n/i18n.svelte.js';
 
-	let { compact = false }: { compact?: boolean } = $props();
+	let { compact = false, ctaOnly = false }: { compact?: boolean; ctaOnly?: boolean } = $props();
 
 	let linked = $state<LinkedAccounts | null>(null);
 	let ratings = $state<OnlineRating[]>([]);
@@ -113,7 +113,7 @@
 		</div>
 		<p class="fine">{t('import.noPassword')}</p>
 	</section>
-{:else if linked}
+{:else if linked && !ctaOnly}
 	<section class="strip card" class:compact>
 		<div class="accs">
 			{#each SOURCES.filter(([s]) => linked?.[s]) as [src, label] (src)}
@@ -174,6 +174,7 @@
 	}
 
 	.cta {
+		min-width: 0;
 		display: flex;
 		flex-direction: column;
 		gap: 0.8rem;
@@ -211,16 +212,18 @@
 
 	.forms {
 		display: grid;
+		grid-template-columns: minmax(0, 1fr);
 		gap: 0.5rem;
 	}
 
 	@media (min-width: 700px) {
-		.forms {
-			grid-template-columns: 1fr 1fr;
+		.cta:not(.compact) .forms {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
 		}
 	}
 
 	.f {
+		min-width: 0;
 		display: flex;
 		align-items: center;
 		gap: 0.5rem;
@@ -232,6 +235,7 @@
 	.f input {
 		flex: 1;
 		min-width: 0;
+		width: 100%;
 		height: 38px;
 		padding: 0 0.7rem;
 		border-radius: 10px;
