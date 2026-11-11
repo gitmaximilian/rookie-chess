@@ -32,7 +32,9 @@ export const en = {
 		black: 'Black',
 		you: 'You',
 		moves: (p: P) => `${p.n} ${s(p.n, 'move', 'moves')}`,
-		enterNext: 'Enter or → for the next one'
+		enterNext: 'Enter or → for the next one',
+		updateAvailable: 'New version available',
+		reload: 'Reload'
 	},
 	pieces: {
 		name: {
@@ -528,7 +530,7 @@ export const en = {
 		username: 'Username',
 		count: 'Number of games',
 		load: 'Import games',
-		loading: (p: P) => `Loading games … ${p.n}`,
+		loading: (p: P) => `Loading games …${p.n ? ' ' + p.n : ''}`,
 		analysing: (p: P) => `Analysing game ${p.i} of ${p.n} …`,
 		done: (p: P) =>
 			`${p.g} new ${s(p.g, 'game', 'games')} imported, ${p.m} new ${s(p.m, 'exercise', 'exercises')} from your mistakes.`,

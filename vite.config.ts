@@ -41,7 +41,7 @@ export default defineConfig({
 				paths: { relative: false }
 			},
 			{
-				registerType: 'autoUpdate',
+				registerType: 'prompt',
 				strategies: 'generateSW',
 				injectRegister: false,
 				kit: { adapterFallback: '404.html', trailingSlash: 'never' },

@@ -40,7 +40,9 @@ export const de: Shape<typeof en> = {
 		black: 'Schwarz',
 		you: 'Du',
 		moves: (p) => `${p.n} ${s(p.n, 'Zug', 'Züge')}`,
-		enterNext: 'Enter oder → für das nächste'
+		enterNext: 'Enter oder → für das nächste',
+		updateAvailable: 'Neue Version verfügbar',
+		reload: 'Neu laden'
 	},
 	pieces: {
 		name: {
@@ -561,7 +563,7 @@ export const de: Shape<typeof en> = {
 		username: 'Benutzername',
 		count: 'Anzahl Partien',
 		load: 'Partien importieren',
-		loading: (p) => `Lade Partien … ${p.n}`,
+		loading: (p) => `Lade Partien …${p.n ? ' ' + p.n : ''}`,
 		analysing: (p) => `Analysiere Partie ${p.i} von ${p.n} …`,
 		done: (p) =>
 			`${p.g} neue ${s(p.g, 'Partie', 'Partien')} importiert, ${p.m} neue ${s(p.m, 'Übung', 'Übungen')} aus deinen Fehlern.`,

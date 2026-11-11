@@ -1,0 +1,157 @@
+import { Game } from '#lib/chess/game.js';
+import type { GameRow } from '#lib/db/db.js';
+
+export type Source = 'lichess' | 'chesscom';
+
+export interface ImportedGame {
+	externalId: string;
+	source: Source;
+	pgn: string;
+	date: number;
+	white: string;
+	black: string;
+	result: GameRow['result'];
+}
+
+export class ImportError extends Error {
+	constructor(public code: 'notFound' | 'network' | 'none') {
+		super(code);
+	}
+}
+
+function result(r: string | undefined): GameRow['result'] {
+	return r === '1-0' || r === '0-1' || r === '1/2-1/2' ? r : '*';
+}
+
+function header(pgn: string, key: string): string | undefined {
+	return pgn.match(new RegExp(`\\[${key}\\s+"([^"]*)"\\]`))?.[1];
+}
+
+/** Lichess NDJSON (pgnInJson=true) → Partien */
+export function parseLichessNdjson(text: string): ImportedGame[] {
+	const out: ImportedGame[] = [];
+	for (const line of text.split('\n')) {
+		if (!line.trim()) continue;
+		let g: {
+			id: string;
+			variant?: string;
+			createdAt?: number;
+			pgn?: string;
+			players?: { white?: { user?: { name?: string } }; black?: { user?: { name?: string } } };
+		};
+		try {
+			g = JSON.parse(line);
+		} catch {
+			continue;
+		}
+		if (!g.pgn || (g.variant && g.variant !== 'standard')) continue;
+		out.push({
+			externalId: `lichess:${g.id}`,
+			source: 'lichess',
+			pgn: g.pgn,
+			date: g.createdAt ?? Date.now(),
+			white: g.players?.white?.user?.name ?? header(g.pgn, 'White') ?? '?',
+			black: g.players?.black?.user?.name ?? header(g.pgn, 'Black') ?? '?',
+			result: result(header(g.pgn, 'Result'))
+		});
+	}
+	return out;
+}
+
+interface ChessComGame {
+	url: string;
+	pgn?: string;
+	end_time: number;
+	rules: string;
+	white: { username: string };
+	black: { username: string };
+}
+
+/** Chess.com Monatsarchiv → Partien (nur Standardschach) */
+export function parseChessComMonth(json: { games?: ChessComGame[] }): ImportedGame[] {
+	return (json.games ?? [])
+		.filter((g) => g.rules === 'chess' && g.pgn)
+		.map((g) => ({
+			externalId: `chesscom:${g.url}`,
+			source: 'chesscom' as const,
+			pgn: g.pgn!,
+			date: g.end_time * 1000,
+			white: g.white.username,
+			black: g.black.username,
+			result: result(header(g.pgn!, 'Result'))
+		}));
+}
+
+export async function fetchLichess(
+	user: string,
+	max: number,
+	fetcher: typeof fetch = fetch
+): Promise<ImportedGame[]> {
+	let res: Response;
+	try {
+		res = await fetcher(
+			`https://lichess.org/api/games/user/${encodeURIComponent(user)}?max=${max}&pgnInJson=true&moves=true&clocks=false&evals=false&opening=false`,
+			{ headers: { Accept: 'application/x-ndjson' } }
+		);
+	} catch {
+		throw new ImportError('network');
+	}
+	if (res.status === 404) throw new ImportError('notFound');
+	if (!res.ok) throw new ImportError('network');
+	return parseLichessNdjson(await res.text()).slice(0, max);
+}
+
+export async function fetchChessCom(
+	user: string,
+	max: number,
+	fetcher: typeof fetch = fetch
+): Promise<ImportedGame[]> {
+	let archives: string[];
+	try {
+		const res = await fetcher(
+			`https://api.chess.com/pub/player/${encodeURIComponent(user.toLowerCase())}/games/archives`
+		);
+		if (res.status === 404) throw new ImportError('notFound');
+		if (!res.ok) throw new ImportError('network');
+		archives = (await res.json()).archives ?? [];
+	} catch (e) {
+		throw e instanceof ImportError ? e : new ImportError('network');
+	}
+	const out: ImportedGame[] = [];
+	// neueste Monate zuerst
+	for (const url of [...archives].reverse()) {
+		if (out.length >= max) break;
+		try {
+			const month = await (await fetcher(url)).json();
+			const games = parseChessComMonth(month).sort((a, b) => b.date - a.date);
+			out.push(...games);
+		} catch {
+			throw new ImportError('network');
+		}
+	}
+	return out.sort((a, b) => b.date - a.date).slice(0, max);
+}
+
+/** Wandelt eine importierte Partie in eine Datenbankzeile (oder null bei ungültigem PGN) */
+export function toGameRow(g: ImportedGame, user: string): GameRow | null {
+	let game: Game;
+	try {
+		game = Game.fromPgn(g.pgn);
+	} catch {
+		return null;
+	}
+	if (game.ply < 4) return null;
+	const me = user.toLowerCase();
+	const myColor = g.black.toLowerCase() === me ? 'black' : 'white';
+	return {
+		date: g.date,
+		pgn: g.pgn,
+		moves: game.moves.map((m) => m.uci),
+		startFen: game.startFen,
+		result: g.result,
+		myColor,
+		opponent: myColor === 'white' ? g.black : g.white,
+		source: g.source,
+		externalId: g.externalId
+	};
+}
