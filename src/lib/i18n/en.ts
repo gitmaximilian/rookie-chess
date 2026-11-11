@@ -525,6 +525,52 @@ export const en = {
 			}
 		}
 	},
+	course: {
+		courses: 'Opening courses',
+		coursesText: 'Learn real openings step by step – with an explanation for every important move.',
+		forWhite: 'For White',
+		vsE4: 'Black against 1.e4',
+		vsD4: 'Black against 1.d4',
+		level1: 'Easy',
+		level2: 'Medium',
+		level3: 'Advanced',
+		progress: (p: P) => `${p.n} of ${p.m} lines learned`,
+		ideas: 'Key ideas',
+		lines: 'Lines',
+		learn: 'Learn',
+		repeat: 'Repeat',
+		learned: 'Learned',
+		start: 'Start learning',
+		you: 'You',
+		opponent: 'Opponent',
+		yourMove: 'Your move – what do you play?',
+		watch: 'Watch the opponent’s reply …',
+		hint: 'Hint',
+		hintPiece: (p: P) => `Piece to move: ${p.piece}`,
+		showMove: 'Show me',
+		correct: 'Correct!',
+		retry: 'Try again',
+		checking: 'Checking your move …',
+		lineDone: 'Line learned!',
+		lineDoneText: (p: P) =>
+			`${p.n} of ${p.m} moves found on the first try. The line is now in your repertoire and comes back for review.`,
+		nextLine: 'Next line',
+		again: 'Again',
+		review: 'Review due moves',
+		backToCourse: 'Course overview',
+		fb: {
+			playableTitle: 'Playable – but not our move',
+			playableText: 'That move is fine, but in this opening we play something else. Try again!',
+			dubiousTitle: 'Not ideal',
+			dubiousText: 'This move makes your position worse. Try again!'
+		},
+		auto: {
+			castle: 'Castles – the king is safe and the rook joins the game.',
+			capture: (p: P) => `Takes the ${p.piece} on ${p.sq}.`,
+			centre: 'Fights for the centre.',
+			develop: (p: P) => `Develops the ${p.piece}.`
+		}
+	},
 	import: {
 		eyebrow: 'Import',
 		title: 'Import your games',

@@ -4,7 +4,6 @@
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import Play from '@lucide/svelte/icons/play';
 	import PenLine from '@lucide/svelte/icons/pen-line';
-	import Plus from '@lucide/svelte/icons/plus';
 	import Check from '@lucide/svelte/icons/check';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
@@ -17,10 +16,7 @@
 	import { figurine } from '#lib/chess/notation.js';
 	import { db, type RepertoireNodeRow, bumpActivity } from '#lib/db/db.js';
 	import {
-		STARTERS,
 		addLine,
-		addStarter,
-		hasStarter,
 		movesAt,
 		removeNode,
 		repertoireStats,
@@ -31,6 +27,8 @@
 	import { openingFor, continuations, onOpeningsLoaded } from '#lib/data/openings.js';
 	import { sound } from '#lib/ui/sound.js';
 	import { t } from '#lib/i18n/i18n.svelte.js';
+	import { COURSES, loc, noteFor, type Course } from '#lib/openings/courses.js';
+	import { getCourseProgress, type CourseProgress } from '#lib/openings/progress.js';
 
 	type View = 'overview' | 'edit' | 'train';
 	let view = $state<View>('overview');
@@ -40,7 +38,6 @@
 		white: { mine: 0, due: 0 },
 		black: { mine: 0, due: 0 }
 	});
-	let starterState = $state<Record<string, boolean>>({});
 	let openingsReady = $state(0);
 
 	onMount(() => {
@@ -50,7 +47,7 @@
 
 	async function refresh() {
 		stats = { white: await repertoireStats('white'), black: await repertoireStats('black') };
-		for (const s of STARTERS) starterState[s.id] = await hasStarter(s);
+		courseProgress = await getCourseProgress();
 	}
 
 	// ── Editor ──
@@ -141,6 +138,7 @@
 	let trainStatus = $state<'idle' | 'waiting' | 'correct' | 'wrong' | 'done' | 'empty'>('idle');
 	let trainShapes = $state<Shape[]>([]);
 	let wrongSan = $state('');
+	let wrongWhy = $state('');
 	let streak = $state(0);
 
 	const tFen = $derived.by(() => {
@@ -205,6 +203,7 @@
 		if (!hit) {
 			trainStatus = 'wrong';
 			wrongSan = trainNode.san;
+			wrongWhy = noteFor(trainGame.fen, trainNode.uci);
 			trainShapes = [
 				{ orig: trainNode.uci.slice(0, 2), dest: trainNode.uci.slice(2, 4), brush: 'good' }
 			];
@@ -254,14 +253,22 @@
 		refresh();
 	}
 
-	async function addStarterRep(id: string) {
-		const s = STARTERS.find((x) => x.id === id)!;
-		await addStarter(s);
-		starterState[id] = true;
-		await refresh();
-	}
-
 	const sides: Side[] = ['white', 'black'];
+
+	const COURSE_GROUPS = [
+		{ key: 'w', label: 'course.forWhite', match: (c: Course) => c.color === 'white' },
+		{
+			key: 'e4',
+			label: 'course.vsE4',
+			match: (c: Course) => c.color === 'black' && c.group === 'e4'
+		},
+		{
+			key: 'd4',
+			label: 'course.vsD4',
+			match: (c: Course) => c.color === 'black' && c.group === 'd4'
+		}
+	];
+	let courseProgress = $state<CourseProgress>({});
 </script>
 
 <svelte:head><title>{t('openings.title')} – Rookie</title></svelte:head>
@@ -295,26 +302,30 @@
 		{/each}
 	</div>
 
-	<h2 class="sec">{t('openings.starters')}</h2>
-	<p class="sec-text">{t('openings.startersText')}</p>
-	<div class="starters">
-		{#each STARTERS as s (s.id)}
-			<div class="starter card">
-				<span class="swatch {s.color}"></span>
-				<div class="st-text">
-					<b>{t(`openings.rep.${s.id}.name`)}</b>
-					<span>{t(`openings.rep.${s.id}.text`)}</span>
-				</div>
-				{#if starterState[s.id]}
-					<span class="added"><Check size={16} /> {t('openings.added')}</span>
-				{:else}
-					<button class="btn small" onclick={() => addStarterRep(s.id)}
-						><Plus size={16} /> {t('openings.add')}</button
-					>
-				{/if}
-			</div>
-		{/each}
-	</div>
+	<h2 class="sec">{t('course.courses')}</h2>
+	<p class="sec-text">{t('course.coursesText')}</p>
+	{#each COURSE_GROUPS as grp (grp.key)}
+		<h3 class="grp">{t(grp.label)}</h3>
+		<div class="courses">
+			{#each COURSES.filter(grp.match) as c, i (c.id)}
+				{@const learned = c.lines.filter((l) => courseProgress[c.id]?.[l.id]).length}
+				<a
+					class="course card pressable"
+					style:--i={i}
+					href={resolve(`/learn/openings/course?id=${c.id}`)}
+				>
+					<span class="c-top">
+						<span class="swatch {c.color}"></span>
+						<span class="lvl l{c.level}">{t(`course.level${c.level}`)}</span>
+					</span>
+					<b>{loc(c.name)}</b>
+					<span class="c-tag">{loc(c.tagline)}</span>
+					<span class="c-bar"><span style:width="{(learned / c.lines.length) * 100}%"></span></span>
+					<span class="c-prog">{t('course.progress', { n: learned, m: c.lines.length })}</span>
+				</a>
+			{/each}
+		</div>
+	{/each}
 {:else if view === 'edit'}
 	<button class="back" onclick={backToOverview}
 		><ArrowLeft size={18} /> {t('openings.title')}</button
@@ -430,6 +441,7 @@
 						{t('openings.trainPrompt')}
 					{/if}
 				</div>
+				{#if trainStatus === 'wrong' && wrongWhy}<p class="why">{wrongWhy}</p>{/if}
 				<p class="streak"><Flame size={18} /> {streak}</p>
 				<div class="row-btns">
 					{#if trainStatus === 'wrong'}
@@ -456,6 +468,102 @@
 		padding: 0;
 		cursor: pointer;
 		margin-bottom: 0.5rem;
+	}
+
+	.grp {
+		font-size: 0.82rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: var(--text-2);
+		margin: 1.1rem 0 0.55rem;
+	}
+
+	.courses {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+		gap: 0.6rem;
+		max-width: 1040px;
+	}
+
+	.course {
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+		padding: 1rem;
+		color: var(--text);
+		animation: rise 420ms var(--ease-out) both;
+		animation-delay: calc(var(--i) * 45ms);
+	}
+
+	.c-top {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 0.2rem;
+	}
+
+	.lvl {
+		font-size: 0.72rem;
+		font-weight: 700;
+		padding: 0.15rem 0.5rem;
+		border-radius: 999px;
+		background: var(--surface-2);
+		color: var(--text-2);
+	}
+
+	.lvl.l1 {
+		color: var(--c-learn);
+		background: var(--c-learn-soft);
+	}
+
+	.lvl.l3 {
+		color: var(--c-play);
+		background: var(--c-play-soft);
+	}
+
+	.course b {
+		font-size: 1.05rem;
+	}
+
+	.c-tag {
+		font-size: 0.85rem;
+		color: var(--text-2);
+		line-height: 1.35;
+		flex: 1;
+	}
+
+	.c-bar {
+		height: 5px;
+		margin-top: 0.4rem;
+		border-radius: 999px;
+		background: var(--surface-2);
+		overflow: hidden;
+	}
+
+	.c-bar span {
+		display: block;
+		height: 100%;
+		background: var(--c-learn);
+		border-radius: inherit;
+	}
+
+	.c-prog {
+		font-size: 0.75rem;
+		color: var(--text-2);
+	}
+
+	.why {
+		font-size: 0.92rem;
+		line-height: 1.45;
+		color: var(--text-2);
+	}
+
+	@keyframes rise {
+		from {
+			opacity: 0;
+			transform: translateY(8px);
+		}
 	}
 
 	.sides {

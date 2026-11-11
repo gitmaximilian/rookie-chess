@@ -1,26 +1,42 @@
 import { expect, test } from '@playwright/test';
 import { fen, playUci } from './helpers/board';
 
-test('Start-Repertoire hinzufügen und trainieren', async ({ page }) => {
+test('Kurs: Variante lernen mit Feedback, danach im Repertoire trainieren', async ({ page }) => {
+	test.setTimeout(90_000);
 	await page.goto('/learn/openings');
-	const italian = page.locator('.starter', { hasText: 'Italian Game' });
-	await italian.getByRole('button', { name: /Add/ }).click();
-	await expect(italian.getByText('Added')).toBeVisible();
-	await expect(page.locator('.side.white .meta')).toContainText('in your repertoire');
+	await page.getByRole('link', { name: /Italian Game/ }).click();
+	await expect(page.getByRole('heading', { name: 'Italian Game' })).toBeVisible();
+	await expect(page.getByText('Key ideas')).toBeVisible();
+	await page.getByRole('button', { name: /Start learning/ }).click();
 
+	// falscher erster Zug → Feedback, Brett bleibt in der Grundstellung
+	await expect(page.getByText(/Your move/)).toBeVisible();
+	await playUci(page, 'a2a3');
+	await expect(page.locator('.fb')).toBeVisible({ timeout: 30_000 });
+	expect(await fen(page)).toMatch(/^rnbqkbnr\/pppppppp\/8\/8\/8\/8\/PPPPPPPP\/RNBQKBNR w/);
+
+	// Tipp zeigt die Figur
+	await page.getByRole('button', { name: /Hint/ }).click();
+	await expect(page.getByText(/Piece to move: pawn/)).toBeVisible();
+
+	// Variante durchspielen: Weiß-Züge der Giuoco Piano
+	for (const uci of ['e2e4', 'g1f3', 'f1c4', 'c2c3', 'd2d3', 'e1g1', 'f1e1', 'c4b3']) {
+		await expect(page.getByText(/Your move/)).toBeVisible({ timeout: 10_000 });
+		await playUci(page, uci);
+		// erst weiter, wenn der Zug angekommen ist (Gegner antwortet bzw. Variante fertig)
+		await expect(page.getByText(/Watch the opponent|Line learned/)).toBeVisible();
+	}
+	await expect(page.getByText('Line learned!')).toBeVisible({ timeout: 10_000 });
+	await expect(page.getByText(/Take the centre/)).toBeVisible();
+
+	// Zug ist jetzt im Repertoire und fällig
+	await page.getByRole('link', { name: /Review due moves/ }).click();
+	await expect(page.locator('.side.white .meta')).toContainText('in your repertoire');
 	await page.locator('.side.white').getByRole('button', { name: /Train/ }).click();
 	await expect(page.getByText('Play your repertoire move')).toBeVisible();
-
-	// Richtiger Zug aus dem Repertoire: in der Startstellung 1.e4
-	const f = await fen(page);
-	if (f.startsWith('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w')) {
-		await playUci(page, 'e2e4');
-		await expect(page.getByText(/Correct!|Line complete!|Play your repertoire move/)).toBeVisible();
-	} else {
-		// falscher Zug → Korrektur
-		await playUci(page, 'a2a3');
-		await expect(page.getByText(/Your repertoire says/)).toBeVisible();
-	}
+	await playUci(page, 'a2a3');
+	await expect(page.getByText(/Your repertoire says/)).toBeVisible();
+	await expect(page.locator('.why')).toBeVisible();
 });
 
 test('Editor: eigenen Zug anlegen, Eröffnungsname erscheint', async ({ page }) => {

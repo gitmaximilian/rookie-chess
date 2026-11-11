@@ -237,6 +237,12 @@ export class Game {
 	}
 
 	/** Grober Materialstand (Weiß − Schwarz) in Bauerneinheiten */
+	/** Figurentyp auf einem Feld (oder null) */
+	pieceAt(square: string): Role | null {
+		const sq = parseSquare(square);
+		return sq === undefined ? null : (this.pos.board.get(sq)?.role ?? null);
+	}
+
 	materialBalance(): number {
 		const v: Record<Role, number> = { pawn: 1, knight: 3, bishop: 3, rook: 5, queen: 9, king: 0 };
 		let s = 0;

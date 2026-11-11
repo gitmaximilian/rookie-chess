@@ -558,6 +558,54 @@ export const de: Shape<typeof en> = {
 			}
 		}
 	},
+	course: {
+		courses: 'Eröffnungskurse',
+		coursesText:
+			'Lerne echte Eröffnungen Schritt für Schritt – mit einer Erklärung zu jedem wichtigen Zug.',
+		forWhite: 'Für Weiß',
+		vsE4: 'Schwarz gegen 1.e4',
+		vsD4: 'Schwarz gegen 1.d4',
+		level1: 'Leicht',
+		level2: 'Mittel',
+		level3: 'Fortgeschritten',
+		progress: (p: P) => `${p.n} von ${p.m} Varianten gelernt`,
+		ideas: 'Die wichtigsten Ideen',
+		lines: 'Varianten',
+		learn: 'Lernen',
+		repeat: 'Wiederholen',
+		learned: 'Gelernt',
+		start: 'Los geht’s',
+		you: 'Du',
+		opponent: 'Gegner',
+		yourMove: 'Dein Zug – was spielst du?',
+		watch: 'Schau dir die Antwort des Gegners an …',
+		hint: 'Tipp',
+		hintPiece: (p: P) => `Zu ziehende Figur: ${p.piece}`,
+		showMove: 'Zeig’s mir',
+		correct: 'Richtig!',
+		retry: 'Nochmal versuchen',
+		checking: 'Dein Zug wird geprüft …',
+		lineDone: 'Variante gelernt!',
+		lineDoneText: (p: P) =>
+			`${p.n} von ${p.m} Zügen beim ersten Versuch gefunden. Die Variante ist jetzt in deinem Repertoire und kommt zur Wiederholung.`,
+		nextLine: 'Nächste Variante',
+		again: 'Nochmal',
+		review: 'Fällige Züge wiederholen',
+		backToCourse: 'Kursübersicht',
+		fb: {
+			playableTitle: 'Spielbar – aber nicht unser Zug',
+			playableText:
+				'Der Zug ist in Ordnung, aber in dieser Eröffnung spielen wir etwas anderes. Versuch es nochmal!',
+			dubiousTitle: 'Nicht ideal',
+			dubiousText: 'Dieser Zug verschlechtert deine Stellung. Versuch es nochmal!'
+		},
+		auto: {
+			castle: 'Rochade – der König steht sicher, und der Turm kommt ins Spiel.',
+			capture: (p: P) => `Schlägt auf ${p.sq}.`,
+			centre: 'Kämpft um das Zentrum.',
+			develop: (p: P) => `Entwickelt eine Figur (${p.piece}).`
+		}
+	},
 	import: {
 		eyebrow: 'Import',
 		title: 'Partien importieren',
