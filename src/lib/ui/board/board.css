@@ -148,14 +148,15 @@ cg-board piece.ghost {
 	color: var(--sq-coord-light);
 }
 
+/* Dunkelmodus: nur das Standard-Holzbrett etwas gedämpft – gewählte Brettfarben bleiben unverändert */
 @media (prefers-color-scheme: dark) {
-	:root:not([data-theme='light']) {
+	:root:not([data-theme='light']):is(:not([data-board]), [data-board='wood']) {
 		--sq-light: #e4d6bf;
 		--sq-dark: #a77a51;
 	}
 }
 
-:root[data-theme='dark'] {
+:root[data-theme='dark']:is(:not([data-board]), [data-board='wood']) {
 	--sq-light: #e4d6bf;
 	--sq-dark: #a77a51;
 }

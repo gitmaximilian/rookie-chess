@@ -43,3 +43,22 @@ test('Sprache: Englisch ist Standard, Deutsch umschaltbar und gespeichert', asyn
 	await page.getByRole('radio', { name: 'English' }).click();
 	await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
 });
+
+test('Brettfarbe wirkt auch im Dunkelmodus', async ({ browser }) => {
+	const ctx = await browser.newContext({ colorScheme: 'dark' });
+	const page = await ctx.newPage();
+	await page.goto('/settings');
+	await page.getByRole('radio', { name: 'Slate' }).click();
+	const bg = () =>
+		page
+			.locator('cg-board')
+			.first()
+			.evaluate((el) => getComputedStyle(el).backgroundImage);
+	await expect.poll(bg).toContain('rgb(110, 118, 129)');
+	await page.getByRole('radio', { name: 'Green' }).click();
+	await expect.poll(bg).toContain('rgb(118, 150, 86)');
+	// Holz im Dunkelmodus weiterhin gedämpft
+	await page.locator('[data-board-preview="wood"]').click();
+	await expect.poll(bg).toContain('rgb(167, 122, 81)');
+	await ctx.close();
+});
