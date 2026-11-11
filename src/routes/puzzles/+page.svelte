@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import Lightbulb from '@lucide/svelte/icons/lightbulb';
 	import Eye from '@lucide/svelte/icons/eye';
@@ -8,6 +9,7 @@
 	import Flame from '@lucide/svelte/icons/flame';
 	import Sparkles from '@lucide/svelte/icons/sparkles';
 	import Repeat from '@lucide/svelte/icons/repeat';
+	import Zap from '@lucide/svelte/icons/zap';
 	import CalendarDays from '@lucide/svelte/icons/calendar-days';
 	import Target from '@lucide/svelte/icons/target';
 	import Check from '@lucide/svelte/icons/check';
@@ -19,6 +21,7 @@
 	import { review, dueCards, formatInterval } from '#lib/training/srs.js';
 	import { THEMES, themeName, themeAbout } from '#lib/data/themes.js';
 	import { t } from '#lib/i18n/i18n.svelte.js';
+	import { notifyProgress } from '#lib/ui/progress.js';
 	import { db, bumpActivity, today, getSetting, setSetting } from '#lib/db/db.js';
 	import { sound } from '#lib/ui/sound.js';
 	import { engine } from '#lib/engine/engine.js';
@@ -260,6 +263,7 @@
 		failureRecorded = false;
 		if (solved || usedSolution) {
 			await bumpActivity('puzzles');
+			notifyProgress();
 			if (mode === 'daily') await setSetting('dailyDone', today());
 		}
 		await refreshCounts();
@@ -385,6 +389,7 @@
 			{t('puzzles.mistakes')}
 			{#if mistakeCount}<span class="count">{mistakeCount}</span>{/if}
 		</button>
+		<a class="chip storm" href={resolve('/puzzles/storm')}><Zap size={15} /> {t('storm.title')}</a>
 		<span class="sep" aria-hidden="true"></span>
 		{#each showAllThemes ? THEMES : coreThemes as th (th.key)}
 			<button
@@ -658,6 +663,12 @@
 		background: var(--text);
 		border-color: var(--text);
 		color: var(--bg);
+	}
+
+	.chip.storm {
+		color: var(--c-puzzle);
+		border-color: color-mix(in srgb, var(--c-puzzle) 40%, transparent);
+		text-decoration: none;
 	}
 
 	.chip.ghost {

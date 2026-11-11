@@ -316,7 +316,7 @@ export const en = {
 		clipboard: 'No clipboard access – please paste (⌘V).',
 		unknown: 'Unknown',
 		result: { win: 'Win', loss: 'Loss', draw: 'Draw', open: 'Open' },
-		source: { bot: 'Bot', lichess: 'Lichess', chesscom: 'Chess.com', pgn: 'PGN' },
+		source: { bot: 'Bot', lichess: 'Lichess', chesscom: 'Chess.com', pgn: 'PGN', friend: 'Friend' },
 		nav: { first: 'Start', prev: 'Back', next: 'Forward', last: 'End', flip: 'Flip board' }
 	},
 	judgement: {
@@ -747,7 +747,13 @@ export const en = {
 		asWhite: 'As White',
 		asBlack: 'As Black',
 		bySource: 'By opponent',
-		source: { bot: 'Bots', lichess: 'Lichess', chesscom: 'Chess.com', pgn: 'PGN' },
+		source: {
+			bot: 'Bots',
+			lichess: 'Lichess',
+			chesscom: 'Chess.com',
+			pgn: 'PGN',
+			friend: 'Friend'
+		},
 		bySpeed: 'By time control',
 		speed: {
 			ultraBullet: 'UltraBullet',
@@ -869,6 +875,67 @@ export const en = {
 		strength: (p: P) => `Estimated strength ≈ ${p.n}`,
 		strengthHint: 'Based on puzzles, bots beaten and online games.',
 		progress: (p: P) => `${p.n} of ${p.m} done`
+	},
+	achievements: {
+		title: 'Achievements',
+		count: (p: P) => `${p.n} of ${p.m} unlocked`,
+		unlocked: 'Achievement unlocked',
+		list: {
+			firstPuzzle: { t: 'First puzzle', d: 'Solve your first puzzle.' },
+			puzzles50: { t: 'Puzzle fan', d: 'Solve 50 puzzles.' },
+			puzzles250: { t: 'Puzzle machine', d: 'Solve 250 puzzles.' },
+			rating1000: { t: 'Four digits', d: 'Reach a puzzle rating of 1000.' },
+			rating1500: { t: 'Tactician', d: 'Reach a puzzle rating of 1500.' },
+			streak3: { t: 'Warming up', d: 'Train 3 days in a row.' },
+			streak7: { t: 'One week', d: 'Train 7 days in a row.' },
+			streak30: { t: 'Unstoppable', d: 'Train 30 days in a row.' },
+			firstWin: { t: 'First win', d: 'Beat a bot.' },
+			firstMate: { t: 'Checkmate!', d: 'Win a game by checkmate.' },
+			bots4: { t: 'Halfway there', d: 'Beat 4 different bots.' },
+			botsAll: { t: 'Bot slayer', d: 'Beat all bots.' },
+			basicsAll: { t: 'Graduate', d: 'Finish all basics lessons.' },
+			firstLine: { t: 'Opening novice', d: 'Learn your first opening line.' },
+			firstCourse: { t: 'Opening expert', d: 'Complete a whole opening course.' },
+			endgameFirst: { t: 'Endgame starter', d: 'Pass your first endgame lesson.' },
+			endgameAll: { t: 'Endgame technician', d: 'Pass every endgame lesson.' },
+			endgamePerfect: { t: 'Perfectionist', d: 'Get 3 stars in every endgame lesson.' },
+			storm20: { t: 'Lightning', d: 'Score 20 in Puzzle Storm.' },
+			plan7: { t: 'Disciplined', d: 'Finish your daily plan on 7 days.' },
+			analyst: { t: 'Analyst', d: 'Replay your mistakes from a game.' },
+			friends: { t: 'Friendly match', d: 'Play a game against a friend.' }
+		}
+	},
+	storm: {
+		title: 'Puzzle Storm',
+		teaser: 'As many puzzles as you can in 3 minutes.',
+		rules:
+			'3 minutes, puzzles get harder with every solve. A wrong move costs 10 seconds and skips the puzzle. How far do you get?',
+		start: 'Start',
+		find: (p: P) => `${p.side} to move – find the best move!`,
+		streak: 'in a row',
+		mistakes: 'mistakes',
+		stop: 'Stop',
+		score: (p: P) => `${p.n} solved`,
+		best: (p: P) => `Your best: ${p.n}`,
+		newBest: 'New personal best!',
+		bestStreak: 'best streak',
+		again: 'Play again'
+	},
+	friend: {
+		title: 'Play a friend',
+		teaser: 'Two players, one device.',
+		white: 'White',
+		black: 'Black',
+		toMove: (p: P) => `${p.side} to move`,
+		flip: 'Turn the board after each move',
+		newGame: 'New game',
+		undo: 'Undo',
+		resign: (p: P) => `${p.side} resigns`,
+		draw: 'Agree a draw',
+		resignConfirm: (p: P) => `Really resign for ${p.side}?`,
+		wins: (p: P) => `${p.side} wins`,
+		drawn: 'Draw',
+		analyse: 'Analyse game'
 	},
 	about: {
 		eyebrow: 'Open source',

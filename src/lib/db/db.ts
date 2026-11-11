@@ -19,7 +19,7 @@ export interface GameRow {
 	/** Wer bin ich in dieser Partie */
 	myColor: 'white' | 'black';
 	opponent: string;
-	source: 'bot' | 'lichess' | 'chesscom' | 'pgn';
+	source: 'bot' | 'lichess' | 'chesscom' | 'pgn' | 'friend';
 	/** Externe ID (Import), verhindert Duplikate */
 	externalId?: string;
 	analysis?: GameAnalysis;

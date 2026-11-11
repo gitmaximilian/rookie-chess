@@ -16,6 +16,7 @@
 	import { getSetting, setSetting, bumpActivity } from '#lib/db/db.js';
 	import { sound } from '#lib/ui/sound.js';
 	import { t } from '#lib/i18n/i18n.svelte.js';
+	import { notifyProgress } from '#lib/ui/progress.js';
 
 	let done = $state<string[]>([]);
 	let lesson = $state.raw<BasicLesson | null>(null);
@@ -160,6 +161,7 @@
 		finished = true;
 		sound.end('win');
 		await bumpActivity('reviews');
+		notifyProgress();
 	}
 
 	function nextLesson(): BasicLesson | null {

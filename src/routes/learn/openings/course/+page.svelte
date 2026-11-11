@@ -32,6 +32,7 @@
 	import { bumpActivity } from '#lib/db/db.js';
 	import { sound } from '#lib/ui/sound.js';
 	import { t } from '#lib/i18n/i18n.svelte.js';
+	import { notifyProgress } from '#lib/ui/progress.js';
 
 	let course = $state.raw<Course>(COURSES[0]);
 	let progress = $state<CourseProgress>({});
@@ -192,6 +193,7 @@
 		await addLine(course.color, ucis);
 		await bumpActivity('reviews');
 		progress = await getCourseProgress();
+		notifyProgress();
 	}
 
 	function nextLine(): CourseLine | null {

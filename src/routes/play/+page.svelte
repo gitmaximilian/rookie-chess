@@ -25,10 +25,13 @@
 	import { engine } from '#lib/engine/engine.js';
 	import { assessMove, threats, opponentIdea, type CoachNote } from '#lib/coach/coach.js';
 	import GraduationCap from '@lucide/svelte/icons/graduation-cap';
+	import Users from '@lucide/svelte/icons/users';
+	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import { figurine } from '#lib/chess/notation.js';
 	import { db, getSetting, setSetting, bumpActivity } from '#lib/db/db.js';
 	import { sound } from '#lib/ui/sound.js';
 	import { t } from '#lib/i18n/i18n.svelte.js';
+	import { notifyProgress } from '#lib/ui/progress.js';
 	import type { Color } from 'chessops/types';
 
 	type TimeControl = { id: string; label: string; base: number; inc: number } | null;
@@ -408,6 +411,7 @@
 				source: 'bot'
 			})) as number;
 			await bumpActivity('games');
+			notifyProgress();
 			if (verdictFor(e, myColor) === 'win') {
 				const beaten = await getSetting<string[]>('botsBeaten', []);
 				if (!beaten.includes(bot.id)) await setSetting('botsBeaten', [...beaten, bot.id]);
@@ -470,6 +474,12 @@
 
 {#if phase === 'setup'}
 	<PageHeader eyebrow={t('play.eyebrow')} title={t('play.title')} subtitle={t('play.subtitle')} />
+
+	<a class="friend-link card pressable" href={resolve('/play/friend')}>
+		<span class="fl-ico"><Users size={20} /></span>
+		<span class="fl-text"><b>{t('friend.title')}</b><span>{t('friend.teaser')}</span></span>
+		<ArrowRight size={18} />
+	</a>
 
 	<div class="setup">
 		<section>
@@ -756,6 +766,39 @@
 	.analyse-now {
 		width: 100%;
 		justify-content: center;
+	}
+
+	.friend-link {
+		display: flex;
+		align-items: center;
+		gap: 0.8rem;
+		max-width: 1100px;
+		margin-bottom: 1rem;
+		padding: 0.8rem 1rem;
+		color: var(--text-2);
+	}
+
+	.fl-ico {
+		display: grid;
+		place-items: center;
+		width: 38px;
+		height: 38px;
+		border-radius: 11px;
+		background: var(--c-play-soft);
+		color: var(--c-play);
+	}
+
+	.fl-text {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		color: var(--text);
+		line-height: 1.3;
+	}
+
+	.fl-text span {
+		font-size: 0.82rem;
+		color: var(--text-2);
 	}
 
 	/* ── Coach ── */

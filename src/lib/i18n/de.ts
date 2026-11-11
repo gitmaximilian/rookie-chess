@@ -350,7 +350,7 @@ export const de: Shape<typeof en> = {
 		clipboard: 'Kein Zugriff auf die Zwischenablage – bitte einfügen (⌘V).',
 		unknown: 'Unbekannt',
 		result: { win: 'Sieg', loss: 'Niederlage', draw: 'Remis', open: 'Offen' },
-		source: { bot: 'Bot', lichess: 'Lichess', chesscom: 'Chess.com', pgn: 'PGN' },
+		source: { bot: 'Bot', lichess: 'Lichess', chesscom: 'Chess.com', pgn: 'PGN', friend: 'Freund' },
 		nav: { first: 'Anfang', prev: 'Zurück', next: 'Vor', last: 'Ende', flip: 'Brett drehen' }
 	},
 	judgement: {
@@ -788,7 +788,13 @@ export const de: Shape<typeof en> = {
 		asWhite: 'Mit Weiß',
 		asBlack: 'Mit Schwarz',
 		bySource: 'Nach Gegner',
-		source: { bot: 'Bots', lichess: 'Lichess', chesscom: 'Chess.com', pgn: 'PGN' },
+		source: {
+			bot: 'Bots',
+			lichess: 'Lichess',
+			chesscom: 'Chess.com',
+			pgn: 'PGN',
+			friend: 'Freund'
+		},
 		bySpeed: 'Nach Bedenkzeit',
 		speed: {
 			ultraBullet: 'UltraBullet',
@@ -917,6 +923,67 @@ export const de: Shape<typeof en> = {
 		strength: (p: P) => `Geschätzte Spielstärke ≈ ${p.n}`,
 		strengthHint: 'Aus Puzzles, besiegten Bots und Online-Partien.',
 		progress: (p: P) => `${p.n} von ${p.m} erledigt`
+	},
+	achievements: {
+		title: 'Erfolge',
+		count: (p: P) => `${p.n} von ${p.m} freigeschaltet`,
+		unlocked: 'Erfolg freigeschaltet',
+		list: {
+			firstPuzzle: { t: 'Erstes Puzzle', d: 'Löse dein erstes Puzzle.' },
+			puzzles50: { t: 'Puzzle-Fan', d: 'Löse 50 Puzzles.' },
+			puzzles250: { t: 'Puzzle-Maschine', d: 'Löse 250 Puzzles.' },
+			rating1000: { t: 'Vierstellig', d: 'Erreiche eine Puzzle-Wertung von 1000.' },
+			rating1500: { t: 'Taktiker', d: 'Erreiche eine Puzzle-Wertung von 1500.' },
+			streak3: { t: 'Warm gespielt', d: 'Trainiere 3 Tage hintereinander.' },
+			streak7: { t: 'Eine Woche', d: 'Trainiere 7 Tage hintereinander.' },
+			streak30: { t: 'Nicht zu bremsen', d: 'Trainiere 30 Tage hintereinander.' },
+			firstWin: { t: 'Erster Sieg', d: 'Besiege einen Bot.' },
+			firstMate: { t: 'Schachmatt!', d: 'Gewinne eine Partie durch Matt.' },
+			bots4: { t: 'Halbzeit', d: 'Besiege 4 verschiedene Bots.' },
+			botsAll: { t: 'Bot-Bezwinger', d: 'Besiege alle Bots.' },
+			basicsAll: { t: 'Absolvent', d: 'Schließe alle Grundlagen-Lektionen ab.' },
+			firstLine: { t: 'Eröffnungs-Neuling', d: 'Lerne deine erste Eröffnungsvariante.' },
+			firstCourse: { t: 'Eröffnungs-Profi', d: 'Schließe einen ganzen Eröffnungskurs ab.' },
+			endgameFirst: { t: 'Endspiel-Einsteiger', d: 'Schaffe deine erste Endspiel-Lektion.' },
+			endgameAll: { t: 'Endspiel-Techniker', d: 'Schaffe jede Endspiel-Lektion.' },
+			endgamePerfect: { t: 'Perfektionist', d: 'Hol in jeder Endspiel-Lektion 3 Sterne.' },
+			storm20: { t: 'Blitzschnell', d: 'Schaffe 20 Punkte im Puzzle-Sturm.' },
+			plan7: { t: 'Diszipliniert', d: 'Erledige deinen Tagesplan an 7 Tagen.' },
+			analyst: { t: 'Analyst', d: 'Spiele deine Fehler aus einer Partie nach.' },
+			friends: { t: 'Freundschaftsspiel', d: 'Spiele eine Partie gegen einen Freund.' }
+		}
+	},
+	storm: {
+		title: 'Puzzle-Sturm',
+		teaser: 'So viele Puzzles wie möglich in 3 Minuten.',
+		rules:
+			'3 Minuten, die Puzzles werden mit jedem gelösten schwerer. Ein falscher Zug kostet 10 Sekunden und überspringt das Puzzle. Wie weit kommst du?',
+		start: 'Start',
+		find: (p: P) => `${p.side} am Zug – finde den besten Zug!`,
+		streak: 'in Folge',
+		mistakes: 'Fehler',
+		stop: 'Stopp',
+		score: (p: P) => `${p.n} gelöst`,
+		best: (p: P) => `Dein Rekord: ${p.n}`,
+		newBest: 'Neuer persönlicher Rekord!',
+		bestStreak: 'beste Serie',
+		again: 'Nochmal'
+	},
+	friend: {
+		title: 'Gegen Freunde',
+		teaser: 'Zwei Spieler, ein Gerät.',
+		white: 'Weiß',
+		black: 'Schwarz',
+		toMove: (p: P) => `${p.side} am Zug`,
+		flip: 'Brett nach jedem Zug drehen',
+		newGame: 'Neue Partie',
+		undo: 'Zurück',
+		resign: (p: P) => `${p.side} gibt auf`,
+		draw: 'Remis vereinbaren',
+		resignConfirm: (p: P) => `Wirklich für ${p.side} aufgeben?`,
+		wins: (p: P) => `${p.side} gewinnt`,
+		drawn: 'Remis',
+		analyse: 'Partie analysieren'
 	},
 	about: {
 		eyebrow: 'Open Source',

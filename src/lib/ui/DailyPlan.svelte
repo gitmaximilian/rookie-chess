@@ -13,6 +13,7 @@
 	import type { Component } from 'svelte';
 	import GoalRing from '#lib/ui/GoalRing.svelte';
 	import { loadPlanContext, todayPlan, currentStrength } from '#lib/training/planData.js';
+	import { getSetting, setSetting } from '#lib/db/db.js';
 	import { progressOf, type PlanContext, type PlanTask } from '#lib/training/plan.js';
 	import type { Strength } from '#lib/training/strength.js';
 	import { basicById } from '#lib/basics/lessons.js';
@@ -45,6 +46,15 @@
 	);
 	const doneCount = $derived(rows.filter((r) => r.finished).length);
 	const next = $derived(rows.find((r) => !r.finished));
+
+	// kompletter Tagesplan → Tag für den Erfolg „Diszipliniert“ merken
+	$effect(() => {
+		if (!ctx || !rows.length || next) return;
+		const day = ctx.day;
+		void getSetting<string[]>('planDaysDone', []).then((days) => {
+			if (!days.includes(day)) void setSetting('planDaysDone', [...days, day]);
+		});
+	});
 
 	const ICON: Record<PlanTask['kind'], Component> = {
 		review: Repeat,

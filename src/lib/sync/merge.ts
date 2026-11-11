@@ -27,7 +27,7 @@ export const LOCAL_ONLY_SETTINGS = new Set(['lastBackupAt', 'syncState']);
 /** Partien aus Lichess/Chess.com enthalten Namen Dritter – sie werden nicht synchronisiert,
  * sondern auf jedem Gerät über das verknüpfte Konto neu geladen. */
 export function isSyncedGame(g: GameRow): boolean {
-	return g.source === 'bot' || g.source === 'pgn';
+	return g.source === 'bot' || g.source === 'pgn' || g.source === 'friend';
 }
 
 export function gameKey(g: GameRow): string {
