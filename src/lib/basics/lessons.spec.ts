@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { BASICS, soloDests, soloFen } from './lessons';
+import { BASICS, TACTICS, soloDests, soloFen } from './lessons';
 import { Game } from '#lib/chess/game.js';
 
 describe('Grundlagen-Lektionen', () => {
-	for (const l of BASICS)
+	for (const l of [...BASICS, ...TACTICS])
 		it(`${l.id}: Stellungen gültig, Aufgaben lösbar`, () => {
 			for (const s of l.steps) {
 				if (s.kind === 'info') {
@@ -39,6 +39,10 @@ describe('Grundlagen-Lektionen', () => {
 				}
 			}
 		});
+
+	it('Taktik: jede Lektion hat ein echtes Puzzle-Thema', () => {
+		for (const l of TACTICS) expect(l.theme).toBeTruthy();
+	});
 
 	it('soloFen setzt die Figur richtig', () => {
 		expect(soloFen('rook', 'a1')).toBe('8/8/8/8/8/8/8/R7 w - - 0 1');

@@ -11,7 +11,17 @@
 	import PageHeader from '#lib/ui/PageHeader.svelte';
 	import Board, { type Shape } from '#lib/ui/board/Board.svelte';
 	import { Game } from '#lib/chess/game.js';
-	import { BASICS, basicById, soloDests, soloFen, type BasicLesson } from '#lib/basics/lessons.js';
+	import {
+		BASICS,
+		TACTICS,
+		basicById,
+		isTactic,
+		soloDests,
+		soloFen,
+		type BasicLesson
+	} from '#lib/basics/lessons.js';
+	import { themeName } from '#lib/data/themes.js';
+	import Puzzle from '@lucide/svelte/icons/puzzle';
 	import { loc } from '#lib/openings/courses.js';
 	import { getSetting, setSetting, bumpActivity } from '#lib/db/db.js';
 	import { sound } from '#lib/ui/sound.js';
@@ -19,6 +29,9 @@
 	import { notifyProgress } from '#lib/ui/progress.js';
 
 	let done = $state<string[]>([]);
+	let set = $state<'basics' | 'tactics'>('basics');
+	const SET = $derived(set === 'tactics' ? TACTICS : BASICS);
+	const doneKey = $derived(set === 'tactics' ? 'tacticsDone' : 'basicsDone');
 	let lesson = $state.raw<BasicLesson | null>(null);
 	let si = $state(0);
 	let finished = $state(false);
@@ -37,9 +50,11 @@
 	const step = $derived(lesson ? lesson.steps[si] : null);
 
 	onMount(async () => {
-		done = await getSetting<string[]>('basicsDone', []);
 		const id = page.url.searchParams.get('id');
-		if (id) open(basicById(id) ?? null);
+		const l = id ? basicById(id) : null;
+		set = (l ? isTactic(l) : page.url.searchParams.get('set') === 'tactics') ? 'tactics' : 'basics';
+		done = await getSetting<string[]>(doneKey, []);
+		if (l) open(l);
 	});
 
 	function open(l: BasicLesson | null) {
@@ -155,7 +170,7 @@
 		if (!done.includes(lesson.id)) {
 			// einfaches Array speichern – IndexedDB kann Svelte-Proxys nicht klonen
 			const list = [...done, lesson.id];
-			await setSetting('basicsDone', list);
+			await setSetting(doneKey, list);
 			done = list;
 		}
 		finished = true;
@@ -166,7 +181,7 @@
 
 	function nextLesson(): BasicLesson | null {
 		if (!lesson) return null;
-		return BASICS[BASICS.indexOf(lesson) + 1] ?? null;
+		return SET[SET.indexOf(lesson) + 1] ?? null;
 	}
 
 	function openNext() {
@@ -182,10 +197,13 @@
 
 {#if !lesson}
 	<a class="back" href={resolve('/learn')}><ArrowLeft size={18} /> {t('endgame.back')}</a>
-	<PageHeader title={t('basics.title')} subtitle={t('basics.subtitle')} />
-	<p class="meta">{t('basics.progress', { n: done.length, m: BASICS.length })}</p>
+	<PageHeader
+		title={set === 'tactics' ? t('tactics.title') : t('basics.title')}
+		subtitle={set === 'tactics' ? t('tactics.subtitle') : t('basics.subtitle')}
+	/>
+	<p class="meta">{t('basics.progress', { n: done.length, m: SET.length })}</p>
 	<ol class="path">
-		{#each BASICS as l, i (l.id)}
+		{#each SET as l, i (l.id)}
 			<li style:--i={i}>
 				<button
 					class="item card pressable"
@@ -229,7 +247,15 @@
 				<div class="fin">
 					<span class="fin-ico"><Check size={26} /></span>
 					<h2>{t('basics.lessonDone')}</h2>
+					{#if lesson.theme}
+						<p class="practise">{t('tactics.practiseText', { theme: themeName(lesson.theme) })}</p>
+					{/if}
 					<div class="row-btns">
+						{#if lesson.theme}
+							<a class="btn" href={resolve(`/puzzles?theme=${lesson.theme}`)}
+								><Puzzle size={17} /> {t('tactics.practise')}</a
+							>
+						{/if}
 						{#if nextLesson()}
 							<button class="btn" onclick={openNext}
 								>{t('basics.nextLesson')} <ArrowRight size={17} /></button
@@ -421,6 +447,11 @@
 
 	.status.bad {
 		color: var(--bad);
+	}
+
+	.practise {
+		color: var(--text-2);
+		line-height: 1.45;
 	}
 
 	.fin {

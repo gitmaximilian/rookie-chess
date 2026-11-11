@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
-	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import BookOpen from '@lucide/svelte/icons/book-open';
 	import GraduationCap from '@lucide/svelte/icons/graduation-cap';
-	import { BASICS } from '#lib/basics/lessons.js';
+	import { BASICS, TACTICS } from '#lib/basics/lessons.js';
+	import Swords from '@lucide/svelte/icons/swords';
 	import { getSetting } from '#lib/db/db.js';
 	import PageHeader from '#lib/ui/PageHeader.svelte';
 	import LessonIcon from '#lib/ui/LessonIcon.svelte';
@@ -18,6 +18,7 @@
 	let repCount = $state(0);
 	let repDue = $state(0);
 	let basicsDone = $state(0);
+	let tacticsDone = $state(0);
 
 	onMount(async () => {
 		const rows = await db.endgames.toArray();
@@ -25,6 +26,7 @@
 		repCount = await db.repertoire.filter((r) => r.mine).count();
 		repDue = await countDue('repertoire');
 		basicsDone = (await getSetting<string[]>('basicsDone', [])).length;
+		tacticsDone = (await getSetting<string[]>('tacticsDone', [])).length;
 	});
 
 	const total = $derived(Object.values(stars).reduce((a, b) => a + b, 0));
@@ -35,30 +37,47 @@
 <PageHeader eyebrow={t('learn.eyebrow')} title={t('learn.title')} subtitle={t('learn.subtitle')} />
 
 <div class="wrap">
-	<a class="openings basics card pressable" href={resolve('/learn/basics')}>
-		<span class="o-icon"><GraduationCap size={26} /></span>
-		<span class="o-text">
+	<div class="paths">
+		<a
+			class="path card pressable"
+			style:--c="var(--c-puzzle)"
+			style:--i={0}
+			href={resolve('/learn/basics')}
+		>
+			<span class="p-icon"><GraduationCap size={24} /></span>
 			<b>{t('basics.title')}</b>
-			<span>{t('basics.hubText')}</span>
-			<span class="o-meta">{t('basics.progress', { n: basicsDone, m: BASICS.length })}</span>
-		</span>
-		<ArrowRight size={20} />
-	</a>
-
-	<a class="openings card pressable" href={resolve('/learn/openings')}>
-		<span class="o-icon"><BookOpen size={26} /></span>
-		<span class="o-text">
+			<span class="p-text">{t('basics.hubText')}</span>
+			<span class="p-bar"><span style:width="{(basicsDone / BASICS.length) * 100}%"></span></span>
+			<span class="p-meta">{t('basics.progress', { n: basicsDone, m: BASICS.length })}</span>
+		</a>
+		<a
+			class="path card pressable"
+			style:--c="var(--c-play)"
+			style:--i={1}
+			href={resolve('/learn/basics?set=tactics')}
+		>
+			<span class="p-icon"><Swords size={24} /></span>
+			<b>{t('tactics.title')}</b>
+			<span class="p-text">{t('tactics.hubText')}</span>
+			<span class="p-bar"><span style:width="{(tacticsDone / TACTICS.length) * 100}%"></span></span>
+			<span class="p-meta">{t('basics.progress', { n: tacticsDone, m: TACTICS.length })}</span>
+		</a>
+		<a
+			class="path card pressable"
+			style:--c="var(--c-learn)"
+			style:--i={2}
+			href={resolve('/learn/openings')}
+		>
+			<span class="p-icon"><BookOpen size={24} /></span>
 			<b>{t('learn.openings')}</b>
-			<span>{t('learn.openingsText')}</span>
-			{#if repCount}
-				<span class="o-meta">
-					{t('openings.moves', { n: repCount })}{#if repDue}
-						· <b class="due">{t('openings.due', { n: repDue })}</b>{/if}
-				</span>
-			{/if}
-		</span>
-		<ArrowRight size={20} />
-	</a>
+			<span class="p-text">{t('learn.openingsText')}</span>
+			<span class="p-bar"><span style:width="{Math.min(100, (repCount / 40) * 100)}%"></span></span>
+			<span class="p-meta">
+				{t('openings.moves', { n: repCount })}{#if repDue}
+					· <b class="due">{t('openings.due', { n: repDue })}</b>{/if}
+			</span>
+		</a>
+	</div>
 
 	<div class="sec-head">
 		<div>
@@ -99,59 +118,75 @@
 		max-width: 1040px;
 	}
 
-	.openings {
-		display: flex;
-		align-items: center;
-		gap: 1rem;
-		padding: 1.1rem 1.25rem;
-		color: var(--text);
-		background:
-			radial-gradient(90% 140% at 100% 0%, var(--c-learn-soft), transparent 70%), var(--surface);
-	}
-
-	.basics {
-		background:
-			radial-gradient(90% 140% at 100% 0%, var(--c-puzzle-soft), transparent 70%), var(--surface);
-	}
-
-	.basics .o-icon {
-		background: var(--c-puzzle);
-		box-shadow: 0 8px 20px color-mix(in srgb, var(--c-puzzle) 35%, transparent);
-	}
-
-	.o-icon {
+	.paths {
 		display: grid;
-		place-items: center;
-		flex: none;
-		width: 52px;
-		height: 52px;
-		border-radius: 16px;
-		background: var(--c-learn);
-		color: #fff;
-		box-shadow: 0 8px 20px color-mix(in srgb, var(--c-learn) 35%, transparent);
+		gap: 0.6rem;
 	}
 
-	.o-text {
-		flex: 1;
+	@media (min-width: 760px) {
+		.paths {
+			grid-template-columns: repeat(3, 1fr);
+		}
+	}
+
+	.path {
 		display: flex;
 		flex-direction: column;
-		gap: 0.15rem;
+		gap: 0.35rem;
+		padding: 1.05rem 1.1rem;
+		color: var(--text);
+		background:
+			radial-gradient(
+				110% 120% at 100% 0%,
+				color-mix(in srgb, var(--c) 14%, transparent),
+				transparent 65%
+			),
+			var(--surface);
+		animation: rise 420ms var(--ease-out) both;
+		animation-delay: calc(var(--i) * 60ms);
 	}
 
-	.o-text b {
-		font-family: var(--font-display);
-		font-size: 1.2rem;
-		font-weight: 680;
+	.p-icon {
+		display: grid;
+		place-items: center;
+		width: 46px;
+		height: 46px;
+		margin-bottom: 0.3rem;
+		border-radius: 14px;
+		background: var(--c);
+		color: #fff;
+		box-shadow: 0 8px 20px color-mix(in srgb, var(--c) 35%, transparent);
 	}
 
-	.o-text span {
+	.path b {
+		font-size: 1.12rem;
+	}
+
+	.p-text {
+		flex: 1;
+		font-size: 0.88rem;
 		color: var(--text-2);
-		font-size: 0.92rem;
+		line-height: 1.4;
 	}
 
-	.o-meta {
-		font-size: 0.82rem !important;
-		font-weight: 600;
+	.p-bar {
+		height: 5px;
+		margin-top: 0.45rem;
+		border-radius: 999px;
+		background: var(--surface-2);
+		overflow: hidden;
+	}
+
+	.p-bar span {
+		display: block;
+		height: 100%;
+		border-radius: inherit;
+		background: var(--c);
+	}
+
+	.p-meta {
+		font-size: 0.78rem;
+		color: var(--text-2);
 	}
 
 	.due {

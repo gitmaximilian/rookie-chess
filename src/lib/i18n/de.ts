@@ -477,7 +477,7 @@ export const de: Shape<typeof en> = {
 	learn: {
 		eyebrow: 'Wissen',
 		title: 'Lernen',
-		subtitle: 'Eröffnungen und Endspiele, die du wirklich brauchst.',
+		subtitle: 'Grundlagen, Taktik, Eröffnungen und Endspiele – Schritt für Schritt.',
 		endgames: 'Endspiele',
 		endgamesText: 'Lerne die wichtigsten Techniken – mit perfektem Spiel aus der Tablebase.',
 		openings: 'Eröffnungen',
@@ -984,6 +984,14 @@ export const de: Shape<typeof en> = {
 		wins: (p: P) => `${p.side} gewinnt`,
 		drawn: 'Remis',
 		analyse: 'Partie analysieren'
+	},
+	tactics: {
+		title: 'Taktik',
+		subtitle: 'Die Tricks, die Partien entscheiden – erst erklärt, dann mit echten Puzzles geübt.',
+		hubText:
+			'Gabel, Fesselung, Spieß & Co.: erst den Trick verstehen, dann mit Puzzles trainieren.',
+		practise: 'Mit Puzzles üben',
+		practiseText: (p: P) => `Jetzt trainieren: Puzzles zum Thema „${p.theme}“ auf deinem Niveau.`
 	},
 	about: {
 		eyebrow: 'Open Source',

@@ -39,6 +39,8 @@ export type BasicStep = InfoStep | StarsStep | FindStep;
 
 export interface BasicLesson {
 	id: string;
+	/** Taktik-Lektionen: Puzzle-Thema für das anschließende Üben */
+	theme?: string;
 	icon: 'board' | Role | 'capture' | 'check' | 'mate' | 'castle' | 'promote' | 'draw' | 'rules';
 	title: L;
 	steps: BasicStep[];
@@ -544,8 +546,217 @@ export const BASICS: BasicLesson[] = [
 	}
 ];
 
+// ───────────────────────────── Taktik ─────────────────────────────
+
+export const TACTICS: BasicLesson[] = [
+	{
+		id: 'fork',
+		theme: 'fork',
+		icon: 'knight',
+		title: N('The fork', 'Die Gabel'),
+		steps: [
+			{
+				kind: 'info',
+				text: N(
+					'A fork attacks two pieces at once. Your opponent can only save one of them – you win the other.',
+					'Eine Gabel greift zwei Figuren gleichzeitig an. Der Gegner kann nur eine retten – die andere gewinnst du.'
+				),
+				fen: 'r3k3/8/2N5/8/8/8/8/4K3 b - - 0 1',
+				shapes: [
+					{ orig: 'c6', dest: 'a7', brush: 'info' },
+					{ orig: 'c6', dest: 'e7', brush: 'info' }
+				]
+			},
+			{
+				kind: 'info',
+				text: N(
+					'Knights are the best forkers: they jump to squares the attacked pieces cannot reach. The deadliest fork includes a check.',
+					'Springer sind die besten Gabel-Figuren: Sie springen auf Felder, die die angegriffenen Figuren nicht erreichen. Am stärksten ist eine Gabel mit Schach.'
+				),
+				fen: 'r3k3/2N5/8/8/8/8/8/4K3 b - - 0 1',
+				shapes: [
+					{ orig: 'c7', dest: 'e8', brush: 'bad' },
+					{ orig: 'c7', dest: 'a8', brush: 'good' }
+				]
+			},
+			{
+				kind: 'find',
+				text: N(
+					'Find the knight fork: check the king and attack the rook!',
+					'Finde die Springergabel: Schach dem König und Angriff auf den Turm!'
+				),
+				fen: 'r3k3/8/8/1N6/8/8/8/4K3 w - - 0 1',
+				accept: ['b5c7'],
+				done: N(
+					'Fork! After the king moves, the rook is yours.',
+					'Gabel! Nach dem Königszug gehört dir der Turm.'
+				)
+			},
+			{
+				kind: 'find',
+				text: N(
+					'Even a pawn can fork. Attack both knights!',
+					'Auch ein Bauer kann gabeln. Greif beide Springer an!'
+				),
+				fen: 'k7/8/8/2n1n3/8/3P4/8/4K3 w - - 0 1',
+				accept: ['d3d4'],
+				done: N('A pawn fork – one knight falls.', 'Bauerngabel – ein Springer fällt.')
+			}
+		]
+	},
+	{
+		id: 'pin',
+		theme: 'pin',
+		icon: 'bishop',
+		title: N('The pin', 'Die Fesselung'),
+		steps: [
+			{
+				kind: 'info',
+				text: N(
+					'A pin attacks a piece that cannot move because a more valuable piece stands behind it – often the king.',
+					'Eine Fesselung greift eine Figur an, die nicht wegziehen kann, weil dahinter eine wertvollere Figur steht – oft der König.'
+				),
+				fen: '4k3/3n4/8/1B6/8/8/8/4K3 b - - 0 1',
+				shapes: [
+					{ orig: 'b5', dest: 'e8', brush: 'info' },
+					{ orig: 'd7', brush: 'bad' }
+				]
+			},
+			{
+				kind: 'info',
+				text: N(
+					'A piece pinned to the king may not move at all. Then attack it again – it cannot escape.',
+					'Eine an den König gefesselte Figur darf gar nicht ziehen. Greif sie dann noch einmal an – sie kann nicht flüchten.'
+				),
+				fen: '4k3/3n4/8/1B6/8/8/8/4K3 b - - 0 1',
+				shapes: [{ orig: 'd7', brush: 'bad' }]
+			},
+			{
+				kind: 'find',
+				text: N('Pin the knight to the king!', 'Fessle den Springer an den König!'),
+				fen: '4k3/3n4/8/8/8/8/8/4KB2 w - - 0 1',
+				accept: ['f1b5'],
+				done: N('Pinned – the knight cannot move.', 'Gefesselt – der Springer kann nicht ziehen.')
+			}
+		]
+	},
+	{
+		id: 'skewer',
+		theme: 'skewer',
+		icon: 'rook',
+		title: N('The skewer', 'Der Spieß'),
+		steps: [
+			{
+				kind: 'info',
+				text: N(
+					'A skewer is a pin the other way round: the more valuable piece is in front. When it steps aside, you take the piece behind.',
+					'Ein Spieß ist eine umgekehrte Fesselung: Die wertvollere Figur steht vorne. Weicht sie aus, schlägst du die Figur dahinter.'
+				),
+				fen: '3q4/8/8/8/3k4/8/8/3RK3 b - - 0 1',
+				shapes: [{ orig: 'd1', dest: 'd8', brush: 'info' }]
+			},
+			{
+				kind: 'find',
+				text: N(
+					'Give check so that the queen behind the king falls!',
+					'Gib Schach, sodass die Dame hinter dem König fällt!'
+				),
+				fen: '3q4/8/8/8/3k4/8/8/R3K3 w - - 0 1',
+				accept: ['a1d1'],
+				done: N(
+					'Skewer! The king steps aside, then Rxd8.',
+					'Spieß! Der König weicht aus, dann Txd8.'
+				)
+			}
+		]
+	},
+	{
+		id: 'discovered',
+		theme: 'discoveredAttack',
+		icon: 'bishop',
+		title: N('Discovered attack', 'Abzugsangriff'),
+		steps: [
+			{
+				kind: 'info',
+				text: N(
+					'One piece moves out of the way and uncovers an attack by the piece behind it. If the moving piece also attacks, you have two threats at once.',
+					'Eine Figur zieht aus dem Weg und gibt den Angriff der Figur dahinter frei. Greift die ziehende Figur auch an, hast du zwei Drohungen auf einmal.'
+				),
+				fen: '7q/4k3/8/8/3N4/8/8/B3K3 b - - 0 1',
+				shapes: [
+					{ orig: 'a1', dest: 'h8', brush: 'info' },
+					{ orig: 'd4', brush: 'good' }
+				]
+			},
+			{
+				kind: 'find',
+				text: N(
+					'Move the knight with check – and win the queen!',
+					'Zieh den Springer mit Schach – und gewinne die Dame!'
+				),
+				fen: '7q/4k3/8/8/3N4/8/8/B3K3 w - - 0 1',
+				accept: ['d4f5', 'd4c6'],
+				done: N(
+					'Discovered attack: the king must escape the check, then Bxh8.',
+					'Abzugsangriff: Der König muss aus dem Schach, dann Lxh8.'
+				)
+			}
+		]
+	},
+	{
+		id: 'backrank',
+		theme: 'backRankMate',
+		icon: 'mate',
+		title: N('Back-rank mate', 'Grundreihenmatt'),
+		steps: [
+			{
+				kind: 'info',
+				text: N(
+					'A castled king behind its own pawns has no escape square. A rook or queen on the last rank delivers mate.',
+					'Ein rochierter König hinter seinen eigenen Bauern hat kein Fluchtfeld. Turm oder Dame auf der Grundreihe setzen matt.'
+				),
+				fen: '6k1/5ppp/8/8/8/8/5PPP/3R2K1 b - - 0 1',
+				shapes: [
+					{ orig: 'f7', brush: 'bad' },
+					{ orig: 'g7', brush: 'bad' },
+					{ orig: 'h7', brush: 'bad' }
+				]
+			},
+			{
+				kind: 'find',
+				text: N(
+					'Mate in one – even through the defender!',
+					'Matt in einem Zug – trotz Verteidiger!'
+				),
+				fen: '3r2k1/5ppp/8/8/8/8/5PPP/3R2K1 w - - 0 1',
+				accept: 'mate',
+				done: N(
+					'Rxd8# – the rook takes the defender with mate.',
+					'Txd8# – der Turm schlägt den Verteidiger mit Matt.'
+				)
+			},
+			{
+				kind: 'info',
+				text: N(
+					'Protect yourself: give your king a “window” with h3 or g3 when the position is calm.',
+					'Schütze dich: Gib deinem König ein „Luftloch“ mit h3 oder g3, wenn es ruhig ist.'
+				),
+				fen: '6k1/5pp1/7p/8/8/7P/5PP1/6K1 w - - 0 1',
+				shapes: [
+					{ orig: 'h3', brush: 'good' },
+					{ orig: 'h6', brush: 'good' }
+				]
+			}
+		]
+	}
+];
+
 export function basicById(id: string): BasicLesson | undefined {
-	return BASICS.find((l) => l.id === id);
+	return BASICS.find((l) => l.id === id) ?? TACTICS.find((l) => l.id === id);
+}
+
+export function isTactic(l: BasicLesson): boolean {
+	return TACTICS.includes(l);
 }
 
 // ───────────── Sterne-Minispiel: eine Figur allein auf dem Brett ─────────────

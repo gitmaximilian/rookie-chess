@@ -33,3 +33,21 @@ test('Grundlagen: falscher Zug, dann Matt in 1', async ({ page }) => {
 	await playUci(page, 'a1a8');
 	await expect(page.getByText(/Back-rank mate/)).toBeVisible();
 });
+
+test('Taktik: Gabel lernen, dann mit Puzzles üben', async ({ page }) => {
+	await page.goto('/learn');
+	await page.getByRole('link', { name: /Tactics/ }).click();
+	await expect(page.getByRole('heading', { name: 'Tactics' })).toBeVisible();
+	await page.getByRole('button', { name: /The fork/ }).click();
+	await page.getByRole('button', { name: /Next/ }).click();
+	await page.getByRole('button', { name: /Next/ }).click();
+	await playUci(page, 'b5c7');
+	await expect(page.getByText(/the rook is yours/)).toBeVisible();
+	await page.getByRole('button', { name: /Next/ }).click();
+	await playUci(page, 'd3d4');
+	await expect(page.getByText(/A pawn fork/)).toBeVisible();
+	await page.getByRole('button', { name: /Next/ }).click();
+	await expect(page.getByText('Lesson complete!')).toBeVisible();
+	await page.getByRole('link', { name: /Practise with puzzles/ }).click();
+	await expect(page).toHaveURL(/puzzles\?theme=fork/);
+});

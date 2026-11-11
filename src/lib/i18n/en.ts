@@ -440,7 +440,7 @@ export const en = {
 	learn: {
 		eyebrow: 'Knowledge',
 		title: 'Learn',
-		subtitle: 'The openings and endgames you really need.',
+		subtitle: 'Basics, tactics, openings and endgames – step by step.',
 		endgames: 'Endgames',
 		endgamesText: 'Learn the most important techniques – with perfect play from the tablebase.',
 		openings: 'Openings',
@@ -936,6 +936,13 @@ export const en = {
 		wins: (p: P) => `${p.side} wins`,
 		drawn: 'Draw',
 		analyse: 'Analyse game'
+	},
+	tactics: {
+		title: 'Tactics',
+		subtitle: 'The tricks that win games – explained, then practised with real puzzles.',
+		hubText: 'Fork, pin, skewer & co.: understand the trick, then train it with puzzles.',
+		practise: 'Practise with puzzles',
+		practiseText: (p: P) => `Now train it: puzzles with the theme “${p.theme}” at your level.`
 	},
 	about: {
 		eyebrow: 'Open source',
