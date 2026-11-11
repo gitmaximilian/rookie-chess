@@ -731,12 +731,12 @@
 	}
 
 	.status.ok {
-		color: var(--good);
+		color: var(--good-text);
 		background: color-mix(in srgb, var(--good) 12%, transparent);
 	}
 
 	.status.warn {
-		color: color-mix(in srgb, var(--warn) 45%, var(--text));
+		color: var(--warn-text);
 		background: color-mix(in srgb, var(--warn) 14%, transparent);
 	}
 
@@ -761,7 +761,7 @@
 
 	.msg.ok {
 		background: color-mix(in srgb, var(--good) 14%, transparent);
-		color: var(--good);
+		color: var(--good-text);
 	}
 
 	.msg.err {

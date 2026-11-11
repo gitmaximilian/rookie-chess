@@ -620,7 +620,7 @@
 	}
 
 	.result.success h2 {
-		color: var(--good);
+		color: var(--good-text);
 	}
 
 	.result p {

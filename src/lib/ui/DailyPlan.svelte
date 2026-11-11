@@ -9,13 +9,11 @@
 	import GraduationCap from '@lucide/svelte/icons/graduation-cap';
 	import Crown from '@lucide/svelte/icons/crown';
 	import ChartLine from '@lucide/svelte/icons/chart-line';
-	import Gauge from '@lucide/svelte/icons/gauge';
 	import type { Component } from 'svelte';
 	import GoalRing from '#lib/ui/GoalRing.svelte';
-	import { loadPlanContext, todayPlan, currentStrength } from '#lib/training/planData.js';
+	import { loadPlanContext, todayPlan } from '#lib/training/planData.js';
 	import { getSetting, setSetting } from '#lib/db/db.js';
 	import { progressOf, type PlanContext, type PlanTask } from '#lib/training/plan.js';
-	import type { Strength } from '#lib/training/strength.js';
 	import { basicById } from '#lib/basics/lessons.js';
 	import { courseById, loc } from '#lib/openings/courses.js';
 	import { lessonById, lessonTitle } from '#lib/endgames/lessons.js';
@@ -25,7 +23,6 @@
 	let ctx = $state<PlanContext | null>(null);
 	let tasks = $state<PlanTask[]>([]);
 	let initial = { dueReview: 0, dueRepertoire: 0 };
-	let strength = $state<Strength | null>(null);
 
 	onMount(async () => {
 		const c = await loadPlanContext();
@@ -33,7 +30,6 @@
 		initial = plan.initial;
 		tasks = plan.tasks;
 		ctx = c;
-		strength = await currentStrength();
 	});
 
 	const rows = $derived(
@@ -154,13 +150,6 @@
 			{/each}
 		</ol>
 	{/if}
-
-	{#if strength}
-		<p class="strength" title={t('plan.strengthHint')}>
-			<Gauge size={15} />
-			{t('plan.strength', { n: strength.value })}
-		</p>
-	{/if}
 </section>
 
 <style>
@@ -268,15 +257,6 @@
 		font-weight: 700;
 		color: var(--text-2);
 		font-variant-numeric: tabular-nums;
-	}
-
-	.strength {
-		display: flex;
-		align-items: center;
-		gap: 0.4rem;
-		font-size: 0.85rem;
-		font-weight: 650;
-		color: var(--text-2);
 	}
 
 	@keyframes rise {

@@ -50,7 +50,18 @@
 		} catch {
 			/* egal */
 		}
-		if (!seen && (await needsOnboarding())) onboarding = true;
+		if (!seen) {
+			if (await needsOnboarding()) onboarding = true;
+			else {
+				// Bestandsnutzer ohne Merker: künftig sofort starten
+				try {
+					localStorage.setItem('rookie:onboarded', '1');
+				} catch {
+					/* egal */
+				}
+			}
+		}
+		if (!onboarding) document.documentElement.removeAttribute('data-first-run');
 		// verknüpfte Konten: neue Partien holen, wenn die App geöffnet wird oder zurückkehrt
 		setTimeout(sync, 2500);
 		// Konto: Stand beim Öffnen holen, beim Verlassen der App sichern
@@ -104,7 +115,12 @@
 
 <AchievementToast />
 
-{#if onboarding}<Onboarding onclose={() => (onboarding = false)} />{:else}<InstallPrompt />{/if}
+{#if onboarding}<Onboarding
+		onclose={() => {
+			onboarding = false;
+			document.documentElement.removeAttribute('data-first-run');
+		}}
+	/>{:else}<InstallPrompt />{/if}
 
 {#if newGames > 0}
 	<div role="status">

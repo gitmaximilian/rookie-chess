@@ -270,8 +270,11 @@
 			transform var(--dur) var(--ease-out);
 	}
 
-	.opt:hover {
-		border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+	/* nur mit Maus: auf Touch bliebe der Zustand an der Option im nächsten Schritt hängen */
+	@media (hover: hover) {
+		.opt:hover {
+			border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+		}
 	}
 
 	.opt:active {

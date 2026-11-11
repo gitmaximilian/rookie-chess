@@ -381,7 +381,7 @@
 	}
 
 	.chg.up {
-		color: var(--good);
+		color: var(--good-text);
 	}
 
 	.lab {
@@ -510,7 +510,7 @@
 	}
 
 	.res.w {
-		color: var(--good);
+		color: var(--good-text);
 	}
 
 	.res.l {
@@ -630,7 +630,7 @@
 	}
 
 	.months td.up {
-		color: var(--good);
+		color: var(--good-text);
 		font-weight: 700;
 	}
 

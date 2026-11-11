@@ -28,6 +28,9 @@
 				var b = JSON.parse(localStorage.getItem('rookie:board') || '{}');
 				if (b.theme) document.documentElement.setAttribute('data-board', b.theme);
 				if (b.pieces) document.documentElement.setAttribute('data-pieces', b.pieces);
+				// Erststart: App verdecken, bis klar ist, ob das Onboarding kommt (kein Aufblitzen)
+				if (localStorage.getItem('rookie:onboarded') !== '1')
+					document.documentElement.setAttribute('data-first-run', '');
 			} catch (e) {}
 		</script>
 		%sveltekit.head%

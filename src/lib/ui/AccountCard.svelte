@@ -156,7 +156,7 @@
 		display: flex;
 		align-items: center;
 		gap: 0.4rem;
-		color: var(--good);
+		color: var(--good-text);
 		font-weight: 650;
 	}
 

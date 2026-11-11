@@ -68,7 +68,8 @@
 	let botId = $state('tina');
 	let colorChoice = $state<'white' | 'black' | 'random'>('white');
 	let tcChoice = $state<string | null>(null);
-	let coachOn = $state(false);
+	// Anfänger lernen am meisten mit Coach – deshalb an, bis man ihn selbst ausschaltet
+	let coachOn = $state(true);
 
 	// ── Partie ──
 	let game = $state.raw(new Game());
@@ -188,7 +189,7 @@
 	onMount(async () => {
 		const saved = await getSetting<SavedGame | null>('currentGame', null);
 		botId = await getSetting('lastBotId', 'tina');
-		coachOn = await getSetting('coachOn', false);
+		coachOn = await getSetting('coachOn', true);
 		if (saved && saved.moves) {
 			resume(saved);
 		} else {
@@ -575,12 +576,6 @@
 {#if phase === 'setup'}
 	<PageHeader eyebrow={t('play.eyebrow')} title={t('play.title')} subtitle={t('play.subtitle')} />
 
-	<a class="friend-link card pressable" href={resolve('/play/friend')}>
-		<span class="fl-ico"><Users size={20} /></span>
-		<span class="fl-text"><b>{t('friend.title')}</b><span>{t('friend.teaser')}</span></span>
-		<ArrowRight size={18} />
-	</a>
-
 	<div class="setup">
 		<section>
 			<h2 class="sec">{t('play.opponent')}</h2>
@@ -672,6 +667,12 @@
 			<button class="btn big" onclick={start}>{t('play.start')}</button>
 		</aside>
 	</div>
+
+	<a class="friend-link card pressable" href={resolve('/play/friend')}>
+		<span class="fl-ico"><Users size={20} /></span>
+		<span class="fl-text"><b>{t('friend.title')}</b><span>{t('friend.teaser')}</span></span>
+		<ArrowRight size={18} />
+	</a>
 
 	<!-- Mobil: Start immer erreichbar, ohne nach unten zu scrollen -->
 	<div class="start-bar" style:--h={botById(botId).hue}>
@@ -923,7 +924,7 @@
 		align-items: center;
 		gap: 0.8rem;
 		max-width: 1100px;
-		margin-bottom: 1rem;
+		margin: 1.25rem 0 0;
 		padding: 0.8rem 1rem;
 		color: var(--text-2);
 	}
@@ -1104,7 +1105,7 @@
 	.cb-warn {
 		font-size: 0.9rem;
 		font-weight: 650;
-		color: color-mix(in srgb, var(--warn) 45%, var(--text));
+		color: var(--warn-text);
 	}
 
 	.cb-title {
@@ -1114,11 +1115,11 @@
 
 	.cb-title.j-best,
 	.cb-title.j-good {
-		color: var(--good);
+		color: var(--good-text);
 	}
 
 	.cb-title.j-inaccuracy {
-		color: color-mix(in srgb, var(--warn) 45%, var(--text));
+		color: var(--warn-text);
 	}
 
 	.cb-title.j-mistake,
@@ -1198,8 +1199,8 @@
 
 	/* schmal: Farbe/Bedenkzeit oben, Start in der schwebenden Leiste unten */
 	@media (max-width: 999px) {
-		.setup {
-			padding-bottom: 5.5rem;
+		.friend-link {
+			margin-bottom: 5.5rem;
 		}
 		.options {
 			order: -1;
@@ -1690,7 +1691,7 @@
 	}
 
 	.sheet.win h2 {
-		color: var(--good);
+		color: var(--good-text);
 	}
 
 	.reason {
@@ -1703,7 +1704,7 @@
 		padding: 0.3rem 0.7rem;
 		border-radius: 999px;
 		background: color-mix(in srgb, var(--good) 14%, transparent);
-		color: var(--good);
+		color: var(--good-text);
 	}
 
 	.sheet-actions {

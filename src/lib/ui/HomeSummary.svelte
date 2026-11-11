@@ -157,15 +157,10 @@
 		}
 	}
 
+	/* breiter: so viele gleich breite Kacheln pro Zeile wie passen, keine Waisen */
 	@media (min-width: 700px) {
 		.sum {
-			grid-template-columns: repeat(3, minmax(0, 1fr));
-		}
-	}
-
-	@media (min-width: 1100px) {
-		.sum {
-			grid-template-columns: repeat(6, minmax(0, 1fr));
+			grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
 		}
 	}
 
@@ -270,7 +265,7 @@
 	}
 
 	.d.up {
-		color: var(--good);
+		color: var(--good-text);
 	}
 
 	.form {

@@ -1098,7 +1098,7 @@
 
 	.ok-text {
 		font-weight: 750;
-		color: var(--good);
+		color: var(--good-text);
 	}
 
 	.lines {

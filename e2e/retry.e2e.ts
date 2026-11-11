@@ -32,7 +32,7 @@ test('Aus eigener Partie lernen: Fehler nachspielen', async ({ page, browserName
 	await expect(page.getByText(/1 new game imported/)).toBeVisible({ timeout: 120_000 });
 
 	await page.getByRole('link', { name: /View games/ }).click();
-	await page.locator('.game-main').first().click();
+	await page.locator('.gli').first().click();
 	const cta = page.getByRole('button', { name: /Replay your \d+ mistake/ });
 	await expect(cta).toBeVisible({ timeout: 60_000 });
 	await cta.click();

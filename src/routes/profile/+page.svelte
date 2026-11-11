@@ -97,7 +97,7 @@
 <ProfileTabs active="overview" />
 
 <div class="wrap">
-	<LinkedAccounts />
+	<LinkedAccounts collapsed />
 
 	<div class="tiles">
 		{#each tiles as tile, i (tile.label)}

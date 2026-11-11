@@ -359,7 +359,7 @@
 	}
 
 	.hist.done {
-		color: var(--good);
+		color: var(--good-text);
 	}
 
 	.live {

@@ -3,6 +3,10 @@ import { expect, test } from '@playwright/test';
 test('Partie gegen Bauer Bruno: Zug, Antwort, Zurück, Aufgeben', async ({ page }) => {
 	await page.goto('/play');
 	await page.getByRole('button', { name: /Pawn Pete/ }).click();
+	// ohne Coach: dieser Test prüft den reinen Spielablauf
+	const coach = page.getByRole('switch', { name: /Play with coach/ });
+	await expect(coach).toHaveAttribute('aria-checked', 'true');
+	await coach.click();
 	await page.getByRole('button', { name: 'Start game' }).click();
 	await expect(page.getByText('Your move')).toBeVisible();
 

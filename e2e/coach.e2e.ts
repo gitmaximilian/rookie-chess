@@ -4,7 +4,11 @@ import { fen, playUci } from './helpers/board';
 test('Coach: lobt gute Züge und bietet bei einem Patzer das Zurücknehmen an', async ({ page }) => {
 	test.setTimeout(90_000);
 	await page.goto('/play');
-	await page.getByRole('switch', { name: /Play with coach/ }).click();
+	// Coach ist für neue Nutzer schon an
+	await expect(page.getByRole('switch', { name: /Play with coach/ })).toHaveAttribute(
+		'aria-checked',
+		'true'
+	);
 	await page
 		.getByRole('button', { name: /Start game/ })
 		.first()

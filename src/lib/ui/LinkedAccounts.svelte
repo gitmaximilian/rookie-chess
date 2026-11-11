@@ -5,6 +5,7 @@
 	import TrendingUp from '@lucide/svelte/icons/trending-up';
 	import TrendingDown from '@lucide/svelte/icons/trending-down';
 	import Link2 from '@lucide/svelte/icons/link-2';
+	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import {
 		getLinked,
 		link,
@@ -17,7 +18,17 @@
 	import type { Source } from '#lib/import/importers.js';
 	import { t, intlLocale } from '#lib/i18n/i18n.svelte.js';
 
-	let { compact = false, ctaOnly = false }: { compact?: boolean; ctaOnly?: boolean } = $props();
+	let {
+		compact = false,
+		ctaOnly = false,
+		collapsed = false
+	}: {
+		compact?: boolean;
+		ctaOnly?: boolean;
+		/** ohne verknüpftes Konto nur eine schmale Zeile zeigen, die sich aufklappt */
+		collapsed?: boolean;
+	} = $props();
+	let open = $state(false);
 
 	let linked = $state<LinkedAccounts | null>(null);
 	let ratings = $state<OnlineRating[]>([]);
@@ -84,7 +95,13 @@
 			: '';
 </script>
 
-{#if linked && !any}
+{#if linked && !any && collapsed && !open}
+	<button class="slim card" onclick={() => (open = true)} aria-expanded="false">
+		<span class="ico small"><Link2 size={16} /></span>
+		<span class="slim-text">{t('accounts.ctaTitle')}</span>
+		<ChevronDown size={18} />
+	</button>
+{:else if linked && !any}
 	<section class="cta card" class:compact>
 		<div class="cta-head">
 			<span class="ico"><Link2 size={20} /></span>
@@ -100,7 +117,7 @@
 					<input
 						bind:value={input[src]}
 						aria-label="{label} {t('import.username')}"
-						placeholder="{label}-{t('import.username')}"
+						placeholder={t('import.username')}
 						autocomplete="off"
 						autocapitalize="off"
 						spellcheck="false"
@@ -171,6 +188,36 @@
 <style>
 	.card {
 		padding: 1rem 1.1rem;
+	}
+
+	.slim {
+		display: flex;
+		align-items: center;
+		gap: 0.65rem;
+		width: 100%;
+		min-height: 52px;
+		padding: 0.55rem 0.9rem 0.55rem 0.6rem;
+		font: inherit;
+		font-weight: 650;
+		font-size: 0.92rem;
+		color: var(--text);
+		text-align: left;
+		cursor: pointer;
+	}
+
+	.slim-text {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.slim :global(svg:last-child) {
+		color: var(--text-3);
+	}
+
+	.ico.small {
+		width: 32px;
+		height: 32px;
+		border-radius: 9px;
 	}
 
 	.cta {
@@ -332,7 +379,7 @@
 	}
 
 	.d.up {
-		color: var(--good);
+		color: var(--good-text);
 	}
 
 	.sync {

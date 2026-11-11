@@ -13,6 +13,7 @@
 	import ClipboardPaste from '@lucide/svelte/icons/clipboard-paste';
 	import Download from '@lucide/svelte/icons/download';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
+	import GameListItem from '#lib/ui/GameListItem.svelte';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import CloudDownload from '@lucide/svelte/icons/cloud-download';
 	import PageHeader from '#lib/ui/PageHeader.svelte';
@@ -30,7 +31,7 @@
 		type MoveReview
 	} from '#lib/analysis/run.js';
 	import { accuracy, MARK, judgementLabel, type PlyEval } from '#lib/analysis/classify.js';
-	import { t, intlLocale } from '#lib/i18n/i18n.svelte.js';
+	import { t } from '#lib/i18n/i18n.svelte.js';
 	import { formatScore } from '#lib/engine/uci.js';
 	import { openingFor, onOpeningsLoaded } from '#lib/data/openings.js';
 	import { feedbackFor, type MoveFeedback } from '#lib/openings/feedback.js';
@@ -61,6 +62,8 @@
 	let loading = $state(true);
 	let listLimit = $state(100);
 	let gameCount = $state(0);
+	let mistakeCount = $state(0);
+	onMount(async () => (mistakeCount = await db.mistakes.count()));
 
 	type Filter = 'all' | 'lichess' | 'chesscom' | 'bot' | 'friend' | 'mistakes';
 	let filter = $state<Filter>('all');
@@ -100,8 +103,6 @@
 		listLimit += 200;
 		await loadList();
 	}
-
-	const qualities = $derived(new Map(games.map((g) => [g.id, quality(g)])));
 
 	const total = $derived(game ? game.ply + 1 : 0);
 	const reviews = $derived<MoveReview[]>(row && evals.length > 1 ? reviewMoves(row, evals) : []);
@@ -318,6 +319,7 @@
 		else if (e.key === 'ArrowRight') go(ply + 1);
 		else if (e.key === 'Home' || e.key === 'ArrowUp') go(0);
 		else if (e.key === 'End' || e.key === 'ArrowDown') go(total - 1);
+		else if (e.key === 'n') goNextMistake();
 		else if (e.key === ' ') showBest = !showBest;
 		else if (e.key === 'f') orientation = orientation === 'white' ? 'black' : 'white';
 		else return;
@@ -375,12 +377,13 @@
 		if (row) await addTombstone('games', row.externalId ?? `${row.source}:${row.date}`);
 		await db.games.delete(id);
 		games = games.filter((g) => g.id !== id);
+		if (gameId) await goto(resolve('/analysis'));
 	}
 
-	function resultFor(g: GameRow): 'win' | 'loss' | 'draw' | 'open' {
-		if (g.result === '*') return 'open';
-		if (g.result === '1/2-1/2') return 'draw';
-		return (g.result === '1-0') === (g.myColor === 'white') ? 'win' : 'loss';
+	/** nächster eigener Fehler nach dem aktuellen Zug (danach wieder von vorn) */
+	const nextMistake = $derived(myMistakes.find((r) => r.ply > ply) ?? myMistakes[0] ?? null);
+	function goNextMistake() {
+		if (nextMistake) go(nextMistake.ply);
 	}
 </script>
 
@@ -395,9 +398,19 @@
 	/>
 
 	<div class="hub">
-		<LinkedAccounts />
+		<LinkedAccounts collapsed={gameCount > 0} />
+		{#if mistakeCount > 0}
+			<a class="card hub-practice pressable" href={resolve('/puzzles?mode=mistakes')}>
+				<span class="hp-ico"><Target size={20} /></span>
+				<span class="hp-text">
+					<b>{t('analysis.hubPractice', { n: mistakeCount })}</b>
+					<span>{t('analysis.hubPracticeText')}</span>
+				</span>
+				<ChevronRight size={18} />
+			</a>
+		{/if}
 		<div class="hub-actions">
-			<a class="btn board-btn" href={resolve('/analysis/board')}
+			<a class="btn secondary board-btn" href={resolve('/analysis/board')}
 				><LayoutGrid size={18} /> {t('board2.open')}</a
 			>
 		</div>
@@ -428,43 +441,11 @@
 					</div>
 				</div>
 			{:else}
-				{#each games as g (g.id)}
-					{@const res = resultFor(g)}
-					<div class="game card">
-						<a class="game-main" href={resolve(`/analysis?game=${g.id}`)}>
-							<span class="res {res}">{t(`analysis.result.${res}`)}</span>
-							<span class="g-text">
-								<b>{t('analysis.vs', { name: g.opponent })}</b>
-								<span>
-									{t(`analysis.source.${g.source}`)} · {new Date(g.date).toLocaleDateString(
-										intlLocale(),
-										{
-											day: 'numeric',
-											month: 'short',
-											year: 'numeric'
-										}
-									)}
-									· {t('common.moves', { n: Math.ceil(g.moves.length / 2) })}
-									{#if g.myRating}· {g.myRating}{/if}
-								</span>
-							</span>
-							{#if qualities.get(g.id)}
-								{@const q = qualities.get(g.id)!}
-								<span class="q">
-									<b class:hi={q.accuracy >= 80} class:lo={q.accuracy < 65}>{q.accuracy}%</b>
-									{#if q.blunders}<span class="qb">{q.blunders}??</span>{/if}
-									{#if q.mistakes}<span class="qm">{q.mistakes}?</span>{/if}
-								</span>
-							{:else if !g.analysis?.done}
-								<span class="q pending">{t('analysis.notYet')}</span>
-							{/if}
-							<ChevronRight size={18} />
-						</a>
-						<button class="del" onclick={() => remove(g.id!)} aria-label={t('analysis.deleteGame')}
-							><Trash2 size={16} /></button
-						>
-					</div>
-				{/each}
+				<ul class="game-list">
+					{#each games as g (g.id)}
+						<li><GameListItem game={g} /></li>
+					{/each}
+				</ul>
 				{#if gameCount > games.length}
 					<button class="btn secondary more" onclick={showMore}
 						>{t('analysis.showMore', { n: gameCount - games.length })}</button
@@ -557,6 +538,15 @@
 						onclick={() => (orientation = orientation === 'white' ? 'black' : 'white')}
 						aria-label={t('analysis.nav.flip')}><RefreshCw size={19} /></button
 					>
+					{#if myMistakes.length && !retry}
+						<button
+							class="to-mistake"
+							onclick={goNextMistake}
+							aria-label={t('analysis.nav.nextMistake', { n: myMistakes.length })}
+							title={t('analysis.nav.nextMistake', { n: myMistakes.length })}
+							><Target size={19} /><span class="tm-n">{myMistakes.length}</span></button
+						>
+					{/if}
 				</div>
 			</Dock>
 		</div>
@@ -739,9 +729,14 @@
 				<MoveList moves={game.moves} current={ply} {marks} onSelect={go} />
 			</div>
 
-			<button class="link" onclick={downloadPgn}
-				><Download size={16} /> {t('analysis.downloadPgn')}</button
-			>
+			<div class="foot-links">
+				<button class="link" onclick={downloadPgn}
+					><Download size={16} /> {t('analysis.downloadPgn')}</button
+				>
+				<button class="link danger" onclick={() => remove(row!.id!)}
+					><Trash2 size={16} /> {t('analysis.deleteGame')}</button
+				>
+			</div>
 		</aside>
 	</div>
 {/if}
@@ -763,6 +758,40 @@
 		gap: 0.75rem;
 		max-width: 1100px;
 		margin-bottom: 1rem;
+	}
+
+	.hub-practice {
+		display: flex;
+		align-items: center;
+		gap: 0.8rem;
+		padding: 0.85rem 1rem;
+		color: var(--text);
+		border-color: color-mix(in srgb, var(--bad) 30%, transparent);
+		background: color-mix(in srgb, var(--bad) 6%, var(--surface));
+	}
+
+	.hp-ico {
+		flex: none;
+		display: grid;
+		place-items: center;
+		width: 40px;
+		height: 40px;
+		border-radius: 12px;
+		background: var(--bad);
+		color: #fff;
+	}
+
+	.hp-text {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		line-height: 1.3;
+	}
+
+	.hp-text span {
+		font-size: 0.85rem;
+		color: var(--text-2);
 	}
 
 	.hub-actions {
@@ -803,43 +832,6 @@
 		color: var(--bg);
 	}
 
-	.q {
-		flex: none;
-		display: flex;
-		flex-direction: column;
-		align-items: flex-end;
-		gap: 0.1rem;
-		font-variant-numeric: tabular-nums;
-		font-size: 0.75rem;
-	}
-
-	.q b {
-		font-size: 0.98rem;
-		color: color-mix(in srgb, var(--warn) 45%, var(--text));
-	}
-
-	.q b.hi {
-		color: var(--good);
-	}
-
-	.q b.lo {
-		color: var(--bad);
-	}
-
-	.qb {
-		color: var(--bad);
-		font-weight: 700;
-	}
-
-	.qm {
-		color: color-mix(in srgb, var(--warn) 45%, var(--text));
-		font-weight: 700;
-	}
-
-	.q.pending {
-		color: var(--text-3);
-	}
-
 	.more {
 		align-self: center;
 		margin-top: 0.5rem;
@@ -875,69 +867,13 @@
 		gap: 0.5rem;
 	}
 
-	.game {
-		display: flex;
-		align-items: center;
-		padding-right: 0.4rem;
-	}
-
-	.game-main {
-		flex: 1;
-		display: flex;
-		align-items: center;
-		gap: 0.85rem;
-		padding: 0.8rem 0.4rem 0.8rem 1rem;
-		min-width: 0;
-	}
-
-	.g-text {
+	.game-list {
+		list-style: none;
+		margin: 0;
+		padding: 0;
 		display: flex;
 		flex-direction: column;
-		flex: 1;
-		min-width: 0;
-	}
-
-	.g-text span {
-		font-size: 0.85rem;
-		color: var(--text-2);
-	}
-
-	.res {
-		flex: none;
-		width: 92px;
-		text-align: center;
-		font-size: 0.78rem;
-		font-weight: 700;
-		padding: 0.3rem 0;
-		border-radius: 999px;
-	}
-
-	.res.win {
-		background: color-mix(in srgb, var(--good) 15%, transparent);
-		color: var(--good);
-	}
-	.res.loss {
-		background: color-mix(in srgb, var(--bad) 13%, transparent);
-		color: var(--bad);
-	}
-	.res.draw,
-	.res.open {
-		background: var(--surface-2);
-		color: var(--text-2);
-	}
-
-	.del {
-		border: none;
-		background: none;
-		color: var(--text-3);
-		padding: 0.5rem;
-		border-radius: 10px;
-		cursor: pointer;
-	}
-
-	.del:hover {
-		color: var(--bad);
-		background: color-mix(in srgb, var(--bad) 10%, transparent);
+		gap: 0.4rem;
 	}
 
 	.empty,
@@ -1018,7 +954,7 @@
 
 	.retry .ok {
 		font-weight: 700;
-		color: var(--good);
+		color: var(--good-text);
 	}
 
 	.retry .bad {
@@ -1141,8 +1077,35 @@
 
 	.nav {
 		display: grid;
-		grid-template-columns: repeat(5, 1fr);
+		grid-auto-columns: 1fr;
+		grid-auto-flow: column;
 		gap: 0.4rem;
+	}
+
+	.nav .to-mistake {
+		gap: 0.25rem;
+		grid-auto-flow: column;
+		background: color-mix(in srgb, var(--bad) 14%, var(--surface));
+		color: var(--bad-text);
+		font-weight: 750;
+		font-size: 0.9rem;
+	}
+
+	.foot-links {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: space-between;
+		gap: 0.5rem;
+	}
+
+	.foot-links .danger {
+		color: var(--text-3);
+	}
+
+	@media (hover: hover) {
+		.foot-links .danger:hover {
+			color: var(--bad-text);
+		}
 	}
 
 	.nav button {
@@ -1252,11 +1215,11 @@
 	}
 	.badge.inaccuracy {
 		background: color-mix(in srgb, var(--warn) 25%, transparent);
-		color: color-mix(in srgb, var(--warn) 45%, var(--text));
+		color: var(--warn-text);
 	}
 	.badge.best {
 		background: color-mix(in srgb, var(--good) 15%, transparent);
-		color: var(--good);
+		color: var(--good-text);
 	}
 
 	.who {

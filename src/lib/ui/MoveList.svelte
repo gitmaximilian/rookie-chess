@@ -181,7 +181,7 @@
 		color: var(--warn);
 	}
 	.mx sup {
-		color: var(--good);
+		color: var(--good-text);
 	}
 	.cur sup {
 		color: inherit;

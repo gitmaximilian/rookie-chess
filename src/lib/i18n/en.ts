@@ -250,6 +250,8 @@ export const en = {
 		reviewIn: (p: P) => `Comes back for review ${p.when}.`,
 		tryAgain: 'Not quite. Try again!',
 		today: 'Solved today',
+		todayGoal: 'Daily goal',
+		goalReached: 'Daily goal reached! See what is next',
 		mistakeNote: (p: P) => `${p.what} vs ${p.opp} – find the better move.`
 	},
 	srs: {
@@ -347,12 +349,14 @@ export const en = {
 		running: 'Stockfish is analysing …',
 		resume: 'Continue',
 		start: 'Starting position',
-		startText: 'Use ← → to step through. Mistakes are marked in the graph.',
+		startText: 'Tap › to step through, or the red target to jump straight to your next mistake.',
 		opponentMove: (p: P) => `Move by ${p.name}`,
 		best: 'Exactly the move Stockfish plays too.',
 		solid: 'A solid move.',
 		bestHere: 'Best move here:',
 		practice: (p: P) => `${p.n} new ${s(p.n, 'exercise', 'exercises')}`,
+		hubPractice: (p: P) => `${p.n} ${s(p.n, 'position', 'positions')} from your games to practise`,
+		hubPracticeText: 'Find the better move – so the same mistake does not happen again.',
 		practiceText: 'from your mistakes – train now',
 		downloadPgn: 'Download PGN',
 		board: 'Analysis board',
@@ -364,7 +368,14 @@ export const en = {
 		unknown: 'Unknown',
 		result: { win: 'Win', loss: 'Loss', draw: 'Draw', open: 'Open' },
 		source: { bot: 'Bot', lichess: 'Lichess', chesscom: 'Chess.com', pgn: 'PGN', friend: 'Friend' },
-		nav: { first: 'Start', prev: 'Back', next: 'Forward', last: 'End', flip: 'Flip board' }
+		nav: {
+			nextMistake: 'Next mistake of yours ({n} in this game)',
+			first: 'Start',
+			prev: 'Back',
+			next: 'Forward',
+			last: 'End',
+			flip: 'Flip board'
+		}
 	},
 	judgement: {
 		blunder: 'Blunder',
@@ -427,7 +438,7 @@ export const en = {
 		}
 	},
 	settings: {
-		eyebrow: 'Profile',
+		eyebrow: 'Rookie',
 		title: 'Settings',
 		appearance: 'Appearance',
 		auto: 'Automatic',
@@ -458,7 +469,7 @@ export const en = {
 		goalText: 'How many puzzles do you want to solve per day?',
 		data: 'Your data',
 		dataText:
-			'Everything stays on this device – no account, no cloud. A backup lets you take your progress to another device (e.g. from iPhone to Mac).',
+			'Without an account, everything stays on this device only. A backup file lets you move your progress to another device yourself (e.g. from iPhone to Mac).',
 		facts: (p: P) => `${p.g} games · ${p.a} puzzle attempts · ${p.c} review cards`,
 		protected: 'Data is protected from automatic deletion.',
 		unprotected: 'Safari may delete data after a longer period of non-use.',

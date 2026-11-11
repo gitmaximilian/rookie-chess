@@ -9,6 +9,7 @@
 	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
 	import Flame from '@lucide/svelte/icons/flame';
 	import Sparkles from '@lucide/svelte/icons/sparkles';
+	import Trophy from '@lucide/svelte/icons/trophy';
 	import Repeat from '@lucide/svelte/icons/repeat';
 	import Zap from '@lucide/svelte/icons/zap';
 	import CalendarDays from '@lucide/svelte/icons/calendar-days';
@@ -41,6 +42,9 @@
 	let mistakeCount = $state(0);
 	let streak = $state(0);
 	let solvedToday = $state(0);
+	let goal = $state(5);
+	/** Tagesziel genau mit diesem Puzzle erreicht → nächste Aktion zeigen */
+	let goalJustReached = $state(false);
 
 	let run = $state.raw<PuzzleRun | null>(null);
 	let v = $state(0);
@@ -95,7 +99,10 @@
 		dueCount = (await dueCards('puzzle')).length;
 		mistakeCount = (await dueCards('mistake')).length;
 		const act = await db.activity.get(today());
+		const before = solvedToday;
 		solvedToday = act?.puzzles ?? 0;
+		goal = await getSetting('dailyGoal', 5);
+		goalJustReached = before > 0 && before < goal && solvedToday >= goal;
 		dailyDone = (await getSetting<string>('dailyDone', '')) === today();
 	}
 
@@ -484,6 +491,13 @@
 							{:else}
 								<p class="big">{t('puzzles.noProblem')}</p>
 							{/if}
+							{#if goalJustReached}
+								<a class="goal-done" href={resolve('/')}
+									><Trophy size={16} />
+									{t('puzzles.goalReached')}
+									<ArrowRight size={15} /></a
+								>
+							{/if}
 							{#if nextReview}
 								<p class="sub">
 									<Repeat size={14} />
@@ -526,8 +540,17 @@
 				{/if}
 
 				<div class="today">
-					<span>{t('puzzles.today')}</span>
-					<b>{solvedToday}</b>
+					<span>{t('puzzles.todayGoal')}</span>
+					<b>{solvedToday}/{goal}</b>
+					<span
+						class="goal-track"
+						role="progressbar"
+						aria-label={t('puzzles.todayGoal')}
+						aria-valuemin={0}
+						aria-valuemax={goal}
+						aria-valuenow={Math.min(solvedToday, goal)}
+						><span style:width="{Math.min(1, solvedToday / Math.max(1, goal)) * 100}%"></span></span
+					>
 				</div>
 			{/if}
 		</aside>
@@ -765,12 +788,12 @@
 
 	.turn-pill.solved {
 		background: color-mix(in srgb, var(--good) 15%, transparent);
-		color: var(--good);
+		color: var(--good-text);
 	}
 
 	.turn-pill.failed {
 		background: color-mix(in srgb, var(--warn) 18%, transparent);
-		color: color-mix(in srgb, var(--warn) 45%, var(--text));
+		color: var(--warn-text);
 	}
 
 	.meta {
@@ -824,7 +847,7 @@
 	}
 
 	.result.good .big {
-		color: var(--good);
+		color: var(--good-text);
 	}
 
 	.sub {
@@ -872,11 +895,39 @@
 
 	.today {
 		display: flex;
+		flex-wrap: wrap;
 		justify-content: space-between;
+		row-gap: 0.4rem;
 		padding-top: 0.85rem;
 		border-top: 1px solid var(--line);
 		font-size: 0.9rem;
 		color: var(--text-2);
+	}
+
+	.goal-track {
+		flex-basis: 100%;
+		height: 6px;
+		border-radius: 999px;
+		background: var(--surface-2);
+		overflow: hidden;
+	}
+
+	.goal-track span {
+		display: block;
+		height: 100%;
+		border-radius: inherit;
+		background: var(--c-puzzle);
+		transition: width 500ms var(--ease-out);
+	}
+
+	.goal-done {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
+		margin-top: 0.15rem;
+		font-size: 0.9rem;
+		font-weight: 700;
+		color: var(--accent);
 	}
 
 	.empty {

@@ -53,14 +53,6 @@
 		</span>
 	</header>
 
-	{#if backupDue}
-		<a class="banner card" href={resolve('/settings')}>
-			<ShieldAlert size={20} />
-			<span><b>{t('home.backup')}</b> {t('home.backupText')}</span>
-			<ArrowRight size={18} />
-		</a>
-	{/if}
-
 	{#if resume}
 		<a class="resume card pressable" href={resolve('/play')}>
 			<BotAvatar bot={botById(resume.botId)} size={44} />
@@ -77,11 +69,20 @@
 		</a>
 	{/if}
 
+	<div class="grid">
+		<div class="plan-col"><DailyPlan /></div>
+		<div class="games-col"><RecentGames /></div>
+	</div>
+
 	<HomeSummary />
 
-	<RecentGames />
-
-	<DailyPlan />
+	{#if backupDue}
+		<a class="banner card" href={resolve('/settings')}>
+			<ShieldAlert size={20} />
+			<span><b>{t('home.backup')}</b> {t('home.backupText')}</span>
+			<ArrowRight size={18} />
+		</a>
+	{/if}
 </div>
 
 <style>
@@ -139,7 +140,7 @@
 		align-items: center;
 		gap: 0.75rem;
 		padding: 0.85rem 1rem;
-		color: color-mix(in srgb, var(--warn) 45%, var(--text));
+		color: var(--warn-text);
 		background: color-mix(in srgb, var(--warn) 12%, var(--surface));
 		font-size: 0.92rem;
 	}
@@ -176,11 +177,16 @@
 		color: #fff;
 	}
 
-	/* Hero: dunkle Bühne, warmer Schein – auch im Hellmodus */
-	@keyframes rise {
-		from {
-			opacity: 0;
-			transform: translateY(12px);
+	/* Tagesplan zuerst: er beantwortet „Was mache ich jetzt?“ */
+	.grid {
+		display: grid;
+		gap: 1rem;
+	}
+
+	@media (min-width: 1000px) {
+		.grid {
+			grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+			align-items: start;
 		}
 	}
 </style>

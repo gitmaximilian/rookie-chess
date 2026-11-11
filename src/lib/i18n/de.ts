@@ -264,6 +264,8 @@ export const de: Shape<typeof en> = {
 		reviewIn: (p) => `Kommt ${p.when} zur Wiederholung.`,
 		tryAgain: 'Nicht ganz. Versuch’s nochmal!',
 		today: 'Heute gelöst',
+		todayGoal: 'Tagesziel',
+		goalReached: 'Tagesziel geschafft! Was kommt als Nächstes?',
 		mistakeNote: (p) => `${p.what} gegen ${p.opp} – finde den besseren Zug.`
 	},
 	srs: {
@@ -382,12 +384,15 @@ export const de: Shape<typeof en> = {
 		running: 'Stockfish analysiert …',
 		resume: 'Fortsetzen',
 		start: 'Ausgangsstellung',
-		startText: 'Mit ← → durch die Partie. Fehler sind in der Kurve markiert.',
+		startText:
+			'Tippe auf ›, um Zug für Zug durchzugehen, oder auf die rote Zielscheibe für deinen nächsten Fehler.',
 		opponentMove: (p) => `Zug von ${p.name}`,
 		best: 'Genau der Zug, den auch Stockfish spielt.',
 		solid: 'Ein solider Zug.',
 		bestHere: 'Bester Zug hier:',
 		practice: (p) => `${p.n} neue ${s(p.n, 'Übung', 'Übungen')}`,
+		hubPractice: (p) => `${p.n} ${s(p.n, 'Stellung', 'Stellungen')} aus deinen Partien zum Üben`,
+		hubPracticeText: 'Finde den besseren Zug – damit dir derselbe Fehler nicht wieder passiert.',
 		practiceText: 'aus deinen Fehlern – jetzt trainieren',
 		downloadPgn: 'PGN herunterladen',
 		board: 'Analyse-Brett',
@@ -399,7 +404,14 @@ export const de: Shape<typeof en> = {
 		unknown: 'Unbekannt',
 		result: { win: 'Sieg', loss: 'Niederlage', draw: 'Remis', open: 'Offen' },
 		source: { bot: 'Bot', lichess: 'Lichess', chesscom: 'Chess.com', pgn: 'PGN', friend: 'Freund' },
-		nav: { first: 'Anfang', prev: 'Zurück', next: 'Vor', last: 'Ende', flip: 'Brett drehen' }
+		nav: {
+			nextMistake: 'Zu deinem nächsten Fehler ({n} in dieser Partie)',
+			first: 'Anfang',
+			prev: 'Zurück',
+			next: 'Vor',
+			last: 'Ende',
+			flip: 'Brett drehen'
+		}
 	},
 	judgement: {
 		blunder: 'Patzer',
@@ -465,7 +477,7 @@ export const de: Shape<typeof en> = {
 		}
 	},
 	settings: {
-		eyebrow: 'Profil',
+		eyebrow: 'Rookie',
 		title: 'Einstellungen',
 		appearance: 'Darstellung',
 		auto: 'Automatisch',
@@ -496,7 +508,7 @@ export const de: Shape<typeof en> = {
 		goalText: 'Wie viele Puzzles möchtest du pro Tag lösen?',
 		data: 'Deine Daten',
 		dataText:
-			'Alles bleibt auf diesem Gerät – kein Konto, keine Cloud. Mit einer Sicherung kannst du deinen Fortschritt auf ein anderes Gerät mitnehmen (z. B. vom iPhone auf den Mac).',
+			'Ohne Konto bleibt alles nur auf diesem Gerät. Mit einer Sicherungsdatei nimmst du deinen Fortschritt selbst auf ein anderes Gerät mit (z. B. vom iPhone auf den Mac).',
 		facts: (p) => `${p.g} Partien · ${p.a} Puzzle-Versuche · ${p.c} Wiederholungskarten`,
 		protected: 'Daten sind vor automatischem Löschen geschützt.',
 		unprotected: 'Safari kann Daten nach längerer Nichtnutzung löschen.',

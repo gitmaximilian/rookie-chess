@@ -442,7 +442,7 @@
 	}
 
 	.status.ok {
-		color: var(--good);
+		color: var(--good-text);
 	}
 
 	.status.bad {

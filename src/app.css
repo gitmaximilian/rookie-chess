@@ -35,6 +35,10 @@
 	--good: #2b9a66;
 	--warn: #d99a1c;
 	--bad: #b83535;
+	/* Status als Text: auf hellen Flächen mindestens 4,5:1 (WCAG AA) */
+	--good-text: #1d7449;
+	--warn-text: #8a5a00;
+	--bad-text: #a42e2e;
 
 	/* Form */
 	--radius-s: 10px;
@@ -84,6 +88,9 @@
 		--accent-soft: rgb(255 122 92 / 0.16);
 		--on-accent: #1a0f0b;
 		--bad: #f07a7a;
+		--good-text: #5fd49b;
+		--warn-text: #f2b544;
+		--bad-text: #f59494;
 		--c-play: #ff7a5c;
 		--c-play-soft: rgb(255 122 92 / 0.15);
 		--c-puzzle: #9c8dff;
@@ -115,6 +122,9 @@
 	--accent-soft: rgb(255 122 92 / 0.16);
 	--on-accent: #1a0f0b;
 	--bad: #f07a7a;
+	--good-text: #5fd49b;
+	--warn-text: #f2b544;
+	--bad-text: #f59494;
 	--c-play: #ff7a5c;
 	--c-play-soft: rgb(255 122 92 / 0.15);
 	--c-puzzle: #9c8dff;
@@ -203,6 +213,23 @@ button {
 	clip: rect(0, 0, 0, 0);
 	white-space: nowrap;
 	border: 0;
+}
+
+/* Erststart: Inhalt bleibt verdeckt, bis das Layout entschieden hat (siehe app.html).
+   Sicherheitsnetz: nach 2,5 s erscheint er auf jeden Fall. */
+html[data-first-run] main,
+html[data-first-run] .tabbar,
+html[data-first-run] .sidebar {
+	animation: first-run-reveal 0s 2.5s both;
+}
+
+@keyframes first-run-reveal {
+	from {
+		visibility: hidden;
+	}
+	to {
+		visibility: visible;
+	}
 }
 
 /* ───────────────────────── Bausteine ───────────────────────── */

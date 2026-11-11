@@ -411,7 +411,7 @@
 	}
 
 	.insights li.good .ins-ico {
-		color: var(--good);
+		color: var(--good-text);
 	}
 
 	.insights li.bad .ins-ico {
@@ -593,7 +593,7 @@
 	}
 
 	.t-val.warn {
-		color: color-mix(in srgb, var(--warn) 45%, var(--text));
+		color: var(--warn-text);
 	}
 
 	.t-lab {

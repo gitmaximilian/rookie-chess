@@ -683,7 +683,7 @@
 		gap: 0.3rem;
 		font-size: 0.85rem;
 		font-weight: 650;
-		color: var(--good);
+		color: var(--good-text);
 	}
 
 	.arena {
@@ -874,7 +874,7 @@
 
 	.pill.ok {
 		background: color-mix(in srgb, var(--good) 14%, transparent);
-		color: var(--good);
+		color: var(--good-text);
 	}
 
 	.pill.bad {
