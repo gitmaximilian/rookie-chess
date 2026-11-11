@@ -33,12 +33,12 @@
 	import { sound } from '#lib/ui/sound.js';
 	import { t } from '#lib/i18n/i18n.svelte.js';
 
-	let course = $state<Course>(COURSES[0]);
+	let course = $state.raw<Course>(COURSES[0]);
 	let progress = $state<CourseProgress>({});
 	let view = $state<'overview' | 'learn' | 'done'>('overview');
 
 	// ── Lernen ──
-	let line = $state<CourseLine | null>(null);
+	let line = $state.raw<CourseLine | null>(null);
 	let ucis: string[] = [];
 	let game = $state.raw(new Game());
 	let v = $state(0);

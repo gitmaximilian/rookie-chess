@@ -417,6 +417,23 @@ export const de: Shape<typeof en> = {
 		maxMoves: (p) => `in ≤ ${p.n} Zügen`,
 		survive: (p) => `über ${p.n} Züge`
 	},
+	basics: {
+		title: 'Schach-Grundlagen',
+		hubText:
+			'Neu im Schach? Lerne jede Regel Schritt für Schritt – mit kleinen Spielen auf dem Brett.',
+		subtitle: 'Vom allerersten Zug bis zum Schachmatt – immer ein kleiner Schritt.',
+		progress: (p: P) => `${p.n} von ${p.m} Lektionen erledigt`,
+		steps: (p: P) => `${p.n} Schritte`,
+		step: (p: P) => `Schritt ${p.i} von ${p.n}`,
+		next: 'Weiter',
+		starsLeft: (p: P) => `Noch ${p.n} ${p.n === 1 ? 'Stern' : 'Sterne'}`,
+		allStars: (p: P) => `Alle Sterne in ${p.n} ${p.n === 1 ? 'Zug' : 'Zügen'} gesammelt!`,
+		tryAgain: 'Nicht ganz – versuch es nochmal.',
+		lessonDone: 'Lektion geschafft!',
+		nextLesson: 'Nächste Lektion',
+		overview: 'Alle Lektionen',
+		again: 'Nochmal'
+	},
 	endgame: {
 		back: 'Lernen',
 		howTo: 'So geht’s',

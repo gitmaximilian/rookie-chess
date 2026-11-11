@@ -3,6 +3,9 @@
 	import { resolve } from '$app/paths';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import BookOpen from '@lucide/svelte/icons/book-open';
+	import GraduationCap from '@lucide/svelte/icons/graduation-cap';
+	import { BASICS } from '#lib/basics/lessons.js';
+	import { getSetting } from '#lib/db/db.js';
 	import PageHeader from '#lib/ui/PageHeader.svelte';
 	import LessonIcon from '#lib/ui/LessonIcon.svelte';
 	import Stars from '#lib/ui/Stars.svelte';
@@ -14,12 +17,14 @@
 	let stars = $state<Record<string, number>>({});
 	let repCount = $state(0);
 	let repDue = $state(0);
+	let basicsDone = $state(0);
 
 	onMount(async () => {
 		const rows = await db.endgames.toArray();
 		stars = Object.fromEntries(rows.map((r) => [r.id, r.stars]));
 		repCount = await db.repertoire.filter((r) => r.mine).count();
 		repDue = await countDue('repertoire');
+		basicsDone = (await getSetting<string[]>('basicsDone', [])).length;
 	});
 
 	const total = $derived(Object.values(stars).reduce((a, b) => a + b, 0));
@@ -30,6 +35,16 @@
 <PageHeader eyebrow={t('learn.eyebrow')} title={t('learn.title')} subtitle={t('learn.subtitle')} />
 
 <div class="wrap">
+	<a class="openings basics card pressable" href={resolve('/learn/basics')}>
+		<span class="o-icon"><GraduationCap size={26} /></span>
+		<span class="o-text">
+			<b>{t('basics.title')}</b>
+			<span>{t('basics.hubText')}</span>
+			<span class="o-meta">{t('basics.progress', { n: basicsDone, m: BASICS.length })}</span>
+		</span>
+		<ArrowRight size={20} />
+	</a>
+
 	<a class="openings card pressable" href={resolve('/learn/openings')}>
 		<span class="o-icon"><BookOpen size={26} /></span>
 		<span class="o-text">
@@ -92,6 +107,16 @@
 		color: var(--text);
 		background:
 			radial-gradient(90% 140% at 100% 0%, var(--c-learn-soft), transparent 70%), var(--surface);
+	}
+
+	.basics {
+		background:
+			radial-gradient(90% 140% at 100% 0%, var(--c-puzzle-soft), transparent 70%), var(--surface);
+	}
+
+	.basics .o-icon {
+		background: var(--c-puzzle);
+		box-shadow: 0 8px 20px color-mix(in srgb, var(--c-puzzle) 35%, transparent);
 	}
 
 	.o-icon {

@@ -381,6 +381,22 @@ export const en = {
 		maxMoves: (p: P) => `in ≤ ${p.n} moves`,
 		survive: (p: P) => `for ${p.n} moves`
 	},
+	basics: {
+		title: 'Chess basics',
+		hubText: 'New to chess? Learn every rule step by step – with little games on the board.',
+		subtitle: 'From the very first move to checkmate – one small step at a time.',
+		progress: (p: P) => `${p.n} of ${p.m} lessons done`,
+		steps: (p: P) => `${p.n} steps`,
+		step: (p: P) => `Step ${p.i} of ${p.n}`,
+		next: 'Next',
+		starsLeft: (p: P) => `${p.n} ${s(p.n, 'star', 'stars')} left`,
+		allStars: (p: P) => `All stars collected in ${p.n} ${s(p.n, 'move', 'moves')}!`,
+		tryAgain: 'Not quite – try again.',
+		lessonDone: 'Lesson complete!',
+		nextLesson: 'Next lesson',
+		overview: 'All lessons',
+		again: 'Again'
+	},
 	endgame: {
 		back: 'Learn',
 		howTo: 'How it works',
