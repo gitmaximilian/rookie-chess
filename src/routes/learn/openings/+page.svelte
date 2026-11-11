@@ -41,7 +41,14 @@
 	let openingsReady = $state(0);
 
 	onMount(() => {
-		refresh();
+		void (async () => {
+			await refresh();
+			// aus dem Tagesplan: direkt mit der Seite starten, die fällige Züge hat
+			if (new URLSearchParams(location.search).get('train') === 'due') {
+				const side = stats.white.due ? 'white' : stats.black.due ? 'black' : null;
+				if (side) await startTraining(side);
+			}
+		})();
 		return onOpeningsLoaded(() => openingsReady++);
 	});
 

@@ -15,6 +15,7 @@
 	import Check from '@lucide/svelte/icons/check';
 	import HeroBoard from '#lib/ui/HeroBoard.svelte';
 	import GoalRing from '#lib/ui/GoalRing.svelte';
+	import DailyPlan from '#lib/ui/DailyPlan.svelte';
 	import Board from '#lib/ui/board/Board.svelte';
 	import BotAvatar from '#lib/ui/BotAvatar.svelte';
 	import { db, getSetting, today } from '#lib/db/db.js';
@@ -160,6 +161,8 @@
 			<span class="resume-go"><Play size={18} /></span>
 		</a>
 	{/if}
+
+	<DailyPlan />
 
 	<section class="hero card">
 		<div class="hero-text">

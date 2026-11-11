@@ -748,6 +748,7 @@ export const de: Shape<typeof en> = {
 		eyebrow: 'Du',
 		title: 'Profil',
 		subtitle: 'Dein Fortschritt, deine Partien, deine Einstellungen.',
+		strength: 'Spielstärke',
 		puzzleRating: 'Puzzle-Rating',
 		streak: 'Tage in Folge',
 		solved: 'Puzzles gelöst',
@@ -899,6 +900,23 @@ export const de: Shape<typeof en> = {
 			openings: { t: 'Eröffnungen lernen', d: 'Echte Eröffnungen mit Erklärungen.' }
 		},
 		done: 'Los geht’s!'
+	},
+	plan: {
+		title: 'Dein Training heute',
+		review: (p: P) => `${p.n} verpasste ${p.n === 1 ? 'Puzzle' : 'Puzzles'} wiederholen`,
+		puzzles: (p: P) => `${p.n} Puzzles lösen`,
+		puzzlesTheme: (p: P) => `${p.n} Puzzles zu deiner Schwäche: ${p.theme}`,
+		repertoire: (p: P) => `${p.n} ${p.n === 1 ? 'Eröffnungszug' : 'Eröffnungszüge'} wiederholen`,
+		basics: (p: P) => `Lektion: ${p.name}`,
+		course: (p: P) => `Eröffnung: ${p.name}`,
+		endgame: (p: P) => `Endspiel: ${p.name}`,
+		game: 'Aus deiner letzten Partie lernen',
+		start: 'Los',
+		continue: 'Weiter',
+		allDone: 'Alles erledigt für heute – stark!',
+		strength: (p: P) => `Geschätzte Spielstärke ≈ ${p.n}`,
+		strengthHint: 'Aus Puzzles, besiegten Bots und Online-Partien.',
+		progress: (p: P) => `${p.n} von ${p.m} erledigt`
 	},
 	about: {
 		eyebrow: 'Open Source',

@@ -54,6 +54,8 @@ export async function saveProfile(p: LearnerProfile): Promise<void> {
 	if (!(await db.puzzleAttempts.count()))
 		await setSetting('puzzleRating', { rating: startRating(p), rd: 300, vol: 0.06 });
 	await setSetting('lastBotId', startBot(p));
+	// Tagesplan mit den neuen Antworten neu erstellen
+	await setSetting('dailyPlan', null);
 }
 
 export function getProfile(): Promise<LearnerProfile | null> {

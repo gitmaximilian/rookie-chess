@@ -153,7 +153,13 @@ export async function getSetting<T>(key: string, fallback: T): Promise<T> {
 }
 
 export async function setSetting(key: string, value: unknown): Promise<void> {
-	await db.settings.put({ key, value, t: Date.now() });
+	try {
+		await db.settings.put({ key, value, t: Date.now() });
+	} catch (e) {
+		// Svelte-Proxys ($state) lassen sich nicht klonen → als einfache Daten speichern
+		if ((e as { name?: string })?.name !== 'DataCloneError') throw e;
+		await db.settings.put({ key, value: JSON.parse(JSON.stringify(value)), t: Date.now() });
+	}
 }
 
 /** Merkt sich gelöschte Einträge, damit sie beim Abgleich nicht von anderen Geräten zurückkommen */

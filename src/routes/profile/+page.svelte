@@ -26,6 +26,8 @@
 	import { BOTS } from '#lib/bots/bots.js';
 	import { LESSONS } from '#lib/endgames/lessons.js';
 	import { t } from '#lib/i18n/i18n.svelte.js';
+	import { currentStrength } from '#lib/training/planData.js';
+	import Gauge from '@lucide/svelte/icons/gauge';
 	import type { Rating } from '#lib/training/glicko2.js';
 
 	let rating = $state<Rating | null>(null);
@@ -34,6 +36,7 @@
 	let games = $state(0);
 	let bots = $state(0);
 	let stars = $state(0);
+	let strength = $state<number | null>(null);
 	let history = $state<{ date: number; rating: number }[]>([]);
 	let activity = $state<ActivityRow[]>([]);
 	let weak = $state<ThemeStat[]>([]);
@@ -41,6 +44,7 @@
 
 	onMount(async () => {
 		rating = await getPuzzleRating();
+		strength = (await currentStrength())?.value ?? null;
 		activity = await db.activity.toArray();
 		streak = computeStreak(activity).days;
 		solved = await db.puzzleAttempts.filter((a) => a.solved).count();
@@ -55,6 +59,12 @@
 	});
 
 	const tiles = $derived([
+		{
+			icon: Gauge,
+			label: t('profile.strength'),
+			value: strength ? `≈ ${strength}` : '–',
+			c: 'var(--accent)'
+		},
 		{
 			icon: Puzzle,
 			label: t('profile.puzzleRating'),
@@ -197,7 +207,7 @@
 
 	@media (min-width: 1100px) {
 		.tiles {
-			grid-template-columns: repeat(6, 1fr);
+			grid-template-columns: repeat(7, 1fr);
 		}
 	}
 

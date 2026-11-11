@@ -708,6 +708,7 @@ export const en = {
 		eyebrow: 'You',
 		title: 'Profile',
 		subtitle: 'Your progress, your games, your settings.',
+		strength: 'Est. strength',
 		puzzleRating: 'Puzzle rating',
 		streak: 'Day streak',
 		solved: 'Puzzles solved',
@@ -851,6 +852,23 @@ export const en = {
 			openings: { t: 'Learn openings', d: 'Real openings with explanations.' }
 		},
 		done: 'Let’s go!'
+	},
+	plan: {
+		title: 'Your training today',
+		review: (p: P) => `Review ${p.n} missed ${s(p.n, 'puzzle', 'puzzles')}`,
+		puzzles: (p: P) => `Solve ${p.n} puzzles`,
+		puzzlesTheme: (p: P) => `${p.n} puzzles on your weak spot: ${p.theme}`,
+		repertoire: (p: P) => `Repeat ${p.n} opening ${s(p.n, 'move', 'moves')}`,
+		basics: (p: P) => `Lesson: ${p.name}`,
+		course: (p: P) => `Opening: ${p.name}`,
+		endgame: (p: P) => `Endgame: ${p.name}`,
+		game: 'Learn from your last game',
+		start: 'Start',
+		continue: 'Continue',
+		allDone: 'All done for today – great work!',
+		strength: (p: P) => `Estimated strength ≈ ${p.n}`,
+		strengthHint: 'Based on puzzles, bots beaten and online games.',
+		progress: (p: P) => `${p.n} of ${p.m} done`
 	},
 	about: {
 		eyebrow: 'Open source',

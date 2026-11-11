@@ -13,7 +13,7 @@ test('Profil zeigt Kennzahlen, Diagramme und Links', async ({ page }) => {
 
 	await page.goto('/profile');
 	await expect(page.getByText('Puzzle rating')).toBeVisible();
-	await expect(page.locator('.tiles > .tile')).toHaveCount(6);
+	await expect(page.locator('.tiles > .tile')).toHaveCount(7);
 	await expect(page.locator('.chart svg')).toBeVisible();
 	await expect(page.locator('.heat .cell.l1, .heat .cell.l2').first()).toBeVisible();
 	await expect(page.getByRole('link', { name: /My games/ })).toBeVisible();

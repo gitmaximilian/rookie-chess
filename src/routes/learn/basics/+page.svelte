@@ -150,12 +150,15 @@
 	async function next() {
 		if (!lesson) return;
 		if (si < lesson.steps.length - 1) return setStep(si + 1);
+		// erst speichern, dann den Abschluss zeigen
+		if (!done.includes(lesson.id)) {
+			// einfaches Array speichern – IndexedDB kann Svelte-Proxys nicht klonen
+			const list = [...done, lesson.id];
+			await setSetting('basicsDone', list);
+			done = list;
+		}
 		finished = true;
 		sound.end('win');
-		if (!done.includes(lesson.id)) {
-			done = [...done, lesson.id];
-			await setSetting('basicsDone', done);
-		}
 		await bumpActivity('reviews');
 	}
 
