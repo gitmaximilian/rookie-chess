@@ -501,7 +501,7 @@ export const en = {
 		empty: 'Your repertoire is still empty.',
 		emptyText: 'Add a starter repertoire or play your own moves in the editor.',
 		comment: 'Comment',
-		explorer: 'Popular moves (Lichess)',
+		explorer: 'Known lines (opening book)',
 		explorerOff: 'Explorer unavailable (offline or blocked).',
 		games: (p: P) => `${p.n} games`,
 		rep: {

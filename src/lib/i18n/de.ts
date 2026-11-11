@@ -537,7 +537,7 @@ export const de: Shape<typeof en> = {
 		empty: 'Dein Repertoire ist noch leer.',
 		emptyText: 'Füge ein Start-Repertoire hinzu oder spiel eigene Züge im Editor.',
 		comment: 'Kommentar',
-		explorer: 'Beliebte Züge (Lichess)',
+		explorer: 'Bekannte Fortsetzungen (Eröffnungsbuch)',
 		explorerOff: 'Explorer nicht verfügbar (offline oder gesperrt).',
 		games: (p) => `${p.n} Partien`,
 		rep: {

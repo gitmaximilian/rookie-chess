@@ -2,6 +2,9 @@
  * Eröffnungsnamen (Lichess chess-openings, CC0). Wird einmal geladen,
  * danach synchron nutzbar. Ohne Daten liefert `openingFor` null.
  */
+import { i18n } from '#lib/i18n/i18n.svelte.js';
+import { translateOpening } from './openingNamesDe.js';
+
 export interface Opening {
 	eco: string;
 	name: string;
@@ -45,7 +48,7 @@ export function openingFor(ucis: string[]): Opening | null {
 	}
 	for (let n = Math.min(ucis.length, 40); n > 0; n--) {
 		const hit = table[ucis.slice(0, n).join(' ')];
-		if (hit) return { eco: hit[0], name: hit[1], plies: n };
+		if (hit) return { eco: hit[0], name: localName(hit[1]), plies: n };
 	}
 	return null;
 }
@@ -53,14 +56,27 @@ export function openingFor(ucis: string[]): Opening | null {
 /** Alle Eröffnungen, die mit dieser Zugfolge beginnen (für den Trainer) */
 export function continuations(ucis: string[]): { uci: string; name: string }[] {
 	if (!table) return [];
-	const prefix = ucis.join(' ');
-	const seen = new Map<string, string>();
+	const prefix = ucis.length ? ucis.join(' ') + ' ' : '';
+	const named = new Map<string, string>();
+	const weight = new Map<string, number>();
 	for (const [k, [, name]] of Object.entries(table)) {
+		if (prefix && !k.startsWith(prefix)) continue;
 		const parts = k.split(' ');
-		if (parts.length !== ucis.length + 1) continue;
-		if (prefix && !k.startsWith(prefix + ' ')) continue;
+		if (parts.length <= ucis.length) continue;
 		const next = parts[ucis.length];
-		if (!seen.has(next) || name.length < seen.get(next)!.length) seen.set(next, name);
+		// Gewicht = Anzahl bekannter Varianten über diesen Zug (Maß für Bedeutung)
+		weight.set(next, (weight.get(next) ?? 0) + 1);
+		if (
+			parts.length === ucis.length + 1 &&
+			(!named.has(next) || name.length < named.get(next)!.length)
+		)
+			named.set(next, name);
 	}
-	return [...seen].map(([uci, name]) => ({ uci, name }));
+	return [...weight.entries()]
+		.sort((a, b) => b[1] - a[1])
+		.map(([uci]) => ({ uci, name: localName(named.get(uci) ?? '') }));
+}
+
+function localName(name: string): string {
+	return i18n.locale === 'de' ? translateOpening(name) : name;
 }
