@@ -25,7 +25,11 @@ test('Start-Repertoire hinzufügen und trainieren', async ({ page }) => {
 
 test('Editor: eigenen Zug anlegen, Eröffnungsname erscheint', async ({ page }) => {
 	await page.goto('/learn/openings');
-	await page.locator('.side.black').getByRole('button', { name: /Edit/ }).click();
+	// Seite ist vorgerendert: Klick erst wirksam, wenn Svelte hydriert hat
+	await expect(async () => {
+		await page.locator('.side.black').getByRole('button', { name: /Edit/ }).click();
+		await expect(page.locator('.cg-host').first()).toBeVisible({ timeout: 1000 });
+	}).toPass();
 	await playUci(page, 'e2e4');
 	await playUci(page, 'c7c5');
 	await expect(page.locator('.opening')).toContainText('Sicilian');

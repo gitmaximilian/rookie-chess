@@ -9,7 +9,14 @@ export async function playUci(page: Page, uci: string) {
 			.getAnimations()
 			.every((a) => (a.effect as KeyframeEffect | null)?.target?.tagName !== 'MAIN')
 	);
-	const box = (await host.boundingBox())!;
+	// Brettgröße kann sich nach dem vorigen Zug noch ändern (Seitenleiste lädt nach) – auf stabile Box warten
+	let box = (await host.boundingBox())!;
+	for (let i = 0; i < 20; i++) {
+		await page.waitForTimeout(50);
+		const next = (await host.boundingBox())!;
+		if (next.x === box.x && next.y === box.y && next.width === box.width) break;
+		box = next;
+	}
 	const flipped = (await host.getAttribute('data-orientation')) === 'black';
 	const sq = box.width / 8;
 	const at = (s: string) => {
