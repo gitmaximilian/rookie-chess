@@ -9,6 +9,7 @@
 	import { i18n, t } from '#lib/i18n/i18n.svelte.js';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
+	import { refreshAccount, syncNow, account } from '#lib/sync/sync.svelte.js';
 	import {
 		autoSync,
 		busyRoute,
@@ -37,8 +38,14 @@
 		i18n.init();
 		// verknüpfte Konten: neue Partien holen, wenn die App geöffnet wird oder zurückkehrt
 		setTimeout(sync, 2500);
+		// Konto: Stand beim Öffnen holen, beim Verlassen der App sichern
+		setTimeout(async () => {
+			await refreshAccount();
+			if (account.status === 'in') void syncNow();
+		}, 1200);
 		document.addEventListener('visibilitychange', () => {
 			if (document.visibilityState === 'visible') void sync();
+			if (account.status === 'in') void syncNow();
 		});
 		if (pwaInfo) {
 			const { registerSW } = await import('virtual:pwa-register');

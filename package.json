@@ -19,9 +19,12 @@
 		"test": "npm run test:unit -- --run && npm run test:e2e",
 		"test:e2e": "playwright test",
 		"postinstall": "node scripts/copy-engine.js",
-		"icons": "pwa-assets-generator"
+		"icons": "pwa-assets-generator",
+		"test:account": "npm run build && playwright test -c playwright.account.config.ts",
+		"dev:api": "npm run build && wrangler pages dev build --d1 DB=rookie-local --compatibility-date=2026-11-01"
 	},
 	"devDependencies": {
+		"@cloudflare/workers-types": "^5.20261110.1",
 		"@eslint/js": "^10.0.1",
 		"@playwright/test": "^1.60.0",
 		"@sveltejs/adapter-static": "^4.0.0",
@@ -44,11 +47,14 @@
 		"typescript-eslint": "^8.60.1",
 		"vite": "^8.3.0",
 		"vite-plugin-pwa": "^2.0.0",
-		"vitest": "^4.1.8"
+		"vitest": "^4.1.8",
+		"wrangler": "^4.160.0"
 	},
 	"dependencies": {
 		"@fontsource-variable/bricolage-grotesque": "^5.3.0",
 		"@lucide/svelte": "^1.71.0",
+		"@simplewebauthn/browser": "^14.0.0",
+		"@simplewebauthn/server": "^14.1.0",
 		"chessground": "^9.2.1",
 		"chessops": "^0.15.1",
 		"dexie": "^4.4.7",

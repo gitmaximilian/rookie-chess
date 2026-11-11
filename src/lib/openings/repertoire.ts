@@ -1,5 +1,5 @@
 import { createEmptyCard } from 'ts-fsrs';
-import { db, type RepertoireNodeRow } from '#lib/db/db.js';
+import { db, addTombstone, type RepertoireNodeRow } from '#lib/db/db.js';
 import { Game, INITIAL_FEN } from '#lib/chess/game.js';
 import { COURSES, lineUcis } from './courses.js';
 
@@ -109,6 +109,7 @@ export async function removeNode(node: RepertoireNodeRow): Promise<number> {
 		const n = queue.shift()!;
 		if (seen.has(n.id)) continue;
 		seen.add(n.id);
+		await addTombstone('repertoire', n.id);
 		await db.repertoire.delete(n.id);
 		await db.reviewCards.delete(`rep:${n.id}`);
 		removed++;

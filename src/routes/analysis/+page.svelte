@@ -19,7 +19,7 @@
 	import EvalBar from '#lib/ui/EvalBar.svelte';
 	import EvalGraph from '#lib/ui/EvalGraph.svelte';
 	import MoveList from '#lib/ui/MoveList.svelte';
-	import { db, type GameRow } from '#lib/db/db.js';
+	import { db, addTombstone, type GameRow } from '#lib/db/db.js';
 	import { Game, sanForUci } from '#lib/chess/game.js';
 	import { figurine } from '#lib/chess/notation.js';
 	import {
@@ -219,6 +219,8 @@
 
 	async function remove(id: number) {
 		if (!confirm(t('analysis.deleteConfirm'))) return;
+		const row = await db.games.get(id);
+		if (row) await addTombstone('games', row.externalId ?? `${row.source}:${row.date}`);
 		await db.games.delete(id);
 		games = games.filter((g) => g.id !== id);
 	}

@@ -4,6 +4,7 @@
 	import Info from '@lucide/svelte/icons/info';
 	import Settings from '@lucide/svelte/icons/settings';
 	import Scale from '@lucide/svelte/icons/scale';
+	import ShieldCheck from '@lucide/svelte/icons/shield-check';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import ChartLine from '@lucide/svelte/icons/chart-line';
 	import CloudDownload from '@lucide/svelte/icons/cloud-download';
@@ -159,6 +160,11 @@
 		<a href={resolve('/about')} class="row card pressable">
 			<span class="ico"><Info size={20} /></span>
 			<span class="txt">{t('profile.about')}</span>
+			<ChevronRight size={18} />
+		</a>
+		<a href={resolve('/privacy')} class="row card pressable">
+			<span class="ico"><ShieldCheck size={20} /></span>
+			<span class="txt">{t('account.privacy')}</span>
 			<ChevronRight size={18} />
 		</a>
 		<a href="https://maximilianauer.at/legal/" rel="noopener" class="row card pressable">

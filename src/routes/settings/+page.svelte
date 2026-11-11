@@ -17,6 +17,7 @@
 	import { getThemePref, setThemePref, type ThemePref } from '#lib/ui/theme.js';
 	import { sound, SOUND_STYLES, type SoundStyle } from '#lib/ui/sound.js';
 	import Board from '#lib/ui/board/Board.svelte';
+	import AccountCard from '#lib/ui/AccountCard.svelte';
 	import {
 		boardPrefs,
 		setBoardPref,
@@ -146,6 +147,8 @@
 	{#if message}
 		<div class="msg {message.kind}" role="status">{message.text}</div>
 	{/if}
+
+	<AccountCard />
 
 	<section class="card block">
 		<h2>{t('settings.appearance')}</h2>

@@ -381,6 +381,41 @@ export const de: Shape<typeof en> = {
 		positionalText: (p) =>
 			`Dieser Zug gibt Vorteil ab.${p.best ? ` Stärker war ${p.best}${p.idea ? ` mit der Idee ${p.idea}` : ''}.` : ''}`
 	},
+	account: {
+		title: 'Konto & Synchronisation',
+		pitch: 'Sichere deinen Fortschritt in der Cloud und nutze ihn auf iPhone, iPad und Mac.',
+		how: 'Anmeldung mit Passkey (Face ID / Touch ID). Keine E-Mail, kein Passwort, kein Name – gespeichert wird nur eine anonyme Konto-ID.',
+		create: 'Konto erstellen',
+		signIn: 'Anmelden',
+		terms:
+			'Mit dem Erstellen bestätigst du, dass du mindestens 14 Jahre alt bist oder die Zustimmung deiner Eltern hast.',
+		privacy: 'Datenschutzhinweise',
+		signedIn: 'Angemeldet – dein Fortschritt wird automatisch gespeichert.',
+		since: (p: P) => `Konto seit ${p.date}`,
+		lastSync: (p: P) => `Zuletzt abgeglichen ${p.when}`,
+		never: 'Noch nicht abgeglichen',
+		syncNow: 'Jetzt abgleichen',
+		syncing: 'Wird abgeglichen …',
+		signOut: 'Abmelden',
+		export: 'Meine Serverdaten herunterladen',
+		delete: 'Konto löschen',
+		deleteConfirm:
+			'Konto und alle auf dem Server gespeicherten Daten jetzt löschen? Das kann nicht rückgängig gemacht werden. Die Daten auf diesem Gerät bleiben erhalten.',
+		deleted: 'Konto gelöscht. Alle Serverdaten wurden entfernt.',
+		notSynced:
+			'Importierte Lichess-/Chess.com-Partien werden nicht hochgeladen – sie werden auf jedem Gerät über dein verknüpftes Konto neu geladen.',
+		offline: 'Offline – der Abgleich läuft automatisch weiter, sobald du online bist.',
+		err: {
+			cancelled: 'Abgebrochen.',
+			unsupported:
+				'Dieser Browser unterstützt keine Passkeys. Bitte iOS/macOS aktualisieren oder Safari verwenden.',
+			network: 'Keine Verbindung zum Server. Bitte später erneut versuchen.',
+			tooLarge:
+				'Deine Daten sind zu groß für den Abgleich. Lösche ein paar alte Partien und versuche es erneut.',
+			server: 'Etwas ist schiefgelaufen. Bitte erneut versuchen.',
+			unknownPasskey: 'Dieser Passkey gehört zu einem Konto, das es nicht mehr gibt.'
+		}
+	},
 	settings: {
 		eyebrow: 'Profil',
 		title: 'Einstellungen',

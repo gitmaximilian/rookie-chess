@@ -4,6 +4,8 @@ import type { Card } from 'ts-fsrs';
 export interface SettingRow {
 	key: string;
 	value: unknown;
+	/** Änderungszeit – für den Abgleich zwischen Geräten */
+	t?: number;
 }
 
 export interface GameRow {
@@ -151,7 +153,14 @@ export async function getSetting<T>(key: string, fallback: T): Promise<T> {
 }
 
 export async function setSetting(key: string, value: unknown): Promise<void> {
-	await db.settings.put({ key, value });
+	await db.settings.put({ key, value, t: Date.now() });
+}
+
+/** Merkt sich gelöschte Einträge, damit sie beim Abgleich nicht von anderen Geräten zurückkommen */
+export async function addTombstone(kind: 'games' | 'repertoire', key: string): Promise<void> {
+	const cur = await getSetting<Record<string, Record<string, number>>>('tombstones', {});
+	cur[kind] = { ...cur[kind], [key]: Date.now() };
+	await setSetting('tombstones', cur);
 }
 
 export function today(d = new Date()): string {

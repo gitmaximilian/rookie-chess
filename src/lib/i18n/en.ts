@@ -346,6 +346,39 @@ export const en = {
 		positionalText: (p: P) =>
 			`This move gives away part of your advantage.${p.best ? ` Stronger was ${p.best}${p.idea ? `, with the idea ${p.idea}` : ''}.` : ''}`
 	},
+	account: {
+		title: 'Account & sync',
+		pitch: 'Keep your progress safe in the cloud and use it on iPhone, iPad and Mac.',
+		how: 'Sign in with a passkey (Face ID / Touch ID). No email, no password, no name – only an anonymous account ID is stored.',
+		create: 'Create account',
+		signIn: 'Sign in',
+		terms:
+			'By creating an account you confirm that you are at least 14 or have your parents’ permission.',
+		privacy: 'Privacy notice',
+		signedIn: 'Signed in – progress is saved automatically.',
+		since: (p: P) => `Account since ${p.date}`,
+		lastSync: (p: P) => `Last synced ${p.when}`,
+		never: 'Not synced yet',
+		syncNow: 'Sync now',
+		syncing: 'Syncing …',
+		signOut: 'Sign out',
+		export: 'Download my server data',
+		delete: 'Delete account',
+		deleteConfirm:
+			'Delete your account and all data stored on the server now? This cannot be undone. The data on this device stays.',
+		deleted: 'Account deleted. All server data has been removed.',
+		notSynced:
+			'Imported Lichess/Chess.com games are not uploaded – they are loaded again on each device via your linked account.',
+		offline: 'Offline – syncing resumes automatically.',
+		err: {
+			cancelled: 'Cancelled.',
+			unsupported: 'This browser does not support passkeys. Please update iOS/macOS or use Safari.',
+			network: 'No connection to the server. Please try again later.',
+			tooLarge: 'Your data is too large to sync. Delete some old games and try again.',
+			server: 'Something went wrong. Please try again.',
+			unknownPasskey: 'This passkey belongs to an account that no longer exists.'
+		}
+	},
 	settings: {
 		eyebrow: 'Profile',
 		title: 'Settings',
