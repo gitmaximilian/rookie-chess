@@ -151,6 +151,25 @@ export const en = {
 		newOpponent: 'New opponent',
 		event: 'Rookie – game vs bot'
 	},
+	coach: {
+		title: 'Coach',
+		toggle: 'Play with coach',
+		toggleText: 'Feedback on every move, warnings and explanations.',
+		welcome: 'I’ll comment on every move. If something goes wrong, you can take it back.',
+		thinking: 'Coach is looking …',
+		bestTitle: (p: P) => `${p.san} – excellent!`,
+		goodTitle: (p: P) => `${p.san} – good move.`,
+		bestText: 'That’s the strongest move here.',
+		goodText: 'A solid move.',
+		worseText: 'This move makes your position worse.',
+		takeback: 'Take back',
+		keepPlaying: 'Keep playing',
+		mateTitle: 'Checkmate!',
+		mateText: 'You found the mate – well done!',
+		threat: (p: P) => `Watch out: ${p.piece} on ${p.sq} is under attack!`,
+		oppCheck: 'Your opponent gives check – you must react.',
+		opponent: 'Opponent'
+	},
 	end: {
 		checkmate: 'by checkmate',
 		resign: 'by resignation',

@@ -214,4 +214,6 @@ Abweichungen vom Plan:
 - Push-Erinnerungen (optional, Cloudflare Worker) noch nicht umgesetzt.
 - Service Worker aktualisiert nicht mehr automatisch, sondern zeigt „Neue Version verfügbar · Neu laden“.
 
+Erweiterungen (Nov. 2026): Engine-Watchdog (Bots hängen nicht mehr), Start-Leiste mobil, neue Klänge, Konten verknüpfen mit Auto-Import, 14 Eröffnungskurse mit Feedback, Endspiel-Technik + Live-Coach, Schach-Grundlagen (15 Lektionen), ausführliche Statistik, Brett-/Figuren-/Animations-Einstellungen, Spielen mit Coach.
+
 Lighthouse (Nov. 2026, mobil, hell und dunkel): Barrierefreiheit 100, Best Practices 100, SEO 100, Performance 89–95.

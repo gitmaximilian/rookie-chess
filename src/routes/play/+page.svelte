@@ -23,6 +23,9 @@
 		colorName
 	} from '#lib/chess/labels.js';
 	import { engine } from '#lib/engine/engine.js';
+	import { assessMove, threats, opponentIdea, type CoachNote } from '#lib/coach/coach.js';
+	import GraduationCap from '@lucide/svelte/icons/graduation-cap';
+	import { figurine } from '#lib/chess/notation.js';
 	import { db, getSetting, setSetting, bumpActivity } from '#lib/db/db.js';
 	import { sound } from '#lib/ui/sound.js';
 	import { t } from '#lib/i18n/i18n.svelte.js';
@@ -43,6 +46,7 @@
 		clocks: { white: number; black: number } | null;
 		hints: number;
 		undos: number;
+		coach?: boolean;
 	}
 
 	// ── Einrichtung ──
@@ -50,6 +54,7 @@
 	let botId = $state('tina');
 	let colorChoice = $state<'white' | 'black' | 'random'>('white');
 	let tcChoice = $state<string | null>(null);
+	let coachOn = $state(false);
 
 	// ── Partie ──
 	let game = $state.raw(new Game());
@@ -70,6 +75,12 @@
 	let lastTick = 0;
 	let botAbort: AbortController | null = null;
 	let showResult = $state(false);
+	// ── Coach ──
+	let coachNote = $state<CoachNote | null>(null);
+	let coachOpp = $state<{ san: string; text: string; warn: string } | null>(null);
+	let coachBusy = $state(false);
+	let coachPending = $state(false);
+	let coachAbort: AbortController | null = null;
 
 	const fen = $derived.by(() => {
 		void v;
@@ -91,7 +102,9 @@
 		void v;
 		return game.isCheck;
 	});
-	const myTurn = $derived(phase === 'playing' && !ended && turn === myColor && !thinking);
+	const myTurn = $derived(
+		phase === 'playing' && !ended && turn === myColor && !thinking && !coachBusy && !coachPending
+	);
 	const dests = $derived.by(() => {
 		void v;
 		return myTurn ? game.dests() : new Map<string, string[]>();
@@ -110,6 +123,7 @@
 	onMount(async () => {
 		const saved = await getSetting<SavedGame | null>('currentGame', null);
 		botId = await getSetting('lastBotId', 'tina');
+		coachOn = await getSetting('coachOn', false);
 		if (saved && saved.moves) {
 			resume(saved);
 		} else {
@@ -136,6 +150,7 @@
 		clocks = s.clocks;
 		hints = s.hints;
 		undos = s.undos;
+		coachOn = !!s.coach;
 		ended = null;
 		phase = 'playing';
 		v++;
@@ -159,6 +174,10 @@
 		phase = 'playing';
 		v++;
 		await setSetting('lastBotId', bot.id);
+		await setSetting('coachOn', coachOn);
+		coachNote = null;
+		coachOpp = null;
+		coachPending = false;
 		engine.newGame();
 		persist();
 		startClock();
@@ -175,7 +194,8 @@
 			tc: tc?.id ?? null,
 			clocks: clocks ? { ...clocks } : null,
 			hints,
-			undos
+			undos,
+			coach: coachOn
 		};
 		return setSetting('currentGame', s);
 	}
@@ -211,6 +231,7 @@
 	// ── Züge ──
 	function onMove(uci: string) {
 		if (!myTurn) return;
+		const fenBefore = game.fen;
 		const played = game.play(uci);
 		if (!played) {
 			v++;
@@ -220,6 +241,43 @@
 		addIncrement(myColor);
 		hintShapes = [];
 		v++;
+		if (coachOn && !game.end()) return void coachAfterMyMove(fenBefore, played.uci);
+		afterMove();
+	}
+
+	/** Coach bewertet den eigenen Zug; bei Fehlern wartet der Bot auf die Entscheidung */
+	async function coachAfterMyMove(fenBefore: string, uci: string) {
+		coachBusy = true;
+		coachOpp = null;
+		coachAbort = new AbortController();
+		const fenNow = game.fen;
+		const note = await assessMove(fenBefore, uci, coachAbort.signal);
+		coachBusy = false;
+		if (coachAbort.signal.aborted || game.fen !== fenNow) return;
+		coachNote = note;
+		if (note?.serious) {
+			coachPending = true;
+			sound.bad();
+			hintShapes = [{ orig: uci.slice(0, 2), dest: uci.slice(2, 4), brush: 'bad' }];
+			return;
+		}
+		afterMove();
+	}
+
+	function coachTakeback() {
+		if (!coachPending) return;
+		game.undo(1);
+		undos++;
+		coachPending = false;
+		coachNote = null;
+		hintShapes = [];
+		v++;
+		persist();
+	}
+
+	function coachContinue() {
+		coachPending = false;
+		hintShapes = [];
 		afterMove();
 	}
 
@@ -254,10 +312,21 @@
 			const wait = thinkDelay(bot, game.ply) - (performance.now() - t0);
 			if (wait > 0) await new Promise((r) => setTimeout(r, wait));
 			if (signal.aborted || game.fen !== fenNow || !choice) return;
+			const botFen = game.fen;
 			const played = game.play(choice);
 			if (played) {
 				sound.move(!!played.captured, game.isCheck);
 				addIncrement(myColor === 'white' ? 'black' : 'white');
+				if (coachOn && !game.end()) {
+					const danger = threats(game.fen)[0];
+					coachOpp = {
+						san: played.san,
+						text: opponentIdea(botFen, played.uci),
+						warn: danger
+							? t('coach.threat', { piece: t(`pieces.poss.${danger.role}`), sq: danger.square })
+							: ''
+					};
+				}
 			}
 			v++;
 			if (game.end()) finish();
@@ -284,6 +353,11 @@
 	function undo() {
 		if (ended || game.ply === 0) return;
 		botAbort?.abort();
+		coachAbort?.abort();
+		coachBusy = false;
+		coachPending = false;
+		coachNote = null;
+		coachOpp = null;
 		thinking = false;
 		// bis ich wieder am Zug bin
 		const n = game.turn === myColor ? 2 : 1;
@@ -473,6 +547,18 @@
 				</div>
 			</div>
 
+			<button
+				class="coach-opt"
+				class:on={coachOn}
+				role="switch"
+				aria-checked={coachOn}
+				onclick={() => (coachOn = !coachOn)}
+			>
+				<span class="co-ico"><GraduationCap size={20} /></span>
+				<span class="co-text"><b>{t('coach.toggle')}</b><span>{t('coach.toggleText')}</span></span>
+				<span class="switch" class:on={coachOn} aria-hidden="true"><span></span></span>
+			</button>
+
 			<button class="btn big" onclick={start}>{t('play.start')}</button>
 		</aside>
 	</div>
@@ -554,6 +640,38 @@
 		</div>
 
 		<aside class="side card">
+			{#if coachOn && !ended}
+				<div class="coach-box" class:warn={coachNote?.serious} role="status">
+					<div class="cb-head">
+						<span class="co-ico small"><GraduationCap size={16} /></span>
+						<b>{t('coach.title')}</b>
+						{#if coachBusy}<span class="cb-busy">{t('coach.thinking')}</span>{/if}
+					</div>
+					{#if coachOpp}
+						<p class="cb-opp">
+							<span class="cb-label">{t('coach.opponent')} {figurine(coachOpp.san)}</span>
+							{coachOpp.text}
+						</p>
+						{#if coachOpp.warn}<p class="cb-warn">{coachOpp.warn}</p>{/if}
+					{/if}
+					{#if coachNote}
+						<p class="cb-title j-{coachNote.judgement}">{coachNote.title}</p>
+						<p class="cb-text">{coachNote.text}</p>
+						{#if coachPending}
+							<div class="cb-actions">
+								<button class="btn" onclick={coachTakeback}
+									><Undo2 size={17} /> {t('coach.takeback')}</button
+								>
+								<button class="btn secondary" onclick={coachContinue}
+									>{t('coach.keepPlaying')}</button
+								>
+							</div>
+						{/if}
+					{:else if !coachOpp}
+						<p class="cb-text">{t('coach.welcome')}</p>
+					{/if}
+				</div>
+			{/if}
 			<div class="side-moves">
 				<MoveList {moves} />
 			</div>
@@ -630,6 +748,159 @@
 {/if}
 
 <style>
+	/* ── Coach ── */
+	.coach-opt {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		padding: 0.75rem;
+		border-radius: 14px;
+		border: 1.5px solid var(--line);
+		background: var(--surface-2);
+		text-align: left;
+		font: inherit;
+		color: var(--text);
+		cursor: pointer;
+	}
+
+	.coach-opt.on {
+		border-color: color-mix(in srgb, var(--c-learn) 55%, transparent);
+		background: var(--c-learn-soft);
+	}
+
+	.co-ico {
+		flex: none;
+		display: grid;
+		place-items: center;
+		width: 38px;
+		height: 38px;
+		border-radius: 11px;
+		background: var(--c-learn);
+		color: #fff;
+	}
+
+	.co-ico.small {
+		width: 26px;
+		height: 26px;
+		border-radius: 8px;
+	}
+
+	.co-text {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		line-height: 1.3;
+	}
+
+	.co-text span {
+		font-size: 0.8rem;
+		color: var(--text-2);
+	}
+
+	.switch {
+		flex: none;
+		position: relative;
+		width: 44px;
+		height: 26px;
+		border-radius: 999px;
+		background: var(--line-strong);
+		transition: background-color var(--dur) var(--ease-out);
+	}
+
+	.switch span {
+		position: absolute;
+		top: 3px;
+		left: 3px;
+		width: 20px;
+		height: 20px;
+		border-radius: 50%;
+		background: #fff;
+		box-shadow: var(--shadow-1);
+		transition: transform var(--dur) var(--ease-spring);
+	}
+
+	.switch.on {
+		background: var(--good);
+	}
+
+	.switch.on span {
+		transform: translateX(18px);
+	}
+
+	.coach-box {
+		display: flex;
+		flex-direction: column;
+		gap: 0.45rem;
+		padding: 0.85rem;
+		border-radius: 14px;
+		background: var(--c-learn-soft);
+		border: 1px solid color-mix(in srgb, var(--c-learn) 30%, transparent);
+	}
+
+	.coach-box.warn {
+		background: color-mix(in srgb, var(--bad) 9%, var(--surface));
+		border-color: color-mix(in srgb, var(--bad) 35%, transparent);
+	}
+
+	.cb-head {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.cb-busy {
+		margin-left: auto;
+		font-size: 0.8rem;
+		color: var(--text-2);
+	}
+
+	.cb-label {
+		font-weight: 700;
+		margin-right: 0.3rem;
+	}
+
+	.cb-opp,
+	.cb-text {
+		font-size: 0.9rem;
+		line-height: 1.45;
+	}
+
+	.cb-opp {
+		color: var(--text-2);
+	}
+
+	.cb-warn {
+		font-size: 0.9rem;
+		font-weight: 650;
+		color: color-mix(in srgb, var(--warn) 45%, var(--text));
+	}
+
+	.cb-title {
+		font-weight: 750;
+		animation: rise 300ms var(--ease-out) both;
+	}
+
+	.cb-title.j-best,
+	.cb-title.j-good {
+		color: var(--good);
+	}
+
+	.cb-title.j-inaccuracy {
+		color: color-mix(in srgb, var(--warn) 45%, var(--text));
+	}
+
+	.cb-title.j-mistake,
+	.cb-title.j-blunder {
+		color: var(--bad);
+	}
+
+	.cb-actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		margin-top: 0.2rem;
+	}
+
 	/* ── Einrichtung ── */
 	.setup {
 		display: grid;

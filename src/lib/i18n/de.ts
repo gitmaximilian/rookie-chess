@@ -162,6 +162,25 @@ export const de: Shape<typeof en> = {
 		newOpponent: 'Neuer Gegner',
 		event: 'Rookie – Partie gegen Bot'
 	},
+	coach: {
+		title: 'Coach',
+		toggle: 'Mit Coach spielen',
+		toggleText: 'Rückmeldung zu jedem Zug, Warnungen und Erklärungen.',
+		welcome: 'Ich kommentiere jeden deiner Züge. Geht etwas schief, kannst du ihn zurücknehmen.',
+		thinking: 'Coach schaut sich das an …',
+		bestTitle: (p: P) => `${p.san} – ausgezeichnet!`,
+		goodTitle: (p: P) => `${p.san} – guter Zug.`,
+		bestText: 'Das ist hier der stärkste Zug.',
+		goodText: 'Ein solider Zug.',
+		worseText: 'Dieser Zug verschlechtert deine Stellung.',
+		takeback: 'Zurücknehmen',
+		keepPlaying: 'Weiterspielen',
+		mateTitle: 'Schachmatt!',
+		mateText: 'Du hast das Matt gefunden – stark!',
+		threat: (p: P) => `Achtung: ${p.piece} auf ${p.sq} wird angegriffen!`,
+		oppCheck: 'Dein Gegner gibt Schach – du musst reagieren.',
+		opponent: 'Gegner'
+	},
 	end: {
 		checkmate: 'durch Schachmatt',
 		resign: 'durch Aufgabe',
