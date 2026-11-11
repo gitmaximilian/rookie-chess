@@ -3,6 +3,12 @@ import type { Page } from '@playwright/test';
 /** Klickt einen UCI-Zug auf dem Brett (Tippen-Tippen) */
 export async function playUci(page: Page, uci: string) {
 	const host = page.locator('.cg-host').first();
+	// Einblend-Animation nach einem Seitenwechsel abwarten, sonst verrutschen die Klick-Koordinaten
+	await page.waitForFunction(() =>
+		document
+			.getAnimations()
+			.every((a) => (a.effect as KeyframeEffect | null)?.target?.tagName !== 'MAIN')
+	);
 	const box = (await host.boundingBox())!;
 	const flipped = (await host.getAttribute('data-orientation')) === 'black';
 	const sq = box.width / 8;
