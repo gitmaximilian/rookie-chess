@@ -137,8 +137,16 @@ export const LESSONS: Lesson[] = [
 		theory: [
 			S('8/8/8/8/8/8/3pk3/K6Q', { orig: 'd2', dest: 'd1', brush: 'bad' }),
 			S('8/8/8/8/4Q3/8/3pk3/K7 b - - 0 1', { orig: 'e4', dest: 'e2', brush: 'info' }),
-			S('8/8/8/8/8/3Q4/3p4/K2k4', { orig: 'd1', brush: 'good' }, { orig: 'a1', dest: 'b2', brush: 'good' }),
-			S('8/8/8/8/8/2K5/3p4/3k1Q2 b - - 0 1', { orig: 'c3', brush: 'good' }, { orig: 'f1', dest: 'd1', brush: 'good' })
+			S(
+				'8/8/8/8/8/3Q4/3p4/K2k4',
+				{ orig: 'd1', brush: 'good' },
+				{ orig: 'a1', dest: 'b2', brush: 'good' }
+			),
+			S(
+				'8/8/8/8/8/2K5/3p4/3k1Q2 b - - 0 1',
+				{ orig: 'c3', brush: 'good' },
+				{ orig: 'f1', dest: 'd1', brush: 'good' }
+			)
 		],
 		positions: ['8/8/8/8/8/8/3pk3/K6Q w - - 0 1']
 	},
@@ -152,7 +160,11 @@ export const LESSONS: Lesson[] = [
 		theory: [
 			S('8/8/8/4k3/8/4p3/8/1K5R', { orig: 'h1', dest: 'e1', brush: 'good' }),
 			S('8/8/8/4k3/8/4p3/8/1K5R', { orig: 'b1', dest: 'd2', brush: 'good' }),
-			S('8/8/8/8/3k4/4p3/3K4/7R', { orig: 'h1', dest: 'e1', brush: 'good' }, { orig: 'e3', brush: 'bad' }),
+			S(
+				'8/8/8/8/3k4/4p3/3K4/7R',
+				{ orig: 'h1', dest: 'e1', brush: 'good' },
+				{ orig: 'e3', brush: 'bad' }
+			),
 			S('8/8/8/8/8/3k4/8/4K2R', { orig: 'e1', brush: 'good' }, { orig: 'h1', brush: 'good' })
 		],
 		positions: ['8/8/8/4k3/8/4p3/8/1K5R w - - 0 1']
@@ -165,7 +177,11 @@ export const LESSONS: Lesson[] = [
 		player: 'white',
 		icon: 'bishops',
 		theory: [
-			S('8/8/8/4k3/8/8/8/2B1KB2', { orig: 'c1', dest: 'h6', brush: 'info' }, { orig: 'f1', dest: 'a6', brush: 'info' }),
+			S(
+				'8/8/8/4k3/8/8/8/2B1KB2',
+				{ orig: 'c1', dest: 'h6', brush: 'info' },
+				{ orig: 'f1', dest: 'a6', brush: 'info' }
+			),
 			S('8/8/8/k7/4B3/4B3/4K3/8', { orig: 'e3', brush: 'good' }, { orig: 'e4', brush: 'good' }),
 			S('2k5/8/2K5/8/8/3BB3/8/8 b - - 0 1', { orig: 'c8', brush: 'info' }),
 			S('k7/2K5/1B6/1B6/8/8/8/8', { orig: 'b5', dest: 'c6', brush: 'good' })

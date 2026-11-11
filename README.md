@@ -8,11 +8,15 @@ A chess trainer for beginners as a Progressive Web App for iPhone, iPad and Mac 
 
 - **Play** against 8 bots with personality (≈ 400–1650) – Stockfish 19 (WebAssembly) in the browser, hints, takebacks, optional clock
 - **Play with a coach** – feedback on every move, warnings about attacked pieces, take back mistakes with an explanation
+- **Daily plan** – a personal training plan every day, built from your weaknesses and due reviews; estimated playing strength
+- **Tactics** – fork, pin, skewer, discovered attack, back-rank mate: explained, then practised with puzzles
+- **Puzzle Storm**, **play a friend** on one device, **22 achievements**
+- **Replay your mistakes** from your own games and find the better move
 - **Chess basics** – 15 interactive lessons from zero (piece mini-games, check, mate, castling, promotion, en passant)
 - **Puzzles** – 38,400 hand-picked puzzles from the free Lichess database, Glicko-2 rating, theme filter, puzzle of the day, spaced repetition (FSRS) for missed ones
 - **Game analysis** – blunders, mistakes and inaccuracies, explained in plain language („your knight on g5 is unprotected“), evaluation graph, PGN import/export
 - **Your mistakes become puzzles** – from bot games and imported games
-- **Endgame trainer** – 7 lessons with the technique explained step by step, then practice against perfect tablebase play with live feedback on every move
+- **Endgame trainer** – 10 lessons with the technique explained step by step, then practice against perfect tablebase play with live feedback on every move
 - **Opening courses** – 14 openings and defences with explained lines; guided learning with hints, Stockfish explains wrong moves; learned lines go into your repertoire for spaced repetition
 - **Linked accounts** – link your Lichess / Chess.com username once, new games are imported and analysed automatically
 - **Profile & statistics** – rating history, activity, results by colour/time control/opponent strength, openings, accuracy by game phase, typical mistakes, personal insights

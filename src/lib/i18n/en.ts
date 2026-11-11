@@ -968,6 +968,20 @@ export const en = {
 		practise: 'Practise with puzzles',
 		practiseText: (p: P) => `Now train it: puzzles with the theme “${p.theme}” at your level.`
 	},
+	retry: {
+		cta: (p: P) => `Replay your ${p.n} ${s(p.n, 'mistake', 'mistakes')}`,
+		ctaText: 'Find the better move yourself – the best way to learn from a game.',
+		step: (p: P) => `Mistake ${p.i} of ${p.n}`,
+		prompt: (p: P) => `You played ${p.move}. Find a better move!`,
+		hint: 'Look at the position from your opponent’s side too: what does your move allow?',
+		sameTitle: 'That was your game move',
+		sameText: 'Try something else – what would be better?',
+		solved: 'Well found!',
+		best: (p: P) => `Best was ${p.san}.`,
+		doneTitle: 'All mistakes replayed',
+		doneText: (p: P) => `You found ${p.n} of ${p.m} better moves on the first try.`,
+		close: 'Back to the analysis'
+	},
 	about: {
 		eyebrow: 'Open source',
 		title: 'About Rookie',

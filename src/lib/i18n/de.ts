@@ -1017,6 +1017,20 @@ export const de: Shape<typeof en> = {
 		practise: 'Mit Puzzles üben',
 		practiseText: (p: P) => `Jetzt trainieren: Puzzles zum Thema „${p.theme}“ auf deinem Niveau.`
 	},
+	retry: {
+		cta: (p: P) => `Deine ${p.n} ${p.n === 1 ? 'Fehler' : 'Fehler'} nachspielen`,
+		ctaText: 'Finde den besseren Zug selbst – so lernst du am meisten aus einer Partie.',
+		step: (p: P) => `Fehler ${p.i} von ${p.n}`,
+		prompt: (p: P) => `Du hast ${p.move} gespielt. Finde einen besseren Zug!`,
+		hint: 'Schau auch mit den Augen des Gegners: Was erlaubt dein Zug?',
+		sameTitle: 'Das war dein Partiezug',
+		sameText: 'Versuch etwas anderes – was wäre besser?',
+		solved: 'Gut gefunden!',
+		best: (p: P) => `Am besten war ${p.san}.`,
+		doneTitle: 'Alle Fehler nachgespielt',
+		doneText: (p: P) => `Du hast ${p.n} von ${p.m} besseren Zügen auf Anhieb gefunden.`,
+		close: 'Zurück zur Analyse'
+	},
 	about: {
 		eyebrow: 'Open Source',
 		title: 'Über Rookie',

@@ -32,6 +32,11 @@
 	import { t, intlLocale } from '#lib/i18n/i18n.svelte.js';
 	import { formatScore } from '#lib/engine/uci.js';
 	import { openingFor, onOpeningsLoaded } from '#lib/data/openings.js';
+	import { feedbackFor, type MoveFeedback } from '#lib/openings/feedback.js';
+	import { getSetting, setSetting } from '#lib/db/db.js';
+	import { notifyProgress } from '#lib/ui/progress.js';
+	import Target from '@lucide/svelte/icons/target';
+	import Lightbulb from '@lucide/svelte/icons/lightbulb';
 
 	// ── Liste ──
 	let games = $state<GameRow[]>([]);
@@ -94,6 +99,106 @@
 			};
 		};
 		return { white: side('white'), black: side('black') };
+	});
+
+	// ── Fehler nachspielen: „Finde den besseren Zug“ ──
+	const myMistakes = $derived(
+		row
+			? reviews.filter(
+					(r) =>
+						r.mover === row!.myColor && (r.judgement === 'mistake' || r.judgement === 'blunder')
+				)
+			: []
+	);
+	let retry = $state<{
+		idx: number;
+		tries: number;
+		found: number;
+		status: 'try' | 'checking' | 'solved' | 'shown' | 'done';
+		fb: MoveFeedback | null;
+		played: string;
+	} | null>(null);
+	let retryV = $state(0);
+	const retryItem = $derived(retry && retry.status !== 'done' ? myMistakes[retry.idx] : null);
+	const retryFen = $derived(retryItem && game ? game.fenAt(retryItem.ply - 1) : '');
+	const retryBest = $derived(retryItem ? (evals[retryItem.ply - 1]?.best ?? '') : '');
+	const retryGame = $derived.by(() => {
+		void retryV;
+		return retryFen ? new Game(retryFen) : null;
+	});
+
+	function startRetry() {
+		if (!myMistakes.length) return;
+		retry = { idx: 0, tries: 0, found: 0, status: 'try', fb: null, played: '' };
+		retryV++;
+	}
+
+	async function onRetryMove(uci: string) {
+		if (!retry || !retryItem || retry.status !== 'try' || !retryFen) return;
+		retry.played = uci;
+		const original = game!.moves[retryItem.ply - 1].uci;
+		if (uci === original) {
+			retry.tries++;
+			retry.fb = { kind: 'bad', title: t('retry.sameTitle'), text: t('retry.sameText') };
+			retryV++;
+			return;
+		}
+		if (uci === retryBest || uci + 'q' === retryBest) return solved(true);
+		retry.status = 'checking';
+		const fb = await feedbackFor(retryFen, uci);
+		if (!retry) return;
+		if (fb?.kind === 'playable') return solved(retry.tries === 0);
+		retry.tries++;
+		retry.fb = fb;
+		retry.status = retry.tries >= 2 ? 'shown' : 'try';
+		retryV++;
+	}
+
+	function solved(firstTry: boolean) {
+		if (!retry) return;
+		if (firstTry || retry.tries === 0) retry.found++;
+		retry.status = 'solved';
+		retry.fb = null;
+	}
+
+	async function nextRetry() {
+		if (!retry) return;
+		if (retry.idx + 1 >= myMistakes.length) {
+			retry.status = 'done';
+			const list = await getSetting<number[]>('reviewedGames', []);
+			if (row?.id && !list.includes(row.id)) await setSetting('reviewedGames', [...list, row.id]);
+			notifyProgress();
+			return;
+		}
+		retry = {
+			idx: retry.idx + 1,
+			tries: 0,
+			found: retry.found,
+			status: 'try',
+			fb: null,
+			played: ''
+		};
+		retryV++;
+	}
+
+	const retryShapes = $derived.by<Shape[]>(() => {
+		if (!retry || !retryItem) return [];
+		if ((retry.status === 'shown' || retry.status === 'solved') && retryBest)
+			return [{ orig: retryBest.slice(0, 2), dest: retryBest.slice(2, 4), brush: 'good' }];
+		return [];
+	});
+
+	// aus dem Tagesplan: ?retry=1 startet sofort, sobald die Analyse fertig ist
+	$effect(() => {
+		if (
+			typeof window !== 'undefined' &&
+			page.url.searchParams.get('retry') === '1' &&
+			!retry &&
+			!analysing &&
+			progress >= 1 &&
+			myMistakes.length
+		)
+			startRetry();
 	});
 
 	const gameId = $derived(
@@ -326,7 +431,29 @@
 			<div class="board-row">
 				<EvalBar score={evalHere} {orientation} />
 				<div class="board-wrap">
-					<Board {fen} {orientation} {lastMove} viewOnly {shapes} label={t('analysis.board')} />
+					{#if retryGame && retry && (retry.status === 'try' || retry.status === 'checking')}
+						<Board
+							fen={retryFen}
+							{orientation}
+							turnColor={retryGame.turn}
+							dests={retry.status === 'try' ? retryGame.dests() : new Map()}
+							movableColor={row.myColor}
+							shapes={retryShapes}
+							isPromotion={(f, to) => retryGame.isPromotion(f as never, to as never)}
+							onMove={(u) => void onRetryMove(u)}
+							label={t('analysis.board')}
+						/>
+					{:else if retryItem}
+						<Board
+							fen={retryFen}
+							{orientation}
+							viewOnly
+							shapes={retryShapes}
+							label={t('analysis.board')}
+						/>
+					{:else}
+						<Board {fen} {orientation} {lastMove} viewOnly {shapes} label={t('analysis.board')} />
+					{/if}
 				</div>
 			</div>
 			<div class="nav">
@@ -350,6 +477,63 @@
 		</div>
 
 		<aside class="side">
+			{#if retry}
+				<div class="card retry" role="status">
+					{#if retry.status === 'done'}
+						<p class="m-title"><Target size={18} /> {t('retry.doneTitle')}</p>
+						<p class="m-text">{t('retry.doneText', { n: retry.found, m: myMistakes.length })}</p>
+						<div class="row-btns">
+							<button class="btn" onclick={() => (retry = null)}>{t('retry.close')}</button>
+							<a class="btn secondary" href={resolve('/puzzles?mode=mistakes')}
+								><Sparkles size={17} /> {t('analysis.practiceText')}</a
+							>
+						</div>
+					{:else if retryItem}
+						{@const mv = game.moves[retryItem.ply - 1]}
+						<span class="r-step">{t('retry.step', { i: retry.idx + 1, n: myMistakes.length })}</span
+						>
+						<p class="m-title">
+							{t('retry.prompt', {
+								move: `${Math.ceil(retryItem.ply / 2)}${retryItem.ply % 2 === 1 ? '.' : '…'} ${figurine(mv.san)}`
+							})}
+						</p>
+						{#if retry.status === 'checking'}
+							<p class="muted">{t('course.checking')}</p>
+						{:else if retry.status === 'solved'}
+							<p class="ok">{t('retry.solved')}</p>
+							{#if retryItem.explanation}<p class="m-text">
+									<b>{retryItem.explanation.title}:</b>
+									{retryItem.explanation.text}
+								</p>{/if}
+							<button class="btn" onclick={() => void nextRetry()}>{t('common.next')}</button>
+						{:else if retry.status === 'shown'}
+							{#if retry.fb}<p class="bad"><b>{retry.fb.title}</b> {retry.fb.text}</p>{/if}
+							<p class="m-text">
+								<Lightbulb size={15} />
+								{t('retry.best', { san: figurine(sanForUci(retryFen, retryBest)) })}
+							</p>
+							{#if retryItem.explanation}<p class="m-text muted">
+									{retryItem.explanation.text}
+								</p>{/if}
+							<button class="btn" onclick={() => void nextRetry()}>{t('common.next')}</button>
+						{:else}
+							<p class="muted">{t('retry.hint')}</p>
+							{#if retry.fb}<p class="bad"><b>{retry.fb.title}</b> {retry.fb.text}</p>{/if}
+						{/if}
+						<button class="link-btn" onclick={() => (retry = null)}>{t('retry.close')}</button>
+					{/if}
+				</div>
+			{:else if myMistakes.length && progress >= 1 && !analysing}
+				<button class="card retry-cta" onclick={startRetry}>
+					<span class="rc-ico"><Target size={20} /></span>
+					<span
+						><b>{t('retry.cta', { n: myMistakes.length })}</b>
+						{t('retry.ctaText')}</span
+					>
+					<ChevronRight size={18} />
+				</button>
+			{/if}
+
 			{#if analysing || progress < 1}
 				<div class="card progress">
 					<div class="p-head">
@@ -609,6 +793,82 @@
 	}
 
 	/* Einzelansicht */
+	.retry {
+		display: flex;
+		flex-direction: column;
+		gap: 0.6rem;
+		padding: 1rem;
+		border: 1.5px solid color-mix(in srgb, var(--c-puzzle) 40%, transparent);
+	}
+
+	.retry .m-title {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+	}
+
+	.r-step {
+		font-size: 0.75rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: var(--c-puzzle);
+	}
+
+	.retry .ok {
+		font-weight: 700;
+		color: var(--good);
+	}
+
+	.retry .bad {
+		font-size: 0.92rem;
+		line-height: 1.45;
+		color: var(--text);
+		padding: 0.6rem 0.75rem;
+		border-radius: 12px;
+		background: color-mix(in srgb, var(--bad) 9%, transparent);
+	}
+
+	.link-btn {
+		align-self: flex-start;
+		border: none;
+		background: none;
+		padding: 0;
+		font: inherit;
+		font-size: 0.85rem;
+		font-weight: 650;
+		color: var(--text-2);
+		cursor: pointer;
+	}
+
+	.retry-cta {
+		display: flex;
+		align-items: center;
+		gap: 0.8rem;
+		padding: 0.9rem 1rem;
+		border: 1.5px solid color-mix(in srgb, var(--c-puzzle) 40%, transparent);
+		text-align: left;
+		font: inherit;
+		color: var(--text-2);
+		cursor: pointer;
+	}
+
+	.retry-cta b {
+		display: block;
+		color: var(--text);
+	}
+
+	.rc-ico {
+		display: grid;
+		place-items: center;
+		width: 40px;
+		height: 40px;
+		flex: none;
+		border-radius: 12px;
+		background: var(--c-puzzle);
+		color: #fff;
+	}
+
 	.top-line {
 		display: flex;
 		align-items: center;

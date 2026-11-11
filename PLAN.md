@@ -221,4 +221,15 @@ Konto & Installation (Nov. 2026):
 - [x] Freiwilliges Konto mit Passkey, Synchronisation über Geräte (Cloudflare Pages Functions + D1, EU), Export und Löschung, Datenschutzhinweise
 - [x] Installations-Hinweis am Handy: Android mit Installations-Knopf, iPhone/iPad mit Schritt-für-Schritt-Anleitung; jederzeit erreichbar in den Einstellungen
 
+Lernen & Motivation (Nov. 2026):
+
+- [x] Tagesplan auf der Startseite, geschätzte Spielstärke
+- [x] Einstieg für neue Nutzer (3 Fragen: Regeln, Niveau, Ziel)
+- [x] Fehler aus eigenen Partien nachspielen („Finde den besseren Zug“)
+- [x] Taktik-Kurse: Gabel, Fesselung, Spieß, Abzugsangriff, Grundreihenmatt – mit Puzzle-Training
+- [x] Puzzle-Sturm, Spiel gegen Freunde an einem Gerät, 22 Erfolge
+- [x] 10 Endspiel-Lektionen (neu: Dame gegen Bauer, Turm gegen Bauer, zwei Läufer)
+- [x] UX: Feedback direkt unter dem Brett, Lernpfade, Sprungleiste in Einstellungen, Lade-Platzhalter
+- [ ] Tägliche Erinnerung per Push (bewusst zurückgestellt)
+
 Lighthouse (Nov. 2026, mobil, hell und dunkel): Barrierefreiheit 100, Best Practices 100, SEO 100, Performance 89–95.
