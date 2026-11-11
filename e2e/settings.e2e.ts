@@ -31,13 +31,13 @@ test('Dunkelmodus lässt sich erzwingen', async ({ page }) => {
 test('Sprache: Englisch ist Standard, Deutsch umschaltbar und gespeichert', async ({ page }) => {
 	await page.goto('/');
 	await expect(page.locator('html')).toHaveAttribute('lang', 'en');
-	await expect(page.getByText('Puzzle of the day')).toBeVisible();
+	await expect(page.getByText('unlocked', { exact: true })).toBeVisible();
 	await page.goto('/settings');
 	await page.getByRole('radio', { name: 'Deutsch' }).click();
 	await expect(page.getByRole('heading', { name: 'Einstellungen' })).toBeVisible();
 	await expect(page.locator('html')).toHaveAttribute('lang', 'de');
 	await page.goto('/');
-	await expect(page.getByText('Puzzle des Tages')).toBeVisible();
+	await expect(page.getByText('freigeschaltet', { exact: true })).toBeVisible();
 	await expect(page.locator('html')).toHaveAttribute('lang', 'de');
 	await page.goto('/settings');
 	await page.getByRole('radio', { name: 'English' }).click();

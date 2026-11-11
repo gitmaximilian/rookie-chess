@@ -5,34 +5,20 @@
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import ShieldAlert from '@lucide/svelte/icons/shield-alert';
 	import Play from '@lucide/svelte/icons/play';
-	import Check from '@lucide/svelte/icons/check';
-	import HeroBoard from '#lib/ui/HeroBoard.svelte';
 	import DailyPlan from '#lib/ui/DailyPlan.svelte';
 	import RecentGames from '#lib/ui/RecentGames.svelte';
 	import HomeSummary from '#lib/ui/HomeSummary.svelte';
-	import Board from '#lib/ui/board/Board.svelte';
 	import BotAvatar from '#lib/ui/BotAvatar.svelte';
-	import { db, getSetting, today } from '#lib/db/db.js';
+	import { db, getSetting } from '#lib/db/db.js';
 	import { computeStreak } from '#lib/training/streak.js';
-	import { dailyPuzzle, PuzzleRun } from '#lib/training/puzzles.js';
-	import { themeName, THEMES } from '#lib/data/themes.js';
 	import { botById } from '#lib/bots/bots.js';
 	import { t } from '#lib/i18n/i18n.svelte.js';
-	import { colorName } from '#lib/chess/labels.js';
-
-	const dailyHref = resolve('/puzzles?mode=daily');
 
 	let greeting = $state('hello');
 	let streak = $state(0);
 	let todayDone = $state(false);
 	let backupDue = $state(false);
 	let resume = $state<{ botId: string; moves: string[] } | null>(null);
-	let daily = $state<{
-		fen: string;
-		color: 'white' | 'black';
-		theme: string;
-		done: boolean;
-	} | null>(null);
 
 	onMount(async () => {
 		const h = new Date().getHours();
@@ -47,21 +33,6 @@
 		const last = await getSetting<number | null>('lastBackupAt', null);
 		const hasData = rows.length > 2;
 		backupDue = hasData && (!last || Date.now() - last > 14 * 86400000);
-
-		try {
-			const p = await dailyPuzzle(today());
-			const run = new PuzzleRun(p);
-			run.playIntro();
-			const tk = p.themes.find((x) => THEMES.find((th) => th.key === x)?.core) ?? p.themes[0];
-			daily = {
-				fen: run.game.fen,
-				color: run.playerColor,
-				theme: tk ?? '',
-				done: (await getSetting<string>('dailyDone', '')) === today()
-			};
-		} catch {
-			daily = null;
-		}
 	});
 </script>
 
@@ -111,46 +82,6 @@
 	<RecentGames />
 
 	<DailyPlan />
-
-	<section class="hero card">
-		<div class="hero-text">
-			<span class="eyebrow on-dark">{t('home.daily')}</span>
-			{#if daily?.done}
-				<h2>{t('home.done')} <Check size={28} strokeWidth={3} /></h2>
-				<p>{t('home.doneText')}</p>
-				<a href={resolve('/puzzles')} class="btn hero-btn"
-					>{t('home.morePuzzles')} <ArrowRight size={18} strokeWidth={2.4} /></a
-				>
-			{:else}
-				<h2>
-					{t('home.toMove', {
-						side: daily ? colorName(daily.color) : t('common.you'),
-						theme: daily?.theme ? themeName(daily.theme) : t('home.findBest')
-					})}
-				</h2>
-				<p>{t('home.dailyText')}</p>
-				<a href={dailyHref} class="btn hero-btn">
-					{t('home.solve')}
-					<ArrowRight size={18} strokeWidth={2.4} />
-				</a>
-			{/if}
-		</div>
-		<div class="hero-board">
-			{#if daily}
-				<div class="real-board">
-					<Board
-						fen={daily.fen}
-						orientation={daily.color}
-						viewOnly
-						coordinates={false}
-						label={t('home.daily')}
-					/>
-				</div>
-			{:else}
-				<HeroBoard />
-			{/if}
-		</div>
-	</section>
 </div>
 
 <style>
@@ -246,83 +177,6 @@
 	}
 
 	/* Hero: dunkle Bühne, warmer Schein – auch im Hellmodus */
-	.hero {
-		position: relative;
-		display: grid;
-		grid-template-columns: 1fr;
-		gap: 1.25rem;
-		padding: 1.5rem;
-		overflow: hidden;
-		border: none;
-		color: #f7f1ea;
-		background:
-			radial-gradient(120% 90% at 100% 0%, rgb(242 122 82 / 0.55), transparent 60%),
-			radial-gradient(80% 80% at 0% 100%, rgb(109 91 240 / 0.35), transparent 60%), #1d1916;
-		box-shadow: var(--shadow-2);
-	}
-
-	.hero-text {
-		display: flex;
-		flex-direction: column;
-		gap: 0.6rem;
-		align-items: flex-start;
-		position: relative;
-		z-index: 1;
-	}
-
-	.on-dark {
-		color: rgb(247 241 234 / 0.65);
-	}
-
-	.hero h2 {
-		display: flex;
-		align-items: center;
-		gap: 0.4rem;
-		font-size: clamp(1.6rem, 5.5vw, 2.2rem);
-	}
-
-	.hero p {
-		color: rgb(247 241 234 / 0.75);
-		max-width: 32ch;
-	}
-
-	.hero-btn {
-		margin-top: 0.5rem;
-		background: #fff;
-		color: #1d1916;
-	}
-
-	.hero-board {
-		width: min(64%, 230px);
-		justify-self: end;
-		margin: 0 -0.25rem -0.25rem 0;
-	}
-
-	.real-board {
-		transform: perspective(900px) rotateX(8deg) rotateZ(-3deg);
-		animation: float 6s ease-in-out infinite;
-		border-radius: 14px;
-		box-shadow: 0 20px 50px rgb(0 0 0 / 0.45);
-	}
-
-	@keyframes float {
-		50% {
-			transform: perspective(900px) rotateX(6deg) rotateZ(-1.5deg) translateY(-6px);
-		}
-	}
-
-	@media (min-width: 640px) {
-		.hero {
-			grid-template-columns: 1.2fr 1fr;
-			align-items: center;
-			padding: 2.25rem;
-		}
-		.hero-board {
-			width: min(100%, 300px);
-			margin: 0;
-		}
-	}
-
 	@keyframes rise {
 		from {
 			opacity: 0;

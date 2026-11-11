@@ -61,6 +61,13 @@
 		if (!syncState.running) void load();
 	});
 
+	const ACCOUNTS = [
+		['lichess', 'Lichess'],
+		['chesscom', 'Chess.com']
+	] as const;
+	// nur verknüpfte Konten zeigen
+	const accounts = $derived(d ? ACCOUNTS.filter(([src]) => d!.linked[src]) : []);
+
 	const speedName = (k: string) => {
 		const s = t(`stats.speed.${k}`);
 		return s.startsWith('stats.') ? k : s;
@@ -80,13 +87,9 @@
 	{#if !d}
 		{#each [0, 1, 2, 3, 4, 5] as i (i)}<div class="skeleton tile-sk"></div>{/each}
 	{:else}
-		{#each [['lichess', 'Lichess'], ['chesscom', 'Chess.com']] as const as [src, label] (src)}
+		{#each accounts as [src, label] (src)}
 			{@const r = d.elo[src]}
-			<a
-				class="tile"
-				href={resolve(d.linked[src] ? '/profile/stats' : '/import')}
-				style:--c="var(--c-analysis)"
-			>
+			<a class="tile" href={resolve('/profile/stats')} style:--c="var(--c-analysis)">
 				<span class="lbl"><span class="logo {src}">{label[0]}</span> {label}</span>
 				{#if r}
 					<span class="val">{r.rating}</span>
@@ -100,12 +103,9 @@
 							>
 						{/if}
 					</span>
-				{:else if d.linked[src]}
+				{:else}
 					<span class="val muted">…</span>
 					<span class="sub">{t('summary.loading')}</span>
-				{:else}
-					<span class="val muted">–</span>
-					<span class="sub link">{t('summary.link')}</span>
 				{/if}
 			</a>
 		{/each}
@@ -148,6 +148,13 @@
 		display: grid;
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 		gap: 0.5rem;
+	}
+
+	/* ungerade Anzahl: letzte Kachel über die volle Breite, keine Lücke */
+	@media (max-width: 699px) {
+		.tile:last-child:nth-child(odd) {
+			grid-column: span 2;
+		}
 	}
 
 	@media (min-width: 700px) {
