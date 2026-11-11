@@ -193,3 +193,23 @@ chess-trainer/
 
 - Phase 0 und die Engine-/Offline-Teile aus Phase 1 mit Opus. Die UI-lastigen Phasen 2–7 können mit Sonnet laufen.
 - `PLAN.md` (dieser Plan) liegt im Repo, nach jeder Phase gibt es einen Commit und ein Deployment.
+
+## Stand (11.11.2026)
+
+Alle Phasen umgesetzt und live auf https://chess.maximilianauer.at:
+
+- [x] Phase 0 – Grundgerüst, PWA, Deployment, eigene Domain
+- [x] Phase 1 – Brett, 8 Bots, Puzzles, Backup
+- [x] Phase 2 – Themenfilter, Wiederholung (FSRS), Puzzle des Tages
+- [x] Phase 3 – Partieanalyse mit Erklärungen, Fehler → Puzzles
+- [x] Phase 4 – Endspieltrainer (Tablebase-Gegner, Sterne)
+- [x] Phase 5 – Eröffnungstrainer (Repertoire, Start-Repertoires, Training, Eröffnungsbuch)
+- [x] Phase 6 – Import von Lichess und Chess.com
+- [x] Phase 7 – Profil & Statistik, Feinschliff
+- [x] Zusätzlich: Englisch (Standard) und Deutsch umschaltbar
+
+Abweichungen vom Plan:
+
+- Lichess Opening Explorer verlangt inzwischen Login → ersetzt durch ein Offline-Eröffnungsbuch aus lichess chess-openings (CC0).
+- Push-Erinnerungen (optional, Cloudflare Worker) noch nicht umgesetzt.
+- Service Worker aktualisiert nicht mehr automatisch, sondern zeigt „Neue Version verfügbar · Neu laden“.

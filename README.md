@@ -1,17 +1,25 @@
-# Rookie – kostenloser Schach-Trainer
+# Rookie – a free chess trainer
 
-Ein Schach-Trainer als Progressive Web App für iPhone, iPad und Mac – komplett kostenlos, offline-fähig, ohne App Store, ohne Konto, ohne Tracking.
+A chess trainer for beginners as a Progressive Web App for iPhone, iPad and Mac – completely free, offline-capable, no App Store, no account, no tracking. English and German.
 
-- **Spielen** gegen Stockfish (WebAssembly, läuft im Browser)
-- **Puzzles** aus der freien Lichess-Datenbank
-- **Eröffnungen & Endspiele** mit Spaced Repetition
+**Live:** https://chess.maximilianauer.at
 
-Der Fahrplan steht in [PLAN.md](PLAN.md).
+## Features
 
-## Entwicklung
+- **Play** against 8 bots with personality (≈ 400–1650) – Stockfish 19 (WebAssembly) in the browser, hints, takebacks, optional clock
+- **Puzzles** – 38,400 hand-picked puzzles from the free Lichess database, Glicko-2 rating, theme filter, puzzle of the day, spaced repetition (FSRS) for missed ones
+- **Game analysis** – blunders, mistakes and inaccuracies, explained in plain language („your knight on g5 is unprotected“), evaluation graph, PGN import/export
+- **Your mistakes become puzzles** – from bot games and imported games
+- **Endgame trainer** – 7 lessons (queen mate, ladder mate, rook mate, opposition, rule of the square, Lucena, Philidor) against perfect play from the Lichess tablebase
+- **Opening trainer** – build your repertoire as White and Black, starter repertoires, training with spaced repetition, offline opening book
+- **Import** games from Lichess and Chess.com by username, analysed automatically
+- **Profile** – rating history, activity, strongest and weakest themes
+- Light/dark mode, English/German, backup export/import, works offline
+
+## Development
 
 ```bash
-npm install          # kopiert Stockfish automatisch nach static/engine
+npm install          # also copies Stockfish to static/engine
 npm run dev          # http://localhost:5173
 npm run build && npm run preview
 ```
@@ -20,36 +28,44 @@ Tests:
 
 ```bash
 npm run test:unit -- --run   # Vitest
-npm run test:e2e             # Playwright: iPhone- & Mac-Safari (WebKit) + Chromium
+npm run test:e2e             # Playwright: iPhone & Mac Safari (WebKit) + Chromium
 npm run check && npm run lint
 ```
 
-> Lokal mit Node 23? Dann `npm install --engine-strict=false`. Empfohlen ist Node 22 oder 24 (siehe `.nvmrc`).
+Data scripts (results are committed):
 
-## Deployment auf Cloudflare Pages (gratis)
+```bash
+# Puzzle packs from the Lichess puzzle database (CC0)
+curl -L -o .data/lichess_db_puzzle.csv.zst https://database.lichess.org/lichess_db_puzzle.csv.zst
+node scripts/build-puzzles.ts
 
-1. Repo auf GitHub anlegen und pushen:
-   `gh repo create rookie-chess --public --source=. --push`
-2. Cloudflare Dashboard → **Workers & Pages** → **Create** → **Pages** → **Connect to Git** → Repo wählen.
-3. Build-Einstellungen:
-   - Framework preset: **SvelteKit**
-   - Build command: `npm run build`
-   - Output directory: `build`
-   - Umgebungsvariable: `NODE_VERSION = 22`
-4. Jeder Push auf `main` wird automatisch veröffentlicht.
-5. **Eigene Domain:** Pages-Projekt → **Custom domains** → **Set up a custom domain** → `chess.maximilianauer.at` → **Activate**. Da die Domain bei Cloudflare liegt, werden CNAME und HTTPS automatisch eingerichtet.
-6. Optional: unter **Rules** eine Weiterleitung von `*.pages.dev` auf `https://chess.maximilianauer.at` anlegen. Gespeicherte Daten (IndexedDB) hängen an der Adresse – so gibt es nur eine.
+# Opening names from lichess-org/chess-openings (CC0)
+node scripts/build-openings.ts
+```
 
-Die Datei [`static/_headers`](static/_headers) setzt die COOP/COEP-Header, damit Stockfish mehrere Threads nutzen kann.
+> Running Node 23 locally? Use `npm install --engine-strict=false`. Node 22 or 24 is recommended (see `.nvmrc`).
 
-### Auf iPhone / iPad installieren
+### Translations
 
-Safari → `https://chess.maximilianauer.at` öffnen → **Teilen** → **Zum Home-Bildschirm**.
+All UI text lives in `src/lib/i18n/en.ts` (default) and `src/lib/i18n/de.ts`. A unit test makes sure both have exactly the same keys.
 
-### Auf dem Mac installieren
+## Deployment (Cloudflare Pages, free)
 
-Safari → `https://chess.maximilianauer.at` öffnen → **Ablage** → **Zum Dock hinzufügen** (macOS Sonoma oder neuer).
+1. Repository on GitHub, connected to a Cloudflare Pages project.
+2. Build command `npm run build`, output directory `build`, environment variable `NODE_VERSION = 22`.
+3. Custom domain `chess.maximilianauer.at` (Pages → Custom domains).
+4. Every push to `main` deploys automatically.
 
-## Lizenz
+[`static/_headers`](static/_headers) sets COOP/COEP so Stockfish can use multiple threads.
 
-GPL-3.0-or-later – siehe [LICENSE](LICENSE). Verwendete Projekte und ihre Lizenzen stehen in der App unter _Profil → Über Rookie_.
+### Install on iPhone / iPad
+
+Safari → open https://chess.maximilianauer.at → **Share** → **Add to Home Screen**.
+
+### Install on Mac
+
+Safari → open the site → **File** → **Add to Dock** (macOS Sonoma or later).
+
+## Licence
+
+GPL-3.0-or-later – see [LICENSE](LICENSE). Third-party projects and their licences are listed in the app under _Profile → About Rookie_.
