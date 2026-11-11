@@ -1,6 +1,6 @@
 # Technische und organisatorische Maßnahmen (Art. 32 DSGVO) – Rookie
 
-> Entwurf, Stand 2026-11-11. Beschreibt, was der Code tatsächlich tut (`server/api.ts`).
+> Stand 2026-11-11, freigegeben. Beschreibt, was der Code tatsächlich tut (`server/api.ts`).
 
 ## Datenminimierung (Art. 5, 25 DSGVO – Privacy by Design/Default)
 
@@ -19,7 +19,7 @@
 - Schutz vor Cross-Site-Anfragen: Origin-Prüfung bei allen schreibenden Anfragen, `SameSite=Strict`.
 - Anmelde-Challenges sind einmalig verwendbar und laufen nach 5 Minuten ab.
 - Sicherheits-Header: COOP/COEP/CORP, Referrer-Policy (`static/_headers`).
-- Zugriff auf Cloudflare-Konto: nur Verantwortlicher; Zwei-Faktor-Anmeldung für das Cloudflare-Konto aktivieren (empfohlen, bitte prüfen).
+- Zugriff auf Cloudflare-Konto: nur Verantwortlicher; Zwei-Faktor-Anmeldung aktiv (seit 2026-11-11).
 
 ## Integrität
 

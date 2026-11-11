@@ -1,6 +1,6 @@
 # Verzeichnis von Verarbeitungstätigkeiten (Art. 30 DSGVO) – Rookie
 
-> Entwurf, Stand 2026-11-11. Internes Dokument; muss nicht veröffentlicht, aber auf Anfrage der Datenschutzbehörde vorgelegt werden. Bitte prüfen und bei Änderungen aktualisieren. Keine Rechtsberatung.
+> Stand 2026-11-11, vom Verantwortlichen freigegeben. Internes Dokument; muss nicht veröffentlicht, aber auf Anfrage der Datenschutzbehörde vorgelegt werden. Bitte prüfen und bei Änderungen aktualisieren. Keine Rechtsberatung.
 
 ## Verantwortlicher
 
