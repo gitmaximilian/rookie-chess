@@ -1,9 +1,10 @@
 <script lang="ts">
+	import { resetDockReserve } from '#lib/ui/dock.js';
 	import { lineStars } from '#lib/training/stars.js';
 	import Stars from '#lib/ui/Stars.svelte';
 	import ColorBadge from '#lib/ui/ColorBadge.svelte';
 	import Dock from '#lib/ui/Dock.svelte';
-	import { onMount, onDestroy } from 'svelte';
+	import { onMount, onDestroy, untrack } from 'svelte';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
@@ -49,6 +50,15 @@
 	let course = $state.raw<Course>(COURSES[0]);
 	let progress = $state<CourseProgress>({});
 	let view = $state<'overview' | 'learn' | 'done' | 'study' | 'quiz'>('overview');
+	// Jede Ansicht beginnt oben (Knöpfe liegen oft weit unten, das Brett wäre sonst außer Sicht)
+	// und misst ihre Aktionsleiste neu (sonst erbt das Üben die Höhe des Lernmodus).
+	$effect(() => {
+		void view;
+		untrack(() => {
+			if (window.scrollY > 0) window.scrollTo({ top: 0 });
+			resetDockReserve();
+		});
+	});
 	const depth = $derived(depthFor(course.id));
 
 	// ── Lernen (Zug für Zug mit Erklärung) ──
@@ -529,11 +539,18 @@
 						aria-label={t('course.prev')}><ChevronLeft size={22} /></button
 					>
 					<span class="step-count">{t('course.moveOf', { n: si, m: study.ucis.length })}</span>
-					<button
-						class="btn step-next"
-						onclick={() => studyStep(1)}
-						disabled={si >= study.ucis.length}>{t('course.next')} <ChevronRight size={18} /></button
-					>
+					<!-- am Ende wird „Weiter“ zum nächsten Schritt – gleiche Stelle, gleiche Höhe, nichts springt -->
+					{#if si < study.ucis.length}
+						<button class="btn step-next" onclick={() => studyStep(1)}
+							>{t('course.next')} <ChevronRight size={18} /></button
+						>
+					{:else if study.kind === 'line'}
+						<button class="btn step-next" onclick={() => startLine(study!.line!)}
+							><Dumbbell size={17} /> {t('course.studyDone')}</button
+						>
+					{:else}
+						<button class="btn step-next" onclick={toOverview}>{t('course.backToCourse')}</button>
+					{/if}
 				</div>
 			</Dock>
 		</div>
@@ -579,18 +596,6 @@
 						<b class="s-san">{Math.ceil(si / 2)}{si % 2 === 1 ? '.' : '…'} {figurine(studySan)}</b>
 						{#if studyNote}<p>{studyNote}</p>{/if}
 					</div>
-				{/if}
-				{#if si >= study.ucis.length}
-					{#if study.kind === 'line'}
-						<div class="done-box">
-							<p class="muted">{t('course.studyDoneText')}</p>
-							<button class="btn" onclick={() => startLine(study!.line!)}
-								><Dumbbell size={17} /> {t('course.studyDone')}</button
-							>
-						</div>
-					{:else}
-						<button class="btn secondary" onclick={toOverview}>{t('course.backToCourse')}</button>
-					{/if}
 				{/if}
 			</Dock>
 		</aside>
@@ -713,7 +718,8 @@
 					</div>
 				</div>
 			{:else}
-				<Dock>
+				<!-- Platz für Anweisung, Rückmeldung und Tipp vorab reservieren (gemessen: bis 132 px) -->
+				<Dock reserve={136}>
 					<div class="prompt" class:waiting={status === 'await'}>
 						{#if status === 'checking'}
 							{t('course.checking')}
@@ -1072,13 +1078,6 @@
 	.s-san {
 		font-family: var(--font-display);
 		font-size: 1.25rem;
-	}
-
-	.done-box {
-		display: flex;
-		flex-direction: column;
-		gap: 0.6rem;
-		align-items: flex-start;
 	}
 
 	.ok-text {

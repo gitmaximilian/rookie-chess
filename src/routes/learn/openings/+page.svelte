@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resetDockReserve } from '#lib/ui/dock.js';
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
@@ -113,6 +114,7 @@
 		view = 'edit';
 		// neue Ansicht beginnt oben – sonst liegt das Brett nach einem Tipp weit unten außer Sicht
 		window.scrollTo({ top: 0 });
+		resetDockReserve();
 		loadHere();
 	}
 
@@ -173,6 +175,7 @@
 		view = 'train';
 		// neue Ansicht beginnt oben – sonst liegt das Brett nach einem Tipp weit unten außer Sicht
 		window.scrollTo({ top: 0 });
+		resetDockReserve();
 		streak = 0;
 		await nextCard();
 	}
@@ -264,6 +267,7 @@
 		view = 'overview';
 		// neue Ansicht beginnt oben – sonst liegt das Brett nach einem Tipp weit unten außer Sicht
 		window.scrollTo({ top: 0 });
+		resetDockReserve();
 		refresh();
 	}
 

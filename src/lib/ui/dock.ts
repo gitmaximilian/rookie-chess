@@ -40,6 +40,14 @@ function publish() {
 	}
 }
 
+/** Für Seiten mit mehreren Ansichten unter derselben Adresse: Reservierung neu messen */
+export function resetDockReserve(): void {
+	reserved = 0;
+	if (typeof document === 'undefined') return;
+	document.documentElement.style.setProperty('--dock-h', '0px');
+	queueMicrotask(publish);
+}
+
 function ensureRoot(): HTMLDivElement {
 	if (releaseTimer) {
 		clearTimeout(releaseTimer);
