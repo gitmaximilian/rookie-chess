@@ -160,7 +160,7 @@ export const de: Shape<typeof en> = {
 		draw: 'Remis',
 		noHelp: 'Ganz ohne Hilfe – stark!',
 		rematch: 'Revanche',
-		analyse: 'Analysieren',
+		analyse: 'Aus der Partie lernen',
 		newOpponent: 'Neuer Gegner',
 		event: 'Rookie – Partie gegen Bot'
 	},

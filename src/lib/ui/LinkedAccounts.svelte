@@ -6,6 +6,7 @@
 	import TrendingDown from '@lucide/svelte/icons/trending-down';
 	import Link2 from '@lucide/svelte/icons/link-2';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
+	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import {
 		getLinked,
 		link,
@@ -122,8 +123,12 @@
 						autocapitalize="off"
 						spellcheck="false"
 					/>
-					<button class="btn small" type="submit" disabled={busy || !input[src].trim()}
-						>{t('import.link')}</button
+					<button
+						class="btn small go"
+						type="submit"
+						disabled={busy || !input[src].trim()}
+						aria-label="{label}: {t('import.link')}"
+						><span class="go-label">{t('import.link')}</span><ArrowRight size={18} /></button
 					>
 				</form>
 			{/each}
@@ -261,6 +266,20 @@
 		display: grid;
 		grid-template-columns: minmax(0, 1fr);
 		gap: 0.5rem;
+		container-type: inline-size;
+	}
+
+	.go {
+		flex: none;
+		gap: 0.35rem;
+		padding-inline: 0.9rem;
+	}
+
+	/* schmal: nur Pfeil, damit das Namensfeld lesbar bleibt */
+	@container (max-width: 360px) {
+		.go-label {
+			display: none;
+		}
 	}
 
 	@media (min-width: 700px) {

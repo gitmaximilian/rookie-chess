@@ -409,18 +409,20 @@
 				<ChevronRight size={18} />
 			</a>
 		{/if}
-		<div class="hub-actions">
-			<a class="btn secondary board-btn" href={resolve('/analysis/board')}
-				><LayoutGrid size={18} /> {t('board2.open')}</a
-			>
-		</div>
-		<nav class="filters" aria-label={t('analysis.games')}>
-			{#each FILTERS as f (f)}
-				<button class="chip" class:on={filter === f} onclick={() => setFilter(f)}
-					>{t(`analysis.filter.${f}`)}</button
+		{#if loading || gameCount > 0 || filter !== 'all'}
+			<div class="hub-actions">
+				<a class="btn secondary board-btn" href={resolve('/analysis/board')}
+					><LayoutGrid size={18} /> {t('board2.open')}</a
 				>
-			{/each}
-		</nav>
+			</div>
+			<nav class="filters" aria-label={t('analysis.games')}>
+				{#each FILTERS as f (f)}
+					<button class="chip" class:on={filter === f} onclick={() => setFilter(f)}
+						>{t(`analysis.filter.${f}`)}</button
+					>
+				{/each}
+			</nav>
+		{/if}
 	</div>
 
 	<div class="list-layout">
@@ -437,6 +439,9 @@
 						<a class="btn" href={resolve('/play')}>{t('analysis.playGame')}</a>
 						<a class="btn secondary" href={resolve('/import')}
 							><CloudDownload size={18} /> {t('analysis.import')}</a
+						>
+						<a class="btn secondary" href={resolve('/analysis/board')}
+							><LayoutGrid size={18} /> {t('board2.open')}</a
 						>
 					</div>
 				</div>

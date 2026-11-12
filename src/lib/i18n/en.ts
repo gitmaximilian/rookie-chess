@@ -149,7 +149,7 @@ export const en = {
 		draw: 'Draw',
 		noHelp: 'No help at all – strong!',
 		rematch: 'Rematch',
-		analyse: 'Analyse',
+		analyse: 'Learn from this game',
 		newOpponent: 'New opponent',
 		event: 'Rookie – game vs bot'
 	},

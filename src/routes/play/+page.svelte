@@ -900,13 +900,16 @@
 				<p class="badge">{t('play.noHelp')}</p>
 			{/if}
 			<div class="sheet-actions">
-				<button class="btn" onclick={rematch}>{t('play.rematch')}</button>
+				<!-- Lernen zuerst: die Analyse zeigt, was man beim nächsten Mal besser macht -->
 				{#if savedGameId}
-					<a class="btn secondary" href={resolve(`/analysis?game=${savedGameId}`)}>
+					<a class="btn" href={resolve(`/analysis?game=${savedGameId}`)}>
 						<ChartLine size={18} />
 						{t('play.analyse')}
 					</a>
 				{/if}
+				<button class="btn" class:secondary={!!savedGameId} onclick={rematch}
+					>{t('play.rematch')}</button
+				>
 				<button class="btn secondary" onclick={newSetup}>{t('play.newOpponent')}</button>
 			</div>
 		</div>
