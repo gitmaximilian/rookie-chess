@@ -581,13 +581,15 @@
 		position: relative;
 		display: flex;
 		flex-direction: column;
-		padding: 0.45rem 0.9rem;
+		padding: 0.45rem 0.95rem;
 		min-width: 92px;
+		border-radius: 18px;
 	}
 
 	.r-label {
-		font-size: 0.7rem;
-		font-weight: 650;
+		font-family: var(--font-num);
+		font-size: 0.68rem;
+		font-weight: 500;
 		letter-spacing: 0.05em;
 		text-transform: uppercase;
 		color: var(--text-3);
@@ -634,6 +636,7 @@
 	.mini {
 		display: flex;
 		align-items: center;
+		border-radius: 18px;
 		gap: 0.35rem;
 		padding: 0 0.85rem;
 		color: var(--accent);

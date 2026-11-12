@@ -62,3 +62,8 @@ test('Brettfarbe wirkt auch im Dunkelmodus', async ({ browser }) => {
 	await expect.poll(bg).toContain('rgb(167, 122, 81)');
 	await ctx.close();
 });
+
+test('Einstellungen zeigen die App-Version', async ({ page }) => {
+	await page.goto('/settings');
+	await expect(page.getByTestId('app-version')).toContainText(/Rookie v\d+\.\d+\.\d+/);
+});

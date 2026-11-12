@@ -231,8 +231,9 @@
 	}
 
 	.count {
-		font-size: 0.78rem;
-		font-weight: 700;
+		font-family: var(--font-num);
+		font-size: 0.74rem;
+		font-weight: 500;
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
 		color: var(--text-2);
@@ -255,7 +256,7 @@
 		align-items: flex-start;
 		gap: 0.15rem;
 		padding: 0.95rem 1.05rem;
-		border-radius: 16px;
+		border-radius: 20px;
 		border: 1.5px solid var(--line);
 		background: var(--surface);
 		box-shadow: var(--shadow-1);

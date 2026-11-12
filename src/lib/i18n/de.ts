@@ -395,6 +395,8 @@ export const de: Shape<typeof en> = {
 		},
 		today: 'Heute',
 		yesterday: 'Gestern',
+		brilliantLabel: 'Brillant',
+		practiceLabel: 'Zum Üben',
 		brilliantMoves: (p) => `${p.n} ${s(p.n, 'brillanter Zug', 'brillante Züge')}`,
 		formAria: (p) => `Ergebnisse deiner letzten ${p.n} Partien`,
 		analyseShort: 'Analysieren',

@@ -17,6 +17,8 @@
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import CloudDownload from '@lucide/svelte/icons/cloud-download';
 	import PageHeader from '#lib/ui/PageHeader.svelte';
+	import BentoGrid from '#lib/ui/bento/BentoGrid.svelte';
+	import StatTile from '#lib/ui/bento/StatTile.svelte';
 	import Board, { type Shape } from '#lib/ui/board/Board.svelte';
 	import EvalBar from '#lib/ui/EvalBar.svelte';
 	import EvalGraph from '#lib/ui/EvalGraph.svelte';
@@ -92,6 +94,16 @@
 					.filter((x) => x.o !== null)
 					.reverse()
 			: []
+	);
+
+	const formScore = $derived(
+		form.length
+			? Math.round(
+					((form.filter((x) => x.o === 'w').length + form.filter((x) => x.o === 'd').length / 2) /
+						form.length) *
+						100
+				)
+			: 0
 	);
 
 	function dayLabel(ms: number): string {
@@ -638,38 +650,57 @@
 
 	<div class="hub">
 		<LinkedAccounts collapsed={gameCount > 0} />
-		{#if form.length >= 3}
-			<div class="form-strip" role="img" aria-label={t('analysis.formAria', { n: form.length })}>
-				{#each form as x, i (x.id)}
-					<a
-						class="fs {x.o}"
-						class:newest={i === form.length - 1}
-						href={resolve(`/analysis?game=${x.id}`)}
-						aria-label={t(`analysis.result.${x.o === 'w' ? 'win' : x.o === 'l' ? 'loss' : 'draw'}`)}
-					></a>
-				{/each}
-			</div>
-		{/if}
-		{#if brilliant || mistakeCount > 0}
-			<div class="highlights card">
+		{#if form.length >= 3 || brilliant || mistakeCount > 0}
+			<BentoGrid label={t('analysis.title')} testid="games-bento">
+				{#if form.length >= 3}
+					<StatTile
+						tone="games"
+						size="m"
+						label={t('summary.form')}
+						value={formScore}
+						unit="%"
+						sub={t('summary.formLast', { n: form.length })}
+					>
+						<div
+							class="form-strip"
+							role="img"
+							aria-label={t('analysis.formAria', { n: form.length })}
+						>
+							{#each form as x, i (x.id)}
+								<a
+									class="fs {x.o}"
+									class:newest={i === form.length - 1}
+									href={resolve(`/analysis?game=${x.id}`)}
+									aria-label={t(
+										`analysis.result.${x.o === 'w' ? 'win' : x.o === 'l' ? 'loss' : 'draw'}`
+									)}
+								></a>
+							{/each}
+						</div>
+					</StatTile>
+				{/if}
 				{#if brilliant}
-					<a class="hl" href={resolve(`/analysis?game=${brilliant.gameId}`)}>
-						<span class="hl-ico brilliant">!!</span>
-						<span class="hl-text">{t('analysis.brilliantMoves', { n: brilliant.n })}</span>
-						<ChevronRight size={18} />
-					</a>
+					<StatTile
+						tone="coach"
+						size={mistakeCount > 0 ? 's' : 'm'}
+						label={t('analysis.brilliantLabel')}
+						value={brilliant.n}
+						sub={t('analysis.brilliantMoves', { n: brilliant.n })}
+						href={resolve(`/analysis?game=${brilliant.gameId}`)}
+					/>
 				{/if}
 				{#if mistakeCount > 0}
-					<a class="hl" href={resolve('/puzzles?mode=mistakes')}>
-						<span class="hl-ico practice"><Target size={17} /></span>
-						<span class="hl-text"
-							><b>{t('analysis.hubPractice', { n: mistakeCount })}</b>
-							<span>{t('analysis.hubPracticeText')}</span></span
-						>
-						<ChevronRight size={18} />
-					</a>
+					<StatTile
+						tone="play"
+						size={brilliant ? 's' : 'm'}
+						label={t('analysis.practiceLabel')}
+						value={mistakeCount}
+						sub={t('analysis.hubPracticeText')}
+						href={resolve('/puzzles?mode=mistakes')}
+						aria={t('analysis.hubPractice', { n: mistakeCount })}
+					/>
 				{/if}
-			</div>
+			</BentoGrid>
 		{/if}
 		{#if loading || gameCount > 0 || filter !== 'all'}
 			<div class="hub-actions">
@@ -1023,17 +1054,14 @@
 	.form-strip {
 		display: grid;
 		grid-template-columns: repeat(10, minmax(0, 1fr));
-		gap: 5px;
-		padding: 6px;
-		border-radius: var(--radius-m);
-		background: var(--surface);
-		border: 1px solid var(--line);
+		gap: 4px;
+		margin: 0.6rem 0 0.35rem;
 	}
 
 	.fs {
 		height: 26px;
-		border-radius: 6px;
-		background: color-mix(in srgb, var(--text-3) 55%, var(--surface-2));
+		border-radius: 7px;
+		background: color-mix(in srgb, var(--tile-text) 22%, transparent);
 	}
 
 	.fs.w {
@@ -1045,67 +1073,7 @@
 	}
 
 	.fs.newest {
-		box-shadow: inset 0 0 0 2px var(--warn);
-	}
-
-	.highlights {
-		display: flex;
-		flex-direction: column;
-		padding: 0.25rem 0.4rem;
-	}
-
-	.hl {
-		display: flex;
-		align-items: center;
-		gap: 0.75rem;
-		min-height: 56px;
-		padding: 0.5rem 0.5rem;
-		color: var(--text);
-	}
-
-	.hl + .hl {
-		border-top: 1px solid var(--line);
-	}
-
-	.hl :global(svg:last-child) {
-		flex: none;
-		color: var(--text-3);
-	}
-
-	.hl-ico {
-		flex: none;
-		display: grid;
-		place-items: center;
-		width: 36px;
-		height: 36px;
-		border-radius: 50%;
-		color: #fff;
-		font-family: var(--font-display);
-		font-weight: 800;
-		font-size: 0.9rem;
-		letter-spacing: -0.04em;
-	}
-
-	.hl-ico.brilliant {
-		background: var(--k-brilliant);
-	}
-
-	.hl-ico.practice {
-		background: var(--bad);
-	}
-
-	.hl-text {
-		flex: 1;
-		min-width: 0;
-		display: flex;
-		flex-direction: column;
-		font-size: 1rem;
-		line-height: 1.3;
-	}
-
-	.hl-text span {
-		font-size: 0.82rem;
-		color: var(--text-2);
+		box-shadow: inset 0 0 0 2px var(--tile-text);
 	}
 
 	.day {
@@ -1120,12 +1088,16 @@
 	}
 
 	.day h3 {
-		font-size: 0.95rem;
+		font-family: var(--font-num);
+		font-size: 0.74rem;
+		font-weight: 500;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
 		color: var(--text-2);
 	}
 
 	.day-score {
-		font-family: var(--font-mono);
+		font-family: var(--font-num);
 		font-size: 0.8rem;
 		color: var(--text-3);
 		word-spacing: 0.2rem;

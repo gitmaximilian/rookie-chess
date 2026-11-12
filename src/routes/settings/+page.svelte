@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { resolve } from '$app/paths';
 	import Download from '@lucide/svelte/icons/download';
 	import Upload from '@lucide/svelte/icons/upload';
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
@@ -375,9 +376,21 @@
 			><Trash2 size={18} /> {t('settings.resetBtn')}</button
 		>
 	</section>
+
+	<a class="version mono-label" href={resolve('/about')} data-testid="app-version"
+		>Rookie v{__APP_VERSION__} · {t('profile.about')}</a
+	>
 </div>
 
 <style>
+	.version {
+		align-self: center;
+		padding: 0.75rem 0.5rem;
+		color: var(--text-3);
+		text-transform: none;
+		letter-spacing: 0.02em;
+	}
+
 	.stack {
 		display: flex;
 		flex-direction: column;

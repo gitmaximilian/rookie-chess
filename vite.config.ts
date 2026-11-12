@@ -2,6 +2,9 @@ import { defineConfig } from 'vitest/config';
 import adapter from '@sveltejs/adapter-static';
 import { withPwa } from '@vite-pwa/sveltekit';
 import type { Plugin } from 'vite';
+import { readFileSync } from 'node:fs';
+
+const { version } = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8'));
 
 const isolationHeaders = {
 	'Cross-Origin-Opener-Policy': 'same-origin',
@@ -27,6 +30,8 @@ const crossOriginIsolation: Plugin = {
 };
 
 export default defineConfig({
+	// Versionsnummer für Einstellungen › Über
+	define: { __APP_VERSION__: JSON.stringify(version) },
 	plugins: [
 		crossOriginIsolation,
 		withPwa(

@@ -360,6 +360,8 @@ export const en = {
 		},
 		today: 'Today',
 		yesterday: 'Yesterday',
+		brilliantLabel: 'Brilliant',
+		practiceLabel: 'To practise',
 		brilliantMoves: (p: P) => `${p.n} brilliant ${s(p.n, 'move', 'moves')}`,
 		formAria: (p: P) => `Results of your last ${p.n} games`,
 		analyseShort: 'Analyse',

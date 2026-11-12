@@ -106,10 +106,9 @@
 		gap: 0.75rem;
 		min-height: 60px;
 		padding: 0.6rem 0.7rem 0.6rem 1rem;
-		border-radius: var(--radius-m);
+		border-radius: 18px;
 		background: var(--surface);
 		border: 1px solid var(--line);
-		box-shadow: var(--shadow-1);
 		color: var(--text);
 		overflow: hidden;
 		transition:
@@ -197,6 +196,7 @@
 		flex-direction: column;
 		align-items: flex-end;
 		gap: 0.05rem;
+		font-family: var(--font-num);
 		font-variant-numeric: tabular-nums;
 		font-size: 0.75rem;
 		line-height: 1.2;
@@ -204,6 +204,7 @@
 
 	.q b {
 		font-size: 1rem;
+		font-weight: 600;
 		color: var(--warn-text);
 	}
 
@@ -249,7 +250,8 @@
 
 	.opp-r {
 		flex: none;
-		font-size: 0.85rem;
+		font-family: var(--font-num);
+		font-size: 0.8rem;
 		font-variant-numeric: tabular-nums;
 		color: var(--text-3);
 	}

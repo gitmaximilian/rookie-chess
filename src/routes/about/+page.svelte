@@ -89,6 +89,7 @@
 <div class="wrap">
 	<section class="card block">
 		<h2>{t('about.licence')}</h2>
+		<p class="ver mono-label">Version {__APP_VERSION__}</p>
 		<p>{t('about.licenceText')}</p>
 		<p class="src">
 			<a
@@ -114,6 +115,10 @@
 </div>
 
 <style>
+	.ver {
+		color: var(--text-3);
+	}
+
 	.wrap {
 		display: flex;
 		flex-direction: column;

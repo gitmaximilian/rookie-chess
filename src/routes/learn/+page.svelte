@@ -110,7 +110,7 @@
 	{#if next}
 		<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- next.href ist bereits aufgelöst -->
 		<a
-			class="next card pressable"
+			class="next tone-learn pressable"
 			href={next.href}
 			style:--c={next.c}
 			aria-label="{t('learn.continue')}: {next.title}"
@@ -126,7 +126,7 @@
 	{/if}
 
 	<div class="paths">
-		<a class="path card pressable" style:--c="var(--c-puzzle)" href={resolve('/learn/basics')}>
+		<a class="path tone-puzzle pressable" href={resolve('/learn/basics')}>
 			<span class="p-icon"><GraduationCap size={22} /></span>
 			<span class="p-main">
 				<b>{t('basics.title')}</b>
@@ -141,11 +141,7 @@
 			</span>
 			<ChevronRight size={18} class="chev" />
 		</a>
-		<a
-			class="path card pressable"
-			style:--c="var(--c-play)"
-			href={resolve('/learn/basics?set=tactics')}
-		>
+		<a class="path tone-play pressable" href={resolve('/learn/basics?set=tactics')}>
 			<span class="p-icon"><Swords size={22} /></span>
 			<span class="p-main">
 				<b>{t('tactics.title')}</b>
@@ -162,7 +158,7 @@
 			</span>
 			<ChevronRight size={18} class="chev" />
 		</a>
-		<a class="path card pressable" style:--c="var(--c-learn)" href={resolve('/learn/openings')}>
+		<a class="path tone-learn pressable" href={resolve('/learn/openings')}>
 			<span class="p-icon"><BookOpen size={22} /></span>
 			<span class="p-main">
 				<b>{t('learn.openings')}</b>
@@ -225,16 +221,8 @@
 		display: flex;
 		align-items: center;
 		gap: 0.9rem;
-		padding: 1rem 1rem 1rem 1.15rem;
-		color: var(--text);
-		border: 1.5px solid color-mix(in srgb, var(--c) 40%, transparent);
-		background:
-			radial-gradient(
-				120% 140% at 100% 0%,
-				color-mix(in srgb, var(--c) 16%, transparent),
-				transparent 70%
-			),
-			var(--surface);
+		padding: 1.15rem 1.15rem 1.15rem 1.25rem;
+		border-radius: var(--radius-tile);
 	}
 
 	.n-text {
@@ -246,7 +234,7 @@
 	}
 
 	.n-text .eyebrow {
-		color: color-mix(in srgb, var(--c) 70%, var(--text));
+		color: var(--tone-ink);
 	}
 
 	.n-text b {
@@ -263,9 +251,8 @@
 		width: 46px;
 		height: 46px;
 		border-radius: 50%;
-		background: var(--c);
-		color: #fff;
-		box-shadow: 0 6px 16px color-mix(in srgb, var(--c) 35%, transparent);
+		background: var(--tone-ink);
+		color: var(--tone-bg);
 	}
 
 	.paths {
@@ -286,8 +273,8 @@
 		display: flex;
 		align-items: center;
 		gap: 0.85rem;
-		padding: 0.9rem 0.8rem 0.9rem 0.95rem;
-		color: var(--text);
+		padding: 1.1rem 0.9rem 1.1rem 1.1rem;
+		border-radius: var(--radius-tile);
 	}
 
 	.p-icon {
@@ -296,9 +283,9 @@
 		place-items: center;
 		width: 44px;
 		height: 44px;
-		border-radius: 13px;
-		background: var(--c);
-		color: #fff;
+		border-radius: 14px;
+		background: var(--tone-ink);
+		color: var(--tone-bg);
 	}
 
 	.p-main {
@@ -320,10 +307,10 @@
 	}
 
 	.p-bar {
-		height: 4px;
-		margin-top: 0.35rem;
+		height: 6px;
+		margin-top: 0.45rem;
 		border-radius: 999px;
-		background: var(--surface-2);
+		background: color-mix(in srgb, var(--tone-ink) 18%, transparent);
 		overflow: hidden;
 	}
 
@@ -331,11 +318,11 @@
 		display: block;
 		height: 100%;
 		border-radius: inherit;
-		background: var(--c);
+		background: var(--tone-ink);
 	}
 
 	.p-meta {
-		font-size: 0.76rem;
+		font-size: 0.78rem;
 		color: var(--text-2);
 	}
 
@@ -349,8 +336,9 @@
 		align-items: center;
 		gap: 0.2rem;
 		margin-right: 0.45rem;
-		font-weight: 700;
-		color: var(--warn-text);
+		font-family: var(--font-num);
+		font-weight: 600;
+		color: var(--tone-ink, var(--warn-text));
 	}
 
 	.all-stars {
@@ -381,7 +369,7 @@
 	.due {
 		font-family: inherit !important;
 		font-size: inherit !important;
-		color: var(--accent);
+		color: var(--tone-ink);
 	}
 
 	.sec-head {
@@ -409,7 +397,8 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 0.35rem;
-		font-weight: 650;
+		font-family: var(--font-num);
+		font-weight: 500;
 		color: var(--text-2);
 		white-space: nowrap;
 	}
