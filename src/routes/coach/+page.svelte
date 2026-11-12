@@ -194,7 +194,7 @@
 			// Erkenntnisse, die nicht schon als Ratschlag oben stehen
 			notes: findInsights(stats).filter((i) => i.key !== 'motif' && i.key !== 'weakPhase'),
 			puzzleHist: ratingRows.map((r) => ({ date: r.date, rating: Math.round(r.rating) })),
-			skills: skillProfile(stats, { rating: puzzle.rating, attempts: attempts.length }),
+			skills: skillProfile(stats),
 			// Genauigkeit der letzten 20 analysierten Partien, älteste links
 			accuracy: sorted
 				.map((g) => {
@@ -335,7 +335,7 @@
 		<section class="card block skills">
 			<div class="sk-head">
 				<h2>{t('skills.title')}</h2>
-				<p class="muted">{t('skills.text')}</p>
+				<p class="muted">{t('skills.text', { n: d.stats.analysed })}</p>
 			</div>
 			<SkillRadar values={d.skills} />
 			{#if weakSkill}
@@ -350,7 +350,7 @@
 					>
 				</div>
 			{:else}
-				<p class="muted">{t('skills.needData')}</p>
+				<p class="muted">{t('skills.needData', { n: d.stats.analysed })}</p>
 			{/if}
 		</section>
 

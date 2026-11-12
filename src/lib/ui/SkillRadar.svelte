@@ -37,7 +37,7 @@
 
 	function rawText(v: SkillValue): string {
 		if (v.raw === null) return t('skills.noData');
-		if (v.skill === 'tactics') return t('skills.rawRating', { n: v.raw });
+		if (v.skill === 'tactics') return t('skills.rawTactics', { n: v.raw.toFixed(1) });
 		if (v.skill === 'safety') return t('skills.rawBlunders', { n: v.raw.toFixed(1) });
 		return t('skills.rawAccuracy', { n: v.raw });
 	}

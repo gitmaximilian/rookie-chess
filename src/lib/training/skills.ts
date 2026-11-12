@@ -20,28 +20,34 @@ const clamp = (v: number) => Math.max(0, Math.min(100, Math.round(v)));
 
 /** Genauigkeit 50 % → 0, 75 % → 50, 100 % → 100 (Anfänger liegen meist bei 60–85 %) */
 export const accuracyScore = (acc: number) => clamp((acc - 50) * 2);
-/** 0 Patzer pro Partie → 100, 3 oder mehr → 0 */
-export const safetyScore = (blundersPerGame: number) => clamp(100 - (blundersPerGame * 100) / 3);
-/** Puzzle-Wertung 400 → 0, 1200 → 50, 2000 → 100 */
-export const tacticsScore = (rating: number) => clamp((rating - 400) / 16);
+/** Patzer pro Partie: 0 → 100, 2,5 → 50, 5 oder mehr → 0 */
+export const safetyScore = (blundersPerGame: number) => clamp(100 - blundersPerGame * 20);
+/** Taktische Fehler pro Partie (hängende Figuren, Gabeln, verpasste Gewinne/Matts): 0 → 100, 4+ → 0 */
+export const tacticsScore = (errorsPerGame: number) => clamp(100 - errorsPerGame * 25);
 
+/** Mindestanzahl analysierter Partien, bevor Taktik und Sicherheit gezeigt werden */
+export const MIN_GAMES = 3;
+
+/**
+ * Alle fünf Werte stammen nur aus deinen analysierten Partien – keine Puzzles, keine Schätzung.
+ */
 export function skillProfile(
-	stats: Pick<GameStats, 'phaseAccuracy' | 'perGame' | 'analysed'>,
-	puzzle: { rating: number; attempts: number }
+	stats: Pick<GameStats, 'phaseAccuracy' | 'perGame' | 'analysed' | 'motifs'>
 ): SkillValue[] {
 	const phase = (p: 'opening' | 'middlegame' | 'endgame'): SkillValue => {
 		const a = stats.phaseAccuracy[p];
 		return { skill: p, score: a === null ? null : accuracyScore(a), raw: a };
 	};
-	const bpg = stats.analysed ? stats.perGame.blunders : null;
+	const enough = stats.analysed >= MIN_GAMES;
+	const tactical = stats.motifs
+		.filter((m) => m.motif !== 'positional')
+		.reduce((sum, m) => sum + m.n, 0);
+	const tpg = enough ? Math.round((tactical / stats.analysed) * 10) / 10 : null;
+	const bpg = enough ? stats.perGame.blunders : null;
 	return [
 		phase('opening'),
 		phase('middlegame'),
-		{
-			skill: 'tactics',
-			score: puzzle.attempts >= 5 ? tacticsScore(puzzle.rating) : null,
-			raw: puzzle.attempts >= 5 ? Math.round(puzzle.rating) : null
-		},
+		{ skill: 'tactics', score: tpg === null ? null : tacticsScore(tpg), raw: tpg },
 		phase('endgame'),
 		{ skill: 'safety', score: bpg === null ? null : safetyScore(bpg), raw: bpg }
 	];

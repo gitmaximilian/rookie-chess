@@ -1237,7 +1237,7 @@ export const de: Shape<typeof en> = {
 	},
 	skills: {
 		title: 'Dein Spielerprofil',
-		text: 'Fünf Bereiche auf einer Skala von 0–100 – tippe auf eine Ecke für Details.',
+		text: (p) => `Nur aus deinen ${p.n} analysierten Partien – tippe auf eine Ecke für Details.`,
 		name: {
 			opening: 'Eröffnung',
 			middlegame: 'Mittelspiel',
@@ -1247,18 +1247,19 @@ export const de: Shape<typeof en> = {
 		},
 		noData: 'noch keine Daten',
 		rawAccuracy: (p) => `${p.n} % Genauigkeit`,
-		rawRating: (p) => `Puzzle-Wertung ${p.n}`,
+		rawTactics: (p) => `${p.n} taktische Fehler pro Partie`,
 		rawBlunders: (p) => `${p.n} Patzer pro Partie`,
 		weakest: (p) => `Schwächster Bereich: ${p.name}`,
 		tip: {
 			opening: 'Lerne eine Eröffnung Variante für Variante.',
 			middlegame: 'Tägliche Puzzles schärfen den Blick für Taktik.',
-			tactics: 'Löse jeden Tag Puzzles auf deinem Niveau.',
+			tactics:
+				'Prüfe jeden Zug auf hängende Figuren, Gabeln und Matts – und trainiere es mit Puzzles.',
 			endgame: 'Mit Endspieltechnik gewinnst du gewonnene Stellungen.',
 			safety: 'Spiel die Stellungen nach, in denen du gepatzt hast.'
 		},
-		needData:
-			'Spiel und analysiere ein paar Partien und löse einige Puzzles – dann füllt sich dein Profil.',
+		needData: (p) =>
+			`Dein Profil braucht mindestens 3 analysierte Partien (bisher ${p.n}). Öffne eine Partie unter „Games“, um sie zu analysieren.`,
 		trend: 'Genauigkeit je Partie',
 		trendText: (p) =>
 			`Deine letzten ${p.n} analysierten Partien – tippe auf eine Säule, um die Partie zu öffnen.`,

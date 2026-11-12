@@ -1180,7 +1180,7 @@ export const en = {
 	},
 	skills: {
 		title: 'Your skill profile',
-		text: 'Five areas on a scale of 0–100 – tap a corner for details.',
+		text: (p: P) => `Based only on your ${p.n} analysed games – tap a corner for details.`,
 		name: {
 			opening: 'Opening',
 			middlegame: 'Middlegame',
@@ -1190,17 +1190,18 @@ export const en = {
 		},
 		noData: 'no data yet',
 		rawAccuracy: (p: P) => `${p.n}% accuracy`,
-		rawRating: (p: P) => `puzzle rating ${p.n}`,
+		rawTactics: (p: P) => `${p.n} tactical mistakes per game`,
 		rawBlunders: (p: P) => `${p.n} blunders per game`,
 		weakest: (p: P) => `Weakest area: ${p.name}`,
 		tip: {
 			opening: 'Learn one opening line by line.',
 			middlegame: 'Daily puzzles train your eye for tactics.',
-			tactics: 'Solve puzzles at your level every day.',
+			tactics: 'Check every move for free pieces, forks and mates – then train it with puzzles.',
 			endgame: 'Basic endgame techniques win won positions.',
 			safety: 'Replay the positions where you blundered.'
 		},
-		needData: 'Play and analyse a few games and solve some puzzles – then your profile fills in.',
+		needData: (p: P) =>
+			`Your profile needs at least 3 analysed games (${p.n} so far). Open a game under Games to analyse it.`,
 		trend: 'Accuracy per game',
 		trendText: (p: P) => `Your last ${p.n} analysed games – tap a bar to open the game.`,
 		trendAria: (p: P) => `Accuracy of your last ${p.n} games, average ${p.avg}%`
