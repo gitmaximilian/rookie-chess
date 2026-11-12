@@ -461,10 +461,11 @@
 	}
 
 	.e-score {
-		font-family: var(--font-display);
+		font-family: var(--font-num);
 		font-size: 1.2rem;
-		font-weight: 750;
+		font-weight: 500;
 		font-variant-numeric: tabular-nums;
+		letter-spacing: -0.02em;
 	}
 
 	.e-depth {

@@ -424,10 +424,12 @@
 	}
 
 	.big-n {
-		font-family: var(--font-display);
+		font-family: var(--font-num);
 		font-size: 2.4rem;
-		font-weight: 750;
+		font-weight: 500;
 		line-height: 1;
+		font-variant-numeric: tabular-nums;
+		letter-spacing: -0.02em;
 	}
 
 	.big-n small {
@@ -582,9 +584,11 @@
 	}
 
 	.t-val {
-		font-family: var(--font-display);
+		font-family: var(--font-num);
 		font-size: 1.6rem;
-		font-weight: 750;
+		font-weight: 500;
+		font-variant-numeric: tabular-nums;
+		letter-spacing: -0.02em;
 	}
 
 	.t-val.bad {

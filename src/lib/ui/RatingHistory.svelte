@@ -3,6 +3,7 @@
 	import TrendingUp from '@lucide/svelte/icons/trending-up';
 	import TrendingDown from '@lucide/svelte/icons/trending-down';
 	import { summarise, byMonth, type RatingPoint, type RatingSeries } from '#lib/import/ratings.js';
+	import SegmentedSwitch from './bento/SegmentedSwitch.svelte';
 	import { t, intlLocale } from '#lib/i18n/i18n.svelte.js';
 
 	interface Series {
@@ -161,13 +162,11 @@
 				{/if}
 				<span class="lab">{series.label}</span>
 			</div>
-			<div class="seg" role="group" aria-label={t('stats.hist.range')}>
-				{#each RANGES as [r] (r)}
-					<button class:on={range === r} aria-pressed={range === r} onclick={() => (range = r)}
-						>{t(`stats.hist.${r}`)}</button
-					>
-				{/each}
-			</div>
+			<SegmentedSwitch
+				label={t('stats.hist.range')}
+				options={RANGES.map(([r]) => ({ value: r, label: t(`stats.hist.${r}`) }))}
+				bind:value={range}
+			/>
 		</div>
 		{#if view.pts.length < 2}
 			<p class="note">{t('stats.hist.fewInRange')}</p>
@@ -364,9 +363,10 @@
 	}
 
 	.cur {
-		font-family: var(--font-display);
+		font-family: var(--font-num);
 		font-size: 2.3rem;
-		font-weight: 760;
+		font-weight: 500;
+		letter-spacing: -0.03em;
 		line-height: 1;
 		font-variant-numeric: tabular-nums;
 	}
@@ -389,32 +389,6 @@
 		margin-top: 0.25rem;
 		font-size: 0.82rem;
 		color: var(--text-2);
-	}
-
-	.seg {
-		display: inline-flex;
-		padding: 3px;
-		border-radius: 11px;
-		background: var(--surface-2);
-	}
-
-	.seg button {
-		min-width: 2.6rem;
-		padding: 0.35rem 0.55rem;
-		border: none;
-		border-radius: 8px;
-		background: none;
-		font: inherit;
-		font-size: 0.8rem;
-		font-weight: 700;
-		color: var(--text-2);
-		cursor: pointer;
-	}
-
-	.seg button.on {
-		background: var(--surface);
-		color: var(--text);
-		box-shadow: var(--shadow-1);
 	}
 
 	.note {
@@ -592,10 +566,11 @@
 
 	dd {
 		margin: 0.15rem 0 0;
-		font-family: var(--font-display);
+		font-family: var(--font-num);
 		font-size: 1.3rem;
-		font-weight: 750;
+		font-weight: 500;
 		font-variant-numeric: tabular-nums;
+		letter-spacing: -0.02em;
 	}
 
 	dd small {

@@ -258,10 +258,11 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 0.35rem;
-		font-family: var(--font-display);
+		font-family: var(--font-num);
 		font-size: 1.5rem;
-		font-weight: 750;
+		font-weight: 500;
 		font-variant-numeric: tabular-nums;
+		letter-spacing: -0.02em;
 	}
 
 	.score {
@@ -274,6 +275,8 @@
 		background: var(--surface);
 		border: 1px solid var(--line);
 		transition: color var(--dur) var(--ease-out);
+		font-variant-numeric: tabular-nums;
+		letter-spacing: -0.02em;
 	}
 
 	.clock.low {

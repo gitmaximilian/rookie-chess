@@ -498,7 +498,7 @@
 
 	@media (min-width: 760px) {
 		.bp-grid {
-			grid-template-columns: 260px 1fr;
+			grid-template-columns: 260px minmax(0, 1fr);
 			align-items: start;
 		}
 	}
@@ -617,10 +617,12 @@
 		margin-top: 0.1rem;
 	}
 
+	/* gleiche Form wie SegmentedSwitch */
 	.seg {
 		display: flex;
+		gap: 2px;
 		padding: 3px;
-		border-radius: 12px;
+		border-radius: 999px;
 		background: var(--surface-2);
 	}
 
@@ -630,9 +632,11 @@
 		align-items: center;
 		justify-content: center;
 		gap: 0.4rem;
+		min-width: 0;
 		min-height: 40px;
+		padding: 0 0.4rem;
 		border: none;
-		border-radius: 9px;
+		border-radius: 999px;
 		background: none;
 		font-weight: 600;
 		font-size: 0.92rem;
@@ -642,9 +646,8 @@
 	}
 
 	.seg button.on {
-		background: var(--surface);
-		color: var(--text);
-		box-shadow: var(--shadow-1);
+		background: var(--text);
+		color: var(--bg);
 	}
 
 	.lang {

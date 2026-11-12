@@ -52,9 +52,11 @@
 	}
 
 	.num {
-		font-family: var(--font-display);
-		font-weight: 700;
+		font-family: var(--font-num);
+		font-weight: 500;
 		font-size: 0.82rem;
 		color: var(--text-2);
+		font-variant-numeric: tabular-nums;
+		letter-spacing: -0.02em;
 	}
 </style>

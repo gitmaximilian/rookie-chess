@@ -183,11 +183,12 @@
 	}
 
 	.val {
-		font-family: var(--font-display);
+		font-family: var(--font-num);
 		font-size: 17px;
-		font-weight: 750;
+		font-weight: 500;
 		fill: var(--text);
 		font-variant-numeric: tabular-nums;
+		letter-spacing: -0.02em;
 	}
 
 	.tip {

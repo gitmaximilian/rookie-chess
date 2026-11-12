@@ -33,6 +33,30 @@
 	--c-coach: #2f6fd0;
 	--c-coach-soft: #e1ebfb;
 
+	/* ── Bento: Pastellflächen je Bereich (Kontraste: node scripts/contrast.mjs) ── */
+	--tile-text: #1c1a17;
+	--tile-text-2: #463f37;
+	--tile-play: #fcdcd2;
+	--tile-play-ink: #8a2a15;
+	--tile-games: #f6e5c3;
+	--tile-games-ink: #6b4800;
+	--tile-coach: #d9e6fb;
+	--tile-coach-ink: #1d4f9e;
+	--tile-puzzle: #e5e0fd;
+	--tile-puzzle-ink: #4535b8;
+	--tile-learn: #cfeee4;
+	--tile-learn-ink: #0b5c50;
+	--tile-stars: #faefb3;
+	--tile-stars-ink: #664e00;
+	--tile-neutral: #ece6dc;
+	--tile-neutral-ink: #4f4940;
+
+	/* Tab-Leiste: dunkel und ruhig, aktiver Tab als Pastell-Pille */
+	--tabbar-bg: #1c1a17;
+	--tabbar-fg: #b4ada2;
+	--tabbar-active-bg: #f3efe8;
+	--tabbar-active-fg: #1c1a17;
+
 	/* Status */
 	--good: #2b9a66;
 	--warn: #d99a1c;
@@ -57,15 +81,21 @@
 	/* Form */
 	--radius-s: 10px;
 	--radius-m: 14px;
-	--radius-l: 22px;
+	--radius-l: 24px;
 	--radius-xl: 28px;
+	/* Bento */
+	--radius-tile: 28px;
+	--tile-pad: 1.1rem;
+	--bento-gap: 0.65rem;
 	--shadow-1: 0 1px 2px rgb(28 26 23 / 0.04), 0 2px 8px rgb(28 26 23 / 0.04);
 	--shadow-2: 0 2px 6px rgb(28 26 23 / 0.05), 0 12px 32px rgb(28 26 23 / 0.08);
 
 	/* Typografie */
 	--font-display: 'Bricolage Grotesque Variable', ui-rounded, system-ui, sans-serif;
 	--font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', system-ui, sans-serif;
-	--font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+	--font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+	/* Zahlen, Kennzahl-Labels, Kachel-Überschriften, kurze Statuszeilen – nie Fließtext */
+	--font-num: var(--font-mono);
 
 	/* Bewegung */
 	--ease-out: cubic-bezier(0.22, 1, 0.36, 1);
@@ -115,6 +145,26 @@
 		--c-analysis-soft: rgb(242 181 68 / 0.14);
 		--c-coach: #6ea6ff;
 		--c-coach-soft: rgb(110 166 255 / 0.15);
+		--tile-text: #f3efe8;
+		--tile-text-2: #d2cbc0;
+		--tile-play: #3b2620;
+		--tile-play-ink: #ffb39f;
+		--tile-games: #352a17;
+		--tile-games-ink: #f2c66e;
+		--tile-coach: #1f2a3d;
+		--tile-coach-ink: #a9c8ff;
+		--tile-puzzle: #29243f;
+		--tile-puzzle-ink: #c3b9ff;
+		--tile-learn: #17322d;
+		--tile-learn-ink: #7fdccb;
+		--tile-stars: #33301b;
+		--tile-stars-ink: #eed96a;
+		--tile-neutral: #26231f;
+		--tile-neutral-ink: #c9c2b7;
+		--tabbar-bg: #0b0a09;
+		--tabbar-fg: #a8a196;
+		--tabbar-active-bg: #f3efe8;
+		--tabbar-active-fg: #1c1a17;
 		--shadow-1: 0 1px 2px rgb(0 0 0 / 0.3);
 		--shadow-2: 0 2px 6px rgb(0 0 0 / 0.3), 0 12px 32px rgb(0 0 0 / 0.35);
 		color-scheme: dark;
@@ -151,6 +201,26 @@
 	--c-analysis-soft: rgb(242 181 68 / 0.14);
 	--c-coach: #6ea6ff;
 	--c-coach-soft: rgb(110 166 255 / 0.15);
+	--tile-text: #f3efe8;
+	--tile-text-2: #d2cbc0;
+	--tile-play: #3b2620;
+	--tile-play-ink: #ffb39f;
+	--tile-games: #352a17;
+	--tile-games-ink: #f2c66e;
+	--tile-coach: #1f2a3d;
+	--tile-coach-ink: #a9c8ff;
+	--tile-puzzle: #29243f;
+	--tile-puzzle-ink: #c3b9ff;
+	--tile-learn: #17322d;
+	--tile-learn-ink: #7fdccb;
+	--tile-stars: #33301b;
+	--tile-stars-ink: #eed96a;
+	--tile-neutral: #26231f;
+	--tile-neutral-ink: #c9c2b7;
+	--tabbar-bg: #0b0a09;
+	--tabbar-fg: #a8a196;
+	--tabbar-active-bg: #f3efe8;
+	--tabbar-active-fg: #1c1a17;
 	--shadow-1: 0 1px 2px rgb(0 0 0 / 0.3);
 	--shadow-2: 0 2px 6px rgb(0 0 0 / 0.3), 0 12px 32px rgb(0 0 0 / 0.35);
 	color-scheme: dark;
@@ -199,6 +269,19 @@ h4 {
 p {
 	margin: 0;
 	text-wrap: pretty;
+}
+
+/* Lange deutsche Wörter sauber trennen statt hässlich umbrechen */
+p,
+li,
+h1,
+h2,
+h3,
+h4 {
+	hyphens: auto;
+	-webkit-hyphens: auto;
+	overflow-wrap: break-word;
+	hyphenate-limit-chars: 10 4 4;
 }
 
 a {
@@ -255,7 +338,98 @@ html[data-first-run] .sidebar {
 	background: var(--surface);
 	border: 1px solid var(--line);
 	border-radius: var(--radius-l);
-	box-shadow: var(--shadow-1);
+}
+
+/* ── Bento: Bereichsfarben als Pastellfläche ──
+   Setzt Fläche und Textfarben; verschachtelte Bausteine erben die dunkleren Grautöne,
+   damit Text auf Pastell immer ≥ 4,5:1 bleibt. */
+.tone-play,
+.tone-games,
+.tone-coach,
+.tone-puzzle,
+.tone-learn,
+.tone-stars,
+.tone-neutral {
+	background: var(--tone-bg);
+	color: var(--tile-text);
+	--text: var(--tile-text);
+	--text-2: var(--tile-text-2);
+	--text-3: var(--tile-text-2);
+	--line: color-mix(in srgb, var(--tile-text) 10%, transparent);
+	--surface-2: color-mix(in srgb, var(--tile-text) 7%, transparent);
+}
+.tone-play {
+	--tone-bg: var(--tile-play);
+	--tone-ink: var(--tile-play-ink);
+}
+.tone-games {
+	--tone-bg: var(--tile-games);
+	--tone-ink: var(--tile-games-ink);
+}
+.tone-coach {
+	--tone-bg: var(--tile-coach);
+	--tone-ink: var(--tile-coach-ink);
+}
+.tone-puzzle {
+	--tone-bg: var(--tile-puzzle);
+	--tone-ink: var(--tile-puzzle-ink);
+}
+.tone-learn {
+	--tone-bg: var(--tile-learn);
+	--tone-ink: var(--tile-learn-ink);
+}
+.tone-stars {
+	--tone-bg: var(--tile-stars);
+	--tone-ink: var(--tile-stars-ink);
+}
+.tone-neutral {
+	--tone-bg: var(--tile-neutral);
+	--tone-ink: var(--tile-neutral-ink);
+}
+
+/* ── Bento-Raster (siehe lib/ui/bento/BentoGrid.svelte) ── */
+.bento {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: var(--bento-gap);
+}
+
+.bento.dense {
+	grid-auto-flow: row dense;
+}
+
+.bento > [data-size='m'],
+.bento > [data-size='l'],
+.bento > [data-size='full'] {
+	grid-column: 1 / -1;
+}
+
+@media (min-width: 700px) {
+	.bento {
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+	}
+	.bento > [data-size='m'] {
+		grid-column: span 2;
+	}
+	.bento > [data-size='l'] {
+		grid-column: span 2;
+		grid-row: span 2;
+	}
+}
+
+/* Zahlen und kurze Labels in Monospace */
+.num {
+	font-family: var(--font-num);
+	font-variant-numeric: tabular-nums;
+	letter-spacing: -0.02em;
+}
+
+.mono-label {
+	font-family: var(--font-num);
+	font-size: 0.72rem;
+	font-weight: 500;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
 }
 
 .pressable {
@@ -336,8 +510,9 @@ html[data-first-run] .sidebar {
 }
 
 .eyebrow {
-	font-size: 0.78rem;
-	font-weight: 650;
+	font-family: var(--font-num);
+	font-size: 0.74rem;
+	font-weight: 500;
 	letter-spacing: 0.06em;
 	text-transform: uppercase;
 	color: var(--text-3);

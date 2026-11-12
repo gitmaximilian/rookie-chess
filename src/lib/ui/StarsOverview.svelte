@@ -100,9 +100,11 @@
 	}
 
 	.big b {
-		font-family: var(--font-display);
+		font-family: var(--font-num);
 		font-size: 1.3rem;
 		color: var(--text);
+		font-variant-numeric: tabular-nums;
+		letter-spacing: -0.02em;
 	}
 
 	.big small {

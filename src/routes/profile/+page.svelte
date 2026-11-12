@@ -280,10 +280,12 @@
 	}
 
 	.t-value {
-		font-family: var(--font-display);
+		font-family: var(--font-num);
 		font-size: 1.6rem;
-		font-weight: 700;
+		font-weight: 500;
 		line-height: 1.1;
+		font-variant-numeric: tabular-nums;
+		letter-spacing: -0.02em;
 	}
 
 	.t-label {

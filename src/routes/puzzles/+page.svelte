@@ -594,11 +594,13 @@
 	}
 
 	.r-val {
-		font-family: var(--font-display);
+		font-family: var(--font-num);
 		font-size: 1.5rem;
-		font-weight: 700;
+		font-weight: 500;
 		line-height: 1.1;
 		color: var(--c-puzzle);
+		font-variant-numeric: tabular-nums;
+		letter-spacing: -0.02em;
 	}
 
 	.prov {
@@ -635,8 +637,10 @@
 		gap: 0.35rem;
 		padding: 0 0.85rem;
 		color: var(--accent);
-		font-family: var(--font-display);
+		font-family: var(--font-num);
 		font-size: 1.1rem;
+		font-variant-numeric: tabular-nums;
+		letter-spacing: -0.02em;
 	}
 
 	.modes {

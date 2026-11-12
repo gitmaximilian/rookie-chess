@@ -945,9 +945,11 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 0.3rem;
-		font-family: var(--font-display);
-		font-weight: 700;
+		font-family: var(--font-num);
+		font-weight: 500;
 		color: var(--accent);
+		font-variant-numeric: tabular-nums;
+		letter-spacing: -0.02em;
 	}
 
 	.empty {

@@ -124,9 +124,11 @@
 		background: var(--surface);
 		border: 1px solid var(--line);
 		color: var(--text-3);
-		font-family: var(--font-display);
+		font-family: var(--font-num);
 		font-size: 1.05rem;
 		box-shadow: var(--shadow-1);
+		font-variant-numeric: tabular-nums;
+		letter-spacing: -0.02em;
 	}
 
 	.streak.lit {

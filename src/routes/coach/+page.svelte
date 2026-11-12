@@ -641,10 +641,11 @@
 	}
 
 	.k-val {
-		font-family: var(--font-display);
+		font-family: var(--font-num);
 		font-size: 1.3rem;
 		font-variant-numeric: tabular-nums;
 		text-align: right;
+		letter-spacing: -0.02em;
 	}
 
 	.chip {
@@ -687,9 +688,11 @@
 	}
 
 	.cov-pct {
-		font-family: var(--font-display);
-		font-weight: 750;
+		font-family: var(--font-num);
+		font-weight: 500;
 		color: var(--c-coach);
+		font-variant-numeric: tabular-nums;
+		letter-spacing: -0.02em;
 	}
 
 	.cov-bar {

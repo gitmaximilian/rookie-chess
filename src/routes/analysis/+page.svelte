@@ -1553,10 +1553,12 @@
 
 	.sum-acc b {
 		text-align: center;
-		font-family: var(--font-display);
+		font-family: var(--font-num);
 		font-size: 1.35rem;
-		font-weight: 750;
+		font-weight: 500;
 		color: var(--text-2);
+		font-variant-numeric: tabular-nums;
+		letter-spacing: -0.02em;
 	}
 
 	.sum-acc b.me {

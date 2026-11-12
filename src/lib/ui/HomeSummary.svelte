@@ -226,11 +226,12 @@
 	}
 
 	.val {
-		font-family: var(--font-display);
+		font-family: var(--font-num);
 		font-size: 1.6rem;
-		font-weight: 750;
+		font-weight: 500;
 		line-height: 1.15;
 		font-variant-numeric: tabular-nums;
+		letter-spacing: -0.02em;
 	}
 
 	.star {

@@ -1,5 +1,8 @@
 <script lang="ts">
 	import '@fontsource-variable/bricolage-grotesque';
+	import '@fontsource/ibm-plex-mono/latin-400.css';
+	import '@fontsource/ibm-plex-mono/latin-500.css';
+	import '@fontsource/ibm-plex-mono/latin-600.css';
 	import '../app.css';
 	import { onMount } from 'svelte';
 	import { afterNavigate } from '$app/navigation';
