@@ -270,7 +270,9 @@
 				<li>
 					<span class="k-ico"><Trophy size={17} /></span>
 					<span class="k-lbl"
-						>{t('coachTab.winRate')}<small>{t('coachTab.lastN', { n: d.last.length })}</small></span
+						>{t('coachTab.winRate')}{#if d.last.length}<small
+								>{t('coachTab.lastN', { n: d.last.length })}</small
+							>{/if}</span
 					>
 					<b class="k-val">{winRate === null ? '–' : `${winRate}%`}</b>
 					<span></span>
