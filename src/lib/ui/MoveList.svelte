@@ -135,7 +135,8 @@
 
 	.no {
 		color: var(--text-3);
-		font-size: 0.85rem;
+		font-family: var(--font-num);
+		font-size: 0.8rem;
 		padding-left: 0.5rem;
 	}
 

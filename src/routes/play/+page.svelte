@@ -1465,7 +1465,7 @@
 	.seg {
 		display: flex;
 		padding: 3px;
-		border-radius: 12px;
+		border-radius: 999px;
 		background: var(--surface-2);
 	}
 
@@ -1477,7 +1477,7 @@
 		gap: 0.4rem;
 		min-height: 38px;
 		border: none;
-		border-radius: 9px;
+		border-radius: 999px;
 		background: none;
 		font-weight: 600;
 		font-size: 0.9rem;
@@ -1489,9 +1489,8 @@
 	}
 
 	.seg button.on {
-		background: var(--surface);
-		color: var(--text);
-		box-shadow: var(--shadow-1);
+		background: var(--text);
+		color: var(--bg);
 	}
 
 	.swatch {
@@ -1628,9 +1627,9 @@
 	}
 
 	.clock {
-		font-family: var(--font-mono);
+		font-family: var(--font-num);
 		font-size: 1.15rem;
-		font-weight: 650;
+		font-weight: 600;
 		padding: 0.3rem 0.7rem;
 		border-radius: 10px;
 		background: var(--surface-2);

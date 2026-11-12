@@ -1567,7 +1567,8 @@
 	.sk-n {
 		align-self: center;
 		text-align: center;
-		font-weight: 750;
+		font-family: var(--font-num);
+		font-weight: 600;
 		font-variant-numeric: tabular-nums;
 		color: color-mix(in srgb, var(--k) 75%, var(--text));
 	}

@@ -22,7 +22,8 @@
 				href={resolve(item.href)}
 				class="item"
 				class:active
-				style:--item-color={item.color}
+				style:--item-bg="var(--tile-{item.tone})"
+				style:--item-ink="var(--tile-{item.tone}-ink)"
 				aria-current={active ? 'page' : undefined}
 			>
 				<span class="icon"><item.icon size={20} strokeWidth={active ? 2.3 : 1.9} /></span>
@@ -35,7 +36,8 @@
 		href={resolve('/profile')}
 		class="item profile"
 		class:active={page.url.pathname.startsWith('/profile')}
-		style:--item-color="var(--text-2)"
+		style:--item-bg="var(--tile-neutral)"
+		style:--item-ink="var(--tile-neutral-ink)"
 		aria-current={page.url.pathname.startsWith('/profile') ? 'page' : undefined}
 	>
 		<span class="icon"><UserRound size={20} /></span>
@@ -45,7 +47,8 @@
 		href={resolve('/settings')}
 		class="item settings"
 		class:active={page.url.pathname.startsWith('/settings')}
-		style:--item-color="var(--text-2)"
+		style:--item-bg="var(--tile-neutral)"
+		style:--item-ink="var(--tile-neutral-ink)"
 		aria-current={page.url.pathname.startsWith('/settings') ? 'page' : undefined}
 	>
 		<span class="icon"><Settings size={20} /></span>
@@ -98,9 +101,9 @@
 		display: flex;
 		align-items: center;
 		gap: 0.75rem;
-		height: 42px;
+		height: 44px;
 		padding: 0 0.6rem;
-		border-radius: var(--radius-m);
+		border-radius: 999px;
 		color: var(--text-2);
 		font-weight: 560;
 		transition:
@@ -125,14 +128,12 @@
 	}
 
 	.item.active {
-		background: var(--surface);
-		color: var(--text);
-		box-shadow: var(--shadow-1);
+		background: var(--item-bg);
+		color: var(--tile-text);
 	}
 
 	.item.active .icon {
-		background: var(--item-color);
-		color: #fff;
+		color: var(--item-ink);
 	}
 
 	.foot a {
@@ -156,7 +157,8 @@
 
 	.foot {
 		padding: 0 0.6rem;
-		font-size: 0.78rem;
+		font-family: var(--font-num);
+		font-size: 0.7rem;
 		color: var(--text-3);
 	}
 </style>

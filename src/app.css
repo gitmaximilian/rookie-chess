@@ -567,7 +567,7 @@ html[data-first-run] .sidebar {
 	flex-direction: column;
 	gap: 0.45rem;
 	padding: 0.55rem;
-	border-radius: 20px;
+	border-radius: var(--radius-l);
 	background: var(--surface);
 	border: 1px solid var(--line);
 	box-shadow: 0 8px 28px rgb(0 0 0 / 0.16);

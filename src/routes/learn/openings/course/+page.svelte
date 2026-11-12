@@ -991,8 +991,9 @@
 
 	.step-count {
 		flex: 1;
-		font-size: 0.85rem;
-		font-weight: 650;
+		font-family: var(--font-num);
+		font-size: 0.82rem;
+		font-weight: 500;
 		color: var(--text-2);
 		font-variant-numeric: tabular-nums;
 	}

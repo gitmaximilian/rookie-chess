@@ -14,15 +14,35 @@ export interface NavItem {
 	icon: Component;
 	/** CSS-Variable der Bereichsfarbe */
 	color: string;
+	/** Pastellfläche des Bereichs (Bento-Tokens in app.css) */
+	tone: 'play' | 'games' | 'coach' | 'puzzle' | 'learn';
 }
 
 export const navItems: NavItem[] = [
-	{ href: '/', label: 'nav.home', icon: House, color: 'var(--accent)' },
-	{ href: '/analysis', label: 'nav.games', icon: ChartLine, color: 'var(--c-analysis)' },
-	{ href: '/coach', label: 'nav.coach', icon: Brain, color: 'var(--c-coach)' },
-	{ href: '/play', label: 'nav.play', icon: ChessKnight, color: 'var(--c-play)' },
-	{ href: '/puzzles', label: 'nav.puzzles', icon: Puzzle, color: 'var(--c-puzzle)' },
-	{ href: '/learn', label: 'nav.learn', icon: GraduationCap, color: 'var(--c-learn)' }
+	{ href: '/', label: 'nav.home', icon: House, color: 'var(--accent)', tone: 'play' },
+	{
+		href: '/analysis',
+		label: 'nav.games',
+		icon: ChartLine,
+		color: 'var(--c-analysis)',
+		tone: 'games'
+	},
+	{ href: '/coach', label: 'nav.coach', icon: Brain, color: 'var(--c-coach)', tone: 'coach' },
+	{ href: '/play', label: 'nav.play', icon: ChessKnight, color: 'var(--c-play)', tone: 'play' },
+	{
+		href: '/puzzles',
+		label: 'nav.puzzles',
+		icon: Puzzle,
+		color: 'var(--c-puzzle)',
+		tone: 'puzzle'
+	},
+	{
+		href: '/learn',
+		label: 'nav.learn',
+		icon: GraduationCap,
+		color: 'var(--c-learn)',
+		tone: 'learn'
+	}
 ];
 
 /**

@@ -12,7 +12,8 @@
 			href={resolve(item.href)}
 			class="tab"
 			class:active
-			style:--tab-color={item.color}
+			style:--tab-bg="var(--tile-{item.tone})"
+			style:--tab-ink="var(--tile-{item.tone}-ink)"
 			aria-current={active ? 'page' : undefined}
 		>
 			<span class="icon-wrap">
@@ -24,6 +25,8 @@
 </nav>
 
 <style>
+	/* Dunkel und ruhig in beiden Modi; aktiver Tab als Pastell-Pille in Bereichsfarbe.
+	   Höhe unverändert (--tabbar-h), damit Dock-Reservierung und Brettgröße gleich bleiben. */
 	.tabbar {
 		position: fixed;
 		inset: auto 0 0 0;
@@ -32,10 +35,9 @@
 		grid-template-columns: repeat(6, 1fr);
 		height: calc(var(--tabbar-h) + var(--safe-bottom));
 		padding: 6px max(4px, var(--safe-left)) var(--safe-bottom) max(4px, var(--safe-right));
-		background: var(--surface-glass);
-		backdrop-filter: saturate(180%) blur(20px);
-		-webkit-backdrop-filter: saturate(180%) blur(20px);
-		border-top: 1px solid var(--line);
+		background: var(--tabbar-bg);
+		border-top: 1px solid rgb(255 255 255 / 0.06);
+		color-scheme: dark;
 	}
 
 	.tab {
@@ -43,9 +45,9 @@
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		gap: 2px;
-		color: var(--text-3);
-		font-size: 0.75rem;
+		gap: 3px;
+		color: var(--tabbar-fg);
+		font-size: 0.72rem;
 		font-weight: 600;
 		letter-spacing: 0.01em;
 		transition: color var(--dur) var(--ease-out);
@@ -57,7 +59,7 @@
 		position: relative;
 		display: grid;
 		place-items: center;
-		width: 46px;
+		width: 50px;
 		height: 30px;
 		border-radius: 999px;
 		transition: transform var(--dur) var(--ease-spring);
@@ -68,7 +70,7 @@
 		position: absolute;
 		inset: 0;
 		border-radius: inherit;
-		background: color-mix(in srgb, var(--tab-color) 14%, transparent);
+		background: var(--tab-bg);
 		transform: scale(0.4);
 		opacity: 0;
 		transition:
@@ -81,7 +83,11 @@
 	}
 
 	.tab.active {
-		color: var(--tab-color);
+		color: var(--tabbar-active-bg);
+	}
+
+	.tab.active .icon-wrap {
+		color: var(--tab-ink);
 	}
 
 	.tab.active .icon-wrap::before {

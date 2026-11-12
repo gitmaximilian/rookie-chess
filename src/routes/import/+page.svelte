@@ -425,7 +425,7 @@
 	.seg {
 		display: flex;
 		padding: 3px;
-		border-radius: 12px;
+		border-radius: 999px;
 		background: var(--surface-2);
 	}
 
@@ -433,7 +433,7 @@
 		flex: 1;
 		min-height: 40px;
 		border: none;
-		border-radius: 9px;
+		border-radius: 999px;
 		background: none;
 		font-weight: 650;
 		color: var(--text-2);
@@ -441,9 +441,8 @@
 	}
 
 	.seg button.on {
-		background: var(--surface);
-		color: var(--text);
-		box-shadow: var(--shadow-1);
+		background: var(--text);
+		color: var(--bg);
 	}
 
 	.field {
