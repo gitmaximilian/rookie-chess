@@ -1202,6 +1202,14 @@ export const en = {
 		},
 		needData: (p: P) =>
 			`Your profile needs at least 3 analysed games (${p.n} so far). Open a game under Games to analyse it.`,
+		coverage: (p: P) => `${p.n} of ${p.m} ${s(p.m, 'game', 'games')} analysed`,
+		onlyAnalysed: (p: P) => `Only analysed games shape this profile. ${p.n} still to go.`,
+		analyseNext: (p: P) => `Analyse next ${p.n}`,
+		analyseAll: (p: P) => `Analyse all ${p.n}`,
+		running: (p: P) => `Analysing … ${p.n} of ${p.m} done.`,
+		keepOpen: 'Keep the app open – Stockfish runs on your device.',
+		stop: 'Stop',
+		allDone: 'All your games are analysed – the profile uses every one of them.',
 		trend: 'Accuracy per game',
 		trendText: (p: P) => `Your last ${p.n} analysed games – tap a bar to open the game.`,
 		trendAria: (p: P) => `Accuracy of your last ${p.n} games, average ${p.avg}%`

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import { resolve } from '$app/paths';
 	import TrendingUp from '@lucide/svelte/icons/trending-up';
 	import TrendingDown from '@lucide/svelte/icons/trending-down';
@@ -9,6 +9,8 @@
 	import Puzzle from '@lucide/svelte/icons/puzzle';
 	import Flame from '@lucide/svelte/icons/flame';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
+	import Play from '@lucide/svelte/icons/play';
+	import Square from '@lucide/svelte/icons/square';
 	import ChartLine from '@lucide/svelte/icons/chart-line';
 	import ChessKnight from '@lucide/svelte/icons/chess-knight';
 	import PageHeader from '#lib/ui/PageHeader.svelte';
@@ -34,7 +36,7 @@
 	import { themeName } from '#lib/data/themes.js';
 	import { getPuzzleRating, isProvisional } from '#lib/training/rating.js';
 	import { currentStrength } from '#lib/training/planData.js';
-	import { getLinked } from '#lib/import/sync.svelte.js';
+	import { getLinked, syncState, analyseBatch, pauseBackground } from '#lib/import/sync.svelte.js';
 	import { t } from '#lib/i18n/i18n.svelte.js';
 
 	interface Advice {
@@ -60,6 +62,7 @@
 		puzzleHist: { date: number; rating: number }[];
 		skills: SkillValue[];
 		accuracy: AccPoint[];
+		coverage: { done: number; total: number };
 	}
 
 	let d = $state<Data | null>(null);
@@ -78,7 +81,27 @@
 		return s.startsWith('stats.') ? k : s;
 	};
 
-	onMount(async () => {
+	let busy = false;
+	let again = false;
+	/** Daten laden; läuft während einer Analyse mehrfach – überlappende Aufrufe werden zusammengefasst */
+	async function load() {
+		if (busy) {
+			again = true;
+			return;
+		}
+		busy = true;
+		try {
+			await loadNow();
+		} finally {
+			busy = false;
+			if (again) {
+				again = false;
+				void load();
+			}
+		}
+	}
+
+	async function loadNow() {
 		try {
 			await loadOpenings();
 		} catch {
@@ -93,6 +116,8 @@
 			db.mistakes.count(),
 			db.ratings.orderBy('date').toArray()
 		]);
+		// nur Partien, die sich analysieren lassen (beendet, mehr als ein paar Züge)
+		const analysable = games.filter((g) => g.result !== '*' && g.moves.length >= 6);
 		const stats = computeStats(games, (m) => openingFor(m)?.name ?? null);
 		const sorted = [...games].sort((a, b) => b.date - a.date);
 		const last = sorted
@@ -206,9 +231,25 @@
 				})
 				.filter((x): x is AccPoint => x !== null)
 				.slice(0, 20)
-				.reverse()
+				.reverse(),
+			coverage: {
+				done: analysable.filter((g) => g.analysis?.done).length,
+				total: analysable.length
+			}
 		};
+	}
+
+	onMount(load);
+	// während einer Analyse das Profil nach jeder fertigen Partie auffrischen
+	$effect(() => {
+		void syncState.batchDone;
+		void syncState.analysing;
+		untrack(() => {
+			if (d) void load();
+		});
 	});
+
+	const pendingN = $derived(d ? d.coverage.total - d.coverage.done : 0);
 
 	const counts = $derived.by(() => {
 		const c = { w: 0, d: 0, l: 0, streak: 0 };
@@ -257,6 +298,56 @@
 	{#snippet action()}<AvatarButton />{/snippet}
 </PageHeader>
 <CoachTabs active="overview" />
+
+{#snippet coverage()}
+	{#if d && d.coverage.total}
+		{@const c = d.coverage}
+		<div class="cov" class:run={syncState.analysing}>
+			<div class="cov-head">
+				<b>{t('skills.coverage', { n: c.done, m: c.total })}</b>
+				{#if c.total}<span class="cov-pct">{Math.round((c.done / c.total) * 100)}%</span>{/if}
+			</div>
+			<div
+				class="cov-bar"
+				role="progressbar"
+				aria-valuemin={0}
+				aria-valuemax={c.total}
+				aria-valuenow={c.done}
+				aria-label={t('skills.coverage', { n: c.done, m: c.total })}
+			>
+				<span style:width="{c.total ? (c.done / c.total) * 100 : 0}%"></span>
+			</div>
+			{#if syncState.analysing && syncState.batchTotal}
+				<p class="cov-text">
+					{t('skills.running', { n: syncState.batchDone, m: syncState.batchTotal })}
+					{t('skills.keepOpen')}
+				</p>
+				<button class="btn small secondary" onclick={pauseBackground}
+					><Square size={13} /> {t('skills.stop')}</button
+				>
+			{:else if pendingN > 0}
+				<p class="cov-text">{t('skills.onlyAnalysed', { n: pendingN })}</p>
+				<div class="cov-btns">
+					<button
+						class="btn small"
+						onclick={() => void analyseBatch(10)}
+						disabled={syncState.analysing}
+						><Play size={14} /> {t('skills.analyseNext', { n: Math.min(10, pendingN) })}</button
+					>
+					{#if pendingN > 10}
+						<button
+							class="btn small secondary"
+							onclick={() => void analyseBatch(pendingN)}
+							disabled={syncState.analysing}>{t('skills.analyseAll', { n: pendingN })}</button
+						>
+					{/if}
+				</div>
+			{:else if c.total}
+				<p class="cov-text ok">{t('skills.allDone')}</p>
+			{/if}
+		</div>
+	{/if}
+{/snippet}
 
 {#if !d}
 	<div class="wrap" aria-busy="true">
@@ -337,6 +428,7 @@
 				<h2>{t('skills.title')}</h2>
 				<p class="muted">{t('skills.text', { n: d.stats.analysed })}</p>
 			</div>
+			{@render coverage()}
 			<SkillRadar values={d.skills} />
 			{#if weakSkill}
 				<div class="sk-weak">
@@ -575,6 +667,76 @@
 	.chip.down {
 		background: color-mix(in srgb, var(--bad) 13%, transparent);
 		color: var(--bad-text);
+	}
+
+	/* Wie viele Partien einfließen */
+	.cov {
+		display: flex;
+		flex-direction: column;
+		gap: 0.45rem;
+		padding: 0.8rem 0.9rem;
+		border-radius: var(--radius-m);
+		background: var(--surface-2);
+	}
+
+	.cov-head {
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+		gap: 0.5rem;
+	}
+
+	.cov-pct {
+		font-family: var(--font-display);
+		font-weight: 750;
+		color: var(--c-coach);
+	}
+
+	.cov-bar {
+		height: 8px;
+		border-radius: 999px;
+		background: var(--surface);
+		overflow: hidden;
+	}
+
+	.cov-bar span {
+		display: block;
+		height: 100%;
+		border-radius: inherit;
+		background: var(--c-coach);
+		transition: width 400ms var(--ease-out);
+	}
+
+	.cov.run .cov-bar span {
+		animation: pulse 1.6s ease-in-out infinite;
+	}
+
+	@keyframes pulse {
+		50% {
+			opacity: 0.6;
+		}
+	}
+
+	.cov-text {
+		font-size: 0.85rem;
+		line-height: 1.4;
+		color: var(--text-2);
+	}
+
+	.cov-text.ok {
+		color: var(--good-text);
+		font-weight: 650;
+	}
+
+	.cov-btns {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.45rem;
+	}
+
+	.cov .btn {
+		align-self: flex-start;
+		gap: 0.35rem;
 	}
 
 	/* Spielerprofil */

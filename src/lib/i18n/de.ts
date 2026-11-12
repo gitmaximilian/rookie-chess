@@ -1260,6 +1260,14 @@ export const de: Shape<typeof en> = {
 		},
 		needData: (p) =>
 			`Dein Profil braucht mindestens 3 analysierte Partien (bisher ${p.n}). Öffne eine Partie unter „Games“, um sie zu analysieren.`,
+		coverage: (p) => `${p.n} von ${p.m} ${s(p.m, 'Partie', 'Partien')} analysiert`,
+		onlyAnalysed: (p) => `Nur analysierte Partien fließen in dieses Profil ein. Noch ${p.n} offen.`,
+		analyseNext: (p) => `Nächste ${p.n} analysieren`,
+		analyseAll: (p) => `Alle ${p.n} analysieren`,
+		running: (p) => `Analysiere … ${p.n} von ${p.m} fertig.`,
+		keepOpen: 'App geöffnet lassen – Stockfish rechnet auf deinem Gerät.',
+		stop: 'Stoppen',
+		allDone: 'Alle deine Partien sind analysiert – das Profil nutzt jede einzelne.',
 		trend: 'Genauigkeit je Partie',
 		trendText: (p) =>
 			`Deine letzten ${p.n} analysierten Partien – tippe auf eine Säule, um die Partie zu öffnen.`,

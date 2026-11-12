@@ -1,5 +1,5 @@
 /* eslint-disable svelte/prefer-svelte-reactivity -- Sets hier nur lokal während eines Abrufs, nicht als UI-Zustand */
-import { db, getSetting, setSetting } from '#lib/db/db.js';
+import { db, getSetting, setSetting, type GameRow } from '#lib/db/db.js';
 import { analyseGame, createMistakePuzzles } from '#lib/analysis/run.js';
 import {
 	archiveEnd,
@@ -48,6 +48,9 @@ export const syncState = $state({
 	imported: 0,
 	/** gerade wird die ältere Historie nachgeladen */
 	history: false,
+	/** vom Nutzer gestartete Analyse (Coach): erledigt / insgesamt */
+	batchDone: 0,
+	batchTotal: 0,
 	error: '' as '' | 'notFound' | 'network' | 'rateLimit'
 });
 
@@ -202,6 +205,42 @@ export async function analyseInBackground(): Promise<void> {
 		}
 	} finally {
 		syncState.analysing = false;
+		bgAbort = null;
+	}
+}
+
+/** Partien, die noch nicht analysiert sind (neueste zuerst). Kurze Partien lohnen sich nicht. */
+export async function pendingGames(): Promise<GameRow[]> {
+	return (await db.games.orderBy('date').reverse().toArray()).filter(
+		(g) => g.result !== '*' && g.moves.length >= 6 && !g.analysis?.done
+	);
+}
+
+/**
+ * Analysiert auf Wunsch des Nutzers die nächsten Partien (alle Quellen, neueste zuerst) –
+ * ohne das Sitzungslimit der Hintergrund-Analyse. Fortschritt in `syncState.batchDone/batchTotal`.
+ */
+export async function analyseBatch(limit: number): Promise<void> {
+	if (syncState.analysing) return;
+	const pending = (await pendingGames()).slice(0, limit);
+	if (!pending.length) return;
+	syncState.analysing = true;
+	syncState.batchDone = 0;
+	syncState.batchTotal = pending.length;
+	bgAbort = new AbortController();
+	const signal = bgAbort.signal;
+	try {
+		for (const row of pending) {
+			if (signal.aborted) break;
+			const evals = await analyseGame(row, () => {}, signal);
+			if (signal.aborted) break;
+			const fresh = await db.games.get(row.id!);
+			if (fresh?.analysis?.done) await createMistakePuzzles(fresh, evals);
+			syncState.batchDone++;
+		}
+	} finally {
+		syncState.analysing = false;
+		syncState.batchTotal = 0;
 		bgAbort = null;
 	}
 }

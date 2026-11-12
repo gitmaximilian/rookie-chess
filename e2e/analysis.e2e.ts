@@ -9,7 +9,7 @@ const LEGAL = `[White "Legal"]
 test('PGN analysieren: Patzer wird erkannt und erklärt', async ({ page }) => {
 	test.setTimeout(90_000);
 	await page.goto('/analysis');
-	await page.getByRole('textbox').fill(LEGAL);
+	await page.locator('textarea').fill(LEGAL);
 	await page.getByRole('button', { name: 'Analyse' }).click();
 	await expect(page).toHaveURL(/analysis\?game=\d+/);
 	await expect(page.locator('.summary')).toBeVisible({ timeout: 60_000 });
@@ -26,6 +26,9 @@ test('PGN analysieren: Patzer wird erkannt und erklärt', async ({ page }) => {
 	// Partie erscheint in der Liste
 	await page.getByRole('main').getByRole('link', { name: 'Games' }).click();
 	await expect(page.locator('.gli .name').getByText('Saint Brie', { exact: true })).toBeVisible();
+	// Coach: zeigt, wie viele Partien ins Profil einfließen
+	await page.goto('/coach');
+	await expect(page.getByText('1 of 1 game analysed')).toBeVisible();
 });
 
 test('Weiterklicken in der Analyse scrollt die Seite nicht und das Brett springt nicht', async ({
