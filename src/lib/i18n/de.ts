@@ -1235,6 +1235,35 @@ export const de: Shape<typeof en> = {
 				'Spiel gegen einen Bot oder verknüpfe Lichess / Chess.com – dann bekommst du hier persönliche Tipps.'
 		}
 	},
+	skills: {
+		title: 'Dein Spielerprofil',
+		text: 'Fünf Bereiche auf einer Skala von 0–100 – tippe auf eine Ecke für Details.',
+		name: {
+			opening: 'Eröffnung',
+			middlegame: 'Mittelspiel',
+			tactics: 'Taktik',
+			endgame: 'Endspiel',
+			safety: 'Sicherheit'
+		},
+		noData: 'noch keine Daten',
+		rawAccuracy: (p) => `${p.n} % Genauigkeit`,
+		rawRating: (p) => `Puzzle-Wertung ${p.n}`,
+		rawBlunders: (p) => `${p.n} Patzer pro Partie`,
+		weakest: (p) => `Schwächster Bereich: ${p.name}`,
+		tip: {
+			opening: 'Lerne eine Eröffnung Variante für Variante.',
+			middlegame: 'Tägliche Puzzles schärfen den Blick für Taktik.',
+			tactics: 'Löse jeden Tag Puzzles auf deinem Niveau.',
+			endgame: 'Mit Endspieltechnik gewinnst du gewonnene Stellungen.',
+			safety: 'Spiel die Stellungen nach, in denen du gepatzt hast.'
+		},
+		needData:
+			'Spiel und analysiere ein paar Partien und löse einige Puzzles – dann füllt sich dein Profil.',
+		trend: 'Genauigkeit je Partie',
+		trendText: (p) =>
+			`Deine letzten ${p.n} analysierten Partien – tippe auf eine Säule, um die Partie zu öffnen.`,
+		trendAria: (p) => `Genauigkeit deiner letzten ${p.n} Partien, Durchschnitt ${p.avg} %`
+	},
 	stars: {
 		title: 'Deine Sterne',
 		text: 'Jede Lektion, Eröffnungsvariante und jedes Endspiel bringt bis zu drei Sterne.',

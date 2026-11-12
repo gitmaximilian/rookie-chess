@@ -15,6 +15,10 @@
 	import CoachTabs from '#lib/ui/CoachTabs.svelte';
 	import AvatarButton from '#lib/ui/AvatarButton.svelte';
 	import RatingHistory from '#lib/ui/RatingHistory.svelte';
+	import SkillRadar from '#lib/ui/SkillRadar.svelte';
+	import AccuracyTrend, { type AccPoint } from '#lib/ui/AccuracyTrend.svelte';
+	import { skillProfile, weakestSkill, type SkillValue } from '#lib/training/skills.js';
+	import { quality } from '#lib/import/ratings.js';
 	import { db } from '#lib/db/db.js';
 	import { loadOpenings, openingFor } from '#lib/data/openings.js';
 	import {
@@ -54,6 +58,8 @@
 		advice: Advice[];
 		notes: Insight[];
 		puzzleHist: { date: number; rating: number }[];
+		skills: SkillValue[];
+		accuracy: AccPoint[];
 	}
 
 	let d = $state<Data | null>(null);
@@ -187,7 +193,20 @@
 			advice: advice.slice(0, 3),
 			// Erkenntnisse, die nicht schon als Ratschlag oben stehen
 			notes: findInsights(stats).filter((i) => i.key !== 'motif' && i.key !== 'weakPhase'),
-			puzzleHist: ratingRows.map((r) => ({ date: r.date, rating: Math.round(r.rating) }))
+			puzzleHist: ratingRows.map((r) => ({ date: r.date, rating: Math.round(r.rating) })),
+			skills: skillProfile(stats, { rating: puzzle.rating, attempts: attempts.length }),
+			// Genauigkeit der letzten 20 analysierten Partien, älteste links
+			accuracy: sorted
+				.map((g) => {
+					const q = quality(g);
+					const o = outcomeOf(g);
+					return q && o
+						? { id: g.id!, date: g.date, accuracy: q.accuracy, opponent: g.opponent, result: o }
+						: null;
+				})
+				.filter((x): x is AccPoint => x !== null)
+				.slice(0, 20)
+				.reverse()
 		};
 	});
 
@@ -213,6 +232,15 @@
 	function noteText(i: Insight): string {
 		return t(`stats.insight.${i.key}`, { ...i.params });
 	}
+
+	const weakSkill = $derived(d ? weakestSkill(d.skills) : null);
+	const SKILL_HREF: Record<string, string> = {
+		opening: resolve('/learn/openings'),
+		middlegame: resolve('/puzzles'),
+		tactics: resolve('/puzzles'),
+		endgame: resolve('/learn'),
+		safety: resolve('/puzzles?mode=mistakes')
+	};
 
 	const motifMax = $derived(d ? Math.max(1, ...d.stats.motifs.map((m) => m.n)) : 1);
 	const outcomeLabel = (o: Outcome) =>
@@ -303,6 +331,29 @@
 			</ul>
 		</section>
 
+		<!-- Spielerprofil als Fünfeck -->
+		<section class="card block skills">
+			<div class="sk-head">
+				<h2>{t('skills.title')}</h2>
+				<p class="muted">{t('skills.text')}</p>
+			</div>
+			<SkillRadar values={d.skills} />
+			{#if weakSkill}
+				<div class="sk-weak">
+					<span
+						>{t('skills.weakest', { name: t(`skills.name.${weakSkill.skill}`) })}
+						<span class="muted">{t(`skills.tip.${weakSkill.skill}`)}</span></span
+					>
+					<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- SKILL_HREF enthält resolve()-Pfade -->
+					<a class="btn small" href={SKILL_HREF[weakSkill.skill]}
+						>{t('coachTab.adv.train')} <ArrowRight size={15} /></a
+					>
+				</div>
+			{:else}
+				<p class="muted">{t('skills.needData')}</p>
+			{/if}
+		</section>
+
 		<!-- Woran arbeiten -->
 		{#if d.advice.length}
 			<section class="card block advice">
@@ -343,6 +394,15 @@
 						></a>
 					{/each}
 				</div>
+			</section>
+		{/if}
+
+		<!-- Genauigkeit je Partie -->
+		{#if d.accuracy.length >= 3}
+			<section class="card block">
+				<h2>{t('skills.trend')}</h2>
+				<p class="muted">{t('skills.trendText', { n: d.accuracy.length })}</p>
+				<AccuracyTrend points={d.accuracy} />
 			</section>
 		{/if}
 
@@ -515,6 +575,36 @@
 	.chip.down {
 		background: color-mix(in srgb, var(--bad) 13%, transparent);
 		color: var(--bad-text);
+	}
+
+	/* Spielerprofil */
+	.sk-head {
+		display: flex;
+		flex-direction: column;
+		gap: 0.2rem;
+	}
+
+	.sk-weak {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.75rem;
+		padding: 0.7rem 0.8rem;
+		border-radius: var(--radius-m);
+		background: var(--c-coach-soft);
+		font-weight: 650;
+		font-size: 0.92rem;
+	}
+
+	.sk-weak > span {
+		display: flex;
+		flex-direction: column;
+		gap: 0.1rem;
+	}
+
+	.sk-weak .btn {
+		flex: none;
+		gap: 0.3rem;
 	}
 
 	/* Ratschläge */

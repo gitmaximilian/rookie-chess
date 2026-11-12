@@ -1178,6 +1178,33 @@ export const en = {
 			playText: 'Play a bot or link Lichess / Chess.com – then you get personal advice here.'
 		}
 	},
+	skills: {
+		title: 'Your skill profile',
+		text: 'Five areas on a scale of 0–100 – tap a corner for details.',
+		name: {
+			opening: 'Opening',
+			middlegame: 'Middlegame',
+			tactics: 'Tactics',
+			endgame: 'Endgame',
+			safety: 'Safety'
+		},
+		noData: 'no data yet',
+		rawAccuracy: (p: P) => `${p.n}% accuracy`,
+		rawRating: (p: P) => `puzzle rating ${p.n}`,
+		rawBlunders: (p: P) => `${p.n} blunders per game`,
+		weakest: (p: P) => `Weakest area: ${p.name}`,
+		tip: {
+			opening: 'Learn one opening line by line.',
+			middlegame: 'Daily puzzles train your eye for tactics.',
+			tactics: 'Solve puzzles at your level every day.',
+			endgame: 'Basic endgame techniques win won positions.',
+			safety: 'Replay the positions where you blundered.'
+		},
+		needData: 'Play and analyse a few games and solve some puzzles – then your profile fills in.',
+		trend: 'Accuracy per game',
+		trendText: (p: P) => `Your last ${p.n} analysed games – tap a bar to open the game.`,
+		trendAria: (p: P) => `Accuracy of your last ${p.n} games, average ${p.avg}%`
+	},
 	stars: {
 		title: 'Your stars',
 		text: 'Every lesson, opening line and endgame earns up to three stars.',
