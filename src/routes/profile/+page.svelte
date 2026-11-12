@@ -16,7 +16,7 @@
 	import Target from '@lucide/svelte/icons/target';
 	import PageHeader from '#lib/ui/PageHeader.svelte';
 	import ProfileTabs from '#lib/ui/ProfileTabs.svelte';
-	import Achievements from '#lib/ui/Achievements.svelte';
+	import StarsOverview from '#lib/ui/StarsOverview.svelte';
 	import LinkedAccounts from '#lib/ui/LinkedAccounts.svelte';
 	import RatingChart from '#lib/ui/RatingChart.svelte';
 	import ActivityHeatmap from '#lib/ui/ActivityHeatmap.svelte';
@@ -164,7 +164,7 @@
 		{/each}
 	</div>
 
-	<Achievements />
+	<StarsOverview />
 
 	<nav class="links">
 		<a href={resolve('/analysis')} class="row card pressable">

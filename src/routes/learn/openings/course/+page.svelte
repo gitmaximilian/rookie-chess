@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { lineStars } from '#lib/training/stars.js';
+	import Stars from '#lib/ui/Stars.svelte';
 	import ColorBadge from '#lib/ui/ColorBadge.svelte';
 	import Dock from '#lib/ui/Dock.svelte';
 	import { onMount, onDestroy } from 'svelte';
@@ -43,7 +45,6 @@
 	import { bumpActivity } from '#lib/db/db.js';
 	import { sound } from '#lib/ui/sound.js';
 	import { t } from '#lib/i18n/i18n.svelte.js';
-	import { notifyProgress } from '#lib/ui/progress.js';
 
 	let course = $state.raw<Course>(COURSES[0]);
 	let progress = $state<CourseProgress>({});
@@ -175,7 +176,6 @@
 		if (!it) {
 			qState = 'done';
 			void bumpActivity('reviews');
-			notifyProgress();
 			return;
 		}
 		qGame = new Game(it.fen);
@@ -372,7 +372,6 @@
 		await addLine(course.color, ucis);
 		await bumpActivity('reviews');
 		progress = await getCourseProgress();
-		notifyProgress();
 	}
 
 	function nextLine(): CourseLine | null {
@@ -442,6 +441,7 @@
 						>
 						<span class="l-text">
 							<b>{loc(l.name)}</b>
+							{#if done}<Stars n={lineStars(done)} size={12} />{/if}
 							<span class="l-moves">{l.moves.split(' ').slice(0, 6).join(' ')} …</span>
 						</span>
 						<span class="l-btns">
@@ -698,6 +698,7 @@
 				<div class="done">
 					<span class="done-ico"><Check size={26} /></span>
 					<h2>{t('course.lineDone')}</h2>
+					<Stars n={lineStars({ firstTry, total: ownTotal, date: 0 })} size={26} animate />
 					<p class="muted">{t('course.lineDoneText', { n: firstTry, m: ownTotal })}</p>
 					<div class="row-btns">
 						{#if nextLine()}

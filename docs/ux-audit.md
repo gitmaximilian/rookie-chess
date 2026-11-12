@@ -60,6 +60,10 @@ Geprüft im Browser bei 393×852, 393×659, iPad (820×1180) und Desktop (1280×
 | R5  | Profil-Kacheln: sieben Kacheln, die letzte allein in der Zeile.                                                                                                       | Feinschl. | Letzte ungerade Kachel über die volle Breite.                                                       |
 | R6  | Endspiel-Stufe „Grundlagen“ kollidiert mit dem Bereich „Schach-Grundlagen“.                                                                                           | mittel    | Stufen heißen „Leicht / Mittel / Schwer“.                                                           |
 
+## Nachtrag: Sterne statt Erfolge
+
+Das Erfolge-System (22 Abzeichen, Einblendung „Erfolg freigeschaltet“) wurde entfernt. Es mischte Lernfortschritt mit Nebenzielen (Freundespartie, Sturm-Rekord) und lenkte vom Lernen ab. Stattdessen bringt jede Lerneinheit 0–3 Sterne: Grundlagen- und Taktiklektionen (abgeschlossen = 3), Eröffnungsvarianten (nach Trefferquote beim ersten Versuch), Endspiele (wie bisher). Die Sterne stehen im Learn-Hub je Bereich und gesamt, im Profil mit Erklärung und auf Home. Es gingen keine Daten verloren: Erfolge wurden nie gespeichert, sondern immer aus vorhandenen Daten berechnet.
+
 ## Vergleich mit Lichess und Chess.com
 
 - **Chess.com** führt nach jeder Partie direkt in „Game Review“ mit „Schlüsselmomente“ und „Nochmal versuchen“. Rookie hat „Fehler nachspielen“, aber erst nach Scrollen. → Sprung zum nächsten Fehler im Dock (H3).

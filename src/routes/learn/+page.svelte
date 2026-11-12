@@ -18,6 +18,7 @@
 	import { db } from '#lib/db/db.js';
 	import { t } from '#lib/i18n/i18n.svelte.js';
 	import { countDue } from '#lib/training/srs.js';
+	import { loadStars, totalStars, type AreaStars, type StarArea } from '#lib/training/stars.js';
 
 	let stars = $state<Record<string, number>>({});
 	let repCount = $state(0);
@@ -26,6 +27,9 @@
 	let tacticsDone = $state(0);
 	let doneIds = $state<string[]>([]);
 	let loaded = $state(false);
+	let starAreas = $state<AreaStars[]>([]);
+	const starsOf = (a: StarArea) => starAreas.find((x) => x.area === a);
+	const allStars = $derived(totalStars(starAreas));
 
 	onMount(async () => {
 		const rows = await db.endgames.toArray();
@@ -37,6 +41,7 @@
 		basicsDone = b.length;
 		tacticsDone = tc.length;
 		doneIds = [...b, ...tc];
+		starAreas = await loadStars();
 		loaded = true;
 	});
 
@@ -80,9 +85,26 @@
 	const total = $derived(Object.values(stars).reduce((a, b) => a + b, 0));
 </script>
 
+{#snippet starChip(a: StarArea)}
+	{@const s = starsOf(a)}
+	{#if s}<span class="st"><Star size={12} fill="currentColor" /> {s.earned}/{s.max}</span>{/if}
+{/snippet}
+
 <svelte:head><title>{t('learn.title')} – Rookie</title></svelte:head>
 
-<PageHeader eyebrow={t('learn.eyebrow')} title={t('learn.title')} subtitle={t('learn.subtitle')} />
+<PageHeader eyebrow={t('learn.eyebrow')} title={t('learn.title')} subtitle={t('learn.subtitle')}>
+	{#snippet action()}
+		{#if loaded}
+			<a
+				class="all-stars"
+				href={resolve('/profile')}
+				aria-label="{t('stars.title')}: {t('stars.total', { n: allStars.earned, m: allStars.max })}"
+				><Star size={17} fill="currentColor" /><b>{allStars.earned}</b><small>/{allStars.max}</small
+				></a
+			>
+		{/if}
+	{/snippet}
+</PageHeader>
 
 <div class="wrap">
 	{#if next}
@@ -110,7 +132,12 @@
 				<b>{t('basics.title')}</b>
 				<span class="p-text">{t('basics.hubText')}</span>
 				<span class="p-bar"><span style:width="{(basicsDone / BASICS.length) * 100}%"></span></span>
-				<span class="p-meta">{t('basics.progress', { n: basicsDone, m: BASICS.length })}</span>
+				<span class="p-meta"
+					>{@render starChip('basics')}{t('basics.progress', {
+						n: basicsDone,
+						m: BASICS.length
+					})}</span
+				>
 			</span>
 			<ChevronRight size={18} class="chev" />
 		</a>
@@ -126,7 +153,12 @@
 				<span class="p-bar"
 					><span style:width="{(tacticsDone / TACTICS.length) * 100}%"></span></span
 				>
-				<span class="p-meta">{t('basics.progress', { n: tacticsDone, m: TACTICS.length })}</span>
+				<span class="p-meta"
+					>{@render starChip('tactics')}{t('basics.progress', {
+						n: tacticsDone,
+						m: TACTICS.length
+					})}</span
+				>
 			</span>
 			<ChevronRight size={18} class="chev" />
 		</a>
@@ -139,6 +171,7 @@
 					><span style:width="{Math.min(100, (repCount / 40) * 100)}%"></span></span
 				>
 				<span class="p-meta">
+					{@render starChip('openings')}
 					{t('openings.moves', { n: repCount })}{#if repDue}
 						· <b class="due">{t('openings.due', { n: repDue })}</b>{/if}
 				</span>
@@ -309,6 +342,38 @@
 	.path :global(.chev) {
 		flex: none;
 		color: var(--text-3);
+	}
+
+	.st {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.2rem;
+		margin-right: 0.45rem;
+		font-weight: 700;
+		color: var(--warn-text);
+	}
+
+	.all-stars {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+		min-height: 44px;
+		padding: 0 0.85rem;
+		border-radius: 999px;
+		background: color-mix(in srgb, var(--warn) 16%, var(--surface));
+		border: 1px solid color-mix(in srgb, var(--warn) 30%, transparent);
+		color: var(--warn);
+	}
+
+	.all-stars b {
+		font-family: var(--font-display);
+		font-size: 1.1rem;
+		color: var(--text);
+	}
+
+	.all-stars small {
+		font-size: 0.8rem;
+		color: var(--text-2);
 	}
 
 	.due {

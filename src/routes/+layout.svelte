@@ -12,7 +12,6 @@
 	import { refreshAccount, syncNow, account } from '#lib/sync/sync.svelte.js';
 	import InstallPrompt from '#lib/ui/InstallPrompt.svelte';
 	import Onboarding from '#lib/onboarding/Onboarding.svelte';
-	import AchievementToast from '#lib/ui/AchievementToast.svelte';
 	import { needsOnboarding } from '#lib/onboarding/profile.js';
 	import { initInstall } from '#lib/ui/install.svelte.js';
 	import {
@@ -112,8 +111,6 @@
 </main>
 
 <TabBar />
-
-<AchievementToast />
 
 {#if onboarding}<Onboarding
 		onclose={() => {

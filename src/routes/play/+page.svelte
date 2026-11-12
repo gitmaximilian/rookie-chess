@@ -42,7 +42,6 @@
 	import { db, getSetting, setSetting, bumpActivity } from '#lib/db/db.js';
 	import { sound } from '#lib/ui/sound.js';
 	import { t } from '#lib/i18n/i18n.svelte.js';
-	import { notifyProgress } from '#lib/ui/progress.js';
 	import type { Color } from 'chessops/types';
 
 	type TimeControl = { id: string; label: string; base: number; inc: number } | null;
@@ -512,7 +511,6 @@
 				source: 'bot'
 			})) as number;
 			await bumpActivity('games');
-			notifyProgress();
 			if (verdictFor(e, myColor) === 'win') {
 				const beaten = await getSetting<string[]>('botsBeaten', []);
 				if (!beaten.includes(bot.id)) await setSetting('botsBeaten', [...beaten, bot.id]);

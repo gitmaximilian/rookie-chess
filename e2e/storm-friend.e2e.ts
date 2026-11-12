@@ -1,10 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { playUci } from './helpers/board';
 
-test('Gegen Freunde: Narrenmatt, Partie gespeichert, Erfolg freigeschaltet', async ({ page }) => {
-	await page.goto('/profile');
-	await expect(page.getByText(/0 of 22 unlocked/)).toBeVisible();
-
+test('Gegen Freunde: Narrenmatt, Partie gespeichert', async ({ page }) => {
 	await page.goto('/play');
 	await page.getByRole('link', { name: /Play a friend/ }).click();
 	await expect(page.getByText('White to move')).toBeVisible();
@@ -13,13 +10,18 @@ test('Gegen Freunde: Narrenmatt, Partie gespeichert, Erfolg freigeschaltet', asy
 		await page.waitForTimeout(250);
 	}
 	await expect(page.locator('.result')).toHaveText('Black wins');
-	await expect(page.getByText('Achievement unlocked')).toBeVisible();
-	await expect(page.getByText('Friendly match')).toBeVisible();
 
 	await page.getByRole('link', { name: /Analyse game/ }).click();
 	await expect(page).toHaveURL(/analysis\?game=/);
+});
+
+test('Sterne: Profil zeigt Fortschritt je Lernbereich', async ({ page }) => {
 	await page.goto('/profile');
-	await expect(page.getByText(/1 of 22 unlocked/)).toBeVisible();
+	const stars = page.locator('section.stars');
+	await expect(stars.getByRole('heading', { name: 'Your stars' })).toBeVisible();
+	await expect(stars.getByText('Chess basics')).toBeVisible();
+	await expect(stars.getByText('Endgames')).toBeVisible();
+	await expect(stars.locator('.big b')).toHaveText('0');
 });
 
 test('Puzzle-Sturm: startet mit Zeit und Punktestand', async ({ page }) => {

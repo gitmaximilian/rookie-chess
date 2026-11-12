@@ -1170,34 +1170,21 @@ export const de: Shape<typeof en> = {
 		strengthHint: 'Aus Puzzles, besiegten Bots und Online-Partien.',
 		progress: (p: P) => `${p.n} von ${p.m} erledigt`
 	},
-	achievements: {
-		title: 'Erfolge',
-		count: (p: P) => `${p.n} von ${p.m} freigeschaltet`,
-		unlocked: 'Erfolg freigeschaltet',
-		list: {
-			firstPuzzle: { t: 'Erstes Puzzle', d: 'Löse dein erstes Puzzle.' },
-			puzzles50: { t: 'Puzzle-Fan', d: 'Löse 50 Puzzles.' },
-			puzzles250: { t: 'Puzzle-Maschine', d: 'Löse 250 Puzzles.' },
-			rating1000: { t: 'Vierstellig', d: 'Erreiche eine Puzzle-Wertung von 1000.' },
-			rating1500: { t: 'Taktiker', d: 'Erreiche eine Puzzle-Wertung von 1500.' },
-			streak3: { t: 'Warm gespielt', d: 'Trainiere 3 Tage hintereinander.' },
-			streak7: { t: 'Eine Woche', d: 'Trainiere 7 Tage hintereinander.' },
-			streak30: { t: 'Nicht zu bremsen', d: 'Trainiere 30 Tage hintereinander.' },
-			firstWin: { t: 'Erster Sieg', d: 'Besiege einen Bot.' },
-			firstMate: { t: 'Schachmatt!', d: 'Gewinne eine Partie durch Matt.' },
-			bots4: { t: 'Halbzeit', d: 'Besiege 4 verschiedene Bots.' },
-			botsAll: { t: 'Bot-Bezwinger', d: 'Besiege alle Bots.' },
-			basicsAll: { t: 'Absolvent', d: 'Schließe alle Grundlagen-Lektionen ab.' },
-			firstLine: { t: 'Eröffnungs-Neuling', d: 'Lerne deine erste Eröffnungsvariante.' },
-			firstCourse: { t: 'Eröffnungs-Profi', d: 'Schließe einen ganzen Eröffnungskurs ab.' },
-			endgameFirst: { t: 'Endspiel-Einsteiger', d: 'Schaffe deine erste Endspiel-Lektion.' },
-			endgameAll: { t: 'Endspiel-Techniker', d: 'Schaffe jede Endspiel-Lektion.' },
-			endgamePerfect: { t: 'Perfektionist', d: 'Hol in jeder Endspiel-Lektion 3 Sterne.' },
-			storm20: { t: 'Blitzschnell', d: 'Schaffe 20 Punkte im Puzzle-Sturm.' },
-			plan7: { t: 'Diszipliniert', d: 'Erledige deinen Tagesplan an 7 Tagen.' },
-			analyst: { t: 'Analyst', d: 'Spiele deine Fehler aus einer Partie nach.' },
-			friends: { t: 'Freundschaftsspiel', d: 'Spiele eine Partie gegen einen Freund.' }
-		}
+	stars: {
+		title: 'Deine Sterne',
+		text: 'Jede Lektion, Eröffnungsvariante und jedes Endspiel bringt bis zu drei Sterne.',
+		total: (p) => `${p.n} von ${p.m}`,
+		area: {
+			basics: 'Schach-Grundlagen',
+			tactics: 'Taktik',
+			openings: 'Eröffnungen',
+			endgames: 'Endspiele'
+		},
+		howBasics: 'Lektion abschließen: 3 Sterne',
+		howTactics: 'Lektion abschließen: 3 Sterne',
+		howOpenings: 'Je Variante 1–3 Sterne, je nachdem, wie viele Züge du auf Anhieb wusstest',
+		howEndgames: 'Je Lektion 1–3 Sterne, je nachdem, wie effizient du gewinnst',
+		all: 'Alle Sterne gesammelt – großartig!'
 	},
 	storm: {
 		title: 'Puzzle-Sturm',
@@ -1288,8 +1275,8 @@ export const de: Shape<typeof en> = {
 		formSub: (p: P) => `${p.pct} % · ${p.n} ${p.n === 1 ? 'Partie' : 'Partien'}`,
 		formAria: (p: P) => `Letzte Partien: ${p.pct} % der Punkte`,
 		noGames: 'Noch keine Partien',
-		achievements: 'Erfolge',
-		achievementsSub: 'freigeschaltet'
+		stars: 'Sterne',
+		starsSub: 'beim Lernen'
 	},
 	about: {
 		eyebrow: 'Open Source',

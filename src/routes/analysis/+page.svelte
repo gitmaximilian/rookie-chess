@@ -50,7 +50,6 @@
 	import { openingFor, onOpeningsLoaded } from '#lib/data/openings.js';
 	import { feedbackFor, type MoveFeedback } from '#lib/openings/feedback.js';
 	import { getSetting, setSetting } from '#lib/db/db.js';
-	import { notifyProgress } from '#lib/ui/progress.js';
 	import { quality } from '#lib/import/ratings.js';
 	import LinkedAccounts from '#lib/ui/LinkedAccounts.svelte';
 	import LayoutGrid from '@lucide/svelte/icons/layout-grid';
@@ -385,9 +384,9 @@
 		if (!retry) return;
 		if (retry.idx + 1 >= myMistakes.length) {
 			retry.status = 'done';
+			// Tagesplan: „Aus deiner letzten Partie lernen“ gilt damit als erledigt
 			const list = await getSetting<number[]>('reviewedGames', []);
 			if (row?.id && !list.includes(row.id)) await setSetting('reviewedGames', [...list, row.id]);
-			notifyProgress();
 			return;
 		}
 		retry = {

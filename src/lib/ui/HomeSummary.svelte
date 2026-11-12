@@ -8,8 +8,7 @@
 	import { getLinked, syncState } from '#lib/import/sync.svelte.js';
 	import { getPuzzleRating, isProvisional } from '#lib/training/rating.js';
 	import { currentStrength } from '#lib/training/planData.js';
-	import { loadAchievementData } from '#lib/training/achievementData.js';
-	import { ACHIEVEMENTS, unlocked } from '#lib/training/achievements.js';
+	import { loadStars, totalStars } from '#lib/training/stars.js';
 	import { outcomeOf } from '#lib/training/gamestats.js';
 	import { t } from '#lib/i18n/i18n.svelte.js';
 
@@ -22,7 +21,7 @@
 		games: number;
 		todayPuzzles: number;
 		goal: number;
-		achievements: number;
+		stars: { earned: number; max: number };
 	}
 
 	let d = $state<Data | null>(null);
@@ -32,13 +31,13 @@
 		rs.filter((r) => r.source === src).sort((a, b) => b.games - a.games)[0] ?? null;
 
 	async function load() {
-		const [ratings, linked, puzzle, strength, games, ach] = await Promise.all([
+		const [ratings, linked, puzzle, strength, games, stars] = await Promise.all([
 			onlineRatings(),
 			getLinked(),
 			getPuzzleRating(),
 			currentStrength(),
 			db.games.orderBy('date').reverse().limit(10).toArray(),
-			loadAchievementData()
+			loadStars()
 		]);
 		d = {
 			elo: { lichess: main(ratings, 'lichess'), chesscom: main(ratings, 'chesscom') },
@@ -52,7 +51,7 @@
 			games: await db.games.count(),
 			todayPuzzles: (await db.activity.get(today()))?.puzzles ?? 0,
 			goal: await getSetting('dailyGoal', 5),
-			achievements: unlocked(ach).length
+			stars: totalStars(stars)
 		};
 	}
 
@@ -135,10 +134,13 @@
 			{/if}
 		</a>
 
-		<a class="tile" href={resolve('/profile')} style:--c="var(--warn)">
-			<span class="lbl">{t('summary.achievements')}</span>
-			<span class="val">{d.achievements}<small>/{ACHIEVEMENTS.length}</small></span>
-			<span class="sub">{t('summary.achievementsSub')}</span>
+		<a class="tile" href={resolve('/learn')} style:--c="var(--warn)">
+			<span class="lbl">{t('summary.stars')}</span>
+			<span class="val"
+				><span class="star" aria-hidden="true">★</span>
+				{d.stars.earned}<small>/{d.stars.max}</small></span
+			>
+			<span class="sub">{t('summary.starsSub')}</span>
 		</a>
 	{/if}
 </section>
@@ -229,6 +231,10 @@
 		font-weight: 750;
 		line-height: 1.15;
 		font-variant-numeric: tabular-nums;
+	}
+
+	.star {
+		color: var(--warn);
 	}
 
 	.val small {

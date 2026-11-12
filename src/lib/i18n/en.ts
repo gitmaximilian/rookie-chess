@@ -1117,34 +1117,21 @@ export const en = {
 		strengthHint: 'Based on puzzles, bots beaten and online games.',
 		progress: (p: P) => `${p.n} of ${p.m} done`
 	},
-	achievements: {
-		title: 'Achievements',
-		count: (p: P) => `${p.n} of ${p.m} unlocked`,
-		unlocked: 'Achievement unlocked',
-		list: {
-			firstPuzzle: { t: 'First puzzle', d: 'Solve your first puzzle.' },
-			puzzles50: { t: 'Puzzle fan', d: 'Solve 50 puzzles.' },
-			puzzles250: { t: 'Puzzle machine', d: 'Solve 250 puzzles.' },
-			rating1000: { t: 'Four digits', d: 'Reach a puzzle rating of 1000.' },
-			rating1500: { t: 'Tactician', d: 'Reach a puzzle rating of 1500.' },
-			streak3: { t: 'Warming up', d: 'Train 3 days in a row.' },
-			streak7: { t: 'One week', d: 'Train 7 days in a row.' },
-			streak30: { t: 'Unstoppable', d: 'Train 30 days in a row.' },
-			firstWin: { t: 'First win', d: 'Beat a bot.' },
-			firstMate: { t: 'Checkmate!', d: 'Win a game by checkmate.' },
-			bots4: { t: 'Halfway there', d: 'Beat 4 different bots.' },
-			botsAll: { t: 'Bot slayer', d: 'Beat all bots.' },
-			basicsAll: { t: 'Graduate', d: 'Finish all basics lessons.' },
-			firstLine: { t: 'Opening novice', d: 'Learn your first opening line.' },
-			firstCourse: { t: 'Opening expert', d: 'Complete a whole opening course.' },
-			endgameFirst: { t: 'Endgame starter', d: 'Pass your first endgame lesson.' },
-			endgameAll: { t: 'Endgame technician', d: 'Pass every endgame lesson.' },
-			endgamePerfect: { t: 'Perfectionist', d: 'Get 3 stars in every endgame lesson.' },
-			storm20: { t: 'Lightning', d: 'Score 20 in Puzzle Storm.' },
-			plan7: { t: 'Disciplined', d: 'Finish your daily plan on 7 days.' },
-			analyst: { t: 'Analyst', d: 'Replay your mistakes from a game.' },
-			friends: { t: 'Friendly match', d: 'Play a game against a friend.' }
-		}
+	stars: {
+		title: 'Your stars',
+		text: 'Every lesson, opening line and endgame earns up to three stars.',
+		total: (p: P) => `${p.n} of ${p.m}`,
+		area: {
+			basics: 'Chess basics',
+			tactics: 'Tactics',
+			openings: 'Openings',
+			endgames: 'Endgames'
+		},
+		howBasics: 'Finish a lesson: 3 stars',
+		howTactics: 'Finish a lesson: 3 stars',
+		howOpenings: 'Per line: 1–3 stars, depending on how many moves you knew right away',
+		howEndgames: 'Per lesson: 1–3 stars, depending on how efficiently you win',
+		all: 'All stars collected – brilliant!'
 	},
 	storm: {
 		title: 'Puzzle Storm',
@@ -1234,8 +1221,8 @@ export const en = {
 		formSub: (p: P) => `${p.pct}% · ${p.n} ${s(p.n, 'game', 'games')}`,
 		formAria: (p: P) => `Last games: ${p.pct}% score`,
 		noGames: 'No games yet',
-		achievements: 'Badges',
-		achievementsSub: 'unlocked'
+		stars: 'Stars',
+		starsSub: 'from learning'
 	},
 	about: {
 		eyebrow: 'Open source',

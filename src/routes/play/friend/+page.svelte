@@ -13,7 +13,6 @@
 	import { db, getSetting, setSetting, bumpActivity } from '#lib/db/db.js';
 	import { sound } from '#lib/ui/sound.js';
 	import { t } from '#lib/i18n/i18n.svelte.js';
-	import { notifyProgress } from '#lib/ui/progress.js';
 
 	type Color = 'white' | 'black';
 
@@ -111,9 +110,7 @@
 			opponent: t('stats.source.friend'),
 			source: 'friend'
 		})) as number;
-		await setSetting('friendGames', (await getSetting<number>('friendGames', 0)) + 1);
 		await bumpActivity('games');
-		notifyProgress();
 	}
 
 	function newGame() {

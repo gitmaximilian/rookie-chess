@@ -11,7 +11,6 @@
 	import { getSetting, setSetting, bumpActivity } from '#lib/db/db.js';
 	import { sound } from '#lib/ui/sound.js';
 	import { t } from '#lib/i18n/i18n.svelte.js';
-	import { notifyProgress } from '#lib/ui/progress.js';
 
 	const DURATION = 180_000;
 	const PENALTY = 10_000;
@@ -149,7 +148,6 @@
 		}
 		if (score > 0) await bumpActivity('puzzles', score);
 		sound.end(newBest ? 'win' : 'draw');
-		notifyProgress();
 	}
 
 	const clock = $derived(

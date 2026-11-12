@@ -23,7 +23,6 @@
 	import { review, dueCards, formatInterval } from '#lib/training/srs.js';
 	import { THEMES, themeName, themeAbout } from '#lib/data/themes.js';
 	import { t } from '#lib/i18n/i18n.svelte.js';
-	import { notifyProgress } from '#lib/ui/progress.js';
 	import { db, bumpActivity, today, getSetting, setSetting } from '#lib/db/db.js';
 	import { sound } from '#lib/ui/sound.js';
 	import { engine } from '#lib/engine/engine.js';
@@ -271,7 +270,6 @@
 		failureRecorded = false;
 		if (solved || usedSolution) {
 			await bumpActivity('puzzles');
-			notifyProgress();
 			if (mode === 'daily') await setSetting('dailyDone', today());
 		}
 		await refreshCounts();

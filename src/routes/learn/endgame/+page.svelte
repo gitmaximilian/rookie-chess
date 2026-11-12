@@ -33,7 +33,6 @@
 	import { db, bumpActivity } from '#lib/db/db.js';
 	import { sound } from '#lib/ui/sound.js';
 	import { t } from '#lib/i18n/i18n.svelte.js';
-	import { notifyProgress } from '#lib/ui/progress.js';
 
 	let lesson = $state<Lesson | null>(null);
 	let posIdx = $state(0);
@@ -194,7 +193,6 @@
 			}
 			best = Math.max(best, earned);
 			await bumpActivity('reviews');
-			notifyProgress();
 		} else {
 			sound.bad();
 		}

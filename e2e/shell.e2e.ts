@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 test('Startseite zeigt Begrüßung, Zusammenfassung und Bereiche', async ({ page }) => {
 	await page.goto('/');
 	await expect(page.locator('h1')).toContainText(/Good|Hello/);
-	await expect(page.getByText('unlocked', { exact: true })).toBeVisible();
+	await expect(page.getByText('from learning', { exact: true })).toBeVisible();
 	await expect(page.getByRole('link', { name: /Play/ }).first()).toBeVisible();
 });
 
@@ -42,7 +42,7 @@ test('App startet offline nach dem ersten Besuch', async ({ page, context, brows
 	await page.goto('/puzzles');
 	await expect(page.locator('h1')).toHaveText('Puzzles');
 	await page.goto('/');
-	await expect(page.getByText('unlocked', { exact: true })).toBeVisible();
+	await expect(page.getByText('from learning', { exact: true })).toBeVisible();
 	await context.setOffline(false);
 });
 
