@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { fen, playUci } from './helpers/board';
 
 test('Partie gegen Bauer Bruno: Zug, Antwort, Zurück, Aufgeben', async ({ page }) => {
 	await page.goto('/play');
@@ -41,4 +42,32 @@ test('Partie gegen Bauer Bruno: Zug, Antwort, Zurück, Aufgeben', async ({ page 
 	await page.getByRole('button', { name: /Resign/ }).click();
 	await expect(page.getByRole('dialog', { name: 'Result' })).toBeVisible();
 	await expect(page.getByRole('heading', { name: 'You lost' })).toBeVisible();
+});
+
+test('Zug zurück und vor: nur ansehen, dann wieder zur aktuellen Stellung', async ({ page }) => {
+	await page.goto('/play');
+	await page.getByRole('button', { name: /Pawn Pete/ }).click();
+	const coach = page.getByRole('switch', { name: /Play with coach/ });
+	await expect(coach).toHaveAttribute('aria-checked', 'true');
+	await coach.click();
+	await page.getByRole('button', { name: 'Start game' }).click();
+	await expect(page.getByText('Your move')).toBeVisible();
+	await playUci(page, 'e2e4');
+	// erst weiter, wenn der Bot geantwortet hat (ein neuer Zug bringt sonst zurück zur aktuellen Stellung)
+	await expect(page.locator('.moves .row').first().locator('.mv')).toHaveCount(2, {
+		timeout: 15000
+	});
+	await expect(page.getByText('Your move')).toBeVisible();
+	const live = await fen(page);
+
+	await page.getByRole('button', { name: 'Previous move' }).click();
+	await expect(page.getByText('Move 1/2')).toBeVisible();
+	expect(await fen(page)).not.toBe(live);
+	await page.getByRole('button', { name: 'Previous move' }).click();
+	expect(await fen(page)).toMatch(/^rnbqkbnr\/pppppppp\/8\/8\/8\/8\/PPPPPPPP\/RNBQKBNR/);
+
+	await page.getByRole('button', { name: 'Next move' }).click();
+	await page.getByRole('button', { name: 'Next move' }).click();
+	expect(await fen(page)).toBe(live);
+	await expect(page.getByText('Your move')).toBeVisible();
 });

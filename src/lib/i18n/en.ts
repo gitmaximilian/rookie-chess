@@ -20,6 +20,7 @@ export const en = {
 		legal: 'Legal notice & privacy'
 	},
 	common: {
+		close: 'Close',
 		next: 'Next',
 		back: 'Back',
 		retry: 'Try again',
@@ -157,6 +158,10 @@ export const en = {
 		lost: 'You lost',
 		draw: 'Draw',
 		noHelp: 'No help at all – strong!',
+		prevMove: 'Previous move',
+		nextMove: 'Next move',
+		showMoves: 'Moves',
+		viewing: (p: P) => `Move ${p.n}/${p.m}`,
 		rematch: 'Rematch',
 		analyse: 'Learn from this game',
 		newOpponent: 'New opponent',

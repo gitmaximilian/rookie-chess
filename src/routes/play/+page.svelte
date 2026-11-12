@@ -1,6 +1,10 @@
 <script lang="ts">
 	import Dock from '#lib/ui/Dock.svelte';
-	import { onDestroy, onMount } from 'svelte';
+	import { onDestroy, onMount, untrack } from 'svelte';
+	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
+	import ChevronRight from '@lucide/svelte/icons/chevron-right';
+	import ListOrdered from '@lucide/svelte/icons/list-ordered';
+	import X from '@lucide/svelte/icons/x';
 	import { resolve } from '$app/paths';
 	import Lightbulb from '@lucide/svelte/icons/lightbulb';
 	import Undo2 from '@lucide/svelte/icons/undo-2';
@@ -167,6 +171,31 @@
 		void v;
 		return game.isCheck;
 	});
+	// ── Zugweise zurück/vor blättern (nur ansehen; „Zurücknehmen“ bleibt eigener Knopf) ──
+	/** null = aktuelle Stellung, sonst Halbzug, der gerade angesehen wird */
+	let viewPly = $state<number | null>(null);
+	let showMoves = $state(false);
+	// jeder neue Zug (eigener, Bot, Zurücknehmen) bringt zur aktuellen Stellung zurück
+	$effect(() => {
+		void v;
+		untrack(() => (viewPly = null));
+	});
+	const browsing = $derived(viewPly !== null);
+	const shownPly = $derived(viewPly ?? moves.length);
+	const boardFen = $derived(viewPly === null ? fen : game.fenAt(viewPly));
+	const boardLast = $derived.by<[string, string] | undefined>(() => {
+		if (viewPly === null) return lastMove;
+		const m = moves[viewPly - 1];
+		return m ? [m.from, m.to] : undefined;
+	});
+	function stepBack() {
+		if (shownPly > 0) viewPly = shownPly - 1;
+	}
+	function stepForward() {
+		if (viewPly === null) return;
+		viewPly = viewPly + 1 >= moves.length ? null : viewPly + 1;
+	}
+
 	const myTurn = $derived(
 		phase === 'playing' && !ended && turn === myColor && !thinking && !coachBusy && !coachPending
 	);
@@ -565,6 +594,8 @@
 			undo();
 		}
 		if (e.key === 'f') orientation = orientation === 'white' ? 'black' : 'white';
+		if (e.key === 'ArrowLeft') stepBack();
+		if (e.key === 'ArrowRight') stepForward();
 	}
 </script>
 
@@ -709,14 +740,14 @@
 			</div>
 
 			<Board
-				{fen}
+				fen={boardFen}
 				{orientation}
 				turnColor={turn}
-				{lastMove}
-				{check}
-				{dests}
+				lastMove={boardLast}
+				check={browsing ? false : check}
+				dests={browsing ? new Map() : dests}
 				movableColor={myColor}
-				shapes={hintShapes}
+				shapes={browsing ? [] : hintShapes}
 				isPromotion={(f, t) => game.isPromotion(f as never, t as never)}
 				{onMove}
 			/>
@@ -733,7 +764,9 @@
 						{#if (myColor === 'white' ? material : -material) > 0}<span class="adv"
 								>+{Math.abs(material)}</span
 							>{/if}
-						{#if myTurn}<span class="status yours">{t('play.yourTurn')}</span>{/if}
+						{#if browsing}<span class="status viewing"
+								>{t('play.viewing', { n: shownPly, m: moves.length })}</span
+							>{:else if myTurn}<span class="status yours">{t('play.yourTurn')}</span>{/if}
 					</span>
 				</div>
 				{#if clocks}
@@ -745,6 +778,31 @@
 						{formatClock(clocks[myColor])}
 					</span>
 				{/if}
+				<!-- Zug zurück · Zugliste · Zug vor (nur ansehen) -->
+				<div class="pnav" class:browsing>
+					<button
+						class="pn-btn"
+						onclick={stepBack}
+						disabled={shownPly === 0}
+						aria-label={t('play.prevMove')}
+						title="{t('play.prevMove')} (←)"><ChevronLeft size={21} /></button
+					>
+					<button
+						class="pn-btn list"
+						class:on={showMoves}
+						onclick={() => (showMoves = !showMoves)}
+						aria-expanded={showMoves}
+						aria-label={t('play.showMoves')}
+						title={t('play.showMoves')}><ListOrdered size={19} /></button
+					>
+					<button
+						class="pn-btn"
+						onclick={stepForward}
+						disabled={!browsing}
+						aria-label={t('play.nextMove')}
+						title="{t('play.nextMove')} (→)"><ChevronRight size={21} /></button
+					>
+				</div>
 			</div>
 			{#if coachOn && !ended}
 				<Dock>
@@ -828,9 +886,32 @@
 			{/if}
 		</div>
 
+		{#if showMoves}
+			<div class="moves-backdrop" role="presentation" onclick={() => (showMoves = false)}></div>
+			<div class="moves-pop card" role="dialog" aria-label={t('play.showMoves')}>
+				<div class="mp-head">
+					<b>{t('play.showMoves')}</b>
+					<button
+						class="mp-close"
+						onclick={() => (showMoves = false)}
+						aria-label={t('common.close')}><X size={18} /></button
+					>
+				</div>
+				<MoveList
+					{moves}
+					current={shownPly}
+					onSelect={(p) => (viewPly = p >= moves.length ? null : p)}
+				/>
+			</div>
+		{/if}
+
 		<aside class="side card">
 			<div class="side-moves">
-				<MoveList {moves} />
+				<MoveList
+					{moves}
+					current={shownPly}
+					onSelect={(p) => (viewPly = p >= moves.length ? null : p)}
+				/>
 			</div>
 			<!-- mit Coach: Platz für Kommentar und Knöpfe vorab reservieren -->
 			<Dock order={1} reserve={coachOn ? 160 : 0}>
@@ -1595,6 +1676,127 @@
 		display: grid;
 		grid-template-columns: repeat(4, 1fr);
 		gap: 0.4rem;
+	}
+
+	/* Zug zurück · Zugliste · Zug vor – rechts in der eigenen Spielerzeile */
+	.pnav {
+		flex: none;
+		display: flex;
+		gap: 0.3rem;
+		margin-left: auto;
+	}
+
+	.pn-btn {
+		display: grid;
+		place-items: center;
+		width: 42px;
+		height: 42px;
+		border: 1px solid var(--line);
+		border-radius: 12px;
+		background: var(--surface);
+		color: var(--text);
+		cursor: pointer;
+		transition: transform var(--dur-fast) var(--ease-out);
+	}
+
+	.pn-btn:active:not(:disabled) {
+		transform: scale(0.94);
+	}
+
+	.pn-btn:disabled {
+		opacity: 0.35;
+		cursor: default;
+	}
+
+	.pn-btn.on {
+		background: var(--text);
+		color: var(--bg);
+		border-color: var(--text);
+	}
+
+	/* beim Zurückblättern deutlich zeigen, dass man nicht die aktuelle Stellung sieht */
+	.pnav.browsing .pn-btn:last-child {
+		background: var(--accent);
+		border-color: var(--accent);
+		color: var(--on-accent);
+	}
+
+	.status.viewing {
+		color: var(--accent-strong);
+		font-weight: 650;
+		animation: none;
+		white-space: nowrap;
+	}
+
+	/* Handy: unter dem Brett nur ein schlichter Link – keine Karte, die halb hinter der Leiste hängt */
+	@media (max-width: 767px) {
+		.side {
+			background: none;
+			border: none;
+			box-shadow: none;
+			padding: 0.2rem 0 0;
+			align-items: center;
+		}
+	}
+
+	.pinfo {
+		min-width: 0;
+	}
+
+	/* Zugliste auf dem Handy: schwebt über der Leiste, verändert keine Höhen */
+	.moves-pop {
+		position: fixed;
+		z-index: 44;
+		left: max(0.6rem, var(--safe-left));
+		right: max(0.6rem, var(--safe-right));
+		bottom: calc(var(--tabbar-h) + var(--safe-bottom) + var(--dock-h) + 1rem);
+		max-height: 34dvh;
+		display: flex;
+		flex-direction: column;
+		padding: 0.5rem;
+		box-shadow: var(--shadow-2);
+		animation: rise 220ms var(--ease-out) both;
+	}
+
+	.moves-backdrop {
+		position: fixed;
+		inset: 0;
+		z-index: 43;
+	}
+
+	.mp-head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 0 0 0.3rem 0.4rem;
+	}
+
+	.mp-close {
+		display: grid;
+		place-items: center;
+		width: 40px;
+		height: 40px;
+		border: none;
+		border-radius: 50%;
+		background: var(--surface-2);
+		color: var(--text);
+		cursor: pointer;
+	}
+
+	@media (min-width: 768px) {
+		/* am Desktop steht die Zugliste ohnehin daneben */
+		.moves-backdrop,
+		.moves-pop,
+		.pn-btn.list {
+			display: none;
+		}
+	}
+
+	/* Handy: Zugliste nur auf Knopfdruck – nichts liegt mehr halb unter der Leiste */
+	@media (max-width: 767px) {
+		.side-moves {
+			display: none;
+		}
 	}
 
 	.ctl {

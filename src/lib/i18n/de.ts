@@ -28,6 +28,7 @@ export const de: Shape<typeof en> = {
 		legal: 'Impressum & Datenschutz'
 	},
 	common: {
+		close: 'Schließen',
 		next: 'Weiter',
 		back: 'Zurück',
 		retry: 'Nochmal versuchen',
@@ -168,6 +169,10 @@ export const de: Shape<typeof en> = {
 		lost: 'Verloren',
 		draw: 'Remis',
 		noHelp: 'Ganz ohne Hilfe – stark!',
+		prevMove: 'Zug zurück',
+		nextMove: 'Zug vor',
+		showMoves: 'Züge',
+		viewing: (p) => `Zug ${p.n}/${p.m}`,
 		rematch: 'Revanche',
 		analyse: 'Aus der Partie lernen',
 		newOpponent: 'Neuer Gegner',
