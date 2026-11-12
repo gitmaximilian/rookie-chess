@@ -480,7 +480,7 @@
 				{/if}
 
 				{#if status === 'solved' || status === 'failed'}
-					<Dock class="pz-dock">
+					<Dock class="pz-dock" reserve={130}>
 						<div class="result" class:good={status === 'solved'}>
 							{#if status === 'solved'}
 								<p class="big">
@@ -516,7 +516,7 @@
 					</Dock>
 					<p class="kbd">{t('common.enterNext')}</p>
 				{:else}
-					<Dock class="pz-dock">
+					<Dock class="pz-dock" reserve={130}>
 						{#if run && run.mistakes > 0}
 							<p class="try-again">{t('puzzles.tryAgain')}</p>
 						{/if}

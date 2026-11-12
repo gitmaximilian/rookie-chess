@@ -67,46 +67,47 @@
 		</div>
 	</div>
 
-	{#if verdict || score}
-		<div class="eval-row">
-			{#if score}<span class="chip" class:neg={(score.mate ?? score.cp ?? 0) < 0}
-					>{formatScore(score)}</span
-				>{/if}
-			{#if verdict}<span class="verdict">{verdict}</span>{/if}
-		</div>
-	{/if}
+	<!-- Bewertung und Varianten sind immer da (notfalls leer), damit die Karte beim
+	     Durchklicken gleich hoch bleibt und nichts darunter springt -->
+	<div class="eval-row">
+		{#if score}<span class="chip" class:neg={(score.mate ?? score.cp ?? 0) < 0}
+				>{formatScore(score)}</span
+			>{/if}
+		{#if verdict}<span class="verdict">{verdict}</span>{/if}
+	</div>
 
-	{#if thinking || lines.length}
-		<div class="lines" role="group" aria-label={t('review.lines')}>
-			<div class="l-head">
-				<span>{t('review.lines')}</span>
-				<span class="depth" class:busy={thinking}>
-					{thinking ? t('review.thinking') : depth ? t('review.depth', { d: depth }) : ''}
-				</span>
-			</div>
-			{#each [0, 1, 2] as i (i)}
-				{@const l = lines[i]}
-				{#if l}
-					<button
-						class="line"
-						class:on={selected === i}
-						class:top={i === 0}
-						onclick={() => onselect(selected === i ? null : i)}
-						aria-pressed={selected === i}
-					>
-						<span class="ev" class:neg={(l.score.mate ?? l.score.cp ?? 0) < 0}
-							>{formatScore(l.score)}</span
-						>
-						<span class="pv"><span class="no">{moveNo}</span> {l.san.join(' ')}</span>
-					</button>
-				{:else}
-					<div class="line ph" aria-hidden="true">
-						<span class="ev skeleton"></span><span class="pv skeleton"></span>
-					</div>
-				{/if}
-			{/each}
+	<div class="lines" role="group" aria-label={t('review.lines')}>
+		<div class="l-head">
+			<span>{t('review.lines')}</span>
+			<span class="depth" class:busy={thinking}>
+				{thinking ? t('review.thinking') : depth ? t('review.depth', { d: depth }) : ''}
+			</span>
 		</div>
-	{/if}
+		{#each [0, 1, 2] as i (i)}
+			{@const l = lines[i]}
+			{#if l}
+				<button
+					class="line"
+					class:on={selected === i}
+					class:top={i === 0}
+					onclick={() => onselect(selected === i ? null : i)}
+					aria-pressed={selected === i}
+				>
+					<span class="ev" class:neg={(l.score.mate ?? l.score.cp ?? 0) < 0}
+						>{formatScore(l.score)}</span
+					>
+					<span class="pv"><span class="no">{moveNo}</span> {l.san.join(' ')}</span>
+				</button>
+			{:else if thinking}
+				<div class="line ph" aria-hidden="true">
+					<span class="ev skeleton"></span><span class="pv skeleton"></span>
+				</div>
+			{:else}
+				<!-- leerer Platz in voller Höhe (nur zwei Züge möglich oder Partie zu Ende) -->
+				<div class="line empty" aria-hidden="true"></div>
+			{/if}
+		{/each}
+	</div>
 </section>
 
 <style>
@@ -123,8 +124,9 @@
 		display: flex;
 		gap: 0.7rem;
 		align-items: flex-start;
-		/* feste Mindesthöhe: das Brett darüber springt beim Durchklicken nicht */
-		min-height: 5.6rem;
+		/* feste Höhe (Absender, eine Zeile Überschrift, drei Zeilen Text):
+		   die Karte bleibt beim Durchklicken gleich hoch, nichts darunter springt */
+		min-height: 6.9rem;
 	}
 
 	.avatar {
@@ -160,6 +162,9 @@
 	}
 
 	.head {
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
 		font-family: var(--font-display);
 		font-weight: 720;
 		font-size: 1.05rem;
@@ -179,6 +184,7 @@
 	}
 
 	.eval-row {
+		min-height: 1.6rem;
 		display: flex;
 		align-items: center;
 		gap: 0.5rem;
@@ -291,6 +297,10 @@
 	.no {
 		color: var(--text-3);
 		font-weight: 500;
+	}
+
+	.line.empty {
+		cursor: default;
 	}
 
 	.ph .ev {

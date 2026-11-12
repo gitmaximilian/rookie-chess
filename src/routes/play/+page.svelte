@@ -832,7 +832,8 @@
 			<div class="side-moves">
 				<MoveList {moves} />
 			</div>
-			<Dock order={1}>
+			<!-- mit Coach: Platz für Kommentar und Knöpfe vorab reservieren -->
+			<Dock order={1} reserve={coachOn ? 160 : 0}>
 				<div class="controls">
 					<button
 						class="ctl"
