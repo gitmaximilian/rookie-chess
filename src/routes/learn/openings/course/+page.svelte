@@ -1,4 +1,5 @@
 <script lang="ts">
+	import ColorBadge from '#lib/ui/ColorBadge.svelte';
 	import Dock from '#lib/ui/Dock.svelte';
 	import { onMount, onDestroy } from 'svelte';
 	import { page } from '$app/state';
@@ -398,7 +399,7 @@
 	<a class="back" href={resolve('/learn/openings')}><ArrowLeft size={18} /> {t('openings.title')}</a
 	>
 	<header class="head">
-		<span class="swatch {course.color}"></span>
+		<ColorBadge color={course.color} size={30} />
 		<div>
 			<span class="eyebrow">{t(`course.level${course.level}`)}</span>
 			<h1>{loc(course.name)}</h1>
@@ -789,23 +790,6 @@
 	.tagline {
 		color: var(--text-2);
 		margin-top: 0.35rem;
-	}
-
-	.swatch {
-		flex: none;
-		width: 26px;
-		height: 26px;
-		margin-top: 0.3rem;
-		border-radius: 8px;
-		border: 1px solid var(--line-strong);
-	}
-
-	.swatch.white {
-		background: #fff;
-	}
-
-	.swatch.black {
-		background: #222;
 	}
 
 	.grid {

@@ -188,7 +188,7 @@
 			<h1>{t('storm.title')}</h1>
 			<p class="muted">{t('storm.rules')}</p>
 			{#if best}<p class="best"><Trophy size={16} /> {t('storm.best', { n: best })}</p>{/if}
-			<button class="btn big" onclick={start}>{t('storm.start')}</button>
+			<button class="btn big storm-go" onclick={start}><Zap size={19} /> {t('storm.start')}</button>
 		{:else if phase === 'running'}
 			<p class="muted">
 				{t('storm.find', {
@@ -216,6 +216,10 @@
 </div>
 
 <style>
+	.storm-go {
+		align-self: stretch;
+	}
+
 	.back {
 		display: inline-flex;
 		align-items: center;

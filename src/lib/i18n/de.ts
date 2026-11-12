@@ -611,6 +611,7 @@ export const de: Shape<typeof en> = {
 		newer: 'Die Sicherung stammt aus einer neueren Rookie-Version.'
 	},
 	learn: {
+		continue: 'Weiter lernen',
 		eyebrow: 'Wissen',
 		title: 'Lernen',
 		subtitle: 'Grundlagen, Taktik, Eröffnungen und Endspiele – Schritt für Schritt.',
@@ -619,12 +620,13 @@ export const de: Shape<typeof en> = {
 		openings: 'Eröffnungen',
 		openingsText:
 			'Bau dein eigenes Repertoire und trainiere es mit Wiederholung im richtigen Moment.',
-		level: (p) => ['', 'Grundlagen', 'Fortgeschritten', 'Profi'][Number(p.n)],
+		level: (p) => ['', 'Leicht', 'Mittel', 'Schwer'][Number(p.n)],
 		goal: { mate: 'Setze matt', promote: 'Wandle den Bauern um', draw: 'Halte remis' },
 		maxMoves: (p) => `in ≤ ${p.n} Zügen`,
 		survive: (p) => `über ${p.n} Züge`
 	},
 	basics: {
+		upNext: 'Als Nächstes',
 		title: 'Schach-Grundlagen',
 		hubText:
 			'Neu im Schach? Lerne jede Regel Schritt für Schritt – mit kleinen Spielen auf dem Brett.',
@@ -773,6 +775,10 @@ export const de: Shape<typeof en> = {
 		}
 	},
 	openings: {
+		startHere: 'Starte mit einem Kurs',
+		startHereText:
+			'Such dir unten eine Eröffnung aus und lerne sie Zug für Zug. Jede gelernte Variante landet in deinem Repertoire – hier kannst du sie dann trainieren.',
+		repertoire: 'Dein Repertoire',
 		title: 'Eröffnungstrainer',
 		subtitle: 'Dein Repertoire – trainiert mit Wiederholung im richtigen Moment.',
 		asWhite: 'Mit Weiß',

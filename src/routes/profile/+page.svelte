@@ -92,7 +92,16 @@
 	eyebrow={t('profile.eyebrow')}
 	title={t('profile.title')}
 	subtitle={t('profile.subtitle')}
-/>
+>
+	{#snippet action()}
+		<a
+			class="gear"
+			href={resolve('/settings')}
+			aria-label={t('profile.settings')}
+			title={t('profile.settings')}><Settings size={21} /></a
+		>
+	{/snippet}
+</PageHeader>
 
 <ProfileTabs active="overview" />
 
@@ -199,10 +208,46 @@
 		max-width: 1040px;
 	}
 
+	.gear {
+		display: grid;
+		place-items: center;
+		width: 44px;
+		height: 44px;
+		border-radius: 50%;
+		background: var(--surface);
+		border: 1px solid var(--line);
+		box-shadow: var(--shadow-1);
+		color: var(--text-2);
+	}
+
 	.tiles {
 		display: grid;
 		grid-template-columns: repeat(2, 1fr);
-		gap: 0.6rem;
+		gap: 0.5rem;
+	}
+
+	/* Handy: drei kompakte Spalten; die siebte Kachel füllt die letzte Zeile */
+	@media (max-width: 639px) {
+		.tiles {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+		}
+		.tile {
+			padding: 0.7rem 0.75rem !important;
+		}
+		.t-icon {
+			width: 26px !important;
+			height: 26px !important;
+			margin-bottom: 0.25rem !important;
+		}
+		.t-value {
+			font-size: 1.25rem !important;
+		}
+		.t-label {
+			font-size: 0.72rem !important;
+		}
+		.tile:last-child:nth-child(3n + 1) {
+			grid-column: span 3;
+		}
 	}
 
 	@media (min-width: 640px) {
@@ -247,6 +292,7 @@
 	.t-label {
 		font-size: 0.8rem;
 		color: var(--text-2);
+		line-height: 1.25;
 	}
 
 	.duo {

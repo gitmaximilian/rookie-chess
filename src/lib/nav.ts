@@ -26,7 +26,15 @@ export const navItems: NavItem[] = [
 ];
 
 /** Ist `href` der aktive Bereich für `pathname`? */
+/** Seiten ohne eigenen Tab gehören zum Profil (dort sind sie verlinkt) */
+const PROFILE_PAGES = ['/settings', '/import', '/about', '/privacy'];
+
 export function isActive(href: string, pathname: string): boolean {
 	if (href === '/') return pathname === '/';
+	if (
+		href === '/profile' &&
+		PROFILE_PAGES.some((p) => pathname === p || pathname.startsWith(p + '/'))
+	)
+		return true;
 	return pathname === href || pathname.startsWith(href + '/');
 }

@@ -303,6 +303,32 @@ html[data-first-run] .sidebar {
 	color: var(--text);
 }
 
+.btn:disabled {
+	opacity: 0.5;
+	cursor: default;
+}
+
+/* Hauptaktion einer Seite */
+.btn.big {
+	min-height: 52px;
+	padding: 0 1.6rem;
+	font-size: 1.05rem;
+}
+
+/* kompakt im Bild, aber mit mindestens 44 px Tippfläche (unsichtbar erweitert) */
+.btn.small {
+	position: relative;
+	min-height: 36px;
+	padding: 0 0.9rem;
+	font-size: 0.88rem;
+}
+
+.btn.small::after {
+	content: '';
+	position: absolute;
+	inset: -5px -3px;
+}
+
 .eyebrow {
 	font-size: 0.78rem;
 	font-weight: 650;

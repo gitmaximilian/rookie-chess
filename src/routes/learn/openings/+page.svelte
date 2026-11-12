@@ -12,6 +12,7 @@
 	import Flame from '@lucide/svelte/icons/flame';
 	import Board, { type Shape } from '#lib/ui/board/Board.svelte';
 	import PageHeader from '#lib/ui/PageHeader.svelte';
+	import ColorBadge from '#lib/ui/ColorBadge.svelte';
 	import { Game } from '#lib/chess/game.js';
 	import { figurine } from '#lib/chess/notation.js';
 	import { db, type RepertoireNodeRow, bumpActivity } from '#lib/db/db.js';
@@ -110,6 +111,8 @@
 		game = new Game();
 		v++;
 		view = 'edit';
+		// neue Ansicht beginnt oben – sonst liegt das Brett nach einem Tipp weit unten außer Sicht
+		window.scrollTo({ top: 0 });
 		loadHere();
 	}
 
@@ -168,6 +171,8 @@
 	async function startTraining(c: Side) {
 		color = c;
 		view = 'train';
+		// neue Ansicht beginnt oben – sonst liegt das Brett nach einem Tipp weit unten außer Sicht
+		window.scrollTo({ top: 0 });
 		streak = 0;
 		await nextCard();
 	}
@@ -257,6 +262,8 @@
 
 	function backToOverview() {
 		view = 'overview';
+		// neue Ansicht beginnt oben – sonst liegt das Brett nach einem Tipp weit unten außer Sicht
+		window.scrollTo({ top: 0 });
 		refresh();
 	}
 
@@ -284,55 +291,115 @@
 	<a class="back" href={resolve('/learn')}><ArrowLeft size={18} /> {t('endgame.back')}</a>
 	<PageHeader title={t('openings.title')} subtitle={t('openings.subtitle')} />
 
-	<div class="sides">
-		{#each sides as c (c)}
-			<section class="side card {c}">
-				<div class="side-head">
-					<span class="swatch {c}"></span>
-					<h2>{c === 'white' ? t('openings.asWhite') : t('openings.asBlack')}</h2>
-				</div>
-				<p class="meta">
-					{t('openings.moves', { n: stats[c].mine })}
-					{#if stats[c].due}· <b class="due">{t('openings.due', { n: stats[c].due })}</b>{/if}
-				</p>
-				<div class="row-btns">
-					<button class="btn" onclick={() => startTraining(c)} disabled={!stats[c].mine}>
-						<Play size={17} />
-						{t('openings.train')}
-					</button>
-					<button class="btn secondary" onclick={() => openEditor(c)}>
-						<PenLine size={17} />
-						{t('openings.edit')}
-					</button>
-				</div>
-			</section>
+	{#if stats.white.mine + stats.black.mine === 0}
+		<div class="first-hint card">
+			<b>{t('openings.startHere')}</b>
+			<span>{t('openings.startHereText')}</span>
+		</div>
+		<h2 class="sec">{t('course.courses')}</h2>
+		<p class="sec-text">{t('course.coursesText')}</p>
+		{#each COURSE_GROUPS as grp (grp.key)}
+			<h3 class="grp">{t(grp.label)}</h3>
+			<div class="courses">
+				{#each COURSES.filter(grp.match) as c, i (c.id)}
+					{@const learned = c.lines.filter((l) => courseProgress[c.id]?.[l.id]).length}
+					<a
+						class="course card pressable"
+						style:--i={i}
+						href={resolve(`/learn/openings/course?id=${c.id}`)}
+					>
+						<span class="c-top">
+							<ColorBadge color={c.color} size={28} />
+							<span class="lvl l{c.level}">{t(`course.level${c.level}`)}</span>
+						</span>
+						<b>{loc(c.name)}</b>
+						<span class="c-tag">{loc(c.tagline)}</span>
+						<span class="c-bar"
+							><span style:width="{(learned / c.lines.length) * 100}%"></span></span
+						>
+						<span class="c-prog">{t('course.progress', { n: learned, m: c.lines.length })}</span>
+					</a>
+				{/each}
+			</div>
 		{/each}
-	</div>
-
-	<h2 class="sec">{t('course.courses')}</h2>
-	<p class="sec-text">{t('course.coursesText')}</p>
-	{#each COURSE_GROUPS as grp (grp.key)}
-		<h3 class="grp">{t(grp.label)}</h3>
-		<div class="courses">
-			{#each COURSES.filter(grp.match) as c, i (c.id)}
-				{@const learned = c.lines.filter((l) => courseProgress[c.id]?.[l.id]).length}
-				<a
-					class="course card pressable"
-					style:--i={i}
-					href={resolve(`/learn/openings/course?id=${c.id}`)}
-				>
-					<span class="c-top">
-						<span class="swatch {c.color}"></span>
-						<span class="lvl l{c.level}">{t(`course.level${c.level}`)}</span>
-					</span>
-					<b>{loc(c.name)}</b>
-					<span class="c-tag">{loc(c.tagline)}</span>
-					<span class="c-bar"><span style:width="{(learned / c.lines.length) * 100}%"></span></span>
-					<span class="c-prog">{t('course.progress', { n: learned, m: c.lines.length })}</span>
-				</a>
+		<h2 class="sec">{t('openings.repertoire')}</h2>
+		<div class="sides">
+			{#each sides as c (c)}
+				<section class="side card {c}">
+					<div class="side-head">
+						<ColorBadge color={c} />
+						<h2>{c === 'white' ? t('openings.asWhite') : t('openings.asBlack')}</h2>
+					</div>
+					<p class="meta">
+						{t('openings.moves', { n: stats[c].mine })}
+						{#if stats[c].due}· <b class="due">{t('openings.due', { n: stats[c].due })}</b>{/if}
+					</p>
+					<div class="row-btns">
+						<button class="btn" onclick={() => startTraining(c)} disabled={!stats[c].mine}>
+							<Play size={17} />
+							{t('openings.train')}
+						</button>
+						<button class="btn secondary" onclick={() => openEditor(c)}>
+							<PenLine size={17} />
+							{t('openings.edit')}
+						</button>
+					</div>
+				</section>
 			{/each}
 		</div>
-	{/each}
+	{:else}
+		<div class="sides">
+			{#each sides as c (c)}
+				<section class="side card {c}">
+					<div class="side-head">
+						<ColorBadge color={c} />
+						<h2>{c === 'white' ? t('openings.asWhite') : t('openings.asBlack')}</h2>
+					</div>
+					<p class="meta">
+						{t('openings.moves', { n: stats[c].mine })}
+						{#if stats[c].due}· <b class="due">{t('openings.due', { n: stats[c].due })}</b>{/if}
+					</p>
+					<div class="row-btns">
+						<button class="btn" onclick={() => startTraining(c)} disabled={!stats[c].mine}>
+							<Play size={17} />
+							{t('openings.train')}
+						</button>
+						<button class="btn secondary" onclick={() => openEditor(c)}>
+							<PenLine size={17} />
+							{t('openings.edit')}
+						</button>
+					</div>
+				</section>
+			{/each}
+		</div>
+
+		<h2 class="sec">{t('course.courses')}</h2>
+		<p class="sec-text">{t('course.coursesText')}</p>
+		{#each COURSE_GROUPS as grp (grp.key)}
+			<h3 class="grp">{t(grp.label)}</h3>
+			<div class="courses">
+				{#each COURSES.filter(grp.match) as c, i (c.id)}
+					{@const learned = c.lines.filter((l) => courseProgress[c.id]?.[l.id]).length}
+					<a
+						class="course card pressable"
+						style:--i={i}
+						href={resolve(`/learn/openings/course?id=${c.id}`)}
+					>
+						<span class="c-top">
+							<ColorBadge color={c.color} size={28} />
+							<span class="lvl l{c.level}">{t(`course.level${c.level}`)}</span>
+						</span>
+						<b>{loc(c.name)}</b>
+						<span class="c-tag">{loc(c.tagline)}</span>
+						<span class="c-bar"
+							><span style:width="{(learned / c.lines.length) * 100}%"></span></span
+						>
+						<span class="c-prog">{t('course.progress', { n: learned, m: c.lines.length })}</span>
+					</a>
+				{/each}
+			</div>
+		{/each}
+	{/if}
 {:else if view === 'edit'}
 	<button class="back" onclick={backToOverview}
 		><ArrowLeft size={18} /> {t('openings.title')}</button
@@ -602,20 +669,19 @@
 		font-size: 1.3rem;
 	}
 
-	.swatch {
-		flex: none;
-		width: 22px;
-		height: 22px;
-		border-radius: 7px;
-		border: 1px solid var(--line-strong);
+	.first-hint {
+		display: flex;
+		flex-direction: column;
+		gap: 0.2rem;
+		padding: 0.9rem 1rem;
+		margin-bottom: 0.5rem;
+		border-color: color-mix(in srgb, var(--c-learn) 35%, transparent);
+		background: var(--c-learn-soft);
 	}
 
-	.swatch.white {
-		background: #fff;
-	}
-
-	.swatch.black {
-		background: #222;
+	.first-hint span {
+		font-size: 0.9rem;
+		color: var(--text-2);
 	}
 
 	.meta {
@@ -664,17 +730,6 @@
 		align-items: center;
 		gap: 0.85rem;
 		padding: 0.85rem 1rem;
-	}
-
-	.st-text {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-	}
-
-	.st-text span {
-		font-size: 0.88rem;
-		color: var(--text-2);
 	}
 
 	.added {

@@ -49,6 +49,17 @@ Geprüft im Browser bei 393×852, 393×659, iPad (820×1180) und Desktop (1280×
 | A4  | Keine Zugarten am Brett.                                                                                                                                                  | Zehn Zugarten (Brillant bis Patzer, Buch, Verpasst) als Abzeichen am Zielfeld, eingefärbte Zugfelder, Zugliste.      |
 | A5  | Matt zulassen in verlorener Stellung galt als „ungenau“; ein Abtausch galt als „Figur gewinnen“; gegnerische Fehler wurden mit „dein Springer …“ erklärt.                 | Regeln korrigiert; gegnerische Fehler zeigen, wie man sie bestraft.                                                  |
 
+## Nachtrag: übrige Bereiche
+
+| #   | Befund                                                                                                                                                                | Schwere   | Umsetzung                                                                                           |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- | --------------------------------------------------------------------------------------------------- |
+| R1  | **Learn ohne „Weiter mit …“.** Der Hub zeigt drei Bereichskarten und zehn hohe Endspielkarten (gut vier Bildschirme), aber keinen nächsten Schritt.                   | hoch      | Karte „Weiter lernen“ mit der nächsten offenen Lektion; Bereiche und Endspiele als kompakte Zeilen. |
+| R2  | **Eröffnungen: Sackgasse für Neulinge.** Oben zwei leere Repertoire-Karten mit ausgegrauten „Trainieren“-Knöpfen, die Kurse (der eigentliche Einstieg) erst darunter. | hoch      | Ohne Repertoire stehen die Kurse oben, mit kurzer Erklärung, wie das Repertoire entsteht.           |
+| R3  | Farbkennzeichnung der Kurse (weißes/schwarzes Quadrat) sieht aus wie eine leere Checkbox.                                                                             | mittel    | Figur-Symbol (♔/♚) in einem Kreis.                                                                  |
+| R4  | **Einstellungen versteckt:** nur ganz unten im Profil (fünf Bildschirme Scrollen), am Desktop gar nicht in der Seitenleiste.                                          | hoch      | Zahnrad oben im Profil, Eintrag in der Seitenleiste.                                                |
+| R5  | Profil-Kacheln: sieben Kacheln, die letzte allein in der Zeile.                                                                                                       | Feinschl. | Letzte ungerade Kachel über die volle Breite.                                                       |
+| R6  | Endspiel-Stufe „Grundlagen“ kollidiert mit dem Bereich „Schach-Grundlagen“.                                                                                           | mittel    | Stufen heißen „Leicht / Mittel / Schwer“.                                                           |
+
 ## Vergleich mit Lichess und Chess.com
 
 - **Chess.com** führt nach jeder Partie direkt in „Game Review“ mit „Schlüsselmomente“ und „Nochmal versuchen“. Rookie hat „Fehler nachspielen“, aber erst nach Scrollen. → Sprung zum nächsten Fehler im Dock (H3).

@@ -4,12 +4,17 @@
 	import BookOpen from '@lucide/svelte/icons/book-open';
 	import GraduationCap from '@lucide/svelte/icons/graduation-cap';
 	import { BASICS, TACTICS } from '#lib/basics/lessons.js';
+	import { loc } from '#lib/openings/courses.js';
+	import ArrowRight from '@lucide/svelte/icons/arrow-right';
+	import ChevronRight from '@lucide/svelte/icons/chevron-right';
+	import Crown from '@lucide/svelte/icons/crown';
+	import Star from '@lucide/svelte/icons/star';
 	import Swords from '@lucide/svelte/icons/swords';
 	import { getSetting } from '#lib/db/db.js';
 	import PageHeader from '#lib/ui/PageHeader.svelte';
 	import LessonIcon from '#lib/ui/LessonIcon.svelte';
 	import Stars from '#lib/ui/Stars.svelte';
-	import { LESSONS, lessonTitle, lessonSubtitle, goalText } from '#lib/endgames/lessons.js';
+	import { LESSONS, lessonTitle, lessonSubtitle } from '#lib/endgames/lessons.js';
 	import { db } from '#lib/db/db.js';
 	import { t } from '#lib/i18n/i18n.svelte.js';
 	import { countDue } from '#lib/training/srs.js';
@@ -19,14 +24,57 @@
 	let repDue = $state(0);
 	let basicsDone = $state(0);
 	let tacticsDone = $state(0);
+	let doneIds = $state<string[]>([]);
+	let loaded = $state(false);
 
 	onMount(async () => {
 		const rows = await db.endgames.toArray();
 		stars = Object.fromEntries(rows.map((r) => [r.id, r.stars]));
 		repCount = await db.repertoire.filter((r) => r.mine).count();
 		repDue = await countDue('repertoire');
-		basicsDone = (await getSetting<string[]>('basicsDone', [])).length;
-		tacticsDone = (await getSetting<string[]>('tacticsDone', [])).length;
+		const b = await getSetting<string[]>('basicsDone', []);
+		const tc = await getSetting<string[]>('tacticsDone', []);
+		basicsDone = b.length;
+		tacticsDone = tc.length;
+		doneIds = [...b, ...tc];
+		loaded = true;
+	});
+
+	/** Der eine nächste Schritt: Grundlagen → Taktik → fällige Eröffnungen → Endspiele */
+	const next = $derived.by(() => {
+		if (!loaded) return null;
+		const basic = BASICS.find((l) => !doneIds.includes(l.id));
+		if (basic)
+			return {
+				area: t('basics.title'),
+				title: loc(basic.title),
+				href: resolve(`/learn/basics?id=${basic.id}`),
+				c: 'var(--c-puzzle)'
+			};
+		const tactic = TACTICS.find((l) => !doneIds.includes(l.id));
+		if (tactic)
+			return {
+				area: t('tactics.title'),
+				title: loc(tactic.title),
+				href: resolve(`/learn/basics?set=tactics&id=${tactic.id}`),
+				c: 'var(--c-play)'
+			};
+		if (repDue)
+			return {
+				area: t('learn.openings'),
+				title: t('openings.due', { n: repDue }),
+				href: resolve('/learn/openings?train=due'),
+				c: 'var(--c-learn)'
+			};
+		const eg = LESSONS.find((l) => !stars[l.id]);
+		if (eg)
+			return {
+				area: t('learn.endgames'),
+				title: lessonTitle(eg),
+				href: resolve(`/learn/endgame?id=${eg.id}`),
+				c: 'var(--c-analysis)'
+			};
+		return null;
 	});
 
 	const total = $derived(Object.values(stars).reduce((a, b) => a + b, 0));
@@ -37,74 +85,96 @@
 <PageHeader eyebrow={t('learn.eyebrow')} title={t('learn.title')} subtitle={t('learn.subtitle')} />
 
 <div class="wrap">
-	<div class="paths">
+	{#if next}
+		<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- next.href ist bereits aufgelöst -->
 		<a
-			class="path card pressable"
-			style:--c="var(--c-puzzle)"
-			style:--i={0}
-			href={resolve('/learn/basics')}
+			class="next card pressable"
+			href={next.href}
+			style:--c={next.c}
+			aria-label="{t('learn.continue')}: {next.title}"
 		>
-			<span class="p-icon"><GraduationCap size={24} /></span>
-			<b>{t('basics.title')}</b>
-			<span class="p-text">{t('basics.hubText')}</span>
-			<span class="p-bar"><span style:width="{(basicsDone / BASICS.length) * 100}%"></span></span>
-			<span class="p-meta">{t('basics.progress', { n: basicsDone, m: BASICS.length })}</span>
+			<span class="n-text">
+				<span class="eyebrow">{t('learn.continue')} · {next.area}</span>
+				<b>{next.title}</b>
+			</span>
+			<span class="n-go"><ArrowRight size={20} /></span>
+		</a>
+	{:else if !loaded}
+		<div class="skeleton" style:height="76px"></div>
+	{/if}
+
+	<div class="paths">
+		<a class="path card pressable" style:--c="var(--c-puzzle)" href={resolve('/learn/basics')}>
+			<span class="p-icon"><GraduationCap size={22} /></span>
+			<span class="p-main">
+				<b>{t('basics.title')}</b>
+				<span class="p-text">{t('basics.hubText')}</span>
+				<span class="p-bar"><span style:width="{(basicsDone / BASICS.length) * 100}%"></span></span>
+				<span class="p-meta">{t('basics.progress', { n: basicsDone, m: BASICS.length })}</span>
+			</span>
+			<ChevronRight size={18} class="chev" />
 		</a>
 		<a
 			class="path card pressable"
 			style:--c="var(--c-play)"
-			style:--i={1}
 			href={resolve('/learn/basics?set=tactics')}
 		>
-			<span class="p-icon"><Swords size={24} /></span>
-			<b>{t('tactics.title')}</b>
-			<span class="p-text">{t('tactics.hubText')}</span>
-			<span class="p-bar"><span style:width="{(tacticsDone / TACTICS.length) * 100}%"></span></span>
-			<span class="p-meta">{t('basics.progress', { n: tacticsDone, m: TACTICS.length })}</span>
-		</a>
-		<a
-			class="path card pressable"
-			style:--c="var(--c-learn)"
-			style:--i={2}
-			href={resolve('/learn/openings')}
-		>
-			<span class="p-icon"><BookOpen size={24} /></span>
-			<b>{t('learn.openings')}</b>
-			<span class="p-text">{t('learn.openingsText')}</span>
-			<span class="p-bar"><span style:width="{Math.min(100, (repCount / 40) * 100)}%"></span></span>
-			<span class="p-meta">
-				{t('openings.moves', { n: repCount })}{#if repDue}
-					· <b class="due">{t('openings.due', { n: repDue })}</b>{/if}
+			<span class="p-icon"><Swords size={22} /></span>
+			<span class="p-main">
+				<b>{t('tactics.title')}</b>
+				<span class="p-text">{t('tactics.hubText')}</span>
+				<span class="p-bar"
+					><span style:width="{(tacticsDone / TACTICS.length) * 100}%"></span></span
+				>
+				<span class="p-meta">{t('basics.progress', { n: tacticsDone, m: TACTICS.length })}</span>
 			</span>
+			<ChevronRight size={18} class="chev" />
+		</a>
+		<a class="path card pressable" style:--c="var(--c-learn)" href={resolve('/learn/openings')}>
+			<span class="p-icon"><BookOpen size={22} /></span>
+			<span class="p-main">
+				<b>{t('learn.openings')}</b>
+				<span class="p-text">{t('learn.openingsText')}</span>
+				<span class="p-bar"
+					><span style:width="{Math.min(100, (repCount / 40) * 100)}%"></span></span
+				>
+				<span class="p-meta">
+					{t('openings.moves', { n: repCount })}{#if repDue}
+						· <b class="due">{t('openings.due', { n: repDue })}</b>{/if}
+				</span>
+			</span>
+			<ChevronRight size={18} class="chev" />
 		</a>
 	</div>
 
 	<div class="sec-head">
 		<div>
-			<h2>{t('learn.endgames')}</h2>
+			<h2><Crown size={20} /> {t('learn.endgames')}</h2>
 			<p>{t('learn.endgamesText')}</p>
 		</div>
-		<span class="total"><Stars n={1} size={15} /> {total} / {LESSONS.length * 3}</span>
+		<span class="total"
+			><Star size={15} fill="var(--warn)" color="var(--warn)" />
+			{total} / {LESSONS.length * 3}</span
+		>
 	</div>
 
 	<div class="lessons">
-		{#each LESSONS as l, i (l.id)}
+		{#each LESSONS as l (l.id)}
 			<a
 				class="lesson card pressable"
 				href={resolve(`/learn/endgame?id=${l.id}`)}
-				style:--i={i}
 				class:done={(stars[l.id] ?? 0) > 0}
 			>
-				<span class="l-top">
-					<span class="l-icon lv{l.level}"><LessonIcon icon={l.icon} size={22} /></span>
-					<span class="lvl">{t('learn.level', { n: l.level })}</span>
+				<span class="l-icon lv{l.level}"><LessonIcon icon={l.icon} size={20} /></span>
+				<span class="l-main">
+					<span class="l-title">{lessonTitle(l)}</span>
+					<span class="l-sub"
+						><span class="lvl lv{l.level}">{t('learn.level', { n: l.level })}</span> · {lessonSubtitle(
+							l
+						)}</span
+					>
 				</span>
-				<span class="l-title">{lessonTitle(l)}</span>
-				<span class="l-sub">{lessonSubtitle(l)}</span>
-				<span class="l-foot">
-					<span class="goal">{goalText(l)}</span>
-					<Stars n={stars[l.id] ?? 0} size={15} />
-				</span>
+				<Stars n={stars[l.id] ?? 0} size={14} />
 			</a>
 		{/each}
 	</div>
@@ -114,64 +184,111 @@
 	.wrap {
 		display: flex;
 		flex-direction: column;
-		gap: 1rem;
+		gap: 0.75rem;
 		max-width: 1040px;
+	}
+
+	.next {
+		display: flex;
+		align-items: center;
+		gap: 0.9rem;
+		padding: 1rem 1rem 1rem 1.15rem;
+		color: var(--text);
+		border: 1.5px solid color-mix(in srgb, var(--c) 40%, transparent);
+		background:
+			radial-gradient(
+				120% 140% at 100% 0%,
+				color-mix(in srgb, var(--c) 16%, transparent),
+				transparent 70%
+			),
+			var(--surface);
+	}
+
+	.n-text {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.15rem;
+	}
+
+	.n-text .eyebrow {
+		color: color-mix(in srgb, var(--c) 70%, var(--text));
+	}
+
+	.n-text b {
+		font-family: var(--font-display);
+		font-size: 1.25rem;
+		font-weight: 700;
+		letter-spacing: -0.01em;
+	}
+
+	.n-go {
+		flex: none;
+		display: grid;
+		place-items: center;
+		width: 46px;
+		height: 46px;
+		border-radius: 50%;
+		background: var(--c);
+		color: #fff;
+		box-shadow: 0 6px 16px color-mix(in srgb, var(--c) 35%, transparent);
 	}
 
 	.paths {
 		display: grid;
-		gap: 0.6rem;
+		gap: 0.5rem;
 	}
 
-	@media (min-width: 760px) {
+	@media (min-width: 900px) {
 		.paths {
-			grid-template-columns: repeat(3, 1fr);
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+		}
+		.path {
+			align-items: flex-start !important;
 		}
 	}
 
 	.path {
 		display: flex;
-		flex-direction: column;
-		gap: 0.35rem;
-		padding: 1.05rem 1.1rem;
+		align-items: center;
+		gap: 0.85rem;
+		padding: 0.9rem 0.8rem 0.9rem 0.95rem;
 		color: var(--text);
-		background:
-			radial-gradient(
-				110% 120% at 100% 0%,
-				color-mix(in srgb, var(--c) 14%, transparent),
-				transparent 65%
-			),
-			var(--surface);
-		animation: rise 420ms var(--ease-out) both;
-		animation-delay: calc(var(--i) * 60ms);
 	}
 
 	.p-icon {
+		flex: none;
 		display: grid;
 		place-items: center;
-		width: 46px;
-		height: 46px;
-		margin-bottom: 0.3rem;
-		border-radius: 14px;
+		width: 44px;
+		height: 44px;
+		border-radius: 13px;
 		background: var(--c);
 		color: #fff;
-		box-shadow: 0 8px 20px color-mix(in srgb, var(--c) 35%, transparent);
+	}
+
+	.p-main {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.15rem;
 	}
 
 	.path b {
-		font-size: 1.12rem;
+		font-size: 1.05rem;
 	}
 
 	.p-text {
-		flex: 1;
-		font-size: 0.88rem;
+		font-size: 0.84rem;
 		color: var(--text-2);
-		line-height: 1.4;
+		line-height: 1.35;
 	}
 
 	.p-bar {
-		height: 5px;
-		margin-top: 0.45rem;
+		height: 4px;
+		margin-top: 0.35rem;
 		border-radius: 999px;
 		background: var(--surface-2);
 		overflow: hidden;
@@ -185,8 +302,13 @@
 	}
 
 	.p-meta {
-		font-size: 0.78rem;
+		font-size: 0.76rem;
 		color: var(--text-2);
+	}
+
+	.path :global(.chev) {
+		flex: none;
+		color: var(--text-3);
 	}
 
 	.due {
@@ -204,12 +326,15 @@
 	}
 
 	.sec-head h2 {
-		font-size: 1.35rem;
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		font-size: 1.3rem;
 	}
 
 	.sec-head p {
 		color: var(--text-2);
-		font-size: 0.95rem;
+		font-size: 0.92rem;
 		margin-top: 0.2rem;
 	}
 
@@ -224,33 +349,26 @@
 
 	.lessons {
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-		gap: 0.75rem;
+		grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+		gap: 0.45rem;
 	}
 
 	.lesson {
 		display: flex;
-		flex-direction: column;
-		gap: 0.3rem;
-		padding: 1rem 1.1rem;
-		min-height: 172px;
-		animation: rise 460ms var(--ease-out) both;
-		animation-delay: calc(var(--i) * 45ms);
-	}
-
-	.l-top {
-		display: flex;
 		align-items: center;
-		justify-content: space-between;
-		margin-bottom: 0.4rem;
+		gap: 0.8rem;
+		min-height: 64px;
+		padding: 0.65rem 0.85rem 0.65rem 0.7rem;
+		color: var(--text);
 	}
 
 	.l-icon {
+		flex: none;
 		display: grid;
 		place-items: center;
-		width: 42px;
-		height: 42px;
-		border-radius: 13px;
+		width: 40px;
+		height: 40px;
+		border-radius: 12px;
 		color: #fff;
 		background: var(--c-learn);
 	}
@@ -263,45 +381,38 @@
 		background: var(--c-play);
 	}
 
-	.lvl {
-		font-size: 0.72rem;
-		font-weight: 700;
-		letter-spacing: 0.04em;
-		text-transform: uppercase;
-		color: var(--text-3);
+	.l-main {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
 	}
 
 	.l-title {
 		font-family: var(--font-display);
 		font-weight: 680;
-		font-size: 1.1rem;
+		font-size: 1rem;
 		letter-spacing: -0.01em;
 	}
 
 	.l-sub {
-		font-size: 0.88rem;
+		font-size: 0.8rem;
 		color: var(--text-2);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 
-	.l-foot {
-		margin-top: auto;
-		padding-top: 0.6rem;
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 0.5rem;
+	.lvl {
+		font-weight: 700;
+		color: var(--c-learn);
 	}
 
-	.goal {
-		font-size: 0.78rem;
-		font-weight: 600;
-		color: var(--text-3);
+	.lvl.lv2 {
+		color: var(--c-puzzle);
 	}
 
-	@keyframes rise {
-		from {
-			opacity: 0;
-			transform: translateY(10px);
-		}
+	.lvl.lv3 {
+		color: var(--c-play);
 	}
 </style>

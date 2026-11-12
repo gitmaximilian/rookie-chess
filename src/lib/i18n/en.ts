@@ -571,6 +571,7 @@ export const en = {
 		newer: 'The backup comes from a newer Rookie version.'
 	},
 	learn: {
+		continue: 'Continue',
 		eyebrow: 'Knowledge',
 		title: 'Learn',
 		subtitle: 'Basics, tactics, openings and endgames – step by step.',
@@ -578,13 +579,14 @@ export const en = {
 		endgamesText: 'Learn the most important techniques – with perfect play from the tablebase.',
 		openings: 'Openings',
 		openingsText: 'Build your own repertoire and train it with spaced repetition.',
-		level: (p: P) => ['', 'Basics', 'Intermediate', 'Advanced'][Number(p.n)],
+		level: (p: P) => ['', 'Easy', 'Medium', 'Hard'][Number(p.n)],
 		goal: { mate: 'Checkmate', promote: 'Promote the pawn', draw: 'Hold the draw' },
 		maxMoves: (p: P) => `in ≤ ${p.n} moves`,
 		survive: (p: P) => `for ${p.n} moves`
 	},
 	basics: {
 		title: 'Chess basics',
+		upNext: 'Up next',
 		hubText: 'New to chess? Learn every rule step by step – with little games on the board.',
 		subtitle: 'From the very first move to checkmate – one small step at a time.',
 		progress: (p: P) => `${p.n} of ${p.m} lessons done`,
@@ -729,6 +731,10 @@ export const en = {
 		}
 	},
 	openings: {
+		startHere: 'Start with a course',
+		startHereText:
+			'Pick an opening below and learn it move by move. Every line you learn goes into your repertoire – then you can train it here.',
+		repertoire: 'Your repertoire',
 		title: 'Opening trainer',
 		subtitle: 'Your repertoire – trained with spaced repetition.',
 		asWhite: 'As White',

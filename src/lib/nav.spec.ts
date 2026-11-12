@@ -12,6 +12,12 @@ describe('isActive', () => {
 		expect(isActive('/learn', '/learnx')).toBe(false);
 	});
 
+	it('Einstellungen & Co. markieren den Profil-Tab', () => {
+		expect(isActive('/profile', '/settings')).toBe(true);
+		expect(isActive('/profile', '/import')).toBe(true);
+		expect(isActive('/play', '/settings')).toBe(false);
+	});
+
 	it('hat sechs Tabs (Partien ist eigener Tab)', () => {
 		expect(navItems).toHaveLength(6);
 	});

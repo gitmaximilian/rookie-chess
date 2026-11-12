@@ -568,6 +568,13 @@
 		}
 	}
 
+	/* ungerade Anzahl in zwei Spalten: letzte Kachel über die volle Breite */
+	@media (max-width: 699px) {
+		.kpis div:last-child:nth-child(odd) {
+			grid-column: span 2;
+		}
+	}
+
 	.kpis div {
 		min-width: 0;
 		padding: 0.6rem 0.75rem;

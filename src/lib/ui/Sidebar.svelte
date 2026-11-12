@@ -4,6 +4,7 @@
 	import { navItems, isActive } from '#lib/nav.js';
 	import { t } from '#lib/i18n/i18n.svelte.js';
 	import Logo from './Logo.svelte';
+	import Settings from '@lucide/svelte/icons/settings';
 </script>
 
 <aside class="sidebar">
@@ -14,7 +15,9 @@
 
 	<nav aria-label={t('nav.main')}>
 		{#each navItems as item (item.href)}
-			{@const active = isActive(item.href, page.url.pathname)}
+			<!-- Einstellungen haben hier einen eigenen Eintrag -->
+			{@const active =
+				isActive(item.href, page.url.pathname) && !page.url.pathname.startsWith('/settings')}
 			<a
 				href={resolve(item.href)}
 				class="item"
@@ -27,6 +30,17 @@
 			</a>
 		{/each}
 	</nav>
+
+	<a
+		href={resolve('/settings')}
+		class="item settings"
+		class:active={page.url.pathname.startsWith('/settings')}
+		style:--item-color="var(--text-2)"
+		aria-current={page.url.pathname.startsWith('/settings') ? 'page' : undefined}
+	>
+		<span class="icon"><Settings size={20} /></span>
+		{t('profile.settings')}
+	</a>
 
 	<p class="foot">
 		{t('nav.foot')}<br />
@@ -121,8 +135,12 @@
 		color: var(--text);
 	}
 
-	.foot {
+	.settings {
 		margin-top: auto;
+		margin-bottom: -1rem;
+	}
+
+	.foot {
 		padding: 0 0.6rem;
 		font-size: 0.78rem;
 		color: var(--text-3);

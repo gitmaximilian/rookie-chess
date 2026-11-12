@@ -191,6 +191,7 @@
 			void goto(resolve(`/learn/basics?id=${n.id}`), { replaceState: true });
 		}
 	}
+	const nextId = $derived(SET.find((x) => !done.includes(x.id))?.id);
 </script>
 
 <svelte:head><title>{t('basics.title')} – Rookie</title></svelte:head>
@@ -208,6 +209,7 @@
 				<button
 					class="item card pressable"
 					class:done={done.includes(l.id)}
+					class:next={l.id === nextId}
 					onclick={() => open(l)}
 				>
 					<span class="no"
@@ -215,7 +217,10 @@
 					>
 					<span class="it-text">
 						<b>{loc(l.title)}</b>
-						<span>{t('basics.steps', { n: l.steps.length })}</span>
+						<span
+							>{#if l.id === nextId}<em class="up">{t('basics.upNext')}</em> ·
+							{/if}{t('basics.steps', { n: l.steps.length })}</span
+						>
 					</span>
 					<ArrowRight size={18} />
 				</button>
@@ -352,6 +357,22 @@
 		background: var(--c-learn-soft);
 		color: var(--c-learn);
 		font-weight: 750;
+	}
+
+	.item.next {
+		border: 1.5px solid color-mix(in srgb, var(--c-learn) 55%, transparent);
+		background: color-mix(in srgb, var(--c-learn) 7%, var(--surface));
+	}
+
+	.item.next .no {
+		background: var(--c-learn);
+		color: #fff;
+	}
+
+	.up {
+		font-style: normal;
+		font-weight: 700;
+		color: var(--c-learn);
 	}
 
 	.item.done .no {
