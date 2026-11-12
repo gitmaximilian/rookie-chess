@@ -71,6 +71,14 @@ export const de: Shape<typeof en> = {
 			king: 'Dein König'
 		},
 		pron: { pawn: 'ihn', knight: 'ihn', bishop: 'ihn', rook: 'ihn', queen: 'sie', king: 'ihn' },
+		acc: {
+			pawn: 'den Bauern',
+			knight: 'den Springer',
+			bishop: 'den Läufer',
+			rook: 'den Turm',
+			queen: 'die Dame',
+			king: 'den König'
+		},
 		enemy: {
 			pawn: 'den gegnerischen Bauern',
 			knight: 'den gegnerischen Springer',
@@ -413,6 +421,74 @@ export const de: Shape<typeof en> = {
 			flip: 'Brett drehen'
 		}
 	},
+	review: {
+		head: {
+			brilliant: (p) => `${p.san} ist brillant`,
+			great: (p) => `${p.san} ist ein starker Zug`,
+			best: (p) => `${p.san} ist der beste Zug`,
+			excellent: (p) => `${p.san} ist exzellent`,
+			good: (p) => `${p.san} ist ein guter Zug`,
+			book: (p) => `${p.san} ist Eröffnungstheorie`,
+			inaccuracy: (p) => `${p.san} ist ungenau`,
+			mistake: (p) => `${p.san} ist ein Fehler`,
+			miss: (p) => `${p.san} verpasst eine Chance`,
+			blunder: (p) => `${p.san} ist ein Patzer`
+		},
+		text: {
+			book: (p) => `Bekannte Eröffnung: ${p.name}.`,
+			bookPlain: 'Bekannte Eröffnungstheorie – tausendfach gespielt.',
+			brilliant: (p) => `Ein Opfer, das wirklich funktioniert${p.line ? `: ${p.line}` : ''}.`,
+			great: 'Der einzige Zug, der die Stellung hält – alles andere ist klar schlechter.',
+			best: 'Genau das, was auch die Engine spielen würde.',
+			excellent: 'Fast so stark wie der Engine-Zug.',
+			good: 'Ein solider Zug.',
+			punish: (p) => `das bestrafst du mit ${p.san}.`,
+			alt: (p) => `Noch stärker war ${p.san}.`
+		},
+		does: {
+			castle: 'Der König steht sicher, und der Turm kommt ins Spiel.',
+			promote: 'Der Bauer wird zur neuen Dame.',
+			mate: 'Schachmatt – Partie vorbei!',
+			capture: (p) => `Schlägt ${p.piece}.`,
+			check: 'Gibt Schach.',
+			attack: (p) => `Greift ${p.piece} auf ${p.sq} an.`,
+			develop: (p) => `Entwickelt ${p.piece} Richtung Zentrum.`,
+			center: 'Besetzt das Zentrum.'
+		},
+		verdict: {
+			equal: 'Ausgeglichen',
+			slightly: (p) => `${p.side} steht etwas besser`,
+			better: (p) => `${p.side} steht besser`,
+			winning: (p) => `${p.side} steht auf Gewinn`,
+			whiteMates: (p) => `Weiß setzt in ${p.n} matt`,
+			blackMates: (p) => `Schwarz setzt in ${p.n} matt`,
+			mated: 'Schachmatt'
+		},
+		kind: {
+			brilliant: 'Brillant',
+			great: 'Stark',
+			best: 'Bester',
+			excellent: 'Exzellent',
+			good: 'Gut',
+			book: 'Buch',
+			inaccuracy: 'Ungenau',
+			mistake: 'Fehler',
+			miss: 'Verpasst',
+			blunder: 'Patzer'
+		},
+		accuracy: 'Genauigkeit',
+		lines: 'Beste Engine-Züge',
+		linesHint: 'Tippe auf eine Variante, um sie am Brett zu sehen',
+		thinking: 'Engine rechnet …',
+		depth: (p) => `Tiefe ${p.d}`,
+		start: 'Ausgangsstellung',
+		startText:
+			'Tippe auf ›, um Zug für Zug durch die Partie zu gehen. Jeder Zug bekommt einen Kommentar.',
+		over: 'Partie beendet',
+		summary: 'Partie-Besprechung',
+		opponentMove: (p) => `Zug von ${p.name}`,
+		yourMove: 'Dein Zug'
+	},
 	judgement: {
 		blunder: 'Patzer',
 		mistake: 'Fehler',
@@ -439,7 +515,7 @@ export const de: Shape<typeof en> = {
 		inaccuracyTitle: 'Nicht der beste Zug',
 		worseTitle: 'Stellung verschlechtert',
 		positionalText: (p) =>
-			`Dieser Zug gibt Vorteil ab.${p.best ? ` Stärker war ${p.best}${p.idea ? ` mit der Idee ${p.idea}` : ''}.` : ''}`
+			`Dieser Zug verschlechtert deine Stellung.${p.best ? ` Stärker war ${p.best}${p.idea ? ` (danach ${p.idea})` : ''}.` : ''}`
 	},
 	account: {
 		title: 'Konto & Synchronisation',

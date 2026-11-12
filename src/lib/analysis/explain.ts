@@ -150,7 +150,7 @@ export function explain(
 	if (best) {
 		const b = parseUci(best) as NormalMove;
 		const target = pos.board.get(b.to);
-		if (target && target.color !== me && VALUE[target.role] >= 3) {
+		if (target && target.color !== me && VALUE[target.role] >= 3 && winsMaterial(pos, b)) {
 			return {
 				title: t('explain.missedTitle'),
 				text: t('explain.missedText', {
@@ -168,10 +168,32 @@ export function explain(
 		title: t(judgement === 'inaccuracy' ? 'explain.inaccuracyTitle' : 'explain.worseTitle'),
 		text: t('explain.positionalText', {
 			best: bestSan,
-			idea: before.pv && before.pv.length > 1 ? sanLine(fenBefore, before.pv, 3) : ''
+			// Fortsetzung nach dem besseren Zug (ohne ihn zu wiederholen)
+			idea:
+				before.pv && before.pv.length > 1
+					? sanLine(fenBefore, before.pv, 3).split(' ').slice(1).join(' ')
+					: ''
 		}),
 		motif: 'positional'
 	};
+}
+
+/**
+ * Gewinnt das Schlagen wirklich Material? Nein, wenn der Gegner gleich- oder höherwertig
+ * zurückschlagen kann (das wäre nur ein Abtausch).
+ */
+function winsMaterial(pos: ReturnType<typeof positionFromFen>, mv: NormalMove): boolean {
+	const capturer = pos.board.get(mv.from);
+	const target = pos.board.get(mv.to);
+	if (!capturer || !target) return false;
+	const after = pos.clone();
+	after.play(mv);
+	for (const [from, dests] of after.allDests()) {
+		if (dests.has(mv.to) && after.board.get(from)) {
+			return VALUE[target.role] > VALUE[capturer.role];
+		}
+	}
+	return true;
 }
 
 /** Akkusativ mit Possessiv: „deinen Springer“ / „your knight“ */

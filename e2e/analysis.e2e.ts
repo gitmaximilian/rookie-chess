@@ -14,8 +14,12 @@ test('PGN analysieren: Patzer wird erkannt und erklärt', async ({ page }) => {
 	await expect(page).toHaveURL(/analysis\?game=\d+/);
 	await expect(page.locator('.summary')).toBeVisible({ timeout: 60_000 });
 	await page.getByRole('button', { name: /xd1/ }).click();
-	await expect(page.locator('.move-card .badge')).toHaveText('Blunder');
-	await expect(page.locator('.move-card').getByText('Allowed mate')).toBeVisible();
+	// Abzeichen am Brett und Kommentar in der Besprechungskarte
+	await expect(page.locator('.sq-badge')).toHaveAttribute('aria-label', 'Blunder');
+	await expect(page.locator('.rp .head')).toContainText('is a blunder');
+	await expect(page.locator('.rp').getByText(/Allowed mate/)).toBeVisible();
+	// Live-Engine: mehrere Kandidatenzüge
+	await expect(page.locator('.rp .line:not(.ph)').first()).toBeVisible({ timeout: 30_000 });
 	// Tastatur-Navigation
 	await page.keyboard.press('Home');
 	await expect(page.getByText('Starting position')).toBeVisible();
@@ -24,7 +28,9 @@ test('PGN analysieren: Patzer wird erkannt und erklärt', async ({ page }) => {
 	await expect(page.getByText('vs Saint Brie')).toBeVisible();
 });
 
-test('Weiterklicken in der Analyse scrollt die Seite nicht', async ({ page }) => {
+test('Weiterklicken in der Analyse scrollt die Seite nicht und das Brett springt nicht', async ({
+	page
+}) => {
 	await page.goto('/analysis');
 	await page
 		.locator('textarea')
@@ -35,7 +41,18 @@ test('Weiterklicken in der Analyse scrollt die Seite nicht', async ({ page }) =>
 	const next = page.getByRole('button', { name: 'Forward', exact: true });
 	await expect(next).toBeVisible();
 	await page.evaluate(() => window.scrollTo(0, 0));
-	for (let i = 0; i < 30; i++) await next.click();
+	const board = page.locator('.cg-host').first();
+	await next.click();
+	await page.waitForTimeout(300);
+	const start = await board.boundingBox();
+	const boxes = new Set<string>();
+	for (let i = 0; i < 30; i++) {
+		await next.click();
+		const b = (await board.boundingBox())!;
+		boxes.add(`${Math.round(b.y)}:${Math.round(b.width)}`);
+	}
 	await page.waitForTimeout(600);
 	expect(await page.evaluate(() => window.scrollY)).toBe(0);
+	// Brett bleibt gleich groß und an derselben Stelle (früher sprang es mit der Kommentarlänge)
+	expect([...boxes]).toEqual([`${Math.round(start!.y)}:${Math.round(start!.width)}`]);
 });

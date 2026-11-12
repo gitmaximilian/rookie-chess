@@ -8,6 +8,8 @@ export interface PlyEval extends Score {
 	best?: string;
 	/** Hauptvariante */
 	pv?: string[];
+	/** Bewertung des zweitbesten Zugs (für „einziger guter Zug“) – erst ab Analyse-Version 2 */
+	second?: Score;
 }
 
 export const MARK: Record<Judgement, '??' | '?' | '?!' | '' | '!'> = {
@@ -48,6 +50,10 @@ export function judge(
 	const stillMate = after.mate !== undefined && sign * after.mate > 0;
 
 	if (played === before.best) return { judgement: 'best', loss };
+	// Matt zugelassen, das vorher nicht drohte → immer ein Patzer (auch in verlorener Stellung)
+	const allowsMate = after.mate !== undefined && sign * after.mate < 0;
+	const wasMated = before.mate !== undefined && sign * before.mate < 0;
+	if (allowsMate && !wasMated) return { judgement: 'blunder', loss };
 	if (loss >= 0.3) return { judgement: 'blunder', loss };
 	if (loss >= 0.2 || (hadMate && !stillMate && loss >= 0.05)) return { judgement: 'mistake', loss };
 	if (loss >= 0.1) return { judgement: 'inaccuracy', loss };

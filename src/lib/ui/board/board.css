@@ -66,6 +66,11 @@ cg-board square.last-move {
 	background-color: var(--sq-last);
 }
 
+/* Partie-Besprechung: Zugfelder in der Farbe der Zugart (siehe Board-Prop `tint`) */
+.board-shell[data-tint] cg-board square.last-move {
+	background-color: color-mix(in srgb, var(--tint) 50%, transparent);
+}
+
 cg-board square.selected {
 	background-color: var(--sq-selected);
 }

@@ -39,6 +39,16 @@ Geprüft im Browser bei 393×852, 393×659, iPad (820×1180) und Desktop (1280×
 - F2 „not analysed“-Text in der Liste lang; ein dezentes Symbol oder kurzer Text reicht.
 - F3 Datum mit Jahr in jeder Zeile, obwohl fast alles aus dem laufenden Jahr ist.
 
+## Nachtrag: Partie-Besprechung nach Chessigma-Vorbild
+
+| #   | Befund                                                                                                                                                                    | Umsetzung                                                                                                            |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| A1  | **Brett springt beim Durchklicken (iPhone).** Der Zugkommentar lag in der Aktionsleiste; deren Höhe hing von der Textlänge ab, und die Brettgröße wurde daraus berechnet. | Kommentar als eigene Karte unter dem Brett, Aktionsleiste nur noch mit Navigation. E2E-Test sichert das ab.          |
+| A2  | Nur Fehler wurden kommentiert, gute Züge hießen bloß „solide“.                                                                                                            | Jeder Zug bekommt Überschrift und Satz: was er tut (schlägt, entwickelt, rochiert, greift an …) oder was besser war. |
+| A3  | Nur ein bester Zug sichtbar.                                                                                                                                              | Live-Engine mit drei Varianten (MultiPV 3), antippbar, Pfeile mit Zugnummern.                                        |
+| A4  | Keine Zugarten am Brett.                                                                                                                                                  | Zehn Zugarten (Brillant bis Patzer, Buch, Verpasst) als Abzeichen am Zielfeld, eingefärbte Zugfelder, Zugliste.      |
+| A5  | Matt zulassen in verlorener Stellung galt als „ungenau“; ein Abtausch galt als „Figur gewinnen“; gegnerische Fehler wurden mit „dein Springer …“ erklärt.                 | Regeln korrigiert; gegnerische Fehler zeigen, wie man sie bestraft.                                                  |
+
 ## Vergleich mit Lichess und Chess.com
 
 - **Chess.com** führt nach jeder Partie direkt in „Game Review“ mit „Schlüsselmomente“ und „Nochmal versuchen“. Rookie hat „Fehler nachspielen“, aber erst nach Scrollen. → Sprung zum nächsten Fehler im Dock (H3).

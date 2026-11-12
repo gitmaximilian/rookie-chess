@@ -63,6 +63,14 @@ export const en = {
 			king: 'Your king'
 		},
 		pron: { pawn: 'it', knight: 'it', bishop: 'it', rook: 'it', queen: 'it', king: 'it' },
+		acc: {
+			pawn: 'the pawn',
+			knight: 'the knight',
+			bishop: 'the bishop',
+			rook: 'the rook',
+			queen: 'the queen',
+			king: 'the king'
+		},
 		enemy: {
 			pawn: 'the enemy pawn',
 			knight: 'the enemy knight',
@@ -377,6 +385,73 @@ export const en = {
 			flip: 'Flip board'
 		}
 	},
+	review: {
+		head: {
+			brilliant: (p: P) => `${p.san} is brilliant`,
+			great: (p: P) => `${p.san} is a great move`,
+			best: (p: P) => `${p.san} is the best move`,
+			excellent: (p: P) => `${p.san} is excellent`,
+			good: (p: P) => `${p.san} is a good move`,
+			book: (p: P) => `${p.san} is a book move`,
+			inaccuracy: (p: P) => `${p.san} is an inaccuracy`,
+			mistake: (p: P) => `${p.san} is a mistake`,
+			miss: (p: P) => `${p.san} misses a chance`,
+			blunder: (p: P) => `${p.san} is a blunder`
+		},
+		text: {
+			book: (p: P) => `Known opening theory: ${p.name}.`,
+			bookPlain: 'Known opening theory – played thousands of times.',
+			brilliant: (p: P) => `A sacrifice that really works${p.line ? `: ${p.line}` : ''}.`,
+			great: 'The only move that holds the position – everything else is clearly worse.',
+			best: 'Exactly what the engine would play.',
+			excellent: 'Almost as strong as the top engine move.',
+			good: 'A solid move.',
+			punish: (p: P) => `you can punish it with ${p.san}.`,
+			alt: (p: P) => `Even stronger was ${p.san}.`
+		},
+		does: {
+			castle: 'The king is safe and the rook joins the game.',
+			promote: 'The pawn becomes a new queen.',
+			mate: 'Checkmate – game over!',
+			capture: (p: P) => `Takes ${p.piece}.`,
+			check: 'Gives check.',
+			attack: (p: P) => `Attacks ${p.piece} on ${p.sq}.`,
+			develop: (p: P) => `Develops ${p.piece} towards the centre.`,
+			center: 'Claims space in the centre.'
+		},
+		verdict: {
+			equal: 'Equal position',
+			slightly: (p: P) => `${p.side} is slightly better`,
+			better: (p: P) => `${p.side} is better`,
+			winning: (p: P) => `${p.side} is winning`,
+			whiteMates: (p: P) => `White mates in ${p.n}`,
+			blackMates: (p: P) => `Black mates in ${p.n}`,
+			mated: 'Checkmate'
+		},
+		kind: {
+			brilliant: 'Brilliant',
+			great: 'Great',
+			best: 'Best',
+			excellent: 'Excellent',
+			good: 'Good',
+			book: 'Book',
+			inaccuracy: 'Inaccuracy',
+			mistake: 'Mistake',
+			miss: 'Miss',
+			blunder: 'Blunder'
+		},
+		accuracy: 'Accuracy',
+		lines: 'Top engine moves',
+		linesHint: 'Tap a line to see it on the board',
+		thinking: 'Engine is thinking …',
+		depth: (p: P) => `depth ${p.d}`,
+		start: 'Starting position',
+		startText: 'Tap › to go through the game move by move. Every move gets a comment.',
+		over: 'Game over',
+		summary: 'Game review',
+		opponentMove: (p: P) => `${p.name}’s move`,
+		yourMove: 'Your move'
+	},
 	judgement: {
 		blunder: 'Blunder',
 		mistake: 'Mistake',
@@ -402,7 +477,7 @@ export const en = {
 		inaccuracyTitle: 'Not the best move',
 		worseTitle: 'Position worsened',
 		positionalText: (p: P) =>
-			`This move gives away part of your advantage.${p.best ? ` Stronger was ${p.best}${p.idea ? `, with the idea ${p.idea}` : ''}.` : ''}`
+			`This move makes your position worse.${p.best ? ` Stronger was ${p.best}${p.idea ? ` (then ${p.idea})` : ''}.` : ''}`
 	},
 	account: {
 		title: 'Account & sync',

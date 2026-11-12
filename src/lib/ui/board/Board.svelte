@@ -2,7 +2,9 @@
 	export type Shape = {
 		orig: string;
 		dest?: string;
-		brush?: 'hint' | 'good' | 'bad' | 'info' | 'mine';
+		brush?: 'hint' | 'good' | 'bad' | 'info' | 'mine' | 'paleBlue' | 'paleGrey' | 'paleGreen';
+		/** kleine Zahl/Text am Pfeil (z. B. Zugnummer einer Variante) */
+		label?: string;
 	};
 </script>
 
@@ -18,6 +20,7 @@
 	import type { Api } from 'chessground/api';
 	import type { Key, Color } from 'chessground/types';
 	import type { DrawShape } from 'chessground/draw';
+	import type { Component } from 'svelte';
 
 	interface Props {
 		fen: string;
@@ -37,6 +40,16 @@
 		/** Zusätzliche CSS-Klasse für Rückmeldungen (z. B. 'flash-good') */
 		flash?: '' | 'good' | 'bad';
 		label?: string;
+		/** Abzeichen an der oberen rechten Ecke eines Feldes (z. B. „??“ nach einem Patzer) */
+		badge?: {
+			square: string;
+			text?: string;
+			icon?: Component;
+			color: string;
+			label: string;
+		} | null;
+		/** färbt die Felder des letzten Zugs (CSS-Farbe) */
+		tint?: string | null;
 	}
 
 	let {
@@ -53,8 +66,23 @@
 		isPromotion,
 		onMove,
 		flash = '',
-		label
+		label,
+		badge = null,
+		tint = null
 	}: Props = $props();
+
+	/** Lage des Abzeichens in Prozent der Brettbreite, nach innen geklemmt (das Brett schneidet ab) */
+	const badgePos = $derived.by(() => {
+		if (!badge || badge.square.length !== 2) return null;
+		const f = badge.square.charCodeAt(0) - 97;
+		const r = Number(badge.square[1]) - 1;
+		const col = orientation === 'white' ? f : 7 - f;
+		const row = orientation === 'white' ? 7 - r : r;
+		return {
+			left: Math.min(100 - 8, (col + 1) * 12.5 - 5),
+			top: Math.max(0.5, row * 12.5 - 2.8)
+		};
+	});
 
 	let el: HTMLDivElement;
 	let cg: Api | null = null;
@@ -83,7 +111,8 @@
 		return s.map((x) => ({
 			orig: x.orig as Key,
 			dest: x.dest as Key | undefined,
-			brush: x.brush ?? 'hint'
+			brush: x.brush ?? 'hint',
+			...(x.label ? { label: { text: x.label } } : {})
 		}));
 	}
 
@@ -176,7 +205,13 @@
 	] as const;
 </script>
 
-<div class="board-shell" class:flash-good={flash === 'good'} class:flash-bad={flash === 'bad'}>
+<div
+	class="board-shell"
+	class:flash-good={flash === 'good'}
+	class:flash-bad={flash === 'bad'}
+	data-tint={tint ? '' : undefined}
+	style:--tint={tint}
+>
 	<div class="board-sizer">
 		<div
 			bind:this={el}
@@ -186,6 +221,19 @@
 			role="application"
 			aria-label={label ?? t('board.label')}
 		></div>
+		{#if badge && badgePos}
+			{#key badge.square + badge.label}
+				<span
+					class="sq-badge"
+					style:left="{badgePos.left}%"
+					style:top="{badgePos.top}%"
+					style:--b={badge.color}
+					role="img"
+					aria-label={badge.label}
+					>{#if badge.icon}<badge.icon size="62%" strokeWidth={3} />{:else}{badge.text}{/if}</span
+				>
+			{/key}
+		{/if}
 	</div>
 
 	{#if promo}
@@ -209,6 +257,36 @@
 </div>
 
 <style>
+	.sq-badge {
+		position: absolute;
+		z-index: 5;
+		display: grid;
+		place-items: center;
+		width: 7.4%;
+		min-width: 25px;
+		aspect-ratio: 1;
+		border-radius: 50%;
+		background: var(--b);
+		color: #fff;
+		font-family: var(--font-display);
+		font-weight: 800;
+		font-size: clamp(0.72rem, 3cqw, 1.05rem);
+		line-height: 1;
+		letter-spacing: -0.04em;
+		box-shadow:
+			0 0 0 2px rgb(255 255 255 / 0.9),
+			0 2px 6px rgb(0 0 0 / 0.35);
+		pointer-events: none;
+		animation: badge-pop 320ms var(--ease-spring) both;
+	}
+
+	@keyframes badge-pop {
+		from {
+			transform: scale(0.3);
+			opacity: 0;
+		}
+	}
+
 	.board-shell {
 		position: relative;
 		width: 100%;
@@ -225,6 +303,7 @@
 		aspect-ratio: 1;
 		border-radius: 14px;
 		overflow: hidden;
+		container-type: inline-size;
 	}
 
 	.cg-host {

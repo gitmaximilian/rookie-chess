@@ -6,12 +6,16 @@ import { Game, turnFromFen } from '#lib/chess/game.js';
 import { db, type GameRow } from '#lib/db/db.js';
 import { judge, type PlyEval, type Judgement } from './classify.js';
 import { explain, type Explanation } from './explain.js';
+import { moveKind, type Kind } from './kinds.js';
+import { isBookLine } from '#lib/data/openings.js';
 import type { Puzzle } from '#lib/training/puzzles.js';
 
 export interface MoveReview {
 	ply: number;
 	mover: 'white' | 'black';
 	judgement: Judgement;
+	/** feinere Zugart für die Besprechung */
+	kind: Kind;
 	loss: number;
 	explanation: Explanation | null;
 }
@@ -49,10 +53,13 @@ export async function analyseGame(
 		} else if (end) {
 			e = { cp: 0 };
 		} else {
-			const res = await engine.analyse({ fen, depth, multipv: 1, signal });
+			// zwei Varianten: die zweite zeigt, ob der beste Zug der einzige gute war
+			const res = await engine.analyse({ fen, depth, multipv: 2, signal });
 			const top = res.lines[0];
+			const alt = res.lines[1];
 			const score = top ? toWhite({ cp: top.cp, mate: top.mate }, turn) : { cp: 0 };
 			e = { ...score, best: res.bestmove ?? undefined, pv: top?.pv.slice(0, 8) };
+			if (alt) e.second = toWhite({ cp: alt.cp, mate: alt.mate }, turn);
 		}
 		evals[ply] = e;
 		onProgress(ply + 1, total, evals);
@@ -70,19 +77,36 @@ export async function analyseGame(
 export function reviewMoves(row: GameRow, evals: PlyEval[]): MoveReview[] {
 	const game = Game.fromUciMoves(row.moves, row.startFen);
 	const out: MoveReview[] = [];
+	const standard = row.startFen.startsWith('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR');
+	let inBook = standard;
 	for (let i = 0; i < game.moves.length; i++) {
 		const before = evals[i];
 		const after = evals[i + 1];
 		if (!before || !after) break;
 		const fen = game.fenAt(i);
 		const mover = turnFromFen(fen);
-		const { judgement, loss } = judge(before, after, mover, game.moves[i].uci);
+		const uci = game.moves[i].uci;
+		const { judgement, loss } = judge(before, after, mover, uci);
+		// Buchzug: liegt auf einer bekannten Eröffnungsvariante (solange die Partie im Buch ist)
+		inBook = inBook && i < 30 && isBookLine(game.moves.slice(0, i + 1).map((m) => m.uci));
+		const explanation = explain(fen, uci, before, after, judgement);
 		out.push({
 			ply: i + 1,
 			mover,
 			judgement,
+			kind: moveKind({
+				judgement,
+				loss,
+				played: uci,
+				before,
+				after,
+				mover,
+				fenBefore: fen,
+				book: inBook,
+				explanation
+			}),
 			loss,
-			explanation: explain(fen, game.moves[i].uci, before, after, judgement)
+			explanation
 		});
 	}
 	return out;

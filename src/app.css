@@ -40,6 +40,18 @@
 	--warn-text: #8a5a00;
 	--bad-text: #a42e2e;
 
+	/* Zugarten der Partie-Besprechung (gesättigt, lesbar auf hellem und dunklem Brett) */
+	--k-brilliant: #13a3a0;
+	--k-great: #4a7fd4;
+	--k-best: #3d9a52;
+	--k-excellent: #64a845;
+	--k-good: #87a06b;
+	--k-book: #a87f55;
+	--k-inaccuracy: #e0a526;
+	--k-mistake: #e8772e;
+	--k-miss: #e05a6b;
+	--k-blunder: #d23b3b;
+
 	/* Form */
 	--radius-s: 10px;
 	--radius-m: 14px;

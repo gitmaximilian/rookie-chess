@@ -21,6 +21,7 @@ export function loadOpenings(fetcher: typeof fetch = fetch): Promise<void> {
 		.then((r) => r.json())
 		.then((t) => {
 			table = t;
+			prefixes = null;
 			for (const l of listeners) l();
 		})
 		.catch(() => {
@@ -38,6 +39,7 @@ export function onOpeningsLoaded(fn: () => void): () => void {
 
 export function setOpeningsForTest(t: Record<string, [string, string]>) {
 	table = t;
+	prefixes = null;
 }
 
 /** Längste bekannte Eröffnung für die Zugfolge */
@@ -51,6 +53,21 @@ export function openingFor(ucis: string[]): Opening | null {
 		if (hit) return { eco: hit[0], name: localName(hit[1]), plies: n };
 	}
 	return null;
+}
+
+let prefixes: Set<string> | null = null;
+
+/** Liegt die Zugfolge auf einer bekannten Eröffnungsvariante? (schnell, mit Präfix-Index) */
+export function isBookLine(ucis: string[]): boolean {
+	if (!table) return false;
+	if (!prefixes) {
+		prefixes = new Set();
+		for (const k of Object.keys(table)) {
+			const parts = k.split(' ');
+			for (let n = 1; n <= parts.length; n++) prefixes.add(parts.slice(0, n).join(' '));
+		}
+	}
+	return prefixes.has(ucis.join(' '));
 }
 
 /** Alle Eröffnungen, die mit dieser Zugfolge beginnen (für den Trainer) */

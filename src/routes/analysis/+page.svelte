@@ -30,9 +30,23 @@
 		createMistakePuzzles,
 		type MoveReview
 	} from '#lib/analysis/run.js';
-	import { accuracy, MARK, judgementLabel, type PlyEval } from '#lib/analysis/classify.js';
+	import { accuracy, type PlyEval } from '#lib/analysis/classify.js';
 	import { t } from '#lib/i18n/i18n.svelte.js';
-	import { formatScore } from '#lib/engine/uci.js';
+	import { toWhite } from '#lib/engine/uci.js';
+	import { engine } from '#lib/engine/engine.js';
+	import { positionFromFen, turnFromFen } from '#lib/chess/game.js';
+	import ReviewPanel, { type LiveLine } from '#lib/ui/ReviewPanel.svelte';
+	import {
+		KINDS,
+		KIND_GLYPH,
+		KIND_ICON,
+		kindColor,
+		isBad,
+		commentFor,
+		verdict,
+		sanMoves,
+		type Kind
+	} from '#lib/analysis/kinds.js';
 	import { openingFor, onOpeningsLoaded } from '#lib/data/openings.js';
 	import { feedbackFor, type MoveFeedback } from '#lib/openings/feedback.js';
 	import { getSetting, setSetting } from '#lib/db/db.js';
@@ -104,9 +118,20 @@
 		await loadList();
 	}
 
+	let openingsReady = $state(0);
+	onMount(() => onOpeningsLoaded(() => openingsReady++));
 	const total = $derived(game ? game.ply + 1 : 0);
-	const reviews = $derived<MoveReview[]>(row && evals.length > 1 ? reviewMoves(row, evals) : []);
-	const marks = $derived(Object.fromEntries(reviews.map((r) => [r.ply, MARK[r.judgement]])));
+	const reviews = $derived.by<MoveReview[]>(() => {
+		void openingsReady;
+		return row && evals.length > 1 ? reviewMoves(row, evals) : [];
+	});
+	const tags = $derived(
+		Object.fromEntries(
+			reviews
+				.filter((r) => r.kind !== 'good' && r.kind !== 'excellent' && r.kind !== 'book')
+				.map((r) => [r.ply, { glyph: KIND_GLYPH[r.kind] || '★', color: kindColor(r.kind) }])
+		)
+	);
 	const fen = $derived(game ? game.fenAt(ply) : '');
 	const lastMove = $derived.by(() => {
 		if (!game || ply === 0) return undefined;
@@ -115,25 +140,172 @@
 	});
 	const currentReview = $derived(reviews.find((r) => r.ply === ply) ?? null);
 	const evalHere = $derived(evals[ply] ?? null);
-	let openingsReady = $state(0);
-	onMount(() => onOpeningsLoaded(() => openingsReady++));
 	const opening = $derived.by(() => {
 		void openingsReady;
 		if (!game) return null;
 		return openingFor(game.moves.slice(0, Math.max(ply, Math.min(game.ply, 12))).map((m) => m.uci));
 	});
 
+	// ── Live-Engine: die drei besten Fortsetzungen der gezeigten Stellung ──
+	let live = $state<{ fen: string; lines: LiveLine[]; depth: number; done: boolean } | null>(null);
+	let selectedLine = $state<number | null>(null);
+	// eslint-disable-next-line svelte/prefer-svelte-reactivity -- reiner Cache, soll nichts neu zeichnen
+	const liveCache = new Map<string, { lines: LiveLine[]; depth: number }>();
+	let liveAbort: AbortController | null = null;
+	const liveDepth = /iPhone|iPad|Android/.test(globalThis.navigator?.userAgent ?? '') ? 13 : 16;
+
+	function toLines(f: string, raw: { cp?: number; mate?: number; pv: string[] }[]): LiveLine[] {
+		const turn = turnFromFen(f);
+		return raw
+			.filter((l) => l.pv.length)
+			.slice(0, 3)
+			.map((l) => ({
+				score: toWhite({ cp: l.cp, mate: l.mate }, turn),
+				uci: l.pv.slice(0, 8),
+				san: sanMoves(f, l.pv, 6)
+			}));
+	}
+
+	$effect(() => {
+		const f = fen;
+		selectedLine = null;
+		liveAbort?.abort();
+		if (!f || !game || retry) return;
+		const cached = liveCache.get(f);
+		if (cached) {
+			live = { fen: f, ...cached, done: true };
+			return;
+		}
+		// sofort zeigen, was die Partie-Analyse schon weiß; die Engine verfeinert gleich
+		const stored = evals[ply];
+		live = {
+			fen: f,
+			lines: stored?.pv?.length ? toLines(f, [{ ...stored, pv: stored.pv }]) : [],
+			depth: 0,
+			done: false
+		};
+		if (positionFromFen(f).isEnd()) {
+			live = { fen: f, lines: [], depth: 0, done: true };
+			return;
+		}
+		const ac = new AbortController();
+		liveAbort = ac;
+		// kurz warten: beim schnellen Durchklicken nicht jede Stellung rechnen
+		const timer = setTimeout(async () => {
+			const res = await engine.analyse({
+				fen: f,
+				depth: liveDepth,
+				multipv: 3,
+				signal: ac.signal,
+				onInfo: (ls) => {
+					if (ac.signal.aborted || ls.length < 1) return;
+					live = { fen: f, lines: toLines(f, ls), depth: ls[0].depth, done: false };
+				}
+			});
+			if (ac.signal.aborted || !res.lines.length) return;
+			const done = { lines: toLines(f, res.lines), depth: res.lines[0].depth };
+			liveCache.set(f, done);
+			live = { fen: f, ...done, done: true };
+		}, 180);
+		return () => {
+			clearTimeout(timer);
+			ac.abort();
+		};
+	});
+
+	const liveLines = $derived(live && live.fen === fen ? live.lines : []);
+
 	const shapes = $derived.by<Shape[]>(() => {
 		const s: Shape[] = [];
 		if (!game) return s;
-		// Bester Zug in der Stellung VOR dem aktuellen Zug, falls der Zug schlecht war
-		if (currentReview && currentReview.judgement !== 'good' && currentReview.judgement !== 'best') {
+		// gewählte Variante: die ersten drei Züge als Pfeile
+		if (selectedLine !== null && liveLines[selectedLine]) {
+			const l = liveLines[selectedLine];
+			l.uci.slice(0, 3).forEach((u, i) =>
+				s.push({
+					orig: u.slice(0, 2),
+					dest: u.slice(2, 4),
+					brush: i === 0 ? 'good' : i === 1 ? 'paleBlue' : 'paleGrey',
+					label: String(i + 1)
+				})
+			);
+			return s;
+		}
+		// schlechter Zug: was stattdessen richtig gewesen wäre
+		if (currentReview && isBad(currentReview.kind)) {
 			const best = evals[ply - 1]?.best;
 			if (best) s.push({ orig: best.slice(0, 2), dest: best.slice(2, 4), brush: 'good' });
-		} else if (showBest && evalHere?.best && ply < total - 1) {
-			s.push({ orig: evalHere.best.slice(0, 2), dest: evalHere.best.slice(2, 4), brush: 'info' });
+			return s;
 		}
+		if (!showBest || ply >= total - 1) return s;
+		// sonst: die besten Züge von hier – stärkster kräftig, die anderen blass
+		liveLines.slice(0, 3).forEach((l, i) => {
+			const u = l.uci[0];
+			if (!u || s.some((x) => x.orig === u.slice(0, 2) && x.dest === u.slice(2, 4))) return;
+			s.push({
+				orig: u.slice(0, 2),
+				dest: u.slice(2, 4),
+				brush: i === 0 ? 'info' : 'paleBlue'
+			});
+		});
 		return s;
+	});
+
+	/** Zugart-Abzeichen auf dem Zielfeld des gerade gezeigten Zugs */
+	const badge = $derived.by(() => {
+		if (!game || !currentReview || ply === 0) return null;
+		const k = currentReview.kind;
+		return {
+			square: game.moves[ply - 1].to,
+			text: KIND_GLYPH[k],
+			icon: KIND_ICON[k],
+			color: kindColor(k),
+			label: t(`review.kind.${k}`)
+		};
+	});
+
+	const comment = $derived.by(() => {
+		if (!game || !row) return null;
+		if (ply === 0) return { headline: t('review.start'), text: t('review.startText') };
+		if (!currentReview) return null;
+		return commentFor({
+			fenBefore: game.fenAt(ply - 1),
+			played: game.moves[ply - 1].uci,
+			kind: currentReview.kind,
+			ply,
+			before: evals[ply - 1] ?? {},
+			explanation: currentReview.explanation,
+			opening: currentReview.kind === 'book' ? openingAt(ply) : null,
+			mine: currentReview.mover === row.myColor,
+			after: evals[ply] ?? undefined
+		});
+	});
+
+	/** Name der Eröffnung genau bis zu diesem Zug */
+	function openingAt(p: number): string | null {
+		void openingsReady;
+		if (!game) return null;
+		return openingFor(game.moves.slice(0, p).map((m) => m.uci))?.name ?? null;
+	}
+
+	const mated = $derived(!!fen && positionFromFen(fen).isCheckmate());
+
+	/** „12.“ bzw. „12…“ für den ersten Zug der Varianten */
+	const linesMoveNo = $derived.by(() => {
+		if (!fen) return '';
+		const parts = fen.split(' ');
+		const no = Number(parts[5] ?? 1);
+		return parts[1] === 'w' ? `${no}.` : `${no}…`;
+	});
+
+	/** Zugarten je Seite – für die Besprechung oben */
+	const kindCounts = $derived.by(() => {
+		const c = {
+			white: Object.fromEntries(KINDS.map((k) => [k, 0])) as Record<Kind, number>,
+			black: Object.fromEntries(KINDS.map((k) => [k, 0])) as Record<Kind, number>
+		};
+		for (const r of reviews) c[r.mover][r.kind]++;
+		return c;
 	});
 
 	const summary = $derived.by(() => {
@@ -521,7 +693,16 @@
 							label={t('analysis.board')}
 						/>
 					{:else}
-						<Board {fen} {orientation} {lastMove} viewOnly {shapes} label={t('analysis.board')} />
+						<Board
+							{fen}
+							{orientation}
+							{lastMove}
+							viewOnly
+							{shapes}
+							{badge}
+							tint={badge?.color ?? null}
+							label={t('analysis.board')}
+						/>
 					{/if}
 				</div>
 			</div>
@@ -557,6 +738,30 @@
 		</div>
 
 		<aside class="side">
+			{#if !retry && comment}
+				<ReviewPanel
+					kind={ply > 0 ? (currentReview?.kind ?? null) : null}
+					headline={comment.headline}
+					text={comment.text}
+					who={ply > 0 && currentReview
+						? currentReview.mover === row.myColor
+							? t('review.yourMove')
+							: t('review.opponentMove', { name: row.opponent })
+						: undefined}
+					verdict={mated ? t('review.verdict.mated') : verdict(evalHere)}
+					score={mated ? null : evalHere}
+					lines={liveLines}
+					thinking={!!live && !live.done}
+					depth={live?.depth}
+					selected={selectedLine}
+					onselect={(i) => (selectedLine = i)}
+					moveNo={linesMoveNo}
+				/>
+			{:else if !retry && analysing}
+				<div class="card rp-wait">
+					<p class="muted">{t('analysis.running')}</p>
+				</div>
+			{/if}
 			{#if retry}
 				<Dock>
 					<div class="card retry" role="status">
@@ -636,86 +841,36 @@
 				</div>
 			{/if}
 
-			{#if !retry && ply > 0 && currentReview}
-				{@const mvc = game.moves[ply - 1]}
-				<Dock order={1} mobileOnly>
-					<div class="mini-move">
-						<div class="mm-head">
-							<b>{Math.ceil(ply / 2)}{ply % 2 === 1 ? '.' : '…'} {figurine(mvc.san)}</b>
-							<span class="badge {currentReview.judgement}"
-								>{judgementLabel(currentReview.judgement)}</span
-							>
-							{#if evalHere}<span class="m-eval">{formatScore(evalHere)}</span>{/if}
-						</div>
-						<p class="mm-text">
-							{#if currentReview.explanation}<b>{currentReview.explanation.title}:</b>
-								{currentReview.explanation.text}
-							{:else if currentReview.judgement === 'best'}{t('analysis.best')}
-							{:else}{t('analysis.solid')}{/if}
-							{#if evalHere?.best && ply < total - 1}
-								<span class="mm-best"
-									>{t('analysis.bestHere')} <b>{figurine(sanForUci(fen, evalHere.best))}</b></span
-								>
-							{/if}
-						</p>
-					</div>
-				</Dock>
-			{/if}
-			<div class="card move-card" class:has={!!currentReview}>
-				{#if ply === 0}
-					<p class="m-title">{t('analysis.start')}</p>
-					<p class="muted">{t('analysis.startText')}</p>
-				{:else if currentReview}
-					{@const mv = game.moves[ply - 1]}
-					<div class="m-head">
-						<span class="m-move"
-							>{Math.ceil(ply / 2)}{ply % 2 === 1 ? '.' : '…'} {figurine(mv.san)}</span
-						>
-						<span class="badge {currentReview.judgement}"
-							>{judgementLabel(currentReview.judgement)}</span
-						>
-						{#if evalHere}<span class="m-eval">{formatScore(evalHere)}</span>{/if}
-					</div>
-					{#if currentReview.mover !== row.myColor && currentReview.explanation}
-						<p class="who">{t('analysis.opponentMove', { name: row.opponent })}</p>
-					{/if}
-					{#if currentReview.explanation}
-						<p class="m-title">{currentReview.explanation.title}</p>
-						<p class="m-text">{currentReview.explanation.text}</p>
-					{:else if currentReview.judgement === 'best'}
-						<p class="m-text">{t('analysis.best')}</p>
-					{:else}
-						<p class="m-text">{t('analysis.solid')}</p>
-					{/if}
-				{:else}
-					<p class="muted">{t('analysis.running')}</p>
-				{/if}
-				{#if evalHere?.best && ply < total - 1}
-					<p class="m-next">
-						{t('analysis.bestHere')} <b>{figurine(sanForUci(fen, evalHere.best))}</b>
-					</p>
-				{/if}
-			</div>
-
 			{#if reviews.length && !analysing}
 				<div class="card summary">
-					{#each [['white', 'common.white'], ['black', 'common.black']] as [c, label] (c)}
-						{@const s = summary[c as 'white' | 'black']}
-						<div class="sum-row" class:me={row.myColor === c}>
-							<span class="sum-name">{row.myColor === c ? t('common.you') : t(label)}</span>
-							<span class="acc">{s.acc}<small>%</small></span>
-							<span class="cnt b" title={t('analysis.legend.blunder')}>{s.blunder}</span>
-							<span class="cnt m" title={t('analysis.legend.mistake')}>{s.mistake}</span>
-							<span class="cnt i" title={t('analysis.legend.inaccuracy')}>{s.inaccuracy}</span>
-						</div>
-					{/each}
-					<div class="legend">
-						<span class="b">??</span>
-						{t('analysis.legend.blunder')} <span class="m">?</span>
-						{t('analysis.legend.mistake')}
-						<span class="i">?!</span>
-						{t('analysis.legend.inaccuracy')}
+					<div class="sum-head">
+						<span></span>
+						{#each [['white', 'common.white'], ['black', 'common.black']] as [c, label] (c)}
+							<span class="sum-col" class:me={row.myColor === c}
+								>{row.myColor === c ? t('common.you') : t(label)}</span
+							>
+						{/each}
 					</div>
+					<div class="sum-acc">
+						<span>{t('review.accuracy')}</span>
+						{#each ['white', 'black'] as const as c (c)}
+							<b class:me={row.myColor === c}>{summary[c].acc}<small>%</small></b>
+						{/each}
+					</div>
+					{#each KINDS as k (k)}
+						{#if kindCounts.white[k] + kindCounts.black[k] > 0}
+							{@const KI = KIND_ICON[k]}
+							<div class="sum-kind" style:--k={kindColor(k)}>
+								<span class="sk-name"
+									><span class="sk-ico"
+										>{#if KI}<KI size={12} strokeWidth={3} />{:else}{KIND_GLYPH[k]}{/if}</span
+									>{t(`review.kind.${k}`)}</span
+								>
+								<span class="sk-n" class:zero={!kindCounts.white[k]}>{kindCounts.white[k]}</span>
+								<span class="sk-n" class:zero={!kindCounts.black[k]}>{kindCounts.black[k]}</span>
+							</div>
+						{/if}
+					{/each}
 				</div>
 			{/if}
 
@@ -731,7 +886,7 @@
 			{/if}
 
 			<div class="card moves-card">
-				<MoveList moves={game.moves} current={ply} {marks} onSelect={go} />
+				<MoveList moves={game.moves} current={ply} {tags} onSelect={go} />
 			</div>
 
 			<div class="foot-links">
@@ -1174,67 +1329,6 @@
 		padding: 0.5rem;
 	}
 
-	.move-card {
-		display: flex;
-		flex-direction: column;
-		gap: 0.4rem;
-		padding: 1rem;
-		min-height: 120px;
-	}
-
-	.m-head {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-	}
-
-	.m-move {
-		font-family: var(--font-display);
-		font-weight: 700;
-		font-size: 1.15rem;
-	}
-
-	.m-eval {
-		margin-left: auto;
-		font-family: var(--font-mono);
-		font-size: 0.85rem;
-		color: var(--text-2);
-	}
-
-	.badge {
-		font-size: 0.75rem;
-		font-weight: 700;
-		padding: 0.18rem 0.55rem;
-		border-radius: 999px;
-		background: var(--surface-2);
-		color: var(--text-2);
-	}
-
-	.badge.blunder {
-		background: var(--bad);
-		color: #fff;
-	}
-	.badge.mistake {
-		background: #e07a1f;
-		color: #fff;
-	}
-	.badge.inaccuracy {
-		background: color-mix(in srgb, var(--warn) 25%, transparent);
-		color: var(--warn-text);
-	}
-	.badge.best {
-		background: color-mix(in srgb, var(--good) 15%, transparent);
-		color: var(--good-text);
-	}
-
-	.who {
-		font-size: 0.78rem;
-		font-weight: 650;
-		color: var(--text-3);
-		text-transform: uppercase;
-		letter-spacing: 0.04em;
-	}
-
 	.m-title {
 		font-weight: 700;
 		font-size: 1.02rem;
@@ -1245,73 +1339,94 @@
 		line-height: 1.5;
 	}
 
-	.m-next {
-		margin-top: auto;
-		padding-top: 0.4rem;
-		font-size: 0.88rem;
-		color: var(--text-3);
-	}
-
 	.summary {
-		padding: 0.75rem 1rem;
-		display: flex;
-		flex-direction: column;
-		gap: 0.35rem;
-	}
-
-	.sum-row {
+		padding: 0.8rem 1rem 0.7rem;
 		display: grid;
-		grid-template-columns: 1fr auto 28px 28px 28px;
-		align-items: center;
-		gap: 0.4rem;
-		font-size: 0.92rem;
+		grid-template-columns: 1fr 4.2rem 4.2rem;
+		row-gap: 0.15rem;
+		font-size: 0.9rem;
 	}
 
-	.sum-row.me .sum-name {
-		font-weight: 700;
+	.sum-head,
+	.sum-acc,
+	.sum-kind {
+		display: contents;
 	}
 
-	.acc {
-		font-family: var(--font-display);
-		font-weight: 700;
-		font-size: 1.1rem;
-		margin-right: 0.4rem;
-	}
-
-	.acc small {
-		font-size: 0.7em;
-		color: var(--text-3);
-	}
-
-	.cnt {
+	.sum-col {
 		text-align: center;
-		font-weight: 700;
-		border-radius: 8px;
-		padding: 0.1rem 0;
-	}
-
-	.cnt.b,
-	.legend .b {
-		color: var(--bad);
-	}
-	.cnt.m,
-	.legend .m {
-		color: #e07a1f;
-	}
-	.cnt.i,
-	.legend .i {
-		color: var(--warn);
-	}
-
-	.legend {
 		font-size: 0.75rem;
+		font-weight: 700;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
 		color: var(--text-3);
-		text-align: right;
 	}
 
-	.legend span {
+	.sum-col.me {
+		color: var(--text);
+	}
+
+	.sum-acc > span {
+		align-self: center;
+		font-weight: 650;
+		padding: 0.3rem 0;
+	}
+
+	.sum-acc b {
+		text-align: center;
+		font-family: var(--font-display);
+		font-size: 1.35rem;
+		font-weight: 750;
+		color: var(--text-2);
+	}
+
+	.sum-acc b.me {
+		color: var(--text);
+	}
+
+	.sum-acc small {
+		font-size: 0.65em;
+		color: var(--text-3);
+	}
+
+	.sk-name {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.22rem 0;
+		color: var(--text-2);
+	}
+
+	.sk-ico {
+		display: grid;
+		place-items: center;
+		width: 20px;
+		height: 20px;
+		border-radius: 50%;
+		background: var(--k);
+		color: #fff;
+		font-family: var(--font-display);
+		font-size: 0.66rem;
 		font-weight: 800;
-		margin-left: 0.4rem;
+		letter-spacing: -0.04em;
+	}
+
+	.sk-n {
+		align-self: center;
+		text-align: center;
+		font-weight: 750;
+		font-variant-numeric: tabular-nums;
+		color: color-mix(in srgb, var(--k) 75%, var(--text));
+	}
+
+	.sk-n.zero {
+		color: var(--text-3);
+		font-weight: 500;
+	}
+
+	.rp-wait {
+		padding: 1rem;
+		min-height: 9rem;
 	}
 
 	.practice {
@@ -1327,44 +1442,6 @@
 
 	.practice span {
 		flex: 1;
-	}
-
-	.mini-move {
-		display: flex;
-		flex-direction: column;
-		gap: 0.25rem;
-		padding: 0.1rem 0.25rem;
-	}
-
-	.mm-head {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-	}
-
-	.mm-head b {
-		font-family: var(--font-display);
-		font-size: 1.05rem;
-	}
-
-	.mm-text {
-		font-size: 0.86rem;
-		line-height: 1.4;
-		color: var(--text-2);
-		display: -webkit-box;
-		-webkit-line-clamp: 4;
-		line-clamp: 4;
-		-webkit-box-orient: vertical;
-		overflow: hidden;
-	}
-
-	.mm-text b {
-		color: var(--text);
-	}
-
-	.mm-best {
-		display: block;
-		margin-top: 0.15rem;
 	}
 
 	:global(.docked) .nav {

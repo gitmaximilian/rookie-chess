@@ -11,6 +11,8 @@
 		/** Startet die Partie mit Schwarz? */
 		blackStarts?: boolean;
 		marks?: Record<number, '??' | '?' | '?!' | '!' | ''>;
+		/** farbige Zugarten der Besprechung (ersetzt `marks`, wenn gesetzt) */
+		tags?: Record<number, { glyph: string; color: string }>;
 		onSelect?: (ply: number) => void;
 	}
 
@@ -19,6 +21,7 @@
 		current = moves.length,
 		blackStarts = false,
 		marks = {},
+		tags = {},
 		onSelect
 	}: Props = $props();
 	let box: HTMLDivElement;
@@ -77,7 +80,9 @@
 					class:cur={current === r.w.ply}
 					onclick={() => onSelect?.(r.w!.ply)}
 				>
-					{@render san(r.w.san)}{#if marks[r.w.ply]}<sup>{marks[r.w.ply]}</sup>{/if}
+					{@render san(r.w.san)}{#if tags[r.w.ply]}<sup class="tag" style:--k={tags[r.w.ply].color}
+							>{tags[r.w.ply].glyph}</sup
+						>{:else if marks[r.w.ply]}<sup>{marks[r.w.ply]}</sup>{/if}
 				</button>
 			{:else}
 				<span class="mv dim">…</span>
@@ -90,7 +95,9 @@
 					class:cur={current === r.b.ply}
 					onclick={() => onSelect?.(r.b!.ply)}
 				>
-					{@render san(r.b.san)}{#if marks[r.b.ply]}<sup>{marks[r.b.ply]}</sup>{/if}
+					{@render san(r.b.san)}{#if tags[r.b.ply]}<sup class="tag" style:--k={tags[r.b.ply].color}
+							>{tags[r.b.ply].glyph}</sup
+						>{:else if marks[r.b.ply]}<sup>{marks[r.b.ply]}</sup>{/if}
 				</button>
 			{/if}
 		</div>
@@ -182,6 +189,9 @@
 	}
 	.mx sup {
 		color: var(--good-text);
+	}
+	sup.tag {
+		color: var(--k);
 	}
 	.cur sup {
 		color: inherit;
