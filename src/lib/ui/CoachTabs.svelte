@@ -5,14 +5,14 @@
 	let { active }: { active: 'overview' | 'stats' } = $props();
 </script>
 
-<nav class="tabs" aria-label={t('profile.title')}>
+<nav class="tabs" aria-label={t('coachTab.title')}>
 	<a
-		href={resolve('/profile')}
+		href={resolve('/coach')}
 		class:on={active === 'overview'}
 		aria-current={active === 'overview' ? 'page' : undefined}>{t('stats.tabOverview')}</a
 	>
 	<a
-		href={resolve('/profile/stats')}
+		href={resolve('/coach/stats')}
 		class:on={active === 'stats'}
 		aria-current={active === 'stats' ? 'page' : undefined}>{t('stats.tabStats')}</a
 	>

@@ -12,13 +12,12 @@ describe('isActive', () => {
 		expect(isActive('/learn', '/learnx')).toBe(false);
 	});
 
-	it('Einstellungen & Co. markieren den Profil-Tab', () => {
-		expect(isActive('/profile', '/settings')).toBe(true);
-		expect(isActive('/profile', '/import')).toBe(true);
-		expect(isActive('/play', '/settings')).toBe(false);
+	it('Coach-Tab gilt auch für die Statistik', () => {
+		expect(isActive('/coach', '/coach/stats')).toBe(true);
+		expect(navItems.some((n) => n.href === '/profile')).toBe(false);
 	});
 
-	it('hat sechs Tabs (Partien ist eigener Tab)', () => {
+	it('hat sechs Tabs (Coach statt Profil)', () => {
 		expect(navItems).toHaveLength(6);
 	});
 });

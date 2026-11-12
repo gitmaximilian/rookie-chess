@@ -15,7 +15,6 @@
 	import Star from '@lucide/svelte/icons/star';
 	import Target from '@lucide/svelte/icons/target';
 	import PageHeader from '#lib/ui/PageHeader.svelte';
-	import ProfileTabs from '#lib/ui/ProfileTabs.svelte';
 	import StarsOverview from '#lib/ui/StarsOverview.svelte';
 	import LinkedAccounts from '#lib/ui/LinkedAccounts.svelte';
 	import RatingChart from '#lib/ui/RatingChart.svelte';
@@ -102,8 +101,6 @@
 		>
 	{/snippet}
 </PageHeader>
-
-<ProfileTabs active="overview" />
 
 <div class="wrap">
 	<LinkedAccounts collapsed />

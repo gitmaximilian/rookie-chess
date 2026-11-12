@@ -5,6 +5,7 @@
 	import { t } from '#lib/i18n/i18n.svelte.js';
 	import Logo from './Logo.svelte';
 	import Settings from '@lucide/svelte/icons/settings';
+	import UserRound from '@lucide/svelte/icons/user-round';
 </script>
 
 <aside class="sidebar">
@@ -16,8 +17,7 @@
 	<nav aria-label={t('nav.main')}>
 		{#each navItems as item (item.href)}
 			<!-- Einstellungen haben hier einen eigenen Eintrag -->
-			{@const active =
-				isActive(item.href, page.url.pathname) && !page.url.pathname.startsWith('/settings')}
+			{@const active = isActive(item.href, page.url.pathname)}
 			<a
 				href={resolve(item.href)}
 				class="item"
@@ -31,6 +31,16 @@
 		{/each}
 	</nav>
 
+	<a
+		href={resolve('/profile')}
+		class="item profile"
+		class:active={page.url.pathname.startsWith('/profile')}
+		style:--item-color="var(--text-2)"
+		aria-current={page.url.pathname.startsWith('/profile') ? 'page' : undefined}
+	>
+		<span class="icon"><UserRound size={20} /></span>
+		{t('nav.profile')}
+	</a>
 	<a
 		href={resolve('/settings')}
 		class="item settings"
@@ -135,8 +145,12 @@
 		color: var(--text);
 	}
 
-	.settings {
+	.profile {
 		margin-top: auto;
+		margin-bottom: -1.5rem;
+	}
+
+	.settings {
 		margin-bottom: -1rem;
 	}
 

@@ -6,7 +6,8 @@
 	import TrendingDown from '@lucide/svelte/icons/trending-down';
 	import Info from '@lucide/svelte/icons/info';
 	import PageHeader from '#lib/ui/PageHeader.svelte';
-	import ProfileTabs from '#lib/ui/ProfileTabs.svelte';
+	import CoachTabs from '#lib/ui/CoachTabs.svelte';
+	import AvatarButton from '#lib/ui/AvatarButton.svelte';
 	import RatingHistory from '#lib/ui/RatingHistory.svelte';
 	import Download from '@lucide/svelte/icons/download';
 	import { gamesCsv, statsJson, download } from '#lib/training/statsExport.js';
@@ -102,12 +103,10 @@
 		</li>{/if}
 {/snippet}
 
-<PageHeader
-	eyebrow={t('profile.eyebrow')}
-	title={t('stats.title')}
-	subtitle={t('stats.subtitle')}
-/>
-<ProfileTabs active="stats" />
+<PageHeader eyebrow={t('coachTab.eyebrow')} title={t('stats.title')} subtitle={t('stats.subtitle')}>
+	{#snippet action()}<AvatarButton />{/snippet}
+</PageHeader>
+<CoachTabs active="stats" />
 
 {#if !stats}
 	<div class="wrap" aria-busy="true">

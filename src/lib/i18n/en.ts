@@ -8,6 +8,7 @@ export const en = {
 			'Free chess trainer: play, puzzles, openings and endgames – offline on iPhone, iPad and Mac.'
 	},
 	nav: {
+		coach: 'Coach',
 		home: 'Home',
 		games: 'Games',
 		play: 'Play',
@@ -352,6 +353,11 @@ export const en = {
 			friend: 'Friends',
 			mistakes: 'With mistakes'
 		},
+		today: 'Today',
+		yesterday: 'Yesterday',
+		brilliantMoves: (p: P) => `${p.n} brilliant ${s(p.n, 'move', 'moves')}`,
+		formAria: (p: P) => `Results of your last ${p.n} games`,
+		analyseShort: 'Analyse',
 		notYet: 'not analysed',
 		games: 'Games',
 		running: 'Stockfish is analysing …',
@@ -1116,6 +1122,61 @@ export const en = {
 		strength: (p: P) => `Estimated strength ≈ ${p.n}`,
 		strengthHint: 'Based on puzzles, bots beaten and online games.',
 		progress: (p: P) => `${p.n} of ${p.m} done`
+	},
+	coachTab: {
+		eyebrow: 'Your coach',
+		title: 'Coach',
+		subtitle: 'How you play, what holds you back – and what to train next.',
+		you: 'You',
+		gamesCount: (p: P) => `${p.n} ${s(p.n, 'game', 'games')}`,
+		strength: (p: P) => `≈ ${p.n} strength`,
+		how: 'How you are playing',
+		rating: 'Current rating',
+		winRate: 'Win rate',
+		lastN: (p: P) => `last ${p.n} games`,
+		accuracy: 'Accuracy',
+		last10: 'last 10 analysed games',
+		blunders: 'Blunders',
+		perGame: 'per game',
+		puzzle: 'Puzzle rating',
+		work: 'What to work on',
+		lastGames: (p: P) => `Your last ${p.n} games`,
+		won: 'won',
+		drawn: 'drawn',
+		lost: 'lost',
+		streak: 'wins in a row',
+		typical: 'Your typical mistakes',
+		typicalText: (p: P) => `From ${p.n} analysed ${s(p.n, 'game', 'games')}.`,
+		notes: 'What stands out',
+		allStats: 'All statistics',
+		allStatsText: 'Openings, colours, time controls, game endings and export.',
+		adv: {
+			practise: 'Practise',
+			train: 'Train',
+			play: 'Play',
+			mistakesTitle: (p: P) =>
+				`${p.n} ${s(p.n, 'position', 'positions')} from your games to replay`,
+			mistakesText: 'Find the move you missed – the fastest way to stop repeating a mistake.',
+			motifTitle: (p: P) => `${p.motif}: ${p.n}× in your games`,
+			motif: {
+				hanging: 'Before every move, check: can my piece be taken for free?',
+				fork: 'Look for squares where an enemy knight or queen attacks two things at once.',
+				'mate-missed': 'You had mates you did not see. Mate puzzles sharpen that eye.',
+				'mate-allowed': 'Check your king’s safety: which checks does your opponent have?',
+				'missed-win': 'Your opponent left pieces hanging. Look for free captures first.',
+				positional: 'Ask yourself: what is my worst piece, and how do I improve it?'
+			},
+			themeTitle: (p: P) => `Weakest puzzle theme: ${p.theme} (${p.pct}%)`,
+			themeText: 'Train it at your level until the pattern clicks.',
+			phaseTitle: (p: P) => `${p.phase}: only ${p.acc}% accuracy`,
+			phase: {
+				opening: 'Learn one opening properly – fewer surprises in the first moves.',
+				middlegame: 'Tactics decide the middlegame. Daily puzzles help most.',
+				endgame: 'A few endgame techniques turn won positions into wins.'
+			},
+			playTitle: 'Your coach needs a few games',
+			playText: 'Play a bot or link Lichess / Chess.com – then you get personal advice here.'
+		}
 	},
 	stars: {
 		title: 'Your stars',

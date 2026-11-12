@@ -6,6 +6,7 @@
 	import ShieldAlert from '@lucide/svelte/icons/shield-alert';
 	import Play from '@lucide/svelte/icons/play';
 	import DailyPlan from '#lib/ui/DailyPlan.svelte';
+	import AvatarButton from '#lib/ui/AvatarButton.svelte';
 	import RecentGames from '#lib/ui/RecentGames.svelte';
 	import HomeSummary from '#lib/ui/HomeSummary.svelte';
 	import BotAvatar from '#lib/ui/BotAvatar.svelte';
@@ -46,11 +47,14 @@
 			<span class="eyebrow">{t('home.eyebrow')}</span>
 			<h1>{t(`home.${greeting}`)}!</h1>
 		</div>
-		<span class="streak" class:lit={todayDone} title={t('home.streak')}>
-			<Flame size={18} strokeWidth={2.4} />
-			<b>{streak}</b>
-			<span class="sr-only">{t('home.streak')}</span>
-		</span>
+		<div class="top-right">
+			<span class="streak" class:lit={todayDone} title={t('home.streak')}>
+				<Flame size={18} strokeWidth={2.4} />
+				<b>{streak}</b>
+				<span class="sr-only">{t('home.streak')}</span>
+			</span>
+			<AvatarButton />
+		</div>
 	</header>
 
 	{#if resume}
@@ -102,6 +106,12 @@
 
 	h1 {
 		font-size: clamp(2.1rem, 7vw, 3rem);
+	}
+
+	.top-right {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
 	}
 
 	.streak {

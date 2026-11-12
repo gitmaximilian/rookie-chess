@@ -14,13 +14,27 @@ test('Navigation zwischen allen Bereichen', async ({ page, isMobile }) => {
 		['Play', 'Play'],
 		['Puzzles', 'Puzzles'],
 		['Learn', 'Learn'],
-		['Profile', 'Profile']
+		['Coach', 'Coach'],
+		['Games', 'My games']
 	]) {
 		await nav.getByRole('link', { name: label }).click();
 		await expect(page.locator('h1')).toHaveText(heading);
 		await expect(nav.getByRole('link', { name: label })).toHaveAttribute('aria-current', 'page');
 	}
+	// Profil hängt am Avatar oben rechts
+	await page.goto('/');
+	await page.getByRole('link', { name: 'Profile' }).first().click();
+	await expect(page.locator('h1')).toHaveText('Profile');
 	expect(isMobile !== undefined).toBe(true);
+});
+
+test('Coach: Überblick und Statistik, alte Statistik-Adresse leitet weiter', async ({ page }) => {
+	await page.goto('/coach');
+	await expect(page.getByRole('heading', { name: 'How you are playing' })).toBeVisible();
+	await page.getByRole('link', { name: 'Statistics', exact: true }).click();
+	await expect(page.getByRole('heading', { name: 'Statistics', level: 1 })).toBeVisible();
+	await page.goto('/profile/stats');
+	await expect(page).toHaveURL(/\/coach\/stats/);
 });
 
 test('Seite ist cross-origin-isoliert (Multi-Thread-Stockfish möglich)', async ({ page }) => {

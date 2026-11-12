@@ -38,8 +38,8 @@ test('Statistik zeigt Ergebnisse, Wertungsverlauf und Eröffnungen', async ({ pa
 	await page.getByRole('button', { name: 'Link', exact: true }).first().click();
 	await expect(page.getByText(/Last synced/)).toBeVisible();
 
-	await page.goto('/profile');
-	await page.getByRole('link', { name: 'Statistics' }).click();
+	await page.goto('/coach');
+	await page.getByRole('link', { name: 'Statistics', exact: true }).click();
 	await expect(page.getByRole('heading', { name: 'Statistics', level: 1 })).toBeVisible();
 	await expect(page.getByText('3 games').first()).toBeVisible();
 	await expect(page.getByText('50% score').first()).toBeVisible();

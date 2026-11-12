@@ -25,7 +25,7 @@ test('PGN analysieren: Patzer wird erkannt und erklärt', async ({ page }) => {
 	await expect(page.getByText('Starting position')).toBeVisible();
 	// Partie erscheint in der Liste
 	await page.getByRole('main').getByRole('link', { name: 'Games' }).click();
-	await expect(page.getByText('vs Saint Brie')).toBeVisible();
+	await expect(page.locator('.gli .name').getByText('Saint Brie', { exact: true })).toBeVisible();
 });
 
 test('Weiterklicken in der Analyse scrollt die Seite nicht und das Brett springt nicht', async ({

@@ -64,6 +64,12 @@ Geprüft im Browser bei 393×852, 393×659, iPad (820×1180) und Desktop (1280×
 
 Das Erfolge-System (22 Abzeichen, Einblendung „Erfolg freigeschaltet“) wurde entfernt. Es mischte Lernfortschritt mit Nebenzielen (Freundespartie, Sturm-Rekord) und lenkte vom Lernen ab. Stattdessen bringt jede Lerneinheit 0–3 Sterne: Grundlagen- und Taktiklektionen (abgeschlossen = 3), Eröffnungsvarianten (nach Trefferquote beim ersten Versuch), Endspiele (wie bisher). Die Sterne stehen im Learn-Hub je Bereich und gesamt, im Profil mit Erklärung und auf Home. Es gingen keine Daten verloren: Erfolge wurden nie gespeichert, sondern immer aus vorhandenen Daten berechnet.
 
+## Nachtrag: Coach-Tab und Partienliste (Chessigma als Vorbild)
+
+- Der Profil-Tab wird zum **Coach-Tab**: So spielst du gerade (Wertung mit 30-Tage-Veränderung, Siegquote, Genauigkeit mit Trend, Patzer pro Partie, Puzzle-Wertung), „Daran solltest du arbeiten“ mit bis zu drei konkreten Trainingsschritten, letzte 30 Partien als Raster, typische Fehler, Wertungsverlauf, Auffälliges. Die ausführliche Statistik ist der zweite Reiter (`/coach/stats`, die alte Adresse leitet weiter).
+- Profil, Sterne und Einstellungen hängen am **Avatar oben rechts** (Home, Coach), am Desktop unten in der Seitenleiste. Es bleibt bei sechs Tabs.
+- **Partienliste:** Formstreifen der letzten zehn Ergebnisse, Höhepunkte als Zeilen (brillante Züge, Fehler zum Üben), Partien nach Tagen mit Bilanz, je Zeile Gegner mit Wertung, Farbe, Bedenkzeit, Zugzahl und Eröffnung; ohne Analyse ein „Analysieren“-Knopf.
+
 ## Vergleich mit Lichess und Chess.com
 
 - **Chess.com** führt nach jeder Partie direkt in „Game Review“ mit „Schlüsselmomente“ und „Nochmal versuchen“. Rookie hat „Fehler nachspielen“, aber erst nach Scrollen. → Sprung zum nächsten Fehler im Dock (H3).

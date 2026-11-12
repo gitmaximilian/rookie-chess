@@ -31,7 +31,8 @@
 		type MoveReview
 	} from '#lib/analysis/run.js';
 	import { accuracy, type PlyEval } from '#lib/analysis/classify.js';
-	import { t } from '#lib/i18n/i18n.svelte.js';
+	import { t, intlLocale } from '#lib/i18n/i18n.svelte.js';
+	import { outcomeOf } from '#lib/training/gamestats.js';
 	import { toWhite } from '#lib/engine/uci.js';
 	import { engine } from '#lib/engine/engine.js';
 	import { positionFromFen, turnFromFen } from '#lib/chess/game.js';
@@ -81,6 +82,73 @@
 	type Filter = 'all' | 'lichess' | 'chesscom' | 'bot' | 'friend' | 'mistakes';
 	let filter = $state<Filter>('all');
 	const FILTERS: Filter[] = ['all', 'lichess', 'chesscom', 'bot', 'friend', 'mistakes'];
+
+	// ── Übersicht im Stil einer Trainings-App: Form, Höhepunkte, Partien nach Tagen ──
+	const form = $derived(
+		filter === 'all'
+			? games
+					.slice(0, 10)
+					.map((g) => ({ id: g.id!, o: outcomeOf(g) }))
+					.filter((x) => x.o !== null)
+					.reverse()
+			: []
+	);
+
+	function dayLabel(ms: number): string {
+		const d = new Date(ms);
+		const now = new Date();
+		const startOf = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+		const diff = Math.round((startOf(now) - startOf(d)) / 86_400_000);
+		if (diff === 0) return t('analysis.today');
+		if (diff === 1) return t('analysis.yesterday');
+		return d.toLocaleDateString(intlLocale(), {
+			day: 'numeric',
+			month: 'short',
+			...(d.getFullYear() === now.getFullYear() ? {} : { year: 'numeric' })
+		});
+	}
+
+	const groups = $derived.by(() => {
+		const out: { key: string; label: string; games: GameRow[]; w: number; d: number; l: number }[] =
+			[];
+		for (const g of games) {
+			const d = new Date(g.date);
+			const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+			let grp = out.at(-1);
+			if (!grp || grp.key !== key) {
+				grp = { key, label: dayLabel(g.date), games: [], w: 0, d: 0, l: 0 };
+				out.push(grp);
+			}
+			grp.games.push(g);
+			const o = outcomeOf(g);
+			if (o) grp[o]++;
+		}
+		return out;
+	});
+
+	function openingName(g: GameRow): string | null {
+		void openingsReady;
+		return openingFor(g.moves)?.name ?? null;
+	}
+
+	/** Brillante Züge in den letzten analysierten Partien – als Höhepunkt oben */
+	let brilliant = $state<{ n: number; gameId: number } | null>(null);
+	async function findBrilliant() {
+		const recent = (await db.games.orderBy('date').reverse().limit(60).toArray()).filter(
+			(g) => g.analysis?.done
+		);
+		let n = 0;
+		let first: number | null = null;
+		for (const g of recent.slice(0, 30)) {
+			const r = reviewMoves(g, g.analysis!.evals as PlyEval[]).filter(
+				(x) => x.mover === g.myColor && x.kind === 'brilliant'
+			).length;
+			if (r && first === null) first = g.id!;
+			n += r;
+		}
+		brilliant = n && first !== null ? { n, gameId: first } : null;
+	}
+	onMount(() => void findBrilliant());
 
 	async function loadList() {
 		if (filter === 'all' || filter === 'mistakes') {
@@ -570,15 +638,38 @@
 
 	<div class="hub">
 		<LinkedAccounts collapsed={gameCount > 0} />
-		{#if mistakeCount > 0}
-			<a class="card hub-practice pressable" href={resolve('/puzzles?mode=mistakes')}>
-				<span class="hp-ico"><Target size={20} /></span>
-				<span class="hp-text">
-					<b>{t('analysis.hubPractice', { n: mistakeCount })}</b>
-					<span>{t('analysis.hubPracticeText')}</span>
-				</span>
-				<ChevronRight size={18} />
-			</a>
+		{#if form.length >= 3}
+			<div class="form-strip" role="img" aria-label={t('analysis.formAria', { n: form.length })}>
+				{#each form as x, i (x.id)}
+					<a
+						class="fs {x.o}"
+						class:newest={i === form.length - 1}
+						href={resolve(`/analysis?game=${x.id}`)}
+						aria-label={t(`analysis.result.${x.o === 'w' ? 'win' : x.o === 'l' ? 'loss' : 'draw'}`)}
+					></a>
+				{/each}
+			</div>
+		{/if}
+		{#if brilliant || mistakeCount > 0}
+			<div class="highlights card">
+				{#if brilliant}
+					<a class="hl" href={resolve(`/analysis?game=${brilliant.gameId}`)}>
+						<span class="hl-ico brilliant">!!</span>
+						<span class="hl-text">{t('analysis.brilliantMoves', { n: brilliant.n })}</span>
+						<ChevronRight size={18} />
+					</a>
+				{/if}
+				{#if mistakeCount > 0}
+					<a class="hl" href={resolve('/puzzles?mode=mistakes')}>
+						<span class="hl-ico practice"><Target size={17} /></span>
+						<span class="hl-text"
+							><b>{t('analysis.hubPractice', { n: mistakeCount })}</b>
+							<span>{t('analysis.hubPracticeText')}</span></span
+						>
+						<ChevronRight size={18} />
+					</a>
+				{/if}
+			</div>
 		{/if}
 		{#if loading || gameCount > 0 || filter !== 'all'}
 			<div class="hub-actions">
@@ -617,11 +708,21 @@
 					</div>
 				</div>
 			{:else}
-				<ul class="game-list">
-					{#each games as g (g.id)}
-						<li><GameListItem game={g} /></li>
-					{/each}
-				</ul>
+				{#each groups as grp (grp.key)}
+					<div class="day">
+						<h3>{grp.label}</h3>
+						<span class="day-score"
+							>{#if grp.w}{grp.w}{t('stats.hist.wShort')}{/if}
+							{#if grp.l}{grp.l}{t('stats.hist.lShort')}{/if}
+							{#if grp.d}{grp.d}{t('stats.hist.dShort')}{/if}</span
+						>
+					</div>
+					<ul class="game-list">
+						{#each grp.games as g (g.id)}
+							<li><GameListItem game={g} detailed opening={openingName(g)} /></li>
+						{/each}
+					</ul>
+				{/each}
 				{#if gameCount > games.length}
 					<button class="btn secondary more" onclick={showMore}
 						>{t('analysis.showMore', { n: gameCount - games.length })}</button
@@ -919,38 +1020,115 @@
 		margin-bottom: 1rem;
 	}
 
-	.hub-practice {
-		display: flex;
-		align-items: center;
-		gap: 0.8rem;
-		padding: 0.85rem 1rem;
-		color: var(--text);
-		border-color: color-mix(in srgb, var(--bad) 30%, transparent);
-		background: color-mix(in srgb, var(--bad) 6%, var(--surface));
+	.form-strip {
+		display: grid;
+		grid-template-columns: repeat(10, minmax(0, 1fr));
+		gap: 5px;
+		padding: 6px;
+		border-radius: var(--radius-m);
+		background: var(--surface);
+		border: 1px solid var(--line);
 	}
 
-	.hp-ico {
+	.fs {
+		height: 26px;
+		border-radius: 6px;
+		background: color-mix(in srgb, var(--text-3) 55%, var(--surface-2));
+	}
+
+	.fs.w {
+		background: var(--good);
+	}
+
+	.fs.l {
+		background: color-mix(in srgb, var(--bad) 80%, var(--surface));
+	}
+
+	.fs.newest {
+		box-shadow: inset 0 0 0 2px var(--warn);
+	}
+
+	.highlights {
+		display: flex;
+		flex-direction: column;
+		padding: 0.25rem 0.4rem;
+	}
+
+	.hl {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		min-height: 56px;
+		padding: 0.5rem 0.5rem;
+		color: var(--text);
+	}
+
+	.hl + .hl {
+		border-top: 1px solid var(--line);
+	}
+
+	.hl :global(svg:last-child) {
+		flex: none;
+		color: var(--text-3);
+	}
+
+	.hl-ico {
 		flex: none;
 		display: grid;
 		place-items: center;
-		width: 40px;
-		height: 40px;
-		border-radius: 12px;
-		background: var(--bad);
+		width: 36px;
+		height: 36px;
+		border-radius: 50%;
 		color: #fff;
+		font-family: var(--font-display);
+		font-weight: 800;
+		font-size: 0.9rem;
+		letter-spacing: -0.04em;
 	}
 
-	.hp-text {
+	.hl-ico.brilliant {
+		background: var(--k-brilliant);
+	}
+
+	.hl-ico.practice {
+		background: var(--bad);
+	}
+
+	.hl-text {
 		flex: 1;
 		min-width: 0;
 		display: flex;
 		flex-direction: column;
+		font-size: 1rem;
 		line-height: 1.3;
 	}
 
-	.hp-text span {
-		font-size: 0.85rem;
+	.hl-text span {
+		font-size: 0.82rem;
 		color: var(--text-2);
+	}
+
+	.day {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		margin: 0.7rem 0.2rem 0.1rem;
+	}
+
+	.day:first-child {
+		margin-top: 0;
+	}
+
+	.day h3 {
+		font-size: 0.95rem;
+		color: var(--text-2);
+	}
+
+	.day-score {
+		font-family: var(--font-mono);
+		font-size: 0.8rem;
+		color: var(--text-3);
+		word-spacing: 0.2rem;
 	}
 
 	.hub-actions {
@@ -1009,13 +1187,15 @@
 
 	.list-layout {
 		display: grid;
+		/* minmax(0, …): lange Eröffnungsnamen dürfen die Spalte nicht aufblähen */
+		grid-template-columns: minmax(0, 1fr);
 		gap: 1rem;
 		max-width: 1100px;
 	}
 
 	@media (min-width: 1000px) {
 		.list-layout {
-			grid-template-columns: 1fr 340px;
+			grid-template-columns: minmax(0, 1fr) 340px;
 			align-items: start;
 		}
 	}

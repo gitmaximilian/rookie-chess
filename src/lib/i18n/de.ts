@@ -16,6 +16,7 @@ export const de: Shape<typeof en> = {
 			'Kostenloser Schach-Trainer: Spielen, Puzzles, Eröffnungen und Endspiele – offline auf iPhone, iPad und Mac.'
 	},
 	nav: {
+		coach: 'Coach',
 		home: 'Start',
 		games: 'Partien',
 		play: 'Spielen',
@@ -387,6 +388,11 @@ export const de: Shape<typeof en> = {
 			friend: 'Freunde',
 			mistakes: 'Mit Fehlern'
 		},
+		today: 'Heute',
+		yesterday: 'Gestern',
+		brilliantMoves: (p) => `${p.n} ${s(p.n, 'brillanter Zug', 'brillante Züge')}`,
+		formAria: (p) => `Ergebnisse deiner letzten ${p.n} Partien`,
+		analyseShort: 'Analysieren',
 		notYet: 'noch nicht analysiert',
 		games: 'Partien',
 		running: 'Stockfish analysiert …',
@@ -1169,6 +1175,65 @@ export const de: Shape<typeof en> = {
 		strength: (p: P) => `Geschätzte Spielstärke ≈ ${p.n}`,
 		strengthHint: 'Aus Puzzles, besiegten Bots und Online-Partien.',
 		progress: (p: P) => `${p.n} von ${p.m} erledigt`
+	},
+	coachTab: {
+		eyebrow: 'Dein Coach',
+		title: 'Coach',
+		subtitle: 'Wie du spielst, was dich bremst – und was du als Nächstes trainierst.',
+		you: 'Du',
+		gamesCount: (p) => `${p.n} ${s(p.n, 'Partie', 'Partien')}`,
+		strength: (p) => `Spielstärke ≈ ${p.n}`,
+		how: 'So spielst du gerade',
+		rating: 'Aktuelle Wertung',
+		winRate: 'Siegquote',
+		lastN: (p) => `letzte ${p.n} Partien`,
+		accuracy: 'Genauigkeit',
+		last10: 'letzte 10 analysierte Partien',
+		blunders: 'Patzer',
+		perGame: 'pro Partie',
+		puzzle: 'Puzzle-Wertung',
+		work: 'Daran solltest du arbeiten',
+		lastGames: (p) => `Deine letzten ${p.n} Partien`,
+		won: 'gewonnen',
+		drawn: 'remis',
+		lost: 'verloren',
+		streak: 'Siege in Folge',
+		typical: 'Deine typischen Fehler',
+		typicalText: (p) => `Aus ${p.n} analysierten ${s(p.n, 'Partie', 'Partien')}.`,
+		notes: 'Was auffällt',
+		allStats: 'Alle Statistiken',
+		allStatsText: 'Eröffnungen, Farben, Bedenkzeiten, Partieenden und Export.',
+		adv: {
+			practise: 'Üben',
+			train: 'Trainieren',
+			play: 'Spielen',
+			mistakesTitle: (p) =>
+				`${p.n} ${s(p.n, 'Stellung', 'Stellungen')} aus deinen Partien zum Nachspielen`,
+			mistakesText:
+				'Finde den Zug, den du übersehen hast – so wiederholst du Fehler am seltensten.',
+			motifTitle: (p) => `${p.motif}: ${p.n}× in deinen Partien`,
+			motif: {
+				hanging: 'Prüfe vor jedem Zug: Kann meine Figur gratis geschlagen werden?',
+				fork: 'Achte auf Felder, von denen Springer oder Dame zwei Dinge gleichzeitig angreifen.',
+				'mate-missed':
+					'Du hattest Matts, die du nicht gesehen hast. Matt-Puzzles schärfen den Blick.',
+				'mate-allowed': 'Prüfe deine Königssicherheit: Welche Schachs hat dein Gegner?',
+				'missed-win':
+					'Dein Gegner hat Figuren hängen lassen. Schau zuerst nach freien Schlagzügen.',
+				positional: 'Frag dich: Welche Figur steht am schlechtesten, und wie verbessere ich sie?'
+			},
+			themeTitle: (p) => `Schwächstes Puzzle-Thema: ${p.theme} (${p.pct} %)`,
+			themeText: 'Trainiere es auf deinem Niveau, bis das Muster sitzt.',
+			phaseTitle: (p) => `${p.phase}: nur ${p.acc} % Genauigkeit`,
+			phase: {
+				opening: 'Lerne eine Eröffnung richtig – weniger Überraschungen in den ersten Zügen.',
+				middlegame: 'Im Mittelspiel entscheidet Taktik. Tägliche Puzzles helfen am meisten.',
+				endgame: 'Ein paar Endspieltechniken machen aus gewonnenen Stellungen Siege.'
+			},
+			playTitle: 'Dein Coach braucht ein paar Partien',
+			playText:
+				'Spiel gegen einen Bot oder verknüpfe Lichess / Chess.com – dann bekommst du hier persönliche Tipps.'
+		}
 	},
 	stars: {
 		title: 'Deine Sterne',
