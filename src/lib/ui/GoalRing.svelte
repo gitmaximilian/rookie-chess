@@ -43,11 +43,11 @@
 	}
 
 	.track {
-		stroke: var(--surface-2);
+		stroke: color-mix(in srgb, var(--tone-ink, var(--text-3)) 20%, transparent);
 	}
 
 	.bar {
-		stroke: var(--accent);
+		stroke: var(--tone-ink, var(--accent));
 		transition: stroke-dashoffset 800ms var(--ease-out);
 	}
 

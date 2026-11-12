@@ -1165,6 +1165,7 @@ export const de: Shape<typeof en> = {
 		done: 'Los geht’s!'
 	},
 	plan: {
+		kicker: 'Nächster Schritt',
 		title: 'Dein Training heute',
 		review: (p: P) => `${p.n} verpasste ${p.n === 1 ? 'Puzzle' : 'Puzzles'} wiederholen`,
 		puzzles: (p: P) => `${p.n} Puzzles lösen`,
@@ -1384,7 +1385,18 @@ export const de: Shape<typeof en> = {
 		formAria: (p: P) => `Letzte Partien: ${p.pct} % der Punkte`,
 		noGames: 'Noch keine Partien',
 		stars: 'Sterne',
-		starsSub: 'beim Lernen'
+		starsSub: 'beim Lernen',
+		formLast: (p: P) => `letzte ${p.n} ${Number(p.n) === 1 ? 'Partie' : 'Partien'}`,
+		strengthGoal: 'geschätzt · Ziel 1200',
+		streak: 'Serie',
+		streakDays: (p: P) => (Number(p.n) === 1 ? 'Tag' : 'Tage'),
+		streakDone: 'heute erledigt',
+		streakOpen: 'heute trainieren, um sie zu halten',
+		goal: 'Tagesziel',
+		goalDone: 'erreicht – stark',
+		goalLeft: (p: P) => `noch ${p.n} ${Number(p.n) === 1 ? 'Puzzle' : 'Puzzles'}`,
+		trend30: '30 Puzzles',
+		last14: 'letzte 14 Tage'
 	},
 	about: {
 		eyebrow: 'Open Source',

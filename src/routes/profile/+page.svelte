@@ -1,4 +1,6 @@
 <script lang="ts">
+	import BentoGrid from '#lib/ui/bento/BentoGrid.svelte';
+	import StatTile, { type Tone } from '#lib/ui/bento/StatTile.svelte';
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 	import Info from '@lucide/svelte/icons/info';
@@ -63,24 +65,30 @@
 		{
 			icon: Gauge,
 			label: t('profile.strength'),
-			value: strength ? `≈ ${strength}` : '–',
-			c: 'var(--accent)'
+			value: strength ? `≈${strength}` : '–',
+			tone: 'coach' as Tone
 		},
 		{
 			icon: Puzzle,
 			label: t('profile.puzzleRating'),
 			value: rating ? `${Math.round(rating.rating)}${isProvisional(rating) ? '?' : ''}` : '–',
-			c: 'var(--c-puzzle)'
+			tone: 'puzzle' as Tone,
+			spark: history.slice(-40).map((h) => h.rating)
 		},
-		{ icon: Flame, label: t('profile.streak'), value: String(streak), c: 'var(--accent)' },
-		{ icon: Target, label: t('profile.solved'), value: String(solved), c: 'var(--c-learn)' },
-		{ icon: Swords, label: t('profile.games'), value: String(games), c: 'var(--c-play)' },
-		{ icon: Trophy, label: t('profile.bots'), value: `${bots} / ${BOTS.length}`, c: 'var(--warn)' },
+		{ icon: Flame, label: t('profile.streak'), value: String(streak), tone: 'play' as Tone },
+		{ icon: Target, label: t('profile.solved'), value: String(solved), tone: 'learn' as Tone },
+		{ icon: Swords, label: t('profile.games'), value: String(games), tone: 'games' as Tone },
+		{
+			icon: Trophy,
+			label: t('profile.bots'),
+			value: `${bots}/${BOTS.length}`,
+			tone: 'neutral' as Tone
+		},
 		{
 			icon: Star,
 			label: t('profile.endgames'),
-			value: `${stars} / ${LESSONS.length * 3}`,
-			c: 'var(--c-analysis)'
+			value: `${stars}/${LESSONS.length * 3}`,
+			tone: 'stars' as Tone
 		}
 	]);
 </script>
@@ -105,15 +113,18 @@
 <div class="wrap">
 	<LinkedAccounts collapsed />
 
-	<div class="tiles">
-		{#each tiles as tile, i (tile.label)}
-			<div class="tile card" style:--c={tile.c} style:--i={i}>
-				<span class="t-icon"><tile.icon size={18} /></span>
-				<span class="t-value">{tile.value}</span>
-				<span class="t-label">{tile.label}</span>
-			</div>
+	<BentoGrid label={t('profile.title')} testid="profile-tiles">
+		{#each tiles as tile (tile.label)}
+			<StatTile
+				tone={tile.tone}
+				size={tile.spark && tile.spark.length > 1 ? 'm' : 's'}
+				label={tile.label}
+				value={tile.value}
+				muted={tile.value === '–'}
+				spark={tile.spark}
+			/>
 		{/each}
-	</div>
+	</BentoGrid>
 
 	<div class="duo">
 		<section class="card block">
@@ -217,12 +228,6 @@
 		color: var(--text-2);
 	}
 
-	.tiles {
-		display: grid;
-		grid-template-columns: repeat(2, 1fr);
-		gap: 0.5rem;
-	}
-
 	/* Handy: drei kompakte Spalten; die siebte Kachel füllt die letzte Zeile */
 	@media (max-width: 639px) {
 		.tiles {
@@ -247,53 +252,6 @@
 		}
 	}
 
-	@media (min-width: 640px) {
-		.tiles {
-			grid-template-columns: repeat(3, 1fr);
-		}
-	}
-
-	@media (min-width: 1100px) {
-		.tiles {
-			grid-template-columns: repeat(7, 1fr);
-		}
-	}
-
-	.tile {
-		display: flex;
-		flex-direction: column;
-		gap: 0.15rem;
-		padding: 0.9rem 1rem;
-		animation: rise 420ms var(--ease-out) both;
-		animation-delay: calc(var(--i) * 40ms);
-	}
-
-	.t-icon {
-		display: grid;
-		place-items: center;
-		width: 32px;
-		height: 32px;
-		border-radius: 10px;
-		margin-bottom: 0.4rem;
-		background: color-mix(in srgb, var(--c) 15%, transparent);
-		color: var(--c);
-	}
-
-	.t-value {
-		font-family: var(--font-num);
-		font-size: 1.6rem;
-		font-weight: 500;
-		line-height: 1.1;
-		font-variant-numeric: tabular-nums;
-		letter-spacing: -0.02em;
-	}
-
-	.t-label {
-		font-size: 0.8rem;
-		color: var(--text-2);
-		line-height: 1.25;
-	}
-
 	.duo {
 		display: grid;
 		gap: 0.75rem;
@@ -306,6 +264,7 @@
 	}
 
 	.block {
+		border-radius: var(--radius-tile);
 		padding: 1.1rem 1.25rem;
 		display: flex;
 		flex-direction: column;

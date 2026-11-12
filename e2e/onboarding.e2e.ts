@@ -81,5 +81,5 @@ test('Einstieg: Lichess verknüpfen → Partien und Elo auf der Startseite', asy
 	await page.goto('/');
 	const mine = page.locator('.mine');
 	await expect(mine.getByText('vs opp1')).toBeVisible({ timeout: 15_000 });
-	await expect(page.locator('.sum')).toContainText('1501');
+	await expect(page.locator('[data-testid="home-bento"]')).toContainText('1501');
 });

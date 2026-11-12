@@ -23,7 +23,7 @@
 	};
 </script>
 
-<section class="stars card" aria-busy={!areas}>
+<section class="stars tone-stars" aria-busy={!areas}>
 	<div class="head">
 		<div>
 			<h2>{t('stars.title')}</h2>
@@ -68,7 +68,8 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.9rem;
-		padding: 1.1rem 1.25rem;
+		padding: 1.15rem;
+		border-radius: var(--radius-tile);
 	}
 
 	.head {
@@ -95,8 +96,8 @@
 		gap: 0.3rem;
 		padding: 0.35rem 0.75rem;
 		border-radius: 999px;
-		background: color-mix(in srgb, var(--warn) 16%, var(--surface));
-		color: var(--warn);
+		background: color-mix(in srgb, var(--surface) 65%, transparent);
+		color: var(--tone-ink);
 	}
 
 	.big b {
@@ -114,16 +115,21 @@
 
 	.all {
 		font-weight: 700;
-		color: var(--warn-text);
+		color: var(--tone-ink);
 	}
 
 	ul {
 		list-style: none;
 		margin: 0;
 		padding: 0;
-		display: flex;
-		flex-direction: column;
-		gap: 0.35rem;
+		display: grid;
+		gap: 0.45rem;
+	}
+
+	@media (min-width: 700px) {
+		ul {
+			grid-template-columns: 1fr 1fr;
+		}
 	}
 
 	li {
@@ -131,6 +137,9 @@
 		display: flex;
 		align-items: center;
 		gap: 0.4rem;
+		padding: 0.2rem 0.6rem 0.2rem 0.85rem;
+		border-radius: 18px;
+		background: color-mix(in srgb, var(--surface) 65%, transparent);
 	}
 
 	li a {
@@ -160,19 +169,21 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 0.25rem;
-		font-weight: 700;
+		font-family: var(--font-num);
+		font-weight: 500;
+		font-size: 0.88rem;
 		font-variant-numeric: tabular-nums;
 		color: var(--text-2);
 	}
 
 	.n :global(svg) {
-		color: var(--warn);
+		color: var(--tone-ink);
 	}
 
 	.bar {
 		height: 6px;
 		border-radius: 999px;
-		background: var(--surface-2);
+		background: color-mix(in srgb, var(--tone-ink) 15%, transparent);
 		overflow: hidden;
 	}
 

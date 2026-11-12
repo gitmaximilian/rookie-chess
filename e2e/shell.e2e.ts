@@ -48,7 +48,7 @@ test('Seite ist cross-origin-isoliert (Multi-Thread-Stockfish möglich)', async 
 test('App startet offline nach dem ersten Besuch', async ({ page, context, browserName }) => {
 	test.skip(browserName !== 'chromium', 'Service Worker nur in Playwright-Chromium testbar');
 	await page.goto('/');
-	await expect(page.locator('section.sum .tile').first()).toBeVisible();
+	await expect(page.locator('[data-testid="home-bento"] .tile').first()).toBeVisible();
 	await page.evaluate(async () => {
 		const reg = await navigator.serviceWorker.ready;
 		return reg.active?.state;
@@ -87,7 +87,7 @@ test('Unterseiten mit Parametern funktionieren auch über den Service Worker', a
 test('Startseite zeigt nur verknüpfte Konten', async ({ page }) => {
 	await page.route(/lichess\.org|chess\.com/, (r) => r.abort());
 	await page.goto('/');
-	await expect(page.locator('section.sum .tile').first()).toBeVisible();
+	await expect(page.locator('[data-testid="home-bento"] .tile').first()).toBeVisible();
 	await page.evaluate(
 		() =>
 			new Promise<void>((res, rej) => {
@@ -105,7 +105,7 @@ test('Startseite zeigt nur verknüpfte Konten', async ({ page }) => {
 			})
 	);
 	await page.reload();
-	const sum = page.locator('section.sum');
+	const sum = page.locator('[data-testid="home-bento"]');
 	await expect(sum.getByText('Lichess')).toBeVisible();
 	await expect(sum.getByText('Chess.com')).toHaveCount(0);
 	await expect(page.getByText('Puzzle of the day')).toHaveCount(0);

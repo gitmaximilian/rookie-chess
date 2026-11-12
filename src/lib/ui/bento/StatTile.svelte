@@ -70,7 +70,9 @@
 	{/if}
 	{#if children}<span class="body">{@render children()}</span>{/if}
 	{#if spark && spark.length > 1}
-		<span class="chart"><Sparkline values={spark} {bars} height={size === 'l' ? 64 : 34} /></span>
+		<span class="tile-chart"
+			><Sparkline values={spark} {bars} height={size === 'l' ? 64 : 34} /></span
+		>
 	{/if}
 	{#if sub || delta}
 		<span class="sub">
@@ -153,7 +155,7 @@
 		min-width: 0;
 	}
 
-	.chart {
+	.tile-chart {
 		display: block;
 		margin-top: auto;
 		padding-top: 0.55rem;
@@ -169,21 +171,18 @@
 		line-height: 1.3;
 	}
 
-	.chart + .sub {
+	.tile-chart + .sub {
 		margin-top: 0.3rem;
 	}
 
+	/* höchstens zwei Zeilen, nie abgeschnitten mitten im Wort */
 	.sub-text {
 		min-width: 0;
 		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-
-	.size-l .sub-text,
-	.size-full .sub-text,
-	.size-m .sub-text {
-		white-space: normal;
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 2;
+		line-clamp: 2;
 	}
 
 	.delta {

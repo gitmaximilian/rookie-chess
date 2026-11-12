@@ -62,7 +62,7 @@
 	--warn: #d99a1c;
 	--bad: #b83535;
 	/* Status als Text: auf hellen Flächen mindestens 4,5:1 (WCAG AA) */
-	--good-text: #1d7449;
+	--good-text: #19683f;
 	--warn-text: #8a5a00;
 	--bad-text: #a42e2e;
 

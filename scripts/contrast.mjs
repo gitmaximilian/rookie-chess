@@ -34,7 +34,10 @@ for (const [mode, sel] of [
 		const checks = [
 			['Text', v['tile-text'], 4.5],
 			['Ink (Label)', v[`tile-${a}-ink`], 4.5],
-			['Text-2', v['tile-text-2'], 4.5]
+			['Text-2', v['tile-text-2'], 4.5],
+			['Gut', v['good-text'], 4.5],
+			['Schlecht', v['bad-text'], 4.5],
+			['Warnung', v['warn-text'], 4.5]
 		];
 		const row = checks.map(([n, fg, min]) => {
 			const r = ratio(fg, bg);

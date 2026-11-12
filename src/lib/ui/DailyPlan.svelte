@@ -98,10 +98,11 @@
 	}
 </script>
 
-<section class="plan card" aria-busy={!ctx}>
+<section class="plan tone-play" data-size="l" aria-busy={!ctx}>
 	<div class="p-head">
-		<GoalRing value={doneCount} max={Math.max(1, rows.length)} size={52} />
+		<GoalRing value={doneCount} max={Math.max(1, rows.length)} size={56} />
 		<div class="p-title">
+			<span class="mono-label kicker">{t('plan.kicker')}</span>
 			<h2>{t('plan.title')}</h2>
 			<span
 				>{ctx
@@ -143,13 +144,13 @@
 </section>
 
 <style>
+	/* Größte Kachel der Startseite: beantwortet „Was mache ich jetzt?“ */
 	.plan {
 		display: flex;
 		flex-direction: column;
-		gap: 0.75rem;
-		padding: 1.1rem 1.15rem;
-		background:
-			radial-gradient(110% 120% at 100% 0%, var(--accent-soft), transparent 60%), var(--surface);
+		gap: 0.85rem;
+		padding: 1.2rem;
+		border-radius: var(--radius-tile);
 	}
 
 	.p-head {
@@ -163,21 +164,27 @@
 		min-width: 0;
 		display: flex;
 		flex-direction: column;
+		gap: 0.1rem;
+	}
+
+	.kicker {
+		color: var(--tone-ink);
 	}
 
 	.p-title h2 {
-		font-size: 1.2rem;
+		font-size: 1.3rem;
 	}
 
-	.p-title span {
-		font-size: 0.85rem;
-		color: var(--text-2);
+	.p-title > span:last-child {
+		font-family: var(--font-num);
+		font-size: 0.8rem;
+		color: var(--tile-text-2);
 	}
 
 	.go {
 		flex: none;
-		height: 40px;
-		padding-inline: 1rem;
+		height: 44px;
+		padding-inline: 1.1rem;
 	}
 
 	.tasks {
@@ -198,16 +205,17 @@
 		display: flex;
 		align-items: center;
 		gap: 0.7rem;
-		padding: 0.6rem 0.7rem;
-		border-radius: 13px;
-		background: var(--surface-2);
-		color: var(--text);
+		min-height: 52px;
+		padding: 0.55rem 0.75rem;
+		border-radius: 18px;
+		background: color-mix(in srgb, var(--surface) 62%, transparent);
+		color: var(--tile-text);
 		border: 1.5px solid transparent;
 		transition: border-color var(--dur) var(--ease-out);
 	}
 
 	.task.next {
-		border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+		border-color: var(--tone-ink);
 		background: var(--surface);
 	}
 
@@ -215,11 +223,11 @@
 		flex: none;
 		display: grid;
 		place-items: center;
-		width: 30px;
-		height: 30px;
-		border-radius: 9px;
-		background: var(--surface);
-		color: var(--accent);
+		width: 32px;
+		height: 32px;
+		border-radius: 11px;
+		background: var(--tone-bg);
+		color: var(--tone-ink);
 	}
 
 	.task.finished .t-ico {
@@ -228,24 +236,25 @@
 	}
 
 	.task.finished .t-text {
-		color: var(--text-2);
+		color: var(--tile-text-2);
 		text-decoration: line-through;
-		text-decoration-color: color-mix(in srgb, var(--text-2) 50%, transparent);
+		text-decoration-color: color-mix(in srgb, var(--tile-text-2) 50%, transparent);
 	}
 
 	.t-text {
 		flex: 1;
 		min-width: 0;
-		font-size: 0.93rem;
+		font-size: 0.95rem;
 		font-weight: 600;
 		line-height: 1.3;
 	}
 
 	.t-count {
 		flex: none;
-		font-size: 0.8rem;
-		font-weight: 700;
-		color: var(--text-2);
+		font-family: var(--font-num);
+		font-size: 0.82rem;
+		font-weight: 500;
+		color: var(--tile-text-2);
 		font-variant-numeric: tabular-nums;
 	}
 

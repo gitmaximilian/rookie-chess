@@ -1112,6 +1112,7 @@ export const en = {
 		done: 'Let’s go!'
 	},
 	plan: {
+		kicker: 'Next step',
 		title: 'Your training today',
 		review: (p: P) => `Review ${p.n} missed ${s(p.n, 'puzzle', 'puzzles')}`,
 		puzzles: (p: P) => `Solve ${p.n} puzzles`,
@@ -1324,7 +1325,18 @@ export const en = {
 		formAria: (p: P) => `Last games: ${p.pct}% score`,
 		noGames: 'No games yet',
 		stars: 'Stars',
-		starsSub: 'from learning'
+		starsSub: 'from learning',
+		formLast: (p: P) => `last ${p.n} ${s(p.n, 'game', 'games')}`,
+		strengthGoal: 'estimated · goal 1200',
+		streak: 'Streak',
+		streakDays: (p: P) => s(p.n, 'day', 'days'),
+		streakDone: 'today done',
+		streakOpen: 'train today to keep it',
+		goal: 'Daily goal',
+		goalDone: 'reached – well done',
+		goalLeft: (p: P) => `${p.n} more ${s(p.n, 'puzzle', 'puzzles')}`,
+		trend30: '30 puzzles',
+		last14: 'last 14 days'
 	},
 	about: {
 		eyebrow: 'Open source',

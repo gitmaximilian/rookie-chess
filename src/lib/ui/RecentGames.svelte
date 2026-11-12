@@ -23,7 +23,7 @@
 	});
 </script>
 
-<section class="mine card">
+<section class="mine tone-games">
 	<div class="head">
 		<span class="ico"><ChartLine size={20} /></span>
 		<h2>{t('analysis.title')}</h2>
@@ -58,13 +58,19 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.75rem;
-		padding: 1.05rem 1.1rem;
-		border: 1.5px solid color-mix(in srgb, var(--c-analysis) 35%, transparent);
+		padding: 1.15rem;
+		border-radius: var(--radius-tile);
+	}
+
+	.mine :global(.gli.flat) {
+		background: color-mix(in srgb, var(--surface) 72%, transparent);
 	}
 
 	.mine :global(.card) {
 		box-shadow: none;
-		border: 1px solid var(--line);
+		border: none;
+		background: color-mix(in srgb, var(--surface) 70%, transparent);
+		border-radius: 18px;
 		padding: 0.75rem 0.85rem;
 	}
 
@@ -85,8 +91,8 @@
 		width: 36px;
 		height: 36px;
 		border-radius: 11px;
-		background: var(--c-analysis);
-		color: #1a1206;
+		background: var(--tone-ink);
+		color: var(--tone-bg);
 	}
 
 	.all {
@@ -95,7 +101,7 @@
 		gap: 0.2rem;
 		font-size: 0.88rem;
 		font-weight: 650;
-		color: var(--accent);
+		color: var(--tone-ink);
 	}
 
 	.list {

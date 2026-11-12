@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
-	import Flame from '@lucide/svelte/icons/flame';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import ShieldAlert from '@lucide/svelte/icons/shield-alert';
 	import Play from '@lucide/svelte/icons/play';
@@ -9,15 +8,13 @@
 	import AvatarButton from '#lib/ui/AvatarButton.svelte';
 	import RecentGames from '#lib/ui/RecentGames.svelte';
 	import HomeSummary from '#lib/ui/HomeSummary.svelte';
+	import BentoGrid from '#lib/ui/bento/BentoGrid.svelte';
 	import BotAvatar from '#lib/ui/BotAvatar.svelte';
 	import { db, getSetting } from '#lib/db/db.js';
-	import { computeStreak } from '#lib/training/streak.js';
 	import { botById } from '#lib/bots/bots.js';
 	import { t } from '#lib/i18n/i18n.svelte.js';
 
 	let greeting = $state('hello');
-	let streak = $state(0);
-	let todayDone = $state(false);
 	let backupDue = $state(false);
 	let resume = $state<{ botId: string; moves: string[] } | null>(null);
 
@@ -26,9 +23,6 @@
 		greeting = h < 5 ? 'night' : h < 11 ? 'morning' : h < 18 ? 'hello' : 'evening';
 
 		const rows = await db.activity.toArray();
-		const s = computeStreak(rows);
-		streak = s.days;
-		todayDone = s.todayDone;
 		resume = await getSetting('currentGame', null);
 
 		const last = await getSetting<number | null>('lastBackupAt', null);
@@ -48,11 +42,6 @@
 			<h1>{t(`home.${greeting}`)}!</h1>
 		</div>
 		<div class="top-right">
-			<span class="streak" class:lit={todayDone} title={t('home.streak')}>
-				<Flame size={18} strokeWidth={2.4} />
-				<b>{streak}</b>
-				<span class="sr-only">{t('home.streak')}</span>
-			</span>
 			<AvatarButton />
 		</div>
 	</header>
@@ -73,12 +62,12 @@
 		</a>
 	{/if}
 
-	<div class="grid">
-		<div class="plan-col"><DailyPlan /></div>
-		<div class="games-col"><RecentGames /></div>
-	</div>
+	<BentoGrid label={t('summary.title')} testid="home-bento">
+		<DailyPlan />
+		<HomeSummary />
+	</BentoGrid>
 
-	<HomeSummary />
+	<RecentGames />
 
 	{#if backupDue}
 		<a class="banner card" href={resolve('/settings')}>
@@ -114,41 +103,9 @@
 		gap: 0.6rem;
 	}
 
-	.streak {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.3rem;
-		height: 38px;
-		padding: 0 0.85rem;
-		border-radius: 999px;
-		background: var(--surface);
-		border: 1px solid var(--line);
-		color: var(--text-3);
-		font-family: var(--font-num);
-		font-size: 1.05rem;
-		box-shadow: var(--shadow-1);
-		font-variant-numeric: tabular-nums;
-		letter-spacing: -0.02em;
-	}
-
-	.streak.lit {
-		color: var(--accent);
-		border-color: color-mix(in srgb, var(--accent) 30%, transparent);
-		background: var(--accent-soft);
-	}
-
-	.streak.lit :global(svg) {
-		animation: flicker 2.4s ease-in-out infinite;
-	}
-
-	@keyframes flicker {
-		50% {
-			transform: scale(1.12) rotate(-4deg);
-		}
-	}
-
 	.banner {
 		display: flex;
+		border-radius: var(--radius-tile);
 		align-items: center;
 		gap: 0.75rem;
 		padding: 0.85rem 1rem;
@@ -163,6 +120,7 @@
 
 	.resume {
 		display: flex;
+		border-radius: var(--radius-tile);
 		align-items: center;
 		gap: 0.85rem;
 		padding: 0.8rem 1rem;
@@ -187,18 +145,5 @@
 		border-radius: 50%;
 		background: var(--accent);
 		color: #fff;
-	}
-
-	/* Tagesplan zuerst: er beantwortet „Was mache ich jetzt?“ */
-	.grid {
-		display: grid;
-		gap: 1rem;
-	}
-
-	@media (min-width: 1000px) {
-		.grid {
-			grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-			align-items: start;
-		}
 	}
 </style>

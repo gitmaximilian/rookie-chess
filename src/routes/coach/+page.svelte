@@ -1,9 +1,6 @@
 <script lang="ts">
 	import { onMount, untrack } from 'svelte';
 	import { resolve } from '$app/paths';
-	import TrendingUp from '@lucide/svelte/icons/trending-up';
-	import TrendingDown from '@lucide/svelte/icons/trending-down';
-	import Trophy from '@lucide/svelte/icons/trophy';
 	import Target from '@lucide/svelte/icons/target';
 	import Bomb from '@lucide/svelte/icons/bomb';
 	import Puzzle from '@lucide/svelte/icons/puzzle';
@@ -14,6 +11,8 @@
 	import ChartLine from '@lucide/svelte/icons/chart-line';
 	import ChessKnight from '@lucide/svelte/icons/chess-knight';
 	import PageHeader from '#lib/ui/PageHeader.svelte';
+	import BentoGrid from '#lib/ui/bento/BentoGrid.svelte';
+	import StatTile from '#lib/ui/bento/StatTile.svelte';
 	import CoachTabs from '#lib/ui/CoachTabs.svelte';
 	import AvatarButton from '#lib/ui/AvatarButton.svelte';
 	import RatingHistory from '#lib/ui/RatingHistory.svelte';
@@ -63,6 +62,7 @@
 		skills: SkillValue[];
 		accuracy: AccPoint[];
 		coverage: { done: number; total: number };
+		ratingSpark: number[];
 	}
 
 	let d = $state<Data | null>(null);
@@ -235,7 +235,8 @@
 			coverage: {
 				done: analysable.filter((g) => g.analysis?.done).length,
 				total: analysable.length
-			}
+			},
+			ratingSpark: main ? main.points.slice(-20).map((p) => p.rating) : []
 		};
 	}
 
@@ -357,73 +358,67 @@
 	</div>
 {:else}
 	<div class="wrap">
-		<!-- Wie du spielst -->
-		<section class="card block how">
-			<div class="who">
-				<span class="who-ini" aria-hidden="true">{(d.name || 'R')[0].toUpperCase()}</span>
-				<div>
-					<b class="who-name">{d.name || t('coachTab.you')}</b>
-					<span class="muted">
-						{t('coachTab.gamesCount', { n: d.games })}{#if d.strength}
-							· {t('coachTab.strength', { n: d.strength })}{/if}
-					</span>
-				</div>
+		<!-- Wie du spielst: eine Kennzahl je Kachel -->
+		<div class="who">
+			<span class="who-ini" aria-hidden="true">{(d.name || 'R')[0].toUpperCase()}</span>
+			<div>
+				<b class="who-name">{d.name || t('coachTab.you')}</b>
+				<span class="muted num-line">
+					{t('coachTab.gamesCount', { n: d.games })}{#if d.strength}
+						· {t('coachTab.strength', { n: d.strength })}{/if}
+				</span>
 			</div>
+		</div>
 
-			<h2>{t('coachTab.how')}</h2>
-			<ul class="kpis">
-				{#if d.rating}
-					<li>
-						<span class="k-ico"><TrendingUp size={17} /></span>
-						<span class="k-lbl">{t('coachTab.rating')}<small>{d.rating.label}</small></span>
-						<b class="k-val">{d.rating.value}</b>
-						{#if d.rating.delta !== null}
-							<span class="chip" class:up={d.rating.delta >= 0} class:down={d.rating.delta < 0}
-								>{#if d.rating.delta >= 0}<TrendingUp size={13} /> +{:else}<TrendingDown
-										size={13}
-									/>{/if}{d.rating.delta}</span
-							>
-						{:else}<span></span>{/if}
-					</li>
-				{/if}
-				<li>
-					<span class="k-ico"><Trophy size={17} /></span>
-					<span class="k-lbl"
-						>{t('coachTab.winRate')}{#if d.last.length}<small
-								>{t('coachTab.lastN', { n: d.last.length })}</small
-							>{/if}</span
-					>
-					<b class="k-val">{winRate === null ? '–' : `${winRate}%`}</b>
-					<span></span>
-				</li>
-				<li>
-					<span class="k-ico"><Target size={17} /></span>
-					<span class="k-lbl">{t('coachTab.accuracy')}<small>{t('coachTab.last10')}</small></span>
-					<b class="k-val">{d.stats.accuracyRecent === null ? '–' : `${d.stats.accuracyRecent}%`}</b
-					>
-					{#if accTrend !== null && accTrend !== 0}
-						<span class="chip" class:up={accTrend > 0} class:down={accTrend < 0}
-							>{accTrend > 0 ? '+' : ''}{accTrend}</span
-						>
-					{:else}<span></span>{/if}
-				</li>
-				<li>
-					<span class="k-ico"><Bomb size={17} /></span>
-					<span class="k-lbl">{t('coachTab.blunders')}<small>{t('coachTab.perGame')}</small></span>
-					<b class="k-val">{d.stats.analysed ? d.stats.perGame.blunders.toFixed(1) : '–'}</b>
-					<span></span>
-				</li>
-				<li>
-					<span class="k-ico"><Puzzle size={17} /></span>
-					<span class="k-lbl">{t('coachTab.puzzle')}</span>
-					<b class="k-val">{d.puzzle.rating}{d.puzzle.provisional ? '?' : ''}</b>
-					<span></span>
-				</li>
-			</ul>
-		</section>
+		<h2 class="how-title">{t('coachTab.how')}</h2>
+		<BentoGrid label={t('coachTab.how')} testid="coach-kpis">
+			{#if d.rating}
+				<StatTile
+					tone="games"
+					size="m"
+					label={t('coachTab.rating')}
+					value={d.rating.value}
+					delta={d.rating.delta || null}
+					sub={d.rating.label}
+					spark={d.ratingSpark}
+				/>
+			{/if}
+			<StatTile
+				tone="play"
+				label={t('coachTab.winRate')}
+				value={winRate === null ? '–' : winRate}
+				unit={winRate === null ? '' : '%'}
+				muted={winRate === null}
+				sub={d.last.length ? t('coachTab.lastN', { n: d.last.length }) : ''}
+			/>
+			<StatTile
+				tone="learn"
+				label={t('coachTab.accuracy')}
+				value={d.stats.accuracyRecent === null ? '–' : d.stats.accuracyRecent}
+				unit={d.stats.accuracyRecent === null ? '' : '%'}
+				muted={d.stats.accuracyRecent === null}
+				delta={accTrend || null}
+				sub={t('coachTab.last10')}
+				spark={d.accuracy.map((a) => a.accuracy)}
+			/>
+			<StatTile
+				tone="neutral"
+				label={t('coachTab.blunders')}
+				value={d.stats.analysed ? d.stats.perGame.blunders.toFixed(1) : '–'}
+				muted={!d.stats.analysed}
+				sub={t('coachTab.perGame')}
+			/>
+			<StatTile
+				tone="puzzle"
+				label={t('coachTab.puzzle')}
+				value={`${d.puzzle.rating}${d.puzzle.provisional ? '?' : ''}`}
+				spark={d.puzzleHist.slice(-30).map((p) => p.rating)}
+				href={resolve('/puzzles')}
+			/>
+		</BentoGrid>
 
 		<!-- Spielerprofil als Fünfeck -->
-		<section class="card block skills">
+		<section class="tone-coach block skills">
 			<div class="sk-head">
 				<h2>{t('skills.title')}</h2>
 				<p class="muted">{t('skills.text', { n: d.stats.analysed })}</p>
@@ -465,7 +460,7 @@
 
 		<!-- Letzte 30 Partien -->
 		{#if d.last.length}
-			<section class="card block form">
+			<section class="tone-games block form">
 				<h2>{t('coachTab.lastGames', { n: d.last.length })}</h2>
 				<p class="legend">
 					<span><i class="sq w"></i><b>{counts.w}</b> {t('coachTab.won')}</span>
@@ -550,7 +545,8 @@
 	}
 
 	.block {
-		padding: 1.05rem 1.15rem;
+		padding: 1.15rem;
+		border-radius: var(--radius-tile);
 		display: flex;
 		flex-direction: column;
 		gap: 0.7rem;
@@ -570,8 +566,10 @@
 		display: flex;
 		align-items: center;
 		gap: 0.8rem;
-		padding-bottom: 0.8rem;
-		border-bottom: 1px solid var(--line);
+	}
+
+	.how-title {
+		margin-top: 0.4rem;
 	}
 
 	.who-ini {
@@ -600,74 +598,6 @@
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
-	}
-
-	.kpis {
-		list-style: none;
-		margin: 0;
-		padding: 0;
-		display: flex;
-		flex-direction: column;
-	}
-
-	.kpis li {
-		display: grid;
-		grid-template-columns: 28px 1fr auto 4.6rem;
-		align-items: center;
-		gap: 0.55rem;
-		min-height: 52px;
-		border-top: 1px solid var(--line);
-	}
-
-	.kpis li:first-child {
-		border-top: none;
-	}
-
-	.k-ico {
-		color: var(--text-3);
-		display: grid;
-	}
-
-	.k-lbl {
-		display: flex;
-		flex-direction: column;
-		font-size: 0.95rem;
-		line-height: 1.25;
-	}
-
-	.k-lbl small {
-		font-size: 0.74rem;
-		color: var(--text-3);
-	}
-
-	.k-val {
-		font-family: var(--font-num);
-		font-size: 1.3rem;
-		font-variant-numeric: tabular-nums;
-		text-align: right;
-		letter-spacing: -0.02em;
-	}
-
-	.chip {
-		justify-self: end;
-		display: inline-flex;
-		align-items: center;
-		gap: 0.15rem;
-		padding: 0.2rem 0.5rem;
-		border-radius: 8px;
-		font-size: 0.82rem;
-		font-weight: 750;
-		font-variant-numeric: tabular-nums;
-	}
-
-	.chip.up {
-		background: color-mix(in srgb, var(--good) 14%, transparent);
-		color: var(--good-text);
-	}
-
-	.chip.down {
-		background: color-mix(in srgb, var(--bad) 13%, transparent);
-		color: var(--bad-text);
 	}
 
 	/* Wie viele Partien einfließen */
