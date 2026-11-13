@@ -1689,6 +1689,25 @@
 
 	:global(.docked) .nav {
 		margin: 0;
+		gap: 0.15rem;
+	}
+
+	/* in der Kapsel: Symbole ohne eigene Kästchen, nur „Fehler nachspielen“ ist hervorgehoben */
+	:global(.docked) .nav button {
+		height: 46px;
+		border-radius: 999px;
+		background: transparent;
+		box-shadow: none;
+		color: var(--text-2);
+	}
+
+	:global(.docked) .nav button:active {
+		background: var(--surface-2);
+	}
+
+	:global(.docked) .nav .to-mistake {
+		background: color-mix(in srgb, var(--bad) 14%, var(--surface));
+		color: var(--bad-text);
 	}
 
 	:global(.docked) .retry {

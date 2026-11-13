@@ -1242,6 +1242,13 @@
 		justify-content: center;
 		gap: 0.35rem;
 		padding: 0.6rem 0.2rem;
+		border-radius: 999px;
+		/* in der Kapsel: keine eigenen Kästchen */
+		background: transparent;
+	}
+
+	:global(.docked) .ctl:active {
+		background: var(--surface-2);
 	}
 
 	.coach-box {
@@ -1421,8 +1428,9 @@
 	.start-bar {
 		position: fixed;
 		z-index: 40;
-		left: max(0.75rem, var(--safe-left));
-		right: max(0.75rem, var(--safe-right));
+		/* bündig mit der Tab-Kapsel */
+		left: max(12px, calc(var(--safe-left) + 8px));
+		right: max(12px, calc(var(--safe-right) + 8px));
 		bottom: calc(var(--tabbar-space) + 0.6rem);
 		display: flex;
 		align-items: center;

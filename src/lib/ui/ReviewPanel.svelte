@@ -318,5 +318,10 @@
 		.coach {
 			display: none;
 		}
+		/* die Farbe der Zugart steht oben im Kommentar – hier eine ruhige Karte */
+		.rp {
+			border-top: 1px solid var(--line);
+			padding-top: 0.75rem;
+		}
 	}
 </style>

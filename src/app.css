@@ -573,11 +573,13 @@ html[data-first-run] .sidebar {
 	display: flex;
 	flex-direction: column;
 	gap: 0.45rem;
-	padding: 0.55rem;
-	border-radius: var(--radius-l);
+	padding: 0.4rem;
+	/* eine ruhige Kapsel wie die Tab-Leiste – ohne Rahmen, Inhalte ohne eigene Kästchen */
+	border-radius: 26px;
 	background: var(--surface);
-	border: 1px solid var(--line);
-	box-shadow: 0 8px 28px rgb(0 0 0 / 0.16);
+	box-shadow:
+		0 0 0 1px var(--line),
+		0 8px 24px rgb(0 0 0 / 0.12);
 	max-height: 46dvh;
 	overflow-y: auto;
 	animation: dock-in 260ms var(--ease-out) both;
@@ -596,6 +598,24 @@ html[data-first-run] .sidebar {
 
 /* Platz schaffen, damit nichts dauerhaft unter der Leiste verschwindet */
 @media (max-width: 767px) {
+	/* Ruhiger Boden hinter Aktionsleiste und Tab-Kapsel: scrollender Inhalt läuft weich aus,
+	   statt zwischen den schwebenden Kapseln durchzuscheinen */
+	body::after {
+		content: '';
+		position: fixed;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		z-index: 39;
+		height: calc(var(--tabbar-space) + var(--dock-h) + 1.75rem);
+		background: linear-gradient(
+			to bottom,
+			color-mix(in srgb, var(--bg) 0%, transparent),
+			var(--bg) 1.75rem
+		);
+		pointer-events: none;
+	}
+
 	body > main,
 	main {
 		padding-bottom: calc(var(--tabbar-space) + var(--dock-h) + 2rem) !important;
