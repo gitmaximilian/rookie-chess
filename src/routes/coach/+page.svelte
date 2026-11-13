@@ -15,19 +15,16 @@
 	import StatTile from '#lib/ui/bento/StatTile.svelte';
 	import CoachTabs from '#lib/ui/CoachTabs.svelte';
 	import AvatarButton from '#lib/ui/AvatarButton.svelte';
-	import RatingHistory from '#lib/ui/RatingHistory.svelte';
 	import SkillRadar from '#lib/ui/SkillRadar.svelte';
-	import AccuracyTrend, { type AccPoint } from '#lib/ui/AccuracyTrend.svelte';
+	import type { AccPoint } from '#lib/ui/AccuracyTrend.svelte';
 	import { skillProfile, weakestSkill, type SkillValue } from '#lib/training/skills.js';
 	import { quality } from '#lib/import/ratings.js';
 	import { db } from '#lib/db/db.js';
 	import { loadOpenings, openingFor } from '#lib/data/openings.js';
 	import {
 		computeStats,
-		insights as findInsights,
 		outcomeOf,
 		type GameStats,
-		type Insight,
 		type Motif,
 		type Outcome
 	} from '#lib/training/gamestats.js';
@@ -60,7 +57,6 @@
 		puzzle: { rating: number; provisional: boolean };
 		mistakes: number;
 		advice: Advice[];
-		notes: Insight[];
 		puzzleHist: { date: number; rating: number }[];
 		skills: SkillValue[];
 		accuracy: AccPoint[];
@@ -212,8 +208,6 @@
 			puzzle: { rating: Math.round(puzzle.rating), provisional: isProvisional(puzzle) },
 			mistakes,
 			advice: advice.slice(0, 3),
-			// Erkenntnisse, die nicht schon als Ratschlag oben stehen
-			notes: findInsights(stats).filter((i) => i.key !== 'motif' && i.key !== 'weakPhase'),
 			puzzleHist: ratingRows.map((r) => ({ date: r.date, rating: Math.round(r.rating) })),
 			skills: skillProfile(stats),
 			// Genauigkeit der letzten 20 analysierten Partien, älteste links
@@ -267,13 +261,8 @@
 			: null
 	);
 
-	function noteText(i: Insight): string {
-		return t(`stats.insight.${i.key}`, { ...i.params });
-	}
-
 	const weakSkill = $derived(d ? weakestSkill(d.skills) : null);
 
-	const motifMax = $derived(d ? Math.max(1, ...d.stats.motifs.map((m) => m.n)) : 1);
 	const outcomeLabel = (o: Outcome) =>
 		t(o === 'w' ? 'stats.win' : o === 'd' ? 'stats.draw' : 'stats.loss');
 </script>
@@ -290,7 +279,10 @@
 <CoachTabs active="overview" />
 
 {#snippet coverage()}
-	{#if d && d.coverage.total}
+	{#if d && d.coverage.total && d.coverage.done >= d.coverage.total && !syncState.analysing}
+		<!-- alles analysiert: nur eine Zeile statt Fortschrittsbox -->
+		<p class="cov-done">{t('skills.coverage', { n: d.coverage.done, m: d.coverage.total })} ✓</p>
+	{:else if d && d.coverage.total}
 		{@const c = d.coverage}
 		<div class="cov" class:run={syncState.analysing}>
 			<div class="cov-head">
@@ -370,6 +362,7 @@
 					delta={d.rating.delta || null}
 					sub={d.rating.label}
 					spark={d.ratingSpark}
+					href={resolve('/coach/stats')}
 				/>
 			{/if}
 			<StatTile
@@ -474,50 +467,7 @@
 			</section>
 		{/if}
 
-		<!-- Genauigkeit je Partie -->
-		{#if d.accuracy.length >= 3}
-			<section class="card block">
-				<h2>{t('skills.trend')}</h2>
-				<p class="muted">{t('skills.trendText', { n: d.accuracy.length })}</p>
-				<AccuracyTrend points={d.accuracy} />
-			</section>
-		{/if}
-
-		<!-- Typische Fehler -->
-		{#if d.stats.motifs.length}
-			<section class="card block motifs">
-				<h2>{t('coachTab.typical')}</h2>
-				<p class="muted">{t('coachTab.typicalText', { n: d.stats.analysed })}</p>
-				<ul>
-					{#each d.stats.motifs.slice(0, 5) as m (m.motif)}
-						<li>
-							<span class="m-row"><b>{t(`stats.motif.${m.motif}`)}</b><span>{m.n}×</span></span>
-							<span class="bar"><span style:width="{(m.n / motifMax) * 100}%"></span></span>
-						</li>
-					{/each}
-				</ul>
-			</section>
-		{/if}
-
-		<!-- Wertungsverlauf -->
-		{#if d.stats.ratingSeries.length || d.puzzleHist.length > 1}
-			<section class="card block">
-				<h2>{t('stats.rating')}</h2>
-				<RatingHistory online={d.stats.ratingSeries} puzzle={d.puzzleHist} />
-			</section>
-		{/if}
-
-		{#if d.notes.length}
-			<section class="card block notes">
-				<h2>{t('coachTab.notes')}</h2>
-				<ul>
-					{#each d.notes as n (n.key)}
-						<li class={n.kind}>{noteText(n)}</li>
-					{/each}
-				</ul>
-			</section>
-		{/if}
-
+		<!-- Wertungsverlauf, Genauigkeit je Partie, typische Fehler und Erkenntnisse: Tab „Statistik“ -->
 		<a class="all card pressable" href={resolve('/coach/stats')}>
 			<span><b>{t('coachTab.allStats')}</b><span>{t('coachTab.allStatsText')}</span></span>
 			<ArrowRight size={18} />
@@ -588,6 +538,12 @@
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
+	}
+
+	.cov-done {
+		font-size: 0.85rem;
+		font-weight: 600;
+		color: var(--text-2);
 	}
 
 	/* Wie viele Partien einfließen */
@@ -694,9 +650,7 @@
 			radial-gradient(120% 120% at 100% 0%, var(--c-coach-soft), transparent 65%), var(--surface);
 	}
 
-	.advice ul,
-	.motifs ul,
-	.notes ul {
+	.advice ul {
 		list-style: none;
 		margin: 0;
 		padding: 0;
@@ -812,65 +766,6 @@
 		box-shadow:
 			0 0 0 2px var(--surface),
 			0 0 0 4px var(--text);
-	}
-
-	/* Typische Fehler */
-	.motifs li {
-		display: flex;
-		flex-direction: column;
-		gap: 0.3rem;
-	}
-
-	.m-row {
-		display: flex;
-		justify-content: space-between;
-		font-size: 0.92rem;
-	}
-
-	.m-row span {
-		font-weight: 700;
-		color: var(--text-2);
-		font-variant-numeric: tabular-nums;
-	}
-
-	.bar {
-		height: 7px;
-		border-radius: 999px;
-		background: var(--surface-2);
-		overflow: hidden;
-	}
-
-	.bar span {
-		display: block;
-		height: 100%;
-		border-radius: inherit;
-		background: var(--warn);
-	}
-
-	.notes li {
-		position: relative;
-		padding-left: 1rem;
-		font-size: 0.92rem;
-		line-height: 1.45;
-	}
-
-	.notes li::before {
-		content: '';
-		position: absolute;
-		left: 0;
-		top: 0.5em;
-		width: 7px;
-		height: 7px;
-		border-radius: 50%;
-		background: var(--text-3);
-	}
-
-	.notes li.good::before {
-		background: var(--good);
-	}
-
-	.notes li.bad::before {
-		background: var(--bad);
 	}
 
 	.all {

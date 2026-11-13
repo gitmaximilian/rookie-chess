@@ -2,7 +2,6 @@
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
-	import LayoutGrid from '@lucide/svelte/icons/layout-grid';
 	import ChartLine from '@lucide/svelte/icons/chart-line';
 	import LinkedAccounts from '#lib/ui/LinkedAccounts.svelte';
 	import { db, type GameRow } from '#lib/db/db.js';
@@ -45,14 +44,12 @@
 		<LinkedAccounts compact ctaOnly />
 	{/if}
 
-	<div class="actions">
-		{#if games && !games.length}
+	<!-- Analysebrett gibt es unter „Partien“ und im Partienkopf – hier nur der Weg zur ersten Partie -->
+	{#if games && !games.length}
+		<div class="actions">
 			<a class="btn" href={resolve('/play')}><ChessKnight size={17} /> {t('analysis.playGame')}</a>
-		{/if}
-		<a class="btn secondary" href={resolve('/analysis/board')}
-			><LayoutGrid size={17} /> {t('board2.open')}</a
-		>
-	</div>
+		</div>
+	{/if}
 </section>
 
 <style>

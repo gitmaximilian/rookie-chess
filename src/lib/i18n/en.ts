@@ -264,6 +264,7 @@ export const en = {
 		daily: 'Daily',
 		review: 'Review',
 		mistakes: 'My mistakes',
+		themes: 'Themes',
 		allThemes: 'All themes …',
 		fewer: 'Fewer',
 		board: 'Puzzle board',
@@ -828,6 +829,7 @@ export const en = {
 		}
 	},
 	course: {
+		recommended: 'Start here',
 		study: 'Study',
 		studyLine: 'Study line',
 		practise: 'Practise',
@@ -1188,7 +1190,7 @@ export const en = {
 		typicalText: (p: P) => `From ${p.n} analysed ${s(p.n, 'game', 'games')}.`,
 		notes: 'What stands out',
 		allStats: 'All statistics',
-		allStatsText: 'Openings, colours, time controls, game endings and export.',
+		allStatsText: 'Rating history, insights, openings, colours, time controls and export.',
 		adv: {
 			practise: 'Practise',
 			train: 'Train',
@@ -1376,7 +1378,7 @@ export const en = {
 		stars: 'Stars',
 		starsSub: 'from learning',
 		formLast: (p: P) => `last ${p.n} ${s(p.n, 'game', 'games')}`,
-		strengthGoal: 'estimated · goal 1200',
+		strengthGoal: 'from games and puzzles · goal 1200',
 		streak: 'Streak',
 		streakDays: (p: P) => s(p.n, 'day', 'days'),
 		streakDone: 'today done',

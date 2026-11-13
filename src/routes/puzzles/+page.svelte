@@ -15,6 +15,7 @@
 	import Zap from '@lucide/svelte/icons/zap';
 	import CalendarDays from '@lucide/svelte/icons/calendar-days';
 	import Target from '@lucide/svelte/icons/target';
+	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import Check from '@lucide/svelte/icons/check';
 	import PuzzleIcon from '@lucide/svelte/icons/puzzle';
 	import X from '@lucide/svelte/icons/x';
@@ -36,6 +37,11 @@
 	let mode = $state<Mode>('rated');
 	let theme = $state<string | null>(null);
 	let showAllThemes = $state(false);
+	// Themen-Chips eingeklappt, außer ein Thema ist gerade gewählt (z. B. aus dem Tagesplan)
+	let themesOpen = $state(false);
+	$effect(() => {
+		if (mode === 'theme') themesOpen = true;
+	});
 
 	let rating = $state<Rating | null>(null);
 	let delta = $state<number | null>(null);
@@ -433,19 +439,27 @@
 		</button>
 		<a class="chip storm" href={resolve('/puzzles/storm')}><Zap size={15} /> {t('storm.title')}</a>
 		<span class="sep" aria-hidden="true"></span>
-		{#each showAllThemes ? THEMES : coreThemes as th (th.key)}
-			<button
-				class="chip theme"
-				class:on={mode === 'theme' && theme === th.key}
-				onclick={() => setMode('theme', th.key)}
-				title={themeAbout(th.key)}
-			>
-				{themeName(th.key)}
+		<!-- Themen erst auf Wunsch: „Für dich“ wählt für Einsteiger schon passende Puzzles -->
+		{#if !themesOpen}
+			<button class="chip ghost" aria-expanded="false" onclick={() => (themesOpen = true)}>
+				{t('puzzles.themes')}
+				<ChevronDown size={14} />
 			</button>
-		{/each}
-		<button class="chip ghost" onclick={() => (showAllThemes = !showAllThemes)}>
-			{showAllThemes ? t('puzzles.fewer') : t('puzzles.allThemes')}
-		</button>
+		{:else}
+			{#each showAllThemes ? THEMES : coreThemes as th (th.key)}
+				<button
+					class="chip theme"
+					class:on={mode === 'theme' && theme === th.key}
+					onclick={() => setMode('theme', th.key)}
+					title={themeAbout(th.key)}
+				>
+					{themeName(th.key)}
+				</button>
+			{/each}
+			<button class="chip ghost" onclick={() => (showAllThemes = !showAllThemes)}>
+				{showAllThemes ? t('puzzles.fewer') : t('puzzles.allThemes')}
+			</button>
+		{/if}
 	</nav>
 
 	{#if puzzleBar}

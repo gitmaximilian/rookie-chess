@@ -273,6 +273,13 @@
 
 	const sides: Side[] = ['white', 'black'];
 
+	/** Empfehlung für Einsteiger: der erste leichte Kurs je Gruppe, solange dort noch nichts begonnen ist */
+	function recommended(c: Course, match: (c: Course) => boolean): boolean {
+		const group = COURSES.filter(match);
+		if (group.some((x) => courseProgress[x.id])) return false;
+		return group.find((x) => x.level === 1)?.id === c.id;
+	}
+
 	const COURSE_GROUPS = [
 		{ key: 'w', label: 'course.forWhite', match: (c: Course) => c.color === 'white' },
 		{
@@ -314,6 +321,7 @@
 					>
 						<span class="c-top">
 							<ColorBadge color={c.color} size={28} />
+							{#if recommended(c, grp.match)}<span class="rec">{t('course.recommended')}</span>{/if}
 							<span class="lvl l{c.level}">{t(`course.level${c.level}`)}</span>
 						</span>
 						<b>{loc(c.name)}</b>
@@ -391,6 +399,7 @@
 					>
 						<span class="c-top">
 							<ColorBadge color={c.color} size={28} />
+							{#if recommended(c, grp.match)}<span class="rec">{t('course.recommended')}</span>{/if}
 							<span class="lvl l{c.level}">{t(`course.level${c.level}`)}</span>
 						</span>
 						<b>{loc(c.name)}</b>
@@ -578,7 +587,23 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
+		gap: 0.4rem;
 		margin-bottom: 0.2rem;
+	}
+
+	/* Empfehlung zum Start: kräftiger als die Schwierigkeit, damit Einsteiger wissen, wo sie anfangen */
+	.rec {
+		margin-left: auto;
+		padding: 0.15rem 0.55rem;
+		border-radius: 999px;
+		background: var(--accent);
+		color: var(--on-accent);
+		font-size: 0.72rem;
+		font-weight: 700;
+	}
+
+	.rec + .lvl {
+		margin-left: 0;
 	}
 
 	.lvl {

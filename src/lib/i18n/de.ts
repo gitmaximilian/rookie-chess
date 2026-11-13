@@ -274,6 +274,7 @@ export const de: Shape<typeof en> = {
 		daily: 'Des Tages',
 		review: 'Wiederholen',
 		mistakes: 'Meine Fehler',
+		themes: 'Themen',
 		allThemes: 'Alle Themen …',
 		fewer: 'Weniger',
 		board: 'Puzzle-Brett',
@@ -867,6 +868,7 @@ export const de: Shape<typeof en> = {
 		}
 	},
 	course: {
+		recommended: 'Empfohlen zum Start',
 		study: 'Lernen',
 		studyLine: 'Variante lernen',
 		practise: 'Üben',
@@ -1239,7 +1241,7 @@ export const de: Shape<typeof en> = {
 		typicalText: (p) => `Aus ${p.n} analysierten ${s(p.n, 'Partie', 'Partien')}.`,
 		notes: 'Was auffällt',
 		allStats: 'Alle Statistiken',
-		allStatsText: 'Eröffnungen, Farben, Bedenkzeiten, Partieenden und Export.',
+		allStatsText: 'Wertungsverlauf, Erkenntnisse, Eröffnungen, Farben, Bedenkzeiten und Export.',
 		adv: {
 			practise: 'Üben',
 			train: 'Trainieren',
@@ -1435,7 +1437,7 @@ export const de: Shape<typeof en> = {
 		stars: 'Sterne',
 		starsSub: 'beim Lernen',
 		formLast: (p: P) => `letzte ${p.n} ${Number(p.n) === 1 ? 'Partie' : 'Partien'}`,
-		strengthGoal: 'geschätzt · Ziel 1200',
+		strengthGoal: 'aus Partien und Puzzles · Ziel 1200',
 		streak: 'Serie',
 		streakDays: (p: P) => (Number(p.n) === 1 ? 'Tag' : 'Tage'),
 		streakDone: 'heute erledigt',

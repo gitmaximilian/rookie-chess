@@ -24,6 +24,7 @@
 		strength: number | null;
 		form: ('w' | 'd' | 'l')[];
 		games: number;
+		attempts: number;
 		todayPuzzles: number;
 		goal: number;
 		stars: { earned: number; max: number };
@@ -65,6 +66,7 @@
 				.filter((o) => o !== null)
 				.reverse(),
 			games: await db.games.count(),
+			attempts: await db.puzzleAttempts.count(),
 			todayPuzzles: (await db.activity.get(today()))?.puzzles ?? 0,
 			goal: await getSetting('dailyGoal', 5),
 			stars: totalStars(stars),
@@ -134,65 +136,60 @@
 		testid="tile-streak"
 	/>
 
-	<StatTile
-		tone="puzzle"
-		label={t('summary.puzzle')}
-		value={d.puzzle.rating}
-		href={resolve('/puzzles')}
-		spark={d.puzzleHist}
-		delta={puzzleDelta}
-		sub={d.puzzleHist.length > 1
-			? t('summary.trend30')
-			: t('summary.today', { n: d.todayPuzzles, m: d.goal })}
-		testid="tile-puzzle"
-	/>
+	<!-- Kacheln erscheinen erst, wenn es etwas zu zeigen gibt – keine leeren „–“ für neue Spieler -->
+	{#if d.attempts}<StatTile
+			tone="puzzle"
+			label={t('summary.puzzle')}
+			value={d.puzzle.rating}
+			href={resolve('/puzzles')}
+			spark={d.puzzleHist}
+			delta={puzzleDelta}
+			sub={d.puzzleHist.length > 1
+				? t('summary.trend30')
+				: t('summary.today', { n: d.todayPuzzles, m: d.goal })}
+			testid="tile-puzzle"
+		/>{/if}
 
-	<StatTile
-		tone="coach"
-		label={t('summary.strength')}
-		value={d.strength ? `≈${d.strength}` : '–'}
-		muted={!d.strength}
-		sub={t('summary.strengthGoal')}
-		href={resolve('/coach')}
-		testid="tile-strength"
-	>
-		{#if d.strength}
+	{#if d.strength}<StatTile
+			tone="coach"
+			label={t('summary.strength')}
+			value={`≈${d.strength}`}
+			sub={t('summary.strengthGoal')}
+			href={resolve('/coach')}
+			testid="tile-strength"
+		>
 			<span class="bar" aria-hidden="true"
 				><i style:width="{Math.min(100, (d.strength / 1200) * 100)}%"></i></span
 			>
-		{/if}
-	</StatTile>
+		</StatTile>{/if}
 
-	<StatTile
-		tone="games"
-		size="m"
-		label={t('summary.form')}
-		value={score !== null ? score : '–'}
-		unit={score !== null ? '%' : ''}
-		muted={score === null}
-		sub={d.form.length ? t('summary.formLast', { n: d.form.length }) : t('summary.noGames')}
-		href={resolve('/analysis')}
-		testid="tile-form"
-	>
-		{#if d.form.length}
-			<span class="form" aria-label={t('summary.formAria', { pct: score ?? 0 })} role="img">
+	{#if d.form.length && score !== null}<StatTile
+			tone="games"
+			size="m"
+			label={t('summary.form')}
+			value={score}
+			unit="%"
+			sub={t('summary.formLast', { n: d.form.length })}
+			href={resolve('/analysis')}
+			testid="tile-form"
+		>
+			<span class="form" aria-label={t('summary.formAria', { pct: score })} role="img">
 				{#each d.form as f, i (i)}<span class="dot {f}"></span>{/each}
 			</span>
-		{/if}
-	</StatTile>
+		</StatTile>{/if}
 
-	<StatTile
-		tone="stars"
-		size="m"
-		label={t('summary.stars')}
-		value={d.stars.earned}
-		unit={`/${d.stars.max}`}
-		sub={t('summary.starsSub')}
-		href={resolve('/profile')}
-		testid="tile-stars"
-	>
-		<span class="bar" aria-hidden="true"><i style:width="{starPct}%"></i></span>
-	</StatTile>
+	{#if d.stars.earned}<StatTile
+			tone="stars"
+			size="m"
+			label={t('summary.stars')}
+			value={d.stars.earned}
+			unit={`/${d.stars.max}`}
+			sub={t('summary.starsSub')}
+			href={resolve('/profile')}
+			testid="tile-stars"
+		>
+			<span class="bar" aria-hidden="true"><i style:width="{starPct}%"></i></span>
+		</StatTile>{/if}
 
 	{#each accounts as [src, label] (src)}
 		{@const r = d.elo[src]}

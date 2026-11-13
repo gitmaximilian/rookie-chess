@@ -9,6 +9,8 @@
 	import CoachTabs from '#lib/ui/CoachTabs.svelte';
 	import AvatarButton from '#lib/ui/AvatarButton.svelte';
 	import RatingHistory from '#lib/ui/RatingHistory.svelte';
+	import AccuracyTrend, { type AccPoint } from '#lib/ui/AccuracyTrend.svelte';
+	import { quality } from '#lib/import/ratings.js';
 	import Download from '@lucide/svelte/icons/download';
 	import { gamesCsv, statsJson, download } from '#lib/training/statsExport.js';
 	import { getPuzzleRating } from '#lib/training/rating.js';
@@ -17,6 +19,7 @@
 	import {
 		computeStats,
 		insights as findInsights,
+		outcomeOf,
 		type GameStats,
 		type Insight,
 		type WDL
@@ -26,6 +29,8 @@
 	let stats = $state<GameStats | null>(null);
 	let list = $state<Insight[]>([]);
 	let puzzleHist = $state<{ date: number; rating: number }[]>([]);
+	/** Genauigkeit der letzten 20 analysierten Partien, älteste links */
+	let accuracy = $state<AccPoint[]>([]);
 	let rows: GameRow[] = [];
 
 	onMount(async () => {
@@ -38,6 +43,18 @@
 		rows = games;
 		stats = computeStats(games, (m) => openingFor(m)?.name ?? null);
 		list = findInsights(stats);
+		accuracy = [...games]
+			.sort((a, b) => b.date - a.date)
+			.map((g) => {
+				const q = quality(g);
+				const o = outcomeOf(g);
+				return q && o
+					? { id: g.id!, date: g.date, accuracy: q.accuracy, opponent: g.opponent, result: o }
+					: null;
+			})
+			.filter((x): x is AccPoint => x !== null)
+			.slice(0, 20)
+			.reverse();
 		puzzleHist = (await db.ratings.orderBy('date').toArray()).map((r) => ({
 			date: r.date,
 			rating: Math.round(r.rating)
@@ -243,6 +260,12 @@
 						<span class="t-lab">{t('stats.mistakes')} · {t('stats.perGame')}</span>
 					</div>
 				</div>
+
+				{#if accuracy.length >= 3}
+					<h3>{t('skills.trend')}</h3>
+					<p class="muted">{t('skills.trendText', { n: accuracy.length })}</p>
+					<AccuracyTrend points={accuracy} />
+				{/if}
 
 				<div class="duo inner">
 					<div>
