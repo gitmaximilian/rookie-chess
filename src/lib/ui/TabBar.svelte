@@ -17,7 +17,7 @@
 			aria-current={active ? 'page' : undefined}
 		>
 			<span class="icon-wrap">
-				<item.icon size={23} strokeWidth={active ? 2.3 : 1.9} />
+				<item.icon size={22} strokeWidth={active ? 2.3 : 1.9} />
 			</span>
 			<span class="label">{t(item.label)}</span>
 		</a>
@@ -25,78 +25,96 @@
 </nav>
 
 <style>
-	/* Dunkel und ruhig in beiden Modi; aktiver Tab als Pastell-Pille in Bereichsfarbe.
-	   Höhe unverändert (--tabbar-h), damit Dock-Reservierung und Brettgröße gleich bleiben. */
+	/* Schwebende Glas-Kapsel (wie aktuelle iOS-Apps): dunkel in beiden Modi,
+	   Beschriftungen bleiben, aktiver Tab als Pastell-Kapsel mit Symbol und Text.
+	   Platzbedarf steht in --tabbar-space (app.css) – Dock und Brettgröße rechnen damit. */
 	.tabbar {
 		position: fixed;
-		inset: auto 0 0 0;
 		z-index: 50;
+		left: max(12px, calc(var(--safe-left) + 8px));
+		right: max(12px, calc(var(--safe-right) + 8px));
+		bottom: var(--tabbar-gap);
 		display: grid;
-		grid-template-columns: repeat(6, 1fr);
-		height: calc(var(--tabbar-h) + var(--safe-bottom));
-		padding: 6px max(4px, var(--safe-left)) var(--safe-bottom) max(4px, var(--safe-right));
-		background: var(--tabbar-bg);
-		border-top: 1px solid rgb(255 255 255 / 0.06);
+		grid-template-columns: repeat(6, minmax(0, 1fr));
+		gap: 2px;
+		height: var(--tabbar-h);
+		padding: 4px;
+		border-radius: 999px;
+		/* 88 % deckend: Beschriftung bleibt auch über hellem Inhalt ≥ 4,5:1 (scripts/contrast.mjs) */
+		background: color-mix(in srgb, var(--tabbar-bg) 88%, transparent);
+		backdrop-filter: saturate(160%) blur(22px);
+		-webkit-backdrop-filter: saturate(160%) blur(22px);
+		border: 1px solid rgb(255 255 255 / 0.08);
+		box-shadow:
+			0 10px 30px rgb(0 0 0 / 0.22),
+			inset 0 1px 0 rgb(255 255 255 / 0.06);
 		color-scheme: dark;
 	}
 
 	.tab {
+		position: relative;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		gap: 3px;
+		gap: 2px;
+		min-width: 0;
+		border-radius: 999px;
 		color: var(--tabbar-fg);
-		font-size: 0.72rem;
+		font-size: 0.7rem;
 		font-weight: 600;
 		letter-spacing: 0.01em;
-		transition: color var(--dur) var(--ease-out);
 		-webkit-user-select: none;
 		user-select: none;
+		transition:
+			color var(--dur) var(--ease-out),
+			transform var(--dur-fast) var(--ease-out);
+	}
+
+	/* aktive Kapsel: Pastellfläche des Bereichs, gleitet weich ein */
+	.tab::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		border-radius: inherit;
+		background: var(--tab-bg);
+		opacity: 0;
+		transform: scale(0.82);
+		transition:
+			opacity var(--dur) var(--ease-out),
+			transform var(--dur) var(--ease-spring);
+	}
+
+	.tab:active {
+		transform: scale(0.94);
+	}
+
+	.tab.active {
+		color: var(--tile-text);
+	}
+
+	.tab.active::before {
+		opacity: 1;
+		transform: none;
 	}
 
 	.icon-wrap {
 		position: relative;
 		display: grid;
 		place-items: center;
-		width: 50px;
-		height: 30px;
-		border-radius: 999px;
-		transition: transform var(--dur) var(--ease-spring);
-	}
-
-	.icon-wrap::before {
-		content: '';
-		position: absolute;
-		inset: 0;
-		border-radius: inherit;
-		background: var(--tab-bg);
-		transform: scale(0.4);
-		opacity: 0;
-		transition:
-			transform var(--dur) var(--ease-spring),
-			opacity var(--dur) var(--ease-out);
-	}
-
-	.tab:active .icon-wrap {
-		transform: scale(0.88);
-	}
-
-	.tab.active {
-		color: var(--tabbar-active-bg);
+		height: 24px;
 	}
 
 	.tab.active .icon-wrap {
 		color: var(--tab-ink);
 	}
 
-	.tab.active .icon-wrap::before {
-		transform: scale(1);
-		opacity: 1;
-	}
-
-	.icon-wrap :global(svg) {
+	.label {
 		position: relative;
+		max-width: 100%;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
 	@media (min-width: 768px) {

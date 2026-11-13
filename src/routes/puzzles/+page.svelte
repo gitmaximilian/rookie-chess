@@ -968,9 +968,7 @@
 		.board-col {
 			max-width: min(
 				100%,
-				calc(
-					100dvh - var(--dock-h) - var(--tabbar-h) - var(--safe-bottom) - var(--safe-top) - 190px
-				)
+				calc(100dvh - var(--dock-h) - var(--tabbar-space) - var(--safe-top) - 190px)
 			);
 		}
 	}

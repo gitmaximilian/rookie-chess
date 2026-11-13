@@ -143,7 +143,7 @@
 		position: fixed;
 		z-index: 90;
 		left: 50%;
-		bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 12px);
+		bottom: calc(var(--tabbar-space) + 12px);
 		transform: translateX(-50%);
 		display: flex;
 		align-items: center;
@@ -197,7 +197,7 @@
 	main {
 		min-height: 100dvh;
 		padding: calc(var(--safe-top) + 1.25rem) max(1.1rem, var(--safe-right))
-			calc(var(--tabbar-h) + var(--safe-bottom) + 1.5rem) max(1.1rem, var(--safe-left));
+			calc(var(--tabbar-space) + 1.5rem) max(1.1rem, var(--safe-left));
 	}
 
 	@media (min-width: 768px) {

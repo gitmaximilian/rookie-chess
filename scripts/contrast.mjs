@@ -53,6 +53,23 @@ for (const [mode, sel] of [
 			console.log(`  ${n} auf ${s}: ${r.toFixed(2)}${r < 4.5 ? ' ✗' : ''}`);
 		}
 	}
+	// Glas-Kapsel: 88 % deckend – schlimmster Fall ist weißer Inhalt dahinter
+	const mix = (hex, a) => {
+		const c = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+		return (
+			'#' +
+			c
+				.map((x) =>
+					Math.round(x * a + 255 * (1 - a))
+						.toString(16)
+						.padStart(2, '0')
+				)
+				.join('')
+		);
+	};
+	const glass = ratio(v['tabbar-fg'], mix(v['tabbar-bg'], 0.88));
+	if (glass < 4.5) fail++;
+	console.log(`  Tab-Kapsel (Glas über Weiß): ${glass.toFixed(2)}`);
 	const tb = ratio(v['tabbar-fg'], v['tabbar-bg']);
 	const ta = ratio(v['tabbar-active-fg'], v['tabbar-active-bg']);
 	if (tb < 4.5 || ta < 4.5) fail++;

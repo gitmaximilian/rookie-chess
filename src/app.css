@@ -104,7 +104,11 @@
 	--dur: 260ms;
 
 	/* Layout */
-	--tabbar-h: 64px;
+	/* Schwebende Tab-Kapsel (TabBar.svelte): Höhe, Abstand unten und der Platz,
+	   den Inhalt, Dock und Hinweise darüber freilassen */
+	--tabbar-h: 58px;
+	--tabbar-gap: max(6px, calc(var(--safe-bottom) - 10px));
+	--tabbar-space: calc(var(--tabbar-h) + var(--tabbar-gap));
 	--sidebar-w: 248px;
 	--safe-top: env(safe-area-inset-top, 0px);
 	--safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -559,9 +563,10 @@ html[data-first-run] .sidebar {
 
 .dock-root {
 	position: fixed;
-	left: max(0.6rem, var(--safe-left));
-	right: max(0.6rem, var(--safe-right));
-	bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 0.5rem);
+	/* bündig mit der Tab-Kapsel */
+	left: max(12px, calc(var(--safe-left) + 8px));
+	right: max(12px, calc(var(--safe-right) + 8px));
+	bottom: calc(var(--tabbar-space) + 0.5rem);
 	z-index: 45;
 	display: flex;
 	flex-direction: column;
@@ -591,7 +596,7 @@ html[data-first-run] .sidebar {
 @media (max-width: 767px) {
 	body > main,
 	main {
-		padding-bottom: calc(var(--tabbar-h) + var(--safe-bottom) + var(--dock-h) + 2rem) !important;
+		padding-bottom: calc(var(--tabbar-space) + var(--dock-h) + 2rem) !important;
 	}
 }
 

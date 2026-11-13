@@ -1321,7 +1321,7 @@
 		z-index: 40;
 		left: max(0.75rem, var(--safe-left));
 		right: max(0.75rem, var(--safe-right));
-		bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 0.6rem);
+		bottom: calc(var(--tabbar-space) + 0.6rem);
 		display: flex;
 		align-items: center;
 		gap: 0.7rem;
@@ -1748,7 +1748,7 @@
 		z-index: 44;
 		left: max(0.6rem, var(--safe-left));
 		right: max(0.6rem, var(--safe-right));
-		bottom: calc(var(--tabbar-h) + var(--safe-bottom) + var(--dock-h) + 1rem);
+		bottom: calc(var(--tabbar-space) + var(--dock-h) + 1rem);
 		max-height: 34dvh;
 		display: flex;
 		flex-direction: column;
@@ -1966,9 +1966,7 @@
 		.board-col {
 			max-width: min(
 				100%,
-				calc(
-					100dvh - var(--dock-h) - var(--tabbar-h) - var(--safe-bottom) - var(--safe-top) - 130px
-				)
+				calc(100dvh - var(--dock-h) - var(--tabbar-space) - var(--safe-top) - 130px)
 			);
 		}
 	}

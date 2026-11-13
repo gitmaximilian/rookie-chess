@@ -87,7 +87,7 @@
 		z-index: 80;
 		left: max(0.75rem, var(--safe-left));
 		right: max(0.75rem, var(--safe-right));
-		bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 0.6rem);
+		bottom: calc(var(--tabbar-space) + 0.6rem);
 		display: flex;
 		align-items: center;
 		gap: 0.7rem;
