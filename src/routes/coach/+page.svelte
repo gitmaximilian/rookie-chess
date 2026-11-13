@@ -35,6 +35,7 @@
 	import { themeName } from '#lib/data/themes.js';
 	import { getPuzzleRating, isProvisional } from '#lib/training/rating.js';
 	import { currentStrength } from '#lib/training/planData.js';
+	import { MOTIF_THEME, pickFocus } from '#lib/training/focus.js';
 	import { getLinked, syncState, analyseBatch, pauseBackground } from '#lib/import/sync.svelte.js';
 	import { t } from '#lib/i18n/i18n.svelte.js';
 
@@ -45,6 +46,8 @@
 		href: string;
 		cta: string;
 		c: string;
+		/** der eine Schwerpunkt – derselbe wie im Tagesplan auf der Startseite */
+		focus?: boolean;
 	}
 
 	interface Data {
@@ -66,15 +69,6 @@
 	}
 
 	let d = $state<Data | null>(null);
-
-	/** Puzzle-Thema, mit dem man eine typische Fehlerart trainiert */
-	const MOTIF_THEME: Partial<Record<Motif, string>> = {
-		hanging: 'hangingPiece',
-		fork: 'fork',
-		'mate-missed': 'mateIn2',
-		'mate-allowed': 'mateIn2',
-		'missed-win': 'hangingPiece'
-	};
 
 	const speedName = (k: string) => {
 		const s = t(`stats.speed.${k}`);
@@ -139,8 +133,32 @@
 			};
 		}
 
-		// Woran arbeiten? Konkrete Schritte mit Knopf – die wichtigsten zuerst
+		// Woran arbeiten? Zuerst der eine Schwerpunkt (derselbe wie im Tagesplan), dann weitere Schritte
 		const advice: Advice[] = [];
+		const weakTheme = weakest(themeStats(attempts), 1)[0];
+		const focus = pickFocus({ motifs: stats.motifs, weakTheme: weakTheme?.theme ?? null });
+		const motifAdvice = (motif: Motif, n: number): Advice => ({
+			icon: Bomb,
+			title: t('coachTab.adv.motifTitle', { motif: t(`stats.motif.${motif}`), n }),
+			text: t(`coachTab.adv.motif.${motif}`),
+			href: MOTIF_THEME[motif]
+				? resolve(`/puzzles?theme=${MOTIF_THEME[motif]}`)
+				: resolve('/puzzles'),
+			cta: t('coachTab.adv.train'),
+			c: 'var(--warn)'
+		});
+		const themeAdvice = (theme: string, rate: number): Advice => ({
+			icon: Puzzle,
+			title: t('coachTab.adv.themeTitle', { theme: themeName(theme), pct: Math.round(rate * 100) }),
+			text: t('coachTab.adv.themeText'),
+			href: resolve(`/puzzles?theme=${theme}`),
+			cta: t('coachTab.adv.train'),
+			c: 'var(--c-puzzle)'
+		});
+		if (focus?.source === 'games')
+			advice.push({ ...motifAdvice(focus.motif!, focus.n!), focus: true });
+		else if (focus && weakTheme)
+			advice.push({ ...themeAdvice(weakTheme.theme, weakTheme.rate), focus: true });
 		if (mistakes > 0)
 			advice.push({
 				icon: Target,
@@ -150,31 +168,9 @@
 				cta: t('coachTab.adv.practise'),
 				c: 'var(--bad)'
 			});
-		const top = stats.motifs.find((m) => m.motif !== 'positional');
-		if (top && top.n >= 2) {
-			const theme = MOTIF_THEME[top.motif];
-			advice.push({
-				icon: Bomb,
-				title: t('coachTab.adv.motifTitle', { motif: t(`stats.motif.${top.motif}`), n: top.n }),
-				text: t(`coachTab.adv.motif.${top.motif}`),
-				href: theme ? resolve(`/puzzles?theme=${theme}`) : resolve('/puzzles'),
-				cta: t('coachTab.adv.train'),
-				c: 'var(--warn)'
-			});
-		}
-		const weakTheme = weakest(themeStats(attempts), 1)[0];
-		if (weakTheme)
-			advice.push({
-				icon: Puzzle,
-				title: t('coachTab.adv.themeTitle', {
-					theme: themeName(weakTheme.theme),
-					pct: Math.round(weakTheme.rate * 100)
-				}),
-				text: t('coachTab.adv.themeText'),
-				href: resolve(`/puzzles?theme=${weakTheme.theme}`),
-				cta: t('coachTab.adv.train'),
-				c: 'var(--c-puzzle)'
-			});
+		// das Puzzle-Thema nur zusätzlich, wenn es nicht schon der Schwerpunkt ist
+		if (weakTheme && focus?.source === 'games' && weakTheme.theme !== focus.theme)
+			advice.push(themeAdvice(weakTheme.theme, weakTheme.rate));
 		const phases = (Object.entries(stats.phaseAccuracy) as [string, number | null][]).filter(
 			(e): e is [string, number] => e[1] !== null
 		);
@@ -276,13 +272,6 @@
 	}
 
 	const weakSkill = $derived(d ? weakestSkill(d.skills) : null);
-	const SKILL_HREF: Record<string, string> = {
-		opening: resolve('/learn/openings'),
-		middlegame: resolve('/puzzles'),
-		tactics: resolve('/puzzles'),
-		endgame: resolve('/learn'),
-		safety: resolve('/puzzles?mode=mistakes')
-	};
 
 	const motifMax = $derived(d ? Math.max(1, ...d.stats.motifs.map((m) => m.n)) : 1);
 	const outcomeLabel = (o: Outcome) =>
@@ -424,9 +413,13 @@
 				<h2>{t('coachTab.work')}</h2>
 				<ul>
 					{#each d.advice as a (a.title)}
-						<li style:--c={a.c}>
+						<li style:--c={a.c} class:focus={a.focus}>
 							<span class="a-ico"><a.icon size={19} /></span>
-							<span class="a-text"><b>{a.title}</b><span>{a.text}</span></span>
+							<span class="a-text"
+								>{#if a.focus}<span class="mono-label a-kick">{t('coachTab.focus')}</span>{/if}<b
+									>{a.title}</b
+								><span>{a.text}</span></span
+							>
 							<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- a.href ist bereits aufgelöst -->
 							<a class="btn small a-go" href={a.href}>{a.cta} <ArrowRight size={15} /></a>
 						</li>
@@ -448,10 +441,6 @@
 					<span
 						>{t('skills.weakest', { name: t(`skills.name.${weakSkill.skill}`) })}
 						<span class="muted">{t(`skills.tip.${weakSkill.skill}`)}</span></span
-					>
-					<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- SKILL_HREF enthält resolve()-Pfade -->
-					<a class="btn small" href={SKILL_HREF[weakSkill.skill]}
-						>{t('coachTab.adv.train')} <ArrowRight size={15} /></a
 					>
 				</div>
 			{:else}
@@ -698,11 +687,6 @@
 		gap: 0.1rem;
 	}
 
-	.sk-weak .btn {
-		flex: none;
-		gap: 0.3rem;
-	}
-
 	/* Ratschläge */
 	.advice {
 		border: 1.5px solid color-mix(in srgb, var(--c-coach) 35%, transparent);
@@ -753,6 +737,18 @@
 	.a-text span {
 		font-size: 0.86rem;
 		color: var(--text-2);
+	}
+
+	/* der eine Schwerpunkt: hervorgehoben, gleiches Ziel wie im Tagesplan */
+	.advice li.focus {
+		border: 2px solid var(--c);
+		background: color-mix(in srgb, var(--c) 7%, var(--surface));
+	}
+
+	.a-text .a-kick {
+		margin-bottom: 0.15rem;
+		font-size: 0.68rem;
+		color: color-mix(in srgb, var(--c) 75%, var(--text));
 	}
 
 	.a-go {

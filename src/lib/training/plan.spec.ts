@@ -7,7 +7,7 @@ const base: PlanContext = {
 	dueReview: 0,
 	dueRepertoire: 0,
 	weakTheme: null,
-	attemptsToday: [],
+	puzzlesToday: 0,
 	basicsDone: [],
 	courseProgress: {},
 	endgameStars: {},
@@ -15,7 +15,9 @@ const base: PlanContext = {
 	focus: null,
 	dailyGoal: 5,
 	gameToReview: null,
-	reviewedGames: []
+	reviewedGames: [],
+	daysSinceGame: 0,
+	gamesToday: 0
 };
 
 describe('Tagesplan', () => {
@@ -51,9 +53,10 @@ describe('Tagesplan', () => {
 	it('Fortschritt wird live berechnet', () => {
 		const plan = buildPlan({ ...base, dueReview: 4, weakTheme: 'fork' });
 		const init = { dueReview: 4, dueRepertoire: 0 };
-		const now = { ...base, dueReview: 1, attemptsToday: [['fork'], ['pin'], ['fork', 'short']] };
+		const now = { ...base, dueReview: 1, puzzlesToday: 3 };
 		expect(progressOf(plan.tasks[0], now, init)).toEqual({ done: 3, target: 4 });
-		expect(progressOf(plan.tasks[1], now, init)).toEqual({ done: 2, target: 5 });
+		// jedes heute gelöste Puzzle zählt (gleiche Zahl wie das Tagesziel)
+		expect(progressOf(plan.tasks[1], now, init)).toEqual({ done: 3, target: 5 });
 		expect(isDone(plan.tasks[0], { ...now, dueReview: 0 }, init)).toBe(true);
 	});
 });
@@ -72,5 +75,26 @@ describe('Spielstärke', () => {
 		expect(withBot.value).toBeGreaterThanOrEqual(1150);
 		const online = estimateStrength({ online: { rating: 1400, source: 'lichess' } })!;
 		expect(online.value).toBe(1250);
+	});
+
+	it('Schwerpunkt „Partien spielen“: Partie mit Coach steht zuerst', () => {
+		const p = buildPlan({ ...base, focus: 'play', weakTheme: 'fork' });
+		expect(p.tasks[0]).toMatchObject({ kind: 'play' });
+		expect(
+			progressOf(p.tasks[0], { ...base, gamesToday: 1 }, { dueReview: 0, dueRepertoire: 0 })
+		).toEqual({
+			done: 1,
+			target: 1
+		});
+	});
+
+	it('länger nicht gespielt oder noch nie: Partie kommt nach den Puzzles dazu', () => {
+		expect(buildPlan({ ...base, daysSinceGame: 3 }).tasks.map((t) => t.kind)).toContain('play');
+		expect(buildPlan({ ...base, daysSinceGame: null }).tasks[1]).toMatchObject({ kind: 'play' });
+		expect(buildPlan({ ...base, daysSinceGame: 1 }).tasks.map((t) => t.kind)).not.toContain('play');
+		// wer die Regeln noch nicht kennt, lernt erst die Grundlagen
+		expect(
+			buildPlan({ ...base, rulesKnown: 'no', daysSinceGame: null }).tasks.map((t) => t.kind)
+		).not.toContain('play');
 	});
 });

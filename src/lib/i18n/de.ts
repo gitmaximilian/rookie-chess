@@ -1198,12 +1198,13 @@ export const de: Shape<typeof en> = {
 		title: 'Dein Training heute',
 		review: (p: P) => `${p.n} verpasste ${p.n === 1 ? 'Puzzle' : 'Puzzles'} wiederholen`,
 		puzzles: (p: P) => `${p.n} Puzzles lösen`,
-		puzzlesTheme: (p: P) => `${p.n} Puzzles zu deiner Schwäche: ${p.theme}`,
+		puzzlesTheme: (p: P) => `${p.n} Puzzles · Schwerpunkt: ${p.theme}`,
 		repertoire: (p: P) => `${p.n} ${p.n === 1 ? 'Eröffnungszug' : 'Eröffnungszüge'} wiederholen`,
 		basics: (p: P) => `Lektion: ${p.name}`,
 		course: (p: P) => `Eröffnung: ${p.name}`,
 		endgame: (p: P) => `Endspiel: ${p.name}`,
 		game: 'Aus deiner letzten Partie lernen',
+		play: 'Eine Partie mit Coach spielen',
 		start: 'Los',
 		continue: 'Weiter',
 		allDone: 'Alles erledigt für heute – stark!',
@@ -1212,6 +1213,7 @@ export const de: Shape<typeof en> = {
 		progress: (p: P) => `${p.n} von ${p.m} erledigt`
 	},
 	coachTab: {
+		focus: 'Dein Schwerpunkt',
 		eyebrow: 'Dein Coach',
 		title: 'Coach',
 		subtitle: 'Wie du spielst, was dich bremst – und was du als Nächstes trainierst.',
@@ -1284,7 +1286,7 @@ export const de: Shape<typeof en> = {
 		rawAccuracy: (p) => `${p.n} % Genauigkeit`,
 		rawTactics: (p: P) => `${p.n} % der Chancen genutzt`,
 		rawBlunders: (p: P) => `${p.n} Patzer je 30 Züge`,
-		weakest: (p) => `Schwächster Bereich: ${p.name}`,
+		weakest: (p) => `Am niedrigsten: ${p.name}`,
 		tip: {
 			opening: 'Lerne eine Eröffnung Variante für Variante.',
 			middlegame: 'Tägliche Puzzles schärfen den Blick für Taktik.',

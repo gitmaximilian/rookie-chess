@@ -1147,12 +1147,13 @@ export const en = {
 		title: 'Your training today',
 		review: (p: P) => `Review ${p.n} missed ${s(p.n, 'puzzle', 'puzzles')}`,
 		puzzles: (p: P) => `Solve ${p.n} puzzles`,
-		puzzlesTheme: (p: P) => `${p.n} puzzles on your weak spot: ${p.theme}`,
+		puzzlesTheme: (p: P) => `${p.n} puzzles · focus: ${p.theme}`,
 		repertoire: (p: P) => `Repeat ${p.n} opening ${s(p.n, 'move', 'moves')}`,
 		basics: (p: P) => `Lesson: ${p.name}`,
 		course: (p: P) => `Opening: ${p.name}`,
 		endgame: (p: P) => `Endgame: ${p.name}`,
 		game: 'Learn from your last game',
+		play: 'Play a game with the coach',
 		start: 'Start',
 		continue: 'Continue',
 		allDone: 'All done for today – great work!',
@@ -1161,6 +1162,7 @@ export const en = {
 		progress: (p: P) => `${p.n} of ${p.m} done`
 	},
 	coachTab: {
+		focus: 'Your focus',
 		eyebrow: 'Your coach',
 		title: 'Coach',
 		subtitle: 'How you play, what holds you back – and what to train next.',
@@ -1229,7 +1231,7 @@ export const en = {
 		rawAccuracy: (p: P) => `${p.n}% accuracy`,
 		rawTactics: (p: P) => `${p.n}% of chances taken`,
 		rawBlunders: (p: P) => `${p.n} blunders per 30 moves`,
-		weakest: (p: P) => `Weakest area: ${p.name}`,
+		weakest: (p: P) => `Lowest: ${p.name}`,
 		tip: {
 			opening: 'Learn one opening line by line.',
 			middlegame: 'Daily puzzles train your eye for tactics.',

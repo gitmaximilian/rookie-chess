@@ -9,6 +9,7 @@
 	import GraduationCap from '@lucide/svelte/icons/graduation-cap';
 	import Crown from '@lucide/svelte/icons/crown';
 	import ChartLine from '@lucide/svelte/icons/chart-line';
+	import ChessKnight from '@lucide/svelte/icons/chess-knight';
 	import type { Component } from 'svelte';
 	import GoalRing from '#lib/ui/GoalRing.svelte';
 	import { loadPlanContext, todayPlan } from '#lib/training/planData.js';
@@ -49,7 +50,8 @@
 		basics: GraduationCap,
 		course: BookOpen,
 		endgame: Crown,
-		game: ChartLine
+		game: ChartLine,
+		play: ChessKnight
 	};
 
 	function title(task: PlanTask): string {
@@ -75,6 +77,8 @@
 			}
 			case 'game':
 				return t('plan.game');
+			case 'play':
+				return t('plan.play');
 		}
 	}
 
@@ -94,6 +98,8 @@
 				return resolve(`/learn/endgame?id=${task.lesson}`);
 			case 'game':
 				return resolve(`/analysis?game=${task.gameId}&retry=1`);
+			case 'play':
+				return resolve('/play');
 		}
 	}
 </script>
