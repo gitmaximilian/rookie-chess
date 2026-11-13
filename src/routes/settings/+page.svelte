@@ -13,7 +13,14 @@
 	import Target from '@lucide/svelte/icons/target';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import PageHeader from '#lib/ui/PageHeader.svelte';
-	import { downloadBackup, importAll, parseBackup, requestPersistence } from '#lib/db/backup.js';
+	import {
+		downloadBackup,
+		importAll,
+		mergeBackup,
+		parseBackup,
+		requestPersistence,
+		type Backup
+	} from '#lib/db/backup.js';
 	import { db, getSetting, setSetting, TABLES } from '#lib/db/db.js';
 	import { getThemePref, setThemePref, type ThemePref } from '#lib/ui/theme.js';
 	import { sound, SOUND_STYLES, type SoundStyle } from '#lib/ui/sound.js';
@@ -34,7 +41,7 @@
 	// Vorschau: eine lebendige Stellung mit letztem Zug
 	const PREVIEW_FEN = 'r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4';
 	import Languages from '@lucide/svelte/icons/languages';
-	import { t, i18n, LOCALES } from '#lib/i18n/i18n.svelte.js';
+	import { t, i18n, LOCALES, intlLocale } from '#lib/i18n/i18n.svelte.js';
 
 	let themePref = $state<ThemePref>('system');
 	let soundOn = $state(true);
@@ -43,6 +50,8 @@
 	let persisted = $state<boolean | null>(null);
 	let lastBackup = $state<number | null>(null);
 	let message = $state<{ kind: 'ok' | 'err'; text: string } | null>(null);
+	/** gewählte Sicherung, bis entschieden ist: zusammenführen oder ersetzen */
+	let pending = $state.raw<Backup | null>(null);
 	let fileInput: HTMLInputElement;
 	let counts = $state<{ games: number; attempts: number; cards: number }>({
 		games: 0,
@@ -112,11 +121,7 @@
 		const file = (e.currentTarget as HTMLInputElement).files?.[0];
 		if (!file) return;
 		try {
-			const backup = parseBackup(await file.text());
-			if (!confirm(t('settings.importConfirm'))) return;
-			await importAll(backup);
-			message = { kind: 'ok', text: t('settings.imported') };
-			setTimeout(() => location.reload(), 900);
+			pending = parseBackup(await file.text());
 		} catch (err) {
 			message = {
 				kind: 'err',
@@ -124,6 +129,24 @@
 			};
 		} finally {
 			fileInput.value = '';
+		}
+	}
+
+	/** Sicherung einspielen: standardmäßig zusammenführen, ersetzen nur nach ausdrücklicher Bestätigung */
+	async function applyBackup(how: 'merge' | 'replace') {
+		if (!pending) return;
+		if (how === 'replace' && !confirm(t('settings.importConfirm'))) return;
+		try {
+			if (how === 'merge') await mergeBackup(pending);
+			else await importAll(pending);
+			pending = null;
+			message = { kind: 'ok', text: t('settings.imported') };
+			setTimeout(() => location.reload(), 900);
+		} catch (err) {
+			message = {
+				kind: 'err',
+				text: err instanceof Error ? err.message : t('settings.importFail')
+			};
 		}
 	}
 
@@ -358,6 +381,24 @@
 				onchange={onFile}
 			/>
 		</div>
+		{#if pending}
+			<div class="restore card" role="group" aria-label={t('settings.restoreTitle')}>
+				<b>{t('settings.restoreTitle')}</b>
+				<span class="muted"
+					>{t('settings.restoreFrom', {
+						date: new Date(pending.exportedAt).toLocaleDateString(intlLocale())
+					})}</span
+				>
+				<button class="btn" onclick={() => applyBackup('merge')}
+					>{t('settings.restoreMerge')}</button
+				>
+				<span class="muted">{t('settings.restoreMergeText')}</span>
+				<button class="btn secondary" onclick={() => applyBackup('replace')}
+					>{t('settings.restoreReplace')}</button
+				>
+				<button class="btn secondary" onclick={() => (pending = null)}>{t('common.cancel')}</button>
+			</div>
+		{/if}
 		<p class="hint small">
 			{#if backupAge === null}
 				{t('settings.never')}
@@ -796,5 +837,19 @@
 			opacity: 0;
 			transform: translateY(-4px);
 		}
+	}
+	.restore {
+		display: flex;
+		flex-direction: column;
+		align-items: stretch;
+		gap: 0.5rem;
+		margin-top: 0.75rem;
+		padding: 1rem;
+		border-radius: var(--radius-m);
+	}
+
+	.restore .muted {
+		font-size: 0.86rem;
+		color: var(--text-2);
 	}
 </style>

@@ -45,6 +45,7 @@ export const de: Shape<typeof en> = {
 		later: 'Später'
 	},
 	common: {
+		cancel: 'Abbrechen',
 		provisional: 'vorläufig',
 		more: 'Mehr',
 		close: 'Schließen',
@@ -635,7 +636,14 @@ export const de: Shape<typeof en> = {
 		save: 'Sicherung speichern',
 		load: 'Sicherung laden',
 		saved: 'Sicherung heruntergeladen. Leg sie z. B. in iCloud Drive ab.',
-		importConfirm: 'Alle aktuellen Daten durch die Sicherung ersetzen?',
+		restoreTitle: 'Sicherung einspielen',
+		restoreFrom: (p: P) => `Sicherung vom ${p.date}`,
+		restoreMerge: 'Mit meinen Daten zusammenführen',
+		restoreMergeText:
+			'Empfohlen: nichts geht verloren – Partien, Puzzles und Fortschritt aus beiden werden vereinigt.',
+		restoreReplace: 'Alles durch die Sicherung ersetzen',
+		importConfirm:
+			'Wirklich alle aktuellen Daten löschen und durch die Sicherung ersetzen? Das lässt sich nicht rückgängig machen.',
 		imported: 'Sicherung eingespielt. Willkommen zurück!',
 		importFail: 'Import fehlgeschlagen.',
 		never: 'Noch keine Sicherung erstellt.',

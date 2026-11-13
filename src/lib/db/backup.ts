@@ -1,5 +1,6 @@
 import { db, TABLES, setSetting } from './db.js';
 import { t } from '#lib/i18n/i18n.svelte.js';
+import { mergeIntoLocal } from '#lib/sync/mergeLocal.js';
 
 export const BACKUP_FORMAT = 'rookie-backup';
 export const BACKUP_VERSION = 1;
@@ -39,7 +40,13 @@ export function parseBackup(text: string): Backup {
 	return b as Backup;
 }
 
-/** Ersetzt alle Daten durch die Sicherung */
+/** Führt die Sicherung mit den vorhandenen Daten zusammen – nichts geht verloren (Standard) */
+export async function mergeBackup(backup: Backup): Promise<void> {
+	await mergeIntoLocal(backup.tables);
+	await setSetting('lastBackupAt', Date.now());
+}
+
+/** Ersetzt alle Daten durch die Sicherung (nur auf ausdrücklichen Wunsch) */
 export async function importAll(backup: Backup): Promise<void> {
 	await db.transaction(
 		'rw',

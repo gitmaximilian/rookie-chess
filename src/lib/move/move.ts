@@ -8,9 +8,8 @@
  * Kein Server sieht die Daten. Die alte Adresse behält ihre Daten in jedem Fall.
  * (Ein unsichtbares iframe ginge nicht: Safari gibt eingebetteten Seiten einen eigenen Speicher.)
  */
-import { db, TABLES, type GameRow } from '#lib/db/db.js';
-import { gameKey, LOCAL_ONLY_SETTINGS, mergeSnapshots, type Snapshot } from '#lib/sync/merge.js';
-import { applySnapshot, buildSnapshot } from '#lib/sync/sync.svelte.js';
+import type { Snapshot } from '#lib/sync/merge.js';
+import { hasLocalData, mergeIntoLocal } from '#lib/sync/mergeLocal.js';
 
 export const OLD_HOST = 'chess.maximilianauer.at';
 export const NEW_ORIGIN = 'https://rookie.maximilianauer.at';
@@ -45,14 +44,7 @@ export function safePath(p: string | null): string {
 }
 
 /** gibt es überhaupt etwas umzuziehen? */
-export async function hasLocalData(): Promise<boolean> {
-	const counts = await Promise.all(
-		(['games', 'puzzleAttempts', 'activity', 'ratings', 'repertoire', 'endgames'] as const).map(
-			(t) => db.table(t).count()
-		)
-	);
-	return counts.some((n) => n > 0);
-}
+export { hasLocalData };
 
 /** Merker der alten Adresse: Daten wurden schon übergeben (setzt static/move-out.html) */
 export function alreadyMoved(): boolean {
@@ -71,42 +63,9 @@ export function clearMoved(): void {
 	}
 }
 
-/** ist die lokale Datenbank (fast) leer? Dann wird 1:1 übernommen, mit denselben IDs. */
-async function isFresh(): Promise<boolean> {
-	return !(await hasLocalData());
-}
-
 /** Neue Adresse: übergebene Daten übernehmen, ohne Vorhandenes zu löschen */
 export async function receive(p: MovePayload): Promise<void> {
-	const tables = { ...p.tables };
-	tables.settings = ((tables.settings ?? []) as { key: string }[]).filter(
-		(r) => !LOCAL_ONLY_SETTINGS.has(r.key)
-	);
-	if (await isFresh()) {
-		await db.transaction(
-			'rw',
-			TABLES.map((t) => db.table(t)),
-			async () => {
-				for (const t of TABLES) {
-					const rows = tables[t];
-					if (Array.isArray(rows) && rows.length) await db.table(t).bulkPut(rows);
-				}
-			}
-		);
-	} else {
-		// schon Daten da: wie beim Konto-Abgleich zusammenführen (nichts geht verloren)
-		await applySnapshot(mergeSnapshots(await buildSnapshot(), tables));
-		// importierte Partien (Lichess/Chess.com) gleicht der Abgleich nicht ab – hier ergänzen
-		const have = new Set((await db.games.toArray()).map(gameKey));
-		const extra = ((tables.games ?? []) as GameRow[])
-			.filter((g) => !have.has(gameKey(g)))
-			.map((g) => {
-				const row = { ...g };
-				delete row.id;
-				return row;
-			});
-		if (extra.length) await db.games.bulkAdd(extra);
-	}
+	await mergeIntoLocal(p.tables);
 	try {
 		for (const [k, v] of Object.entries(p.local ?? {}))
 			if (localStorage.getItem(k) === null || k === 'rookie:onboarded') localStorage.setItem(k, v);

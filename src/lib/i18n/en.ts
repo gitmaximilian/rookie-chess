@@ -39,6 +39,7 @@ export const en = {
 		later: 'Later'
 	},
 	common: {
+		cancel: 'Cancel',
 		provisional: 'provisional',
 		more: 'More',
 		close: 'Close',
@@ -597,7 +598,14 @@ export const en = {
 		save: 'Save backup',
 		load: 'Load backup',
 		saved: 'Backup downloaded. Keep it e.g. in iCloud Drive.',
-		importConfirm: 'Replace all current data with the backup?',
+		restoreTitle: 'Restore backup',
+		restoreFrom: (p: P) => `Backup from ${p.date}`,
+		restoreMerge: 'Merge with my data',
+		restoreMergeText:
+			'Recommended: nothing is lost – games, puzzles and progress from both are combined.',
+		restoreReplace: 'Replace everything with the backup',
+		importConfirm:
+			'Really delete all current data and replace it with the backup? This cannot be undone.',
 		imported: 'Backup restored. Welcome back!',
 		importFail: 'Import failed.',
 		never: 'No backup yet.',

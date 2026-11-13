@@ -10,10 +10,19 @@ test('Sicherung exportieren und wieder einspielen', async ({ page }) => {
 	const path = await download.path();
 	expect(download.suggestedFilename()).toMatch(/^rookie-backup-.*\.json$/);
 
-	// Tagesziel ändern, dann Sicherung zurückspielen
+	// Tagesziel ändern, dann Sicherung zusammenführen: die neuere Einstellung bleibt
 	await page.getByRole('radio', { name: '3' }).click();
-	page.once('dialog', (d) => d.accept());
 	await page.locator('input[type=file]').setInputFiles(path!);
+	await page.getByRole('button', { name: 'Merge with my data' }).click();
+	await expect(page.getByText('Backup restored')).toBeVisible();
+	await page.waitForLoadState('load');
+	await page.goto('/settings');
+	await expect(page.getByRole('radio', { name: '3' })).toHaveAttribute('aria-checked', 'true');
+
+	// ausdrücklich ersetzen: Stand der Sicherung kommt zurück
+	await page.locator('input[type=file]').setInputFiles(path!);
+	page.once('dialog', (d) => d.accept());
+	await page.getByRole('button', { name: 'Replace everything with the backup' }).click();
 	await expect(page.getByText('Backup restored')).toBeVisible();
 	await page.waitForLoadState('load');
 	await page.goto('/settings');
