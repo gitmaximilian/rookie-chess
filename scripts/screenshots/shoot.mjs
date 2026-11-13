@@ -150,6 +150,15 @@ for (const theme of themes) {
 			await page.goto(base + r);
 			await page.waitForLoadState('networkidle').catch(() => {});
 			await page.waitForTimeout(r.includes('game=') ? 2500 : 1200);
+			// --click=Text[;Text…]: nacheinander Knöpfe antippen (z. B. „Replay your“;„Solution“)
+			if (args.click)
+				for (const name of args.click.split(';')) {
+					await page
+						.getByRole('button', { name: new RegExp(name) })
+						.first()
+						.click();
+					await page.waitForTimeout(900);
+				}
 			// --press=N: in einer Partie N Züge vorspulen (Pfeil rechts)
 			if (args.press && r.includes('game=')) {
 				for (let k = 0; k < Number(args.press); k++) await page.keyboard.press('ArrowRight');

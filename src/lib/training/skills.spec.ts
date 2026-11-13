@@ -3,9 +3,9 @@ import { accuracyScore, safetyScore, skillProfile, tacticsScore, weakestSkill } 
 
 const base = {
 	phaseAccuracy: { opening: null, middlegame: null, endgame: null },
-	perGame: { blunders: 0, mistakes: 0, inaccuracies: 0 },
 	analysed: 0,
-	motifs: []
+	blundersPer30: null,
+	chances: { taken: 0, total: 0 }
 };
 
 describe('Skill-Profil (nur aus Partien)', () => {
@@ -14,13 +14,15 @@ describe('Skill-Profil (nur aus Partien)', () => {
 		expect(accuracyScore(75)).toBe(50);
 		expect(accuracyScore(100)).toBe(100);
 		expect(accuracyScore(30)).toBe(0);
+		// Patzer je 30 eigene Züge
 		expect(safetyScore(0)).toBe(100);
 		expect(safetyScore(2.5)).toBe(50);
 		expect(safetyScore(3.2)).toBe(36);
 		expect(safetyScore(9)).toBe(0);
-		expect(tacticsScore(0)).toBe(100);
-		expect(tacticsScore(2)).toBe(50);
-		expect(tacticsScore(6)).toBe(0);
+		// Anteil genutzter Chancen in Prozent
+		expect(tacticsScore(0)).toBe(0);
+		expect(tacticsScore(60)).toBe(60);
+		expect(tacticsScore(100)).toBe(100);
 	});
 
 	it('ohne analysierte Partien: alles null, kein schwächster Bereich', () => {
@@ -29,29 +31,32 @@ describe('Skill-Profil (nur aus Partien)', () => {
 		expect(weakestSkill(v)).toBeNull();
 	});
 
-	it('zu wenige Partien: Taktik und Sicherheit bleiben leer', () => {
-		const v = skillProfile({ ...base, analysed: 2, perGame: { ...base.perGame, blunders: 1 } });
+	it('zu wenig Daten: Sicherheit erst ab 3 Partien, Taktik erst ab 5 Gelegenheiten', () => {
+		const v = skillProfile({
+			...base,
+			analysed: 2,
+			blundersPer30: 1,
+			chances: { taken: 3, total: 4 }
+		});
 		expect(v.find((x) => x.skill === 'safety')?.score).toBeNull();
+		expect(v.find((x) => x.skill === 'tactics')?.score).toBeNull();
 	});
 
-	it('Puzzles fließen nicht ein, positionelle Fehler zählen nicht als taktisch', () => {
+	it('jede Ecke misst etwas Eigenes', () => {
 		const v = skillProfile({
 			phaseAccuracy: { opening: 90, middlegame: 70, endgame: null },
-			perGame: { blunders: 2.4, mistakes: 1, inaccuracies: 2 },
 			analysed: 10,
-			motifs: [
-				{ motif: 'hanging', n: 12 },
-				{ motif: 'fork', n: 8 },
-				{ motif: 'positional', n: 30 }
-			]
+			blundersPer30: 2.4,
+			chances: { taken: 6, total: 10 }
 		});
 		expect(Object.fromEntries(v.map((x) => [x.skill, x.score]))).toEqual({
 			opening: 80,
 			middlegame: 40,
-			tactics: 50,
+			tactics: 60,
 			endgame: null,
 			safety: 52
 		});
+		expect(v.find((x) => x.skill === 'tactics')?.raw).toBe(60);
 		expect(weakestSkill(v)?.skill).toBe('middlegame');
 	});
 });

@@ -1258,14 +1258,14 @@ export const de: Shape<typeof en> = {
 		},
 		noData: 'noch keine Daten',
 		rawAccuracy: (p) => `${p.n} % Genauigkeit`,
-		rawTactics: (p) => `${p.n} taktische Fehler pro Partie`,
-		rawBlunders: (p) => `${p.n} Patzer pro Partie`,
+		rawTactics: (p: P) => `${p.n} % der Chancen genutzt`,
+		rawBlunders: (p: P) => `${p.n} Patzer je 30 Züge`,
 		weakest: (p) => `Schwächster Bereich: ${p.name}`,
 		tip: {
 			opening: 'Lerne eine Eröffnung Variante für Variante.',
 			middlegame: 'Tägliche Puzzles schärfen den Blick für Taktik.',
 			tactics:
-				'Prüfe jeden Zug auf hängende Figuren, Gabeln und Matts – und trainiere es mit Puzzles.',
+				'Fehler des Gegners bestrafen: Frag dich nach jedem seiner Züge, was er erlaubt – und übe es mit Puzzles.',
 			endgame: 'Mit Endspieltechnik gewinnst du gewonnene Stellungen.',
 			safety: 'Spiel die Stellungen nach, in denen du gepatzt hast.'
 		},
@@ -1341,6 +1341,22 @@ export const de: Shape<typeof en> = {
 		practiseText: (p: P) => `Jetzt trainieren: Puzzles zum Thema „${p.theme}“ auf deinem Niveau.`
 	},
 	retry: {
+		solvedHint: 'Gefunden – mit Tipp.',
+		hintShown: 'Die richtige Figur ist grün markiert.',
+		after: (p: P) => `Dein Gegner hatte gerade ${p.move} gespielt.`,
+		youPlayed: (p: P) => `In der Partie hast du ${p.move} gespielt (rot).`,
+		doneMissed: (p: P) =>
+			`${p.n} ${Number(p.n) === 1 ? 'Stellung lohnt' : 'Stellungen lohnen'} einen zweiten Blick.`,
+		donePerfect: 'Jeden besseren Zug beim ersten Versuch gefunden – stark.',
+		again: (p: P) => `Die ${p.n} verpassten nochmal`,
+		prev: 'Voriger Fehler',
+		next: 'Nächster Fehler',
+		hintBtn: 'Tipp',
+		solution: 'Lösung',
+		continue: 'Weiter',
+		finish: 'Fertig',
+		exit: 'Beenden',
+		goTo: (p: P) => `Zu Fehler ${p.n}`,
 		cta: (p: P) => `Deine ${p.n} ${p.n === 1 ? 'Fehler' : 'Fehler'} nachspielen`,
 		ctaText: 'Finde den besseren Zug selbst – so lernst du am meisten aus einer Partie.',
 		step: (p: P) => `Fehler ${p.i} von ${p.n}`,

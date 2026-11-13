@@ -53,7 +53,11 @@
 		void title;
 		void text;
 		requestAnimationFrame(() => {
-			if (body) clipped = body.scrollHeight > body.clientHeight + 1;
+			// Titel und Text sind auf Zeilen begrenzt: abgeschnitten, wenn ihr Inhalt höher ist als sichtbar
+			if (body)
+				clipped =
+					body.scrollHeight > body.clientHeight + 1 ||
+					[...body.querySelectorAll('p')].some((el) => el.scrollHeight > el.clientHeight + 1);
 		});
 	});
 </script>

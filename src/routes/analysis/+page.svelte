@@ -60,6 +60,10 @@
 	import LayoutGrid from '@lucide/svelte/icons/layout-grid';
 	import Target from '@lucide/svelte/icons/target';
 	import Lightbulb from '@lucide/svelte/icons/lightbulb';
+	import X from '@lucide/svelte/icons/x';
+	import Eye from '@lucide/svelte/icons/eye';
+	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
+	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 
 	// ── Liste ──
 	let games = $state<GameRow[]>([]);
@@ -411,81 +415,143 @@
 				)
 			: []
 	);
+	/** Ergebnis je geübtem Fehler (Index in myMistakes) */
+	type RetryResult = 'solved' | 'hinted' | 'shown';
 	let retry = $state<{
-		idx: number;
-		tries: number;
-		found: number;
+		/** Reihenfolge der zu übenden Fehler (Indizes in myMistakes) */
+		list: number[];
+		pos: number;
+		res: Record<number, RetryResult>;
 		status: 'try' | 'checking' | 'solved' | 'shown' | 'done';
+		tries: number;
+		hint: boolean;
 		fb: MoveFeedback | null;
-		played: string;
 	} | null>(null);
 	let retryV = $state(0);
-	const retryItem = $derived(retry && retry.status !== 'done' ? myMistakes[retry.idx] : null);
+	const retryIdx = $derived(retry && retry.status !== 'done' ? retry.list[retry.pos] : -1);
+	const retryItem = $derived(retryIdx >= 0 ? myMistakes[retryIdx] : null);
 	const retryFen = $derived(retryItem && game ? game.fenAt(retryItem.ply - 1) : '');
 	const retryBest = $derived(retryItem ? (evals[retryItem.ply - 1]?.best ?? '') : '');
+	const retryOriginal = $derived(retryItem && game ? game.moves[retryItem.ply - 1].uci : '');
+	/** Gegnerzug, der zur Übungsstellung geführt hat – als Bezug hervorgehoben */
+	const retryLast = $derived.by<[string, string] | undefined>(() => {
+		if (!retryItem || !game || retryItem.ply < 2) return undefined;
+		const u = game.moves[retryItem.ply - 2].uci;
+		return [u.slice(0, 2), u.slice(2, 4)];
+	});
 	const retryGame = $derived.by(() => {
 		void retryV;
 		return retryFen ? new Game(retryFen) : null;
 	});
+	const retryFound = $derived(
+		retry ? Object.values(retry.res).filter((r) => r === 'solved').length : 0
+	);
+	const retryMissed = $derived(retry ? retry.list.filter((i) => retry!.res[i] !== 'solved') : []);
 
-	function startRetry() {
+	function startRetry(only?: number[]) {
 		if (!myMistakes.length) return;
-		retry = { idx: 0, tries: 0, found: 0, status: 'try', fb: null, played: '' };
+		retry = {
+			list: only?.length ? only : myMistakes.map((_, i) => i),
+			pos: 0,
+			res: {},
+			status: 'try',
+			tries: 0,
+			hint: false,
+			fb: null
+		};
+		retryV++;
+		toBoard();
+	}
+
+	/** Brett und Aufgabe in den Blick holen (der Start-Knopf liegt am Handy unter dem Brett) */
+	function toBoard() {
+		if (typeof window === 'undefined') return;
+		const smooth = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+		window.scrollTo({ top: 0, behavior: smooth ? 'smooth' : 'auto' });
+	}
+
+	/** zu einem Fehler springen – schon gelöste zeigen ihr Ergebnis */
+	function goRetry(pos: number) {
+		if (!retry || pos < 0 || pos >= retry.list.length) return;
+		const done = retry.res[retry.list[pos]];
+		retry.pos = pos;
+		retry.status = done === 'shown' ? 'shown' : done ? 'solved' : 'try';
+		retry.tries = 0;
+		retry.hint = false;
+		retry.fb = null;
 		retryV++;
 	}
 
 	async function onRetryMove(uci: string) {
 		if (!retry || !retryItem || retry.status !== 'try' || !retryFen) return;
-		retry.played = uci;
-		const original = game!.moves[retryItem.ply - 1].uci;
-		if (uci === original) {
+		if (uci === retryOriginal) {
 			retry.tries++;
 			retry.fb = { kind: 'bad', title: t('retry.sameTitle'), text: t('retry.sameText') };
 			retryV++;
 			return;
 		}
-		if (uci === retryBest || uci + 'q' === retryBest) return solved(true);
+		if (uci === retryBest || uci + 'q' === retryBest) return solved();
 		retry.status = 'checking';
 		const fb = await feedbackFor(retryFen, uci);
 		if (!retry) return;
-		if (fb?.kind === 'playable') return solved(retry.tries === 0);
+		if (fb?.kind === 'playable') return solved();
 		retry.tries++;
 		retry.fb = fb;
-		retry.status = retry.tries >= 2 ? 'shown' : 'try';
+		retry.status = 'try';
 		retryV++;
 	}
 
-	function solved(firstTry: boolean) {
+	function solved() {
 		if (!retry) return;
-		if (firstTry || retry.tries === 0) retry.found++;
+		// beim ersten Versuch ohne Tipp zählt es als gefunden
+		retry.res[retry.list[retry.pos]] = retry.tries === 0 && !retry.hint ? 'solved' : 'hinted';
 		retry.status = 'solved';
+		retry.fb = null;
+	}
+
+	function retryHint() {
+		if (!retry || retry.status !== 'try') return;
+		retry.hint = true;
+	}
+
+	function retrySolution() {
+		if (!retry || (retry.status !== 'try' && retry.status !== 'checking')) return;
+		retry.res[retry.list[retry.pos]] = 'shown';
+		retry.status = 'shown';
 		retry.fb = null;
 	}
 
 	async function nextRetry() {
 		if (!retry) return;
-		if (retry.idx + 1 >= myMistakes.length) {
-			retry.status = 'done';
-			// Tagesplan: „Aus deiner letzten Partie lernen“ gilt damit als erledigt
-			const list = await getSetting<number[]>('reviewedGames', []);
-			if (row?.id && !list.includes(row.id)) await setSetting('reviewedGames', [...list, row.id]);
-			return;
-		}
-		retry = {
-			idx: retry.idx + 1,
-			tries: 0,
-			found: retry.found,
-			status: 'try',
-			fb: null,
-			played: ''
-		};
-		retryV++;
+		// nächster noch offener Fehler, sonst fertig
+		const open = retry.list.findIndex((i, p) => p > retry!.pos && !retry!.res[i]);
+		if (open >= 0) return goRetry(open);
+		const anyOpen = retry.list.findIndex((i) => !retry!.res[i]);
+		if (anyOpen >= 0) return goRetry(anyOpen);
+		retry.status = 'done';
+		// Tagesplan: „Aus deiner letzten Partie lernen“ gilt damit als erledigt
+		const list = await getSetting<number[]>('reviewedGames', []);
+		if (row?.id && !list.includes(row.id)) await setSetting('reviewedGames', [...list, row.id]);
+	}
+
+	/** Training beenden und in der Analyse genau diesen Zug zeigen */
+	function closeRetry() {
+		const target = retryItem?.ply;
+		retry = null;
+		if (target) go(target);
+		toBoard();
 	}
 
 	const retryShapes = $derived.by<Shape[]>(() => {
 		if (!retry || !retryItem) return [];
+		if (retry.status === 'try' && retry.hint && retryBest)
+			return [{ orig: retryBest.slice(0, 2), brush: 'good' }];
 		if ((retry.status === 'shown' || retry.status === 'solved') && retryBest)
-			return [{ orig: retryBest.slice(0, 2), dest: retryBest.slice(2, 4), brush: 'good' }];
+			return [
+				// rot: was in der Partie gespielt wurde, grün: der bessere Zug
+				{ orig: retryOriginal.slice(0, 2), dest: retryOriginal.slice(2, 4), brush: 'bad' },
+				{ orig: retryBest.slice(0, 2), dest: retryBest.slice(2, 4), brush: 'good' }
+			];
 		return [];
 	});
 
@@ -568,6 +634,22 @@
 
 	function onKey(e: KeyboardEvent) {
 		if (!game || (e.target as HTMLElement)?.tagName === 'TEXTAREA') return;
+		// im Fehler-Trainer: ← → zwischen den Fehlern, h = Tipp, s = Lösung, Enter = weiter, Esc = beenden
+		if (retry) {
+			if (retry.status === 'done') {
+				if (e.key === 'Escape' || e.key === 'Enter') retry = null;
+				else return;
+			} else if (e.key === 'ArrowLeft') goRetry(retry.pos - 1);
+			else if (e.key === 'ArrowRight') goRetry(retry.pos + 1);
+			else if (e.key === 'h') retryHint();
+			else if (e.key === 's') retrySolution();
+			else if (e.key === 'Escape') closeRetry();
+			else if (e.key === 'Enter' && (retry.status === 'solved' || retry.status === 'shown'))
+				void nextRetry();
+			else return;
+			e.preventDefault();
+			return;
+		}
 		if (e.key === 'ArrowLeft') go(ply - 1);
 		else if (e.key === 'ArrowRight') go(ply + 1);
 		else if (e.key === 'Home' || e.key === 'ArrowUp') go(0);
@@ -652,50 +734,54 @@
 		};
 	});
 	// Nachspielen der eigenen Fehler: Aufgabe und Rückmeldung stehen ebenfalls oben
+	const moveLabel = (ply: number) =>
+		game
+			? `${Math.ceil(ply / 2)}${ply % 2 === 1 ? '.' : '…'} ${figurine(game.moves[ply - 1].san)}`
+			: '';
 	const retryBar = $derived.by(() => {
 		if (!retry || !row || !game) return null;
 		if (retry.status === 'done')
 			return {
 				kicker: t('retry.doneTitle'),
-				title: t('retry.doneText', { n: retry.found, m: myMistakes.length }),
-				text: '',
+				title: t('retry.doneText', { n: retryFound, m: retry.list.length }),
+				text: retryMissed.length
+					? t('retry.doneMissed', { n: retryMissed.length })
+					: t('retry.donePerfect'),
 				color: 'var(--k-best)'
 			};
 		if (!retryItem) return null;
-		const mv = game.moves[retryItem.ply - 1];
-		const kicker = t('retry.step', { i: retry.idx + 1, n: myMistakes.length });
-		const prompt = t('retry.prompt', {
-			move: `${Math.ceil(retryItem.ply / 2)}${retryItem.ply % 2 === 1 ? '.' : '…'} ${figurine(mv.san)}`
-		});
+		const kicker = t('retry.step', { i: retry.pos + 1, n: retry.list.length });
+		const played = moveLabel(retryItem.ply);
+		const why = retryItem.explanation
+			? `${retryItem.explanation.title}: ${retryItem.explanation.text}`
+			: '';
+		const best = figurine(sanForUci(retryFen, retryBest));
 		if (retry.status === 'solved')
 			return {
 				kicker,
-				title: t('retry.solved'),
-				text: retryItem.explanation
-					? `${retryItem.explanation.title}: ${retryItem.explanation.text}`
-					: '',
+				title: retry.res[retryIdx] === 'hinted' ? t('retry.solvedHint') : t('retry.solved'),
+				text: [t('retry.youPlayed', { move: played }), why].filter(Boolean).join(' '),
 				color: 'var(--k-best)'
 			};
 		if (retry.status === 'shown')
 			return {
 				kicker,
-				title: t('retry.best', { san: figurine(sanForUci(retryFen, retryBest)) }),
-				text: [
-					retry.fb ? `${retry.fb.title} ${retry.fb.text}` : '',
-					retryItem.explanation?.text ?? ''
-				]
-					.filter(Boolean)
-					.join(' '),
+				title: t('retry.best', { san: best }),
+				text: [t('retry.youPlayed', { move: played }), why].filter(Boolean).join(' '),
 				color: 'var(--k-mistake)'
 			};
 		return {
 			kicker,
-			title: prompt,
+			title: t('retry.prompt', { move: played }),
 			text: retry.fb
 				? `${retry.fb.title} ${retry.fb.text}`
 				: retry.status === 'checking'
 					? t('course.checking')
-					: t('retry.hint'),
+					: retry.hint
+						? t('retry.hintShown')
+						: retryLast
+							? t('retry.after', { move: moveLabel(retryItem.ply - 1) })
+							: t('retry.hint'),
 			color: retry.fb ? 'var(--k-mistake)' : 'var(--c-learn)'
 		};
 	});
@@ -892,24 +978,18 @@
 			<div class="board-row">
 				<EvalBar score={evalHere} {orientation} />
 				<div class="board-wrap">
-					{#if retryGame && retry && (retry.status === 'try' || retry.status === 'checking')}
+					{#if retryGame && retry && retryItem}
+						<!-- ein Brett für den ganzen Übungsablauf (kein Neuaufbau zwischen Versuch und Lösung) -->
 						<Board
 							fen={retryFen}
 							{orientation}
 							turnColor={retryGame.turn}
+							lastMove={retryLast}
 							dests={retry.status === 'try' ? retryGame.dests() : new Map()}
 							movableColor={row.myColor}
 							shapes={retryShapes}
 							isPromotion={(f, to) => retryGame.isPromotion(f as never, to as never)}
 							onMove={(u) => void onRetryMove(u)}
-							label={t('analysis.board')}
-						/>
-					{:else if retryItem}
-						<Board
-							fen={retryFen}
-							{orientation}
-							viewOnly
-							shapes={retryShapes}
 							label={t('analysis.board')}
 						/>
 					{:else}
@@ -926,35 +1006,37 @@
 					{/if}
 				</div>
 			</div>
-			<Dock order={2}>
-				<div class="nav">
-					<button onclick={() => go(0)} aria-label={t('analysis.nav.first')}
-						><ChevronsLeft size={22} /></button
-					>
-					<button onclick={() => go(ply - 1)} aria-label={t('analysis.nav.prev')}
-						><ChevronLeft size={22} /></button
-					>
-					<button onclick={() => go(ply + 1)} aria-label={t('analysis.nav.next')}
-						><ChevronRight size={22} /></button
-					>
-					<button onclick={() => go(total - 1)} aria-label={t('analysis.nav.last')}
-						><ChevronsRight size={22} /></button
-					>
-					<button
-						onclick={() => (orientation = orientation === 'white' ? 'black' : 'white')}
-						aria-label={t('analysis.nav.flip')}><RefreshCw size={19} /></button
-					>
-					{#if myMistakes.length && !retry}
-						<button
-							class="to-mistake"
-							onclick={goNextMistake}
-							aria-label={t('analysis.nav.nextMistake', { n: myMistakes.length })}
-							title={t('analysis.nav.nextMistake', { n: myMistakes.length })}
-							><Target size={19} /><span class="tm-n">{myMistakes.length}</span></button
+			{#if !retry}
+				<Dock order={2}>
+					<div class="nav">
+						<button onclick={() => go(0)} aria-label={t('analysis.nav.first')}
+							><ChevronsLeft size={22} /></button
 						>
-					{/if}
-				</div>
-			</Dock>
+						<button onclick={() => go(ply - 1)} aria-label={t('analysis.nav.prev')}
+							><ChevronLeft size={22} /></button
+						>
+						<button onclick={() => go(ply + 1)} aria-label={t('analysis.nav.next')}
+							><ChevronRight size={22} /></button
+						>
+						<button onclick={() => go(total - 1)} aria-label={t('analysis.nav.last')}
+							><ChevronsRight size={22} /></button
+						>
+						<button
+							onclick={() => (orientation = orientation === 'white' ? 'black' : 'white')}
+							aria-label={t('analysis.nav.flip')}><RefreshCw size={19} /></button
+						>
+						{#if myMistakes.length && !retry}
+							<button
+								class="to-mistake"
+								onclick={goNextMistake}
+								aria-label={t('analysis.nav.nextMistake', { n: myMistakes.length })}
+								title={t('analysis.nav.nextMistake', { n: myMistakes.length })}
+								><Target size={19} /><span class="tm-n">{myMistakes.length}</span></button
+							>
+						{/if}
+					</div>
+				</Dock>
+			{/if}
 		</div>
 
 		<aside class="side">
@@ -983,56 +1065,95 @@
 				</div>
 			{/if}
 			{#if retry}
-				<Dock>
-					<div class="card retry" role="status">
+				<!-- Fehler-Trainer: eigene Steuerung (am Handy in der Leiste, Text steht oben im Kommentar) -->
+				<Dock reserve={112}>
+					<div
+						class="card retry"
+						role="group"
+						aria-label={t('retry.cta', { n: retry.list.length })}
+					>
+						{#if retryBar}
+							<div class="rt-text" aria-live="polite">
+								<span class="rt-kick">{retryBar.kicker}</span>
+								<p class="rt-title">{retryBar.title}</p>
+								{#if retryBar.text}<p class="rt-body">{retryBar.text}</p>{/if}
+							</div>
+						{/if}
 						{#if retry.status === 'done'}
-							<p class="m-title"><Target size={18} /> {t('retry.doneTitle')}</p>
-							<p class="m-text">{t('retry.doneText', { n: retry.found, m: myMistakes.length })}</p>
-							<div class="row-btns">
-								<button class="btn" onclick={() => (retry = null)}>{t('retry.close')}</button>
-								<a class="btn secondary" href={resolve('/puzzles?mode=mistakes')}
-									><Sparkles size={17} /> {t('analysis.practiceText')}</a
+							<div class="rt-actions">
+								{#if retryMissed.length}
+									<button class="btn" onclick={() => startRetry(retryMissed)}
+										><RotateCcw size={17} /> {t('retry.again', { n: retryMissed.length })}</button
+									>
+								{/if}
+								<button
+									class="btn"
+									class:secondary={retryMissed.length > 0}
+									onclick={() => (retry = null)}>{t('retry.close')}</button
 								>
 							</div>
-						{:else if retryItem}
-							{@const mv = game.moves[retryItem.ply - 1]}
-							<span class="r-step"
-								>{t('retry.step', { i: retry.idx + 1, n: myMistakes.length })}</span
-							>
-							<p class="m-title">
-								{t('retry.prompt', {
-									move: `${Math.ceil(retryItem.ply / 2)}${retryItem.ply % 2 === 1 ? '.' : '…'} ${figurine(mv.san)}`
-								})}
-							</p>
-							{#if retry.status === 'checking'}
-								<p class="muted">{t('course.checking')}</p>
-							{:else if retry.status === 'solved'}
-								<p class="ok">{t('retry.solved')}</p>
-								{#if retryItem.explanation}<p class="m-text">
-										<b>{retryItem.explanation.title}:</b>
-										{retryItem.explanation.text}
-									</p>{/if}
-								<button class="btn" onclick={() => void nextRetry()}>{t('common.next')}</button>
-							{:else if retry.status === 'shown'}
-								{#if retry.fb}<p class="bad"><b>{retry.fb.title}</b> {retry.fb.text}</p>{/if}
-								<p class="m-text">
-									<Lightbulb size={15} />
-									{t('retry.best', { san: figurine(sanForUci(retryFen, retryBest)) })}
-								</p>
-								{#if retryItem.explanation}<p class="m-text muted">
-										{retryItem.explanation.text}
-									</p>{/if}
-								<button class="btn" onclick={() => void nextRetry()}>{t('common.next')}</button>
-							{:else}
-								<p class="muted">{t('retry.hint')}</p>
-								{#if retry.fb}<p class="bad"><b>{retry.fb.title}</b> {retry.fb.text}</p>{/if}
-							{/if}
-							<button class="link-btn" onclick={() => (retry = null)}>{t('retry.close')}</button>
+						{:else}
+							<div class="rt-nav">
+								<button
+									class="rt-icon"
+									onclick={closeRetry}
+									aria-label={t('retry.exit')}
+									title={t('retry.exit')}><X size={19} /></button
+								>
+								<button
+									class="rt-icon"
+									onclick={() => goRetry(retry!.pos - 1)}
+									disabled={retry.pos === 0}
+									aria-label={t('retry.prev')}
+									title="{t('retry.prev')} (←)"><ChevronLeft size={21} /></button
+								>
+								<div class="rt-dots">
+									{#each retry.list as mi, p (mi)}
+										<button
+											class="rt-dot {retry.res[mi] ?? ''}"
+											class:on={p === retry.pos}
+											onclick={() => goRetry(p)}
+											aria-label={t('retry.goTo', { n: p + 1 })}
+											aria-current={p === retry.pos ? 'step' : undefined}
+										></button>
+									{/each}
+								</div>
+								<button
+									class="rt-icon"
+									onclick={() => goRetry(retry!.pos + 1)}
+									disabled={retry.pos >= retry.list.length - 1}
+									aria-label={t('retry.next')}
+									title="{t('retry.next')} (→)"><ChevronRight size={21} /></button
+								>
+							</div>
+							<div class="rt-actions">
+								{#if retry.status === 'solved' || retry.status === 'shown'}
+									<button class="btn grow" onclick={() => void nextRetry()}
+										>{retry.list.every((i, p) => p === retry!.pos || retry!.res[i])
+											? t('retry.finish')
+											: t('retry.continue')}
+										<ArrowRight size={17} /></button
+									>
+								{:else}
+									<button
+										class="btn secondary grow"
+										onclick={retryHint}
+										disabled={retry.hint || retry.status !== 'try'}
+										><Lightbulb size={17} /> {t('retry.hintBtn')}</button
+									>
+									<button
+										class="btn secondary grow"
+										onclick={retrySolution}
+										disabled={retry.status === 'checking'}
+										><Eye size={17} /> {t('retry.solution')}</button
+									>
+								{/if}
+							</div>
 						{/if}
 					</div>
 				</Dock>
 			{:else if myMistakes.length && progress >= 1 && !analysing}
-				<button class="card retry-cta" onclick={startRetry}>
+				<button class="card retry-cta" onclick={() => startRetry()}>
 					<span class="rc-ico"><Target size={20} /></span>
 					<span
 						><b>{t('retry.cta', { n: myMistakes.length })}</b>
@@ -1330,52 +1451,123 @@
 	}
 
 	/* Einzelansicht */
+	/* ── Fehler-Trainer ── */
 	.retry {
 		display: flex;
 		flex-direction: column;
-		gap: 0.6rem;
+		gap: 0.7rem;
 		padding: 1rem;
 		border: 1.5px solid color-mix(in srgb, var(--c-puzzle) 40%, transparent);
 	}
 
-	.retry .m-title {
+	.rt-text {
 		display: flex;
-		align-items: center;
-		gap: 0.4rem;
+		flex-direction: column;
+		gap: 0.2rem;
 	}
 
-	.r-step {
-		font-size: 0.75rem;
-		font-weight: 700;
+	.rt-kick {
+		font-family: var(--font-num);
+		font-size: 0.72rem;
+		letter-spacing: 0.04em;
 		text-transform: uppercase;
-		letter-spacing: 0.05em;
 		color: var(--c-puzzle);
 	}
 
-	.retry .ok {
+	.rt-title {
 		font-weight: 700;
-		color: var(--good-text);
+		font-size: 1.02rem;
 	}
 
-	.retry .bad {
-		font-size: 0.92rem;
-		line-height: 1.45;
-		color: var(--text);
-		padding: 0.6rem 0.75rem;
-		border-radius: 12px;
-		background: color-mix(in srgb, var(--bad) 9%, transparent);
+	.rt-body {
+		color: var(--text-2);
+		line-height: 1.5;
 	}
 
-	.link-btn {
-		align-self: flex-start;
+	.rt-nav {
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+	}
+
+	.rt-icon {
+		flex: none;
+		display: grid;
+		place-items: center;
+		width: 44px;
+		height: 44px;
 		border: none;
-		background: none;
-		padding: 0;
-		font: inherit;
-		font-size: 0.85rem;
-		font-weight: 650;
+		border-radius: 999px;
+		background: transparent;
 		color: var(--text-2);
 		cursor: pointer;
+	}
+
+	.rt-icon:disabled {
+		opacity: 0.35;
+		cursor: default;
+	}
+
+	.rt-icon:not(:disabled):active {
+		background: var(--surface-2);
+	}
+
+	/* Fortschritt: ein Punkt je Fehler – gelöst, mit Tipp, Lösung angesehen, offen */
+	.rt-dots {
+		flex: 1;
+		display: flex;
+		justify-content: center;
+		flex-wrap: wrap;
+		gap: 0.2rem;
+		min-width: 0;
+	}
+
+	.rt-dot {
+		position: relative;
+		width: 12px;
+		height: 12px;
+		padding: 0;
+		border: none;
+		border-radius: 50%;
+		background: var(--surface-2);
+		box-shadow: inset 0 0 0 1.5px var(--line-strong);
+		cursor: pointer;
+	}
+
+	/* Tippfläche größer als der Punkt */
+	.rt-dot::after {
+		content: '';
+		position: absolute;
+		inset: -10px -3px;
+	}
+
+	.rt-dot.solved {
+		background: var(--good);
+		box-shadow: none;
+	}
+
+	.rt-dot.hinted {
+		background: var(--warn);
+		box-shadow: none;
+	}
+
+	.rt-dot.shown {
+		background: var(--bad);
+		box-shadow: none;
+	}
+
+	.rt-dot.on {
+		outline: 2px solid var(--text);
+		outline-offset: 2px;
+	}
+
+	.rt-actions {
+		display: flex;
+		gap: 0.5rem;
+	}
+
+	.rt-actions .grow {
+		flex: 1;
 	}
 
 	.retry-cta {
@@ -1569,16 +1761,6 @@
 		padding: 0.5rem;
 	}
 
-	.m-title {
-		font-weight: 700;
-		font-size: 1.02rem;
-	}
-
-	.m-text {
-		color: var(--text-2);
-		line-height: 1.5;
-	}
-
 	.summary {
 		padding: 0.8rem 1rem 0.7rem;
 		display: grid;
@@ -1714,7 +1896,8 @@
 		box-shadow: none;
 		border: none;
 		background: none;
-		padding: 0.2rem 0.3rem;
+		padding: 0.1rem;
+		gap: 0.4rem;
 	}
 
 	.moves-card {
@@ -1741,13 +1924,8 @@
 				)
 			);
 		}
-		/* beim Nachspielen: Aufgabe und Rückmeldung stehen oben, unten nur die Knöpfe */
-		.retry .r-step,
-		.retry .m-title,
-		.retry .m-text,
-		.retry .ok,
-		.retry .bad,
-		.retry .muted {
+		/* beim Nachspielen: Aufgabe und Rückmeldung stehen oben im Kommentar, unten nur die Steuerung */
+		.rt-text {
 			display: none;
 		}
 	}

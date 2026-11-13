@@ -69,6 +69,10 @@ export interface GameStats {
 	accuracyPrevious: number | null;
 	phaseAccuracy: Record<Phase, number | null>;
 	perGame: { blunders: number; mistakes: number; inaccuracies: number };
+	/** Patzer je 30 eigene Züge – unabhängig von der Partielänge */
+	blundersPer30: number | null;
+	/** Fehler des Gegners (Fehler/Patzer) und wie oft du sie sofort bestraft hast */
+	chances: { taken: number; total: number };
 	motifs: { motif: Motif; n: number }[];
 }
 
@@ -85,11 +89,43 @@ function ending(g: GameRow): Ending {
 	return 'resign';
 }
 
-/** Phase eines Halbzugs (vereinfachte Grenzen nach Zugnummer) */
+/** Phase eines Halbzugs nur nach Zugnummer – Rückfall, wenn keine Stellung bekannt ist */
 export function phaseOf(ply: number): Phase {
 	if (ply <= 20) return 'opening';
 	if (ply <= 60) return 'middlegame';
 	return 'endgame';
+}
+
+/** Figuren außer Bauern und Königen (beide Seiten) und Besetzung der Grundreihen aus einer FEN */
+function material(fen: string): { pieces: number; backWhite: number; backBlack: number } {
+	const rows = fen.split(' ')[0].split('/');
+	const count = (row: string, re: RegExp) => (row.match(re) ?? []).length;
+	return {
+		pieces: count(rows.join(''), /[qrbnQRBN]/g),
+		backWhite: count(rows[7] ?? '', /[QRBNK]/g),
+		backBlack: count(rows[0] ?? '', /[qrbnk]/g)
+	};
+}
+
+/**
+ * Phase jeder Stellung nach dem Material auf dem Brett (angelehnt an Lichess):
+ * - Endspiel: höchstens 6 Figuren außer Bauern und Königen
+ * - Eröffnung endet nach Zug 15, sobald höchstens 10 solche Figuren übrig sind
+ *   oder eine Grundreihe weitgehend leer ist (Figuren entwickelt)
+ * Phasen gehen nur vorwärts. Index = Halbzug-Nummer der Stellung (0 = Ausgangsstellung).
+ */
+export function phasesByMaterial(fens: string[]): Phase[] {
+	let phase: Phase = 'opening';
+	return fens.map((fen, i) => {
+		const m = material(fen);
+		if (m.pieces <= 6) phase = 'endgame';
+		else if (
+			phase === 'opening' &&
+			(i > 30 || m.pieces <= 10 || m.backWhite < 4 || m.backBlack < 4)
+		)
+			phase = 'middlegame';
+		return phase;
+	});
 }
 
 /**
@@ -157,14 +193,41 @@ export function computeStats(
 	const phaseLoss: Record<Phase, number[]> = { opening: [], middlegame: [], endgame: [] };
 	const counts = { blunders: 0, mistakes: 0, inaccuracies: 0 };
 	const motifMap = new Map<Motif, number>();
-	for (const g of analysed) {
-		const reviews = reviewMoves(g, g.analysis!.evals as PlyEval[]).filter(
-			(r) => r.mover === g.myColor
-		);
+	const phaseGames: Record<Phase, Set<number>> = {
+		opening: new Set(),
+		middlegame: new Set(),
+		endgame: new Set()
+	};
+	let ownMoves = 0;
+	const chances = { taken: 0, total: 0 };
+	for (const [gi, g] of analysed.entries()) {
+		const all = reviewMoves(g, g.analysis!.evals as PlyEval[]);
+		const reviews = all.filter((r) => r.mover === g.myColor);
 		if (!reviews.length) continue;
 		gameAcc.push(accuracy(reviews.map((r) => r.loss)));
+		ownMoves += reviews.length;
+		// Phase nach Material der Stellung vor dem Zug
+		let phases: Phase[] | null = null;
+		try {
+			const game = Game.fromUciMoves(g.moves, g.startFen);
+			phases = phasesByMaterial(Array.from({ length: game.ply + 1 }, (_, i) => game.fenAt(i)));
+		} catch {
+			/* ungültige Zugfolge: Rückfall auf Zugnummer */
+		}
+		// Chancen: Gegner macht einen Fehler/Patzer – nutzt du ihn mit dem nächsten Zug?
+		const byPly = new Map(all.map((r) => [r.ply, r]));
+		for (const r of all) {
+			if (r.mover === g.myColor || (r.judgement !== 'mistake' && r.judgement !== 'blunder'))
+				continue;
+			const reply = byPly.get(r.ply + 1);
+			if (!reply) continue;
+			chances.total++;
+			if (reply.loss < 0.1) chances.taken++;
+		}
 		for (const r of reviews) {
-			phaseLoss[phaseOf(r.ply)].push(r.loss);
+			const ph = phases?.[r.ply - 1] ?? phaseOf(r.ply);
+			phaseLoss[ph].push(r.loss);
+			phaseGames[ph].add(gi);
 			if (r.judgement === 'blunder') counts.blunders++;
 			else if (r.judgement === 'mistake') counts.mistakes++;
 			else if (r.judgement === 'inaccuracy') counts.inaccuracies++;
@@ -177,6 +240,8 @@ export function computeStats(
 	const recent = gameAcc.slice(-10);
 	const previous = gameAcc.slice(-20, -10);
 	const nA = gameAcc.length || 1;
+	const phaseValue = (p: Phase) =>
+		phaseLoss[p].length >= 12 && phaseGames[p].size >= 2 ? accuracy(phaseLoss[p]) : null;
 
 	return {
 		total: wdl(finished),
@@ -193,11 +258,14 @@ export function computeStats(
 		accuracy: avg(gameAcc),
 		accuracyRecent: avg(recent),
 		accuracyPrevious: previous.length >= 3 ? avg(previous) : null,
+		// erst ab 12 Zügen aus mindestens 2 Partien – sonst schwankt der Wert zu stark
 		phaseAccuracy: {
-			opening: phaseLoss.opening.length >= 5 ? accuracy(phaseLoss.opening) : null,
-			middlegame: phaseLoss.middlegame.length >= 5 ? accuracy(phaseLoss.middlegame) : null,
-			endgame: phaseLoss.endgame.length >= 5 ? accuracy(phaseLoss.endgame) : null
+			opening: phaseValue('opening'),
+			middlegame: phaseValue('middlegame'),
+			endgame: phaseValue('endgame')
 		},
+		blundersPer30: ownMoves >= 30 ? Math.round((counts.blunders / ownMoves) * 300) / 10 : null,
+		chances,
 		perGame: {
 			blunders: Math.round((counts.blunders / nA) * 10) / 10,
 			mistakes: Math.round((counts.mistakes / nA) * 10) / 10,

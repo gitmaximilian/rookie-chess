@@ -56,6 +56,41 @@ test('Aus eigener Partie lernen: Fehler nachspielen', async ({ page, browserName
 			.locator('visible=true')
 			.first()
 	).toBeVisible();
-	await page.getByRole('button', { name: 'Back to the analysis' }).click();
+	// Tipp markiert die Figur, Lösung zeigt den besseren Zug – danach geht es weiter
+	await page.getByRole('button', { name: 'Hint', exact: true }).click();
+	await expect(
+		page
+			.getByText(/piece to move is marked/)
+			.locator('visible=true')
+			.first()
+	).toBeVisible();
+	await page.getByRole('button', { name: 'Solution', exact: true }).click();
+	await expect(
+		page
+			.getByText(/In the game you played/)
+			.locator('visible=true')
+			.first()
+	).toBeVisible();
+	await expect(page.getByRole('button', { name: 'Go to mistake 1' })).toHaveClass(/shown/);
+	// frei zwischen den Fehlern wechseln (falls es mehr als einen gibt) und zurück
+	const next = page.getByRole('button', { name: 'Next mistake' });
+	if (await next.isEnabled()) {
+		await next.click();
+		await expect(
+			page
+				.getByText(/Mistake 2 of \d+/)
+				.locator('visible=true')
+				.first()
+		).toBeVisible();
+		await page.getByRole('button', { name: 'Previous mistake' }).click();
+		await expect(
+			page
+				.getByText(/Mistake 1 of \d+/)
+				.locator('visible=true')
+				.first()
+		).toBeVisible();
+	}
+	// Beenden führt zur Analyse genau dieses Zugs zurück
+	await page.getByRole('button', { name: 'Exit' }).click();
 	await expect(cta).toBeVisible();
 });
