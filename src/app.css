@@ -494,6 +494,59 @@ html[data-first-run] .sidebar {
 	cursor: default;
 }
 
+/*
+ * Auswahl-Chip (Filter, Umschalter in einer Zeile). Sichtbar 36 px hoch,
+ * Tippfläche unsichtbar auf 44 px erweitert. Aktiv: --chip-on (Standard: Textfarbe).
+ */
+.chip {
+	position: relative;
+	flex: none;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	height: 36px;
+	padding: 0 0.85rem;
+	border-radius: 999px;
+	border: 1px solid var(--line);
+	background: var(--surface);
+	font: inherit;
+	font-size: 0.88rem;
+	font-weight: 600;
+	color: var(--text-2);
+	white-space: nowrap;
+	cursor: pointer;
+	transition:
+		background-color var(--dur) var(--ease-out),
+		color var(--dur) var(--ease-out),
+		transform var(--dur-fast) var(--ease-out);
+}
+
+.chip::after,
+.hit44::after {
+	content: '';
+	position: absolute;
+	inset: -4px -2px;
+}
+
+.chip:active {
+	transform: scale(0.95);
+}
+
+.chip.on {
+	background: var(--chip-on, var(--text));
+	border-color: var(--chip-on, var(--text));
+	color: var(--chip-on-text, var(--bg));
+}
+
+/* kleine Links/Knöpfe: Tippfläche unsichtbar auf mindestens 44 px erweitern */
+.hit44 {
+	position: relative;
+}
+
+.hit44::after {
+	inset: min(0px, calc((100% - 44px) / 2)) 0;
+}
+
 /* Hauptaktion einer Seite */
 .btn.big {
 	min-height: 52px;

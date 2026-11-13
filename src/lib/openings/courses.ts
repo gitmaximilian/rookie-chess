@@ -4,6 +4,7 @@ import type { NormalMove } from 'chessops/types';
 import { makeFen } from 'chessops/fen';
 import type { Chess } from 'chessops/chess';
 import { positionFromFen, INITIAL_FEN } from '#lib/chess/game.js';
+import { figurineText } from '#lib/chess/notation.js';
 import { i18n, t } from '#lib/i18n/i18n.svelte.js';
 import type { Side } from './repertoire.js';
 
@@ -18,7 +19,8 @@ export interface L {
 
 export function loc(l: L | undefined): string {
 	if (!l) return '';
-	return i18n.locale === 'de' ? l.de : l.en;
+	// Züge im Text mit Figurensymbolen – wie am Brett, unabhängig von der Sprache
+	return figurineText(i18n.locale === 'de' ? l.de : l.en);
 }
 
 const N = (en: string, de: string): L => ({ en, de });

@@ -132,6 +132,7 @@ cg-board piece.ghost {
 }
 
 .cg-wrap coords.files {
+	text-transform: none;
 	left: 3px;
 	bottom: 1px;
 	text-align: left;
@@ -150,6 +151,17 @@ cg-board piece.ghost {
 }
 
 .cg-wrap.orientation-black coords coord:nth-child(even) {
+	color: var(--sq-coord-light);
+}
+
+/* Spalten (a–h) stehen in der unteren Reihe: dort beginnt die Farbfolge umgekehrt (a1 ist dunkel) */
+.cg-wrap coords.files coord:nth-child(odd),
+.cg-wrap.orientation-black coords.files coord:nth-child(even) {
+	color: var(--sq-coord-dark);
+}
+
+.cg-wrap coords.files coord:nth-child(even),
+.cg-wrap.orientation-black coords.files coord:nth-child(odd) {
 	color: var(--sq-coord-light);
 }
 

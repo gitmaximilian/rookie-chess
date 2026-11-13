@@ -154,7 +154,7 @@
 
 	<nav class="jump" aria-label={t('settings.title')}>
 		{#each [['s-account', 'account.title'], ['s-look', 'settings.appearance'], ['s-board', 'settings.boardTitle'], ['s-goal', 'settings.goal'], ['s-data', 'settings.data']] as [id, label] (id)}
-			<a href="#{id}">{t(label)}</a>
+			<a class="hit44" href="#{id}">{t(label)}</a>
 		{/each}
 	</nav>
 

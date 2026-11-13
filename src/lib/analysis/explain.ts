@@ -104,12 +104,13 @@ export function explain(
 				piece: t(`pieces.poss.${victim.role}`),
 				Piece: t(`pieces.Poss.${victim.role}`),
 				pron: t(`pieces.pron.${victim.role}`),
+				name: t(`pieces.name.${victim.role}`),
 				sq: makeSquare(reply.to),
 				reply: san(fenAfter, after.best!)
 			};
 			const justMoved = reply.to === mv.to;
 			return {
-				title: t(justMoved ? 'explain.blunderedTitle' : 'explain.hangingTitle'),
+				title: t(justMoved ? 'explain.blunderedTitle' : 'explain.hangingTitle', params),
 				text: t(justMoved ? 'explain.blunderedText' : 'explain.hangingText', params) + better,
 				motif: 'hanging'
 			};

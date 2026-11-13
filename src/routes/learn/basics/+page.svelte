@@ -195,7 +195,7 @@
 <svelte:head><title>{t('basics.title')} – Rookie</title></svelte:head>
 
 {#if !lesson}
-	<a class="back" href={resolve('/learn')}><ArrowLeft size={18} /> {t('endgame.back')}</a>
+	<a class="back hit44" href={resolve('/learn')}><ArrowLeft size={18} /> {t('endgame.back')}</a>
 	<PageHeader
 		title={set === 'tactics' ? t('tactics.title') : t('basics.title')}
 		subtitle={set === 'tactics' ? t('tactics.subtitle') : t('basics.subtitle')}
@@ -226,7 +226,7 @@
 		{/each}
 	</ol>
 {:else}
-	<button class="back" onclick={() => open(null)}
+	<button class="back hit44" onclick={() => open(null)}
 		><ArrowLeft size={18} /> {t('basics.overview')}</button
 	>
 	<div class="arena">

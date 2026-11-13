@@ -45,6 +45,7 @@ export const de: Shape<typeof en> = {
 		later: 'Später'
 	},
 	common: {
+		provisional: 'vorläufig',
 		more: 'Mehr',
 		close: 'Schließen',
 		next: 'Weiter',
@@ -420,6 +421,11 @@ export const de: Shape<typeof en> = {
 		brilliantMoves: (p) => `${p.n} ${s(p.n, 'brillanter Zug', 'brillante Züge')}`,
 		formAria: (p) => `Ergebnisse deiner letzten ${p.n} Partien`,
 		analyseShort: 'Analysieren',
+		blundersShort: (p: P) => `${p.n} Patzer`,
+		mistakesShort: (p: P) => `${p.n} ${s(p.n, 'Fehler', 'Fehler')}`,
+		dayWins: (p: P) => `${p.n} ${s(p.n, 'Sieg', 'Siege')}`,
+		dayLosses: (p: P) => `${p.n} ${s(p.n, 'Niederlage', 'Niederlagen')}`,
+		dayDraws: (p: P) => `${p.n} Remis`,
 		notYet: 'noch nicht analysiert',
 		games: 'Partien',
 		running: 'Stockfish analysiert …',
@@ -536,8 +542,8 @@ export const de: Shape<typeof en> = {
 		mateAllowedTitle: 'Matt zugelassen',
 		mateAllowedText: (p) =>
 			`Nach diesem Zug kann dein Gegner in ${p.n} ${s(p.n, 'Zug', 'Zügen')} mattsetzen${p.line ? ` (${p.line})` : ''}.`,
-		blunderedTitle: 'Figur eingestellt',
-		hangingTitle: 'Figur hängt',
+		blunderedTitle: (p) => `${p.name} eingestellt`,
+		hangingTitle: (p) => `${p.name} hängt`,
 		blunderedText: (p) => `${p.Piece} auf ${p.sq} ist ungeschützt – ${p.reply} schlägt ${p.pron}.`,
 		hangingText: (p) => `Nach deinem Zug hängt ${p.piece} auf ${p.sq}: ${p.reply}.`,
 		forkTitle: 'Gabel zugelassen',
@@ -1115,9 +1121,10 @@ export const de: Shape<typeof en> = {
 		insight: {
 			betterWhite: (p: P) => `Mit Weiß holst du ${p.a} % der Punkte, mit Schwarz nur ${p.b} %.`,
 			betterBlack: (p: P) => `Mit Schwarz holst du ${p.a} % der Punkte, mit Weiß nur ${p.b} %.`,
-			bestOpening: (p: P) => `Deine beste Eröffnung: ${p.name} – ${p.pct} % aus ${p.n} Partien.`,
+			bestOpening: (p: P) =>
+				`Deine beste Eröffnung mit ${p.color === 'white' ? 'Weiß' : 'Schwarz'}: ${p.name} – ${p.pct} % aus ${p.n} Partien.`,
 			worstOpening: (p: P) =>
-				`${p.name} macht dir Probleme: nur ${p.pct} % aus ${p.n} Partien. Ein Kurs könnte helfen.`,
+				`${p.name} (du mit ${p.color === 'white' ? 'Weiß' : 'Schwarz'}) macht dir Probleme: nur ${p.pct} % aus ${p.n} Partien. Ein Kurs könnte helfen.`,
 			weakPhase: (p: P) =>
 				`Schwächste Partiephase: ${p.phase} – ${p.acc} % Genauigkeit (beste Phase: ${p.best} %).`,
 			motif: (p: P) => `Dein häufigster Fehler: ${p.motif} (${p.n}×).`,

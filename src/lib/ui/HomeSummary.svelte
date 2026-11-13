@@ -137,7 +137,7 @@
 	<StatTile
 		tone="puzzle"
 		label={t('summary.puzzle')}
-		value={`${d.puzzle.rating}${d.puzzle.provisional ? '?' : ''}`}
+		value={d.puzzle.rating}
 		href={resolve('/puzzles')}
 		spark={d.puzzleHist}
 		delta={puzzleDelta}

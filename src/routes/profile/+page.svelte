@@ -71,7 +71,8 @@
 		{
 			icon: Puzzle,
 			label: t('profile.puzzleRating'),
-			value: rating ? `${Math.round(rating.rating)}${isProvisional(rating) ? '?' : ''}` : '–',
+			value: rating ? String(Math.round(rating.rating)) : '–',
+			sub: rating && isProvisional(rating) ? t('common.provisional') : undefined,
 			tone: 'puzzle' as Tone,
 			spark: history.slice(-40).map((h) => h.rating)
 		},
@@ -120,6 +121,7 @@
 				value={tile.value}
 				muted={tile.value === '–'}
 				spark={tile.spark}
+				sub={'sub' in tile ? tile.sub : undefined}
 			/>
 		{/each}
 	</BentoGrid>

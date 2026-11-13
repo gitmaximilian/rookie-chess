@@ -27,7 +27,9 @@
 	<div class="head">
 		<span class="ico"><ChartLine size={20} /></span>
 		<h2>{t('analysis.title')}</h2>
-		<a class="all" href={resolve('/analysis')}>{t('home.allGames')} <ArrowRight size={15} /></a>
+		<a class="all hit44" href={resolve('/analysis')}
+			>{t('home.allGames')} <ArrowRight size={15} /></a
+		>
 	</div>
 
 	{#if games === null}

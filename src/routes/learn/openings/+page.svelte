@@ -292,7 +292,7 @@
 <svelte:head><title>{t('openings.title')} – Rookie</title></svelte:head>
 
 {#if view === 'overview'}
-	<a class="back" href={resolve('/learn')}><ArrowLeft size={18} /> {t('endgame.back')}</a>
+	<a class="back hit44" href={resolve('/learn')}><ArrowLeft size={18} /> {t('endgame.back')}</a>
 	<PageHeader title={t('openings.title')} subtitle={t('openings.subtitle')} />
 
 	{#if stats.white.mine + stats.black.mine === 0}
@@ -405,7 +405,7 @@
 		{/each}
 	{/if}
 {:else if view === 'edit'}
-	<button class="back" onclick={backToOverview}
+	<button class="back hit44" onclick={backToOverview}
 		><ArrowLeft size={18} /> {t('openings.title')}</button
 	>
 	<div class="arena">
@@ -472,7 +472,7 @@
 		</aside>
 	</div>
 {:else}
-	<button class="back" onclick={backToOverview}
+	<button class="back hit44" onclick={backToOverview}
 		><ArrowLeft size={18} /> {t('openings.title')}</button
 	>
 	<div class="arena">

@@ -230,7 +230,7 @@
 <svelte:window onkeydown={onKey} />
 
 <div class="top-line">
-	<a class="back" href={resolve('/analysis')}><ArrowLeft size={18} /> {t('nav.games')}</a>
+	<a class="back hit44" href={resolve('/analysis')}><ArrowLeft size={18} /> {t('nav.games')}</a>
 	{#if opening}<span class="opening">{opening.name}</span>{/if}
 </div>
 

@@ -718,34 +718,9 @@
 		}
 	}
 
-	.chip {
-		flex: none;
-		display: inline-flex;
-		align-items: center;
-		gap: 0.35rem;
-		height: 36px;
-		padding: 0 0.85rem;
-		border-radius: 999px;
-		border: 1px solid var(--line);
-		background: var(--surface);
-		font-size: 0.88rem;
-		font-weight: 600;
-		color: var(--text-2);
-		cursor: pointer;
-		transition:
-			background-color var(--dur) var(--ease-out),
-			color var(--dur) var(--ease-out),
-			transform var(--dur-fast) var(--ease-out);
-	}
-
-	.chip:active {
-		transform: scale(0.95);
-	}
-
 	.chip.on {
-		background: var(--c-puzzle);
-		border-color: var(--c-puzzle);
-		color: var(--on-accent);
+		--chip-on: var(--c-puzzle);
+		--chip-on-text: var(--on-accent);
 	}
 
 	.chip.theme.on {

@@ -1,5 +1,7 @@
 type P = Record<string, string | number>;
 const s = (n: number | string, one: string, many: string) => (Number(n) === 1 ? one : many);
+/** erster Buchstabe groß: „knight“ → „Knight“ */
+const cap = (w: string | number) => String(w).charAt(0).toUpperCase() + String(w).slice(1);
 
 export const en = {
 	meta: {
@@ -37,6 +39,7 @@ export const en = {
 		later: 'Later'
 	},
 	common: {
+		provisional: 'provisional',
 		more: 'More',
 		close: 'Close',
 		next: 'Next',
@@ -385,6 +388,11 @@ export const en = {
 		brilliantMoves: (p: P) => `${p.n} brilliant ${s(p.n, 'move', 'moves')}`,
 		formAria: (p: P) => `Results of your last ${p.n} games`,
 		analyseShort: 'Analyse',
+		blundersShort: (p: P) => `${p.n} ${s(p.n, 'blunder', 'blunders')}`,
+		mistakesShort: (p: P) => `${p.n} ${s(p.n, 'mistake', 'mistakes')}`,
+		dayWins: (p: P) => `${p.n} ${s(p.n, 'win', 'wins')}`,
+		dayLosses: (p: P) => `${p.n} ${s(p.n, 'loss', 'losses')}`,
+		dayDraws: (p: P) => `${p.n} ${s(p.n, 'draw', 'draws')}`,
 		notYet: 'not analysed',
 		games: 'Games',
 		running: 'Stockfish is analysing …',
@@ -499,8 +507,8 @@ export const en = {
 		mateAllowedTitle: 'Allowed mate',
 		mateAllowedText: (p: P) =>
 			`After this move your opponent can mate in ${p.n} ${s(p.n, 'move', 'moves')}${p.line ? ` (${p.line})` : ''}.`,
-		blunderedTitle: 'Piece blundered',
-		hangingTitle: 'Piece hanging',
+		blunderedTitle: (p: P) => `${cap(p.name)} blundered`,
+		hangingTitle: (p: P) => `${cap(p.name)} hanging`,
 		blunderedText: (p: P) => `${p.Piece} on ${p.sq} is unprotected – ${p.reply} takes ${p.pron}.`,
 		hangingText: (p: P) => `After your move ${p.piece} on ${p.sq} hangs: ${p.reply}.`,
 		forkTitle: 'Allowed a fork',
@@ -1064,9 +1072,10 @@ export const en = {
 		insight: {
 			betterWhite: (p: P) => `You score ${p.a}% with White but only ${p.b}% with Black.`,
 			betterBlack: (p: P) => `You score ${p.a}% with Black but only ${p.b}% with White.`,
-			bestOpening: (p: P) => `Your best opening: ${p.name} – ${p.pct}% from ${p.n} games.`,
+			bestOpening: (p: P) =>
+				`Your best opening as ${p.color === 'white' ? 'White' : 'Black'}: ${p.name} – ${p.pct}% from ${p.n} games.`,
 			worstOpening: (p: P) =>
-				`${p.name} is giving you trouble: only ${p.pct}% from ${p.n} games. A course could help.`,
+				`${p.name} (you as ${p.color === 'white' ? 'White' : 'Black'}) is giving you trouble: only ${p.pct}% from ${p.n} games. A course could help.`,
 			weakPhase: (p: P) =>
 				`Weakest game phase: ${p.phase} – ${p.acc}% accuracy (best phase: ${p.best}%).`,
 			motif: (p: P) => `Your most common mistake: ${p.motif} (${p.n}×).`,

@@ -76,8 +76,6 @@
 				<span>{t(`analysis.source.${game.source}`)}</span>
 				<span class="dot" aria-hidden="true">·</span>
 				<span>{date}</span>
-				{#if game.myRating}<span class="dot" aria-hidden="true">·</span><span>{game.myRating}</span
-					>{/if}
 			</span>
 		{/if}
 	</span>
@@ -86,8 +84,11 @@
 			<b class:hi={q.accuracy >= 80} class:lo={q.accuracy < 65}>{q.accuracy}%</b>
 			{#if q.blunders || q.mistakes}
 				<span class="errs">
-					{#if q.blunders}<span class="qb">{q.blunders}??</span>{/if}
-					{#if q.mistakes}<span class="qm">{q.mistakes}?</span>{/if}
+					{#if q.blunders}<span class="qb">{t('analysis.blundersShort', { n: q.blunders })}</span
+						>{/if}
+					{#if q.mistakes && !q.blunders}<span class="qm"
+							>{t('analysis.mistakesShort', { n: q.mistakes })}</span
+						>{/if}
 				</span>
 			{/if}
 		</span>
@@ -219,7 +220,9 @@
 	.errs {
 		display: flex;
 		gap: 0.3rem;
-		font-weight: 700;
+		font-size: 0.72rem;
+		font-weight: 650;
+		white-space: nowrap;
 	}
 
 	.qb {

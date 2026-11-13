@@ -35,7 +35,9 @@ test('Einstieg: erfahren + Taktik → Puzzles mit höherem Start-Rating', async 
 	await ob.getByRole('button', { name: /don’t play online/ }).click();
 	await expect(page).toHaveURL(/\/puzzles/);
 	await page.goto('/profile');
-	await expect(page.getByText('1300?')).toBeVisible();
+	const tile = page.getByTestId('profile-tiles');
+	await expect(tile.getByText('1300', { exact: true })).toBeVisible();
+	await expect(tile.getByText('provisional')).toBeVisible();
 });
 
 test('Einstieg überspringen', async ({ page }) => {

@@ -7,13 +7,13 @@
 
 <nav class="tabs" aria-label={t('coachTab.title')}>
 	<a
-		class="mono-label"
+		class="mono-label hit44"
 		href={resolve('/coach')}
 		class:on={active === 'overview'}
 		aria-current={active === 'overview' ? 'page' : undefined}>{t('stats.tabOverview')}</a
 	>
 	<a
-		class="mono-label"
+		class="mono-label hit44"
 		href={resolve('/coach/stats')}
 		class:on={active === 'stats'}
 		aria-current={active === 'stats' ? 'page' : undefined}>{t('stats.tabStats')}</a

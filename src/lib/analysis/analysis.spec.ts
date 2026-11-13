@@ -39,6 +39,7 @@ describe('Erklärungen', () => {
 		const fen = 'rnbqkbnr/ppp2ppp/3p4/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 0 3';
 		const e = explain(fen, 'f3g5', { cp: 30, best: 'd2d4' }, { cp: -300, best: 'd8g5' }, 'blunder');
 		expect(e?.motif).toBe('hanging');
+		expect(e?.title).toBe('Springer eingestellt');
 		expect(e?.text).toContain('Springer');
 		expect(e?.text).toContain('g5');
 	});
@@ -75,7 +76,7 @@ describe('Erklärungen', () => {
 		setLocaleForTest('en');
 		const fen = 'rnbqkbnr/ppp2ppp/3p4/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 0 3';
 		const e = explain(fen, 'f3g5', { cp: 30, best: 'd2d4' }, { cp: -300, best: 'd8g5' }, 'blunder');
-		expect(e?.title).toBe('Piece blundered');
+		expect(e?.title).toBe('Knight blundered');
 		expect(e?.text).toContain('Your knight on g5 is unprotected');
 		setLocaleForTest('de');
 	});

@@ -131,11 +131,12 @@
 		const judged = (opp: boolean): CoachBar => ({
 			kicker: `${coach} · ${t('review.yourMove')}`,
 			title: coachNote!.title,
-			// danach antwortet der Bot: sein Zug steht als Zusatz darunter, die Bewertung bleibt sichtbar
+			// danach antwortet der Bot: eine Warnung zu seinem Zug kommt zuerst (sonst wird sie abgeschnitten),
+			// dann die Erklärung zum eigenen Zug, dann was der Gegner gezogen hat
 			text: [
+				opp && coachOpp?.warn ? coachOpp.warn : '',
 				coachNote!.text,
 				opp && coachOpp ? `${t('coach.opponent')} ${figurine(coachOpp.san)}: ${coachOpp.text}` : '',
-				opp && coachOpp?.warn ? coachOpp.warn : '',
 				coachPending ? '' : coachTip
 			]
 				.filter(Boolean)
@@ -1580,6 +1581,7 @@
 	}
 
 	.seg button {
+		position: relative;
 		flex: 1;
 		display: inline-flex;
 		align-items: center;
@@ -1596,6 +1598,13 @@
 		transition:
 			background-color var(--dur) var(--ease-out),
 			color var(--dur) var(--ease-out);
+	}
+
+	/* 44 px Tippfläche, Optik bleibt kompakt */
+	.seg button::after {
+		content: '';
+		position: absolute;
+		inset: -3px 0;
 	}
 
 	.seg button.on {

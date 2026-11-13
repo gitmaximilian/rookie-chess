@@ -493,7 +493,8 @@
 <svelte:window onkeydown={onStudyKey} />
 
 {#if view === 'overview'}
-	<a class="back" href={resolve('/learn/openings')}><ArrowLeft size={18} /> {t('openings.title')}</a
+	<a class="back hit44" href={resolve('/learn/openings')}
+		><ArrowLeft size={18} /> {t('openings.title')}</a
 	>
 	<header class="head">
 		<ColorBadge color={course.color} size={30} />
@@ -540,7 +541,8 @@
 						<span class="l-text">
 							<b>{loc(l.name)}</b>
 							{#if done}<Stars n={lineStars(done)} size={12} />{/if}
-							<span class="l-moves">{l.moves.split(' ').slice(0, 6).join(' ')} …</span>
+							<span class="l-moves">{l.moves.split(' ').slice(0, 6).map(figurine).join(' ')} …</span
+							>
 						</span>
 						<span class="l-btns">
 							<button
@@ -605,7 +607,7 @@
 		{/if}
 	</div>
 {:else if view === 'study' && study && studyGame}
-	<button class="back" onclick={toOverview}
+	<button class="back hit44" onclick={toOverview}
 		><ArrowLeft size={18} /> {t('course.backToCourse')}</button
 	>
 	{#if courseBar}
@@ -701,7 +703,7 @@
 		</aside>
 	</div>
 {:else if view === 'quiz'}
-	<button class="back" onclick={toOverview}
+	<button class="back hit44" onclick={toOverview}
 		><ArrowLeft size={18} /> {t('course.backToCourse')}</button
 	>
 	{#if courseBar}
@@ -782,7 +784,7 @@
 		</aside>
 	</div>
 {:else}
-	<button class="back" onclick={toOverview}
+	<button class="back hit44" onclick={toOverview}
 		><ArrowLeft size={18} /> {t('course.backToCourse')}</button
 	>
 	{#if courseBar}

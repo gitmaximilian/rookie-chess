@@ -903,9 +903,13 @@
 					<div class="day">
 						<h3>{grp.label}</h3>
 						<span class="day-score"
-							>{#if grp.w}{grp.w}{t('stats.hist.wShort')}{/if}
-							{#if grp.l}{grp.l}{t('stats.hist.lShort')}{/if}
-							{#if grp.d}{grp.d}{t('stats.hist.dShort')}{/if}</span
+							>{[
+								grp.w ? t('analysis.dayWins', { n: grp.w }) : '',
+								grp.l ? t('analysis.dayLosses', { n: grp.l }) : '',
+								grp.d ? t('analysis.dayDraws', { n: grp.d }) : ''
+							]
+								.filter(Boolean)
+								.join(' · ')}</span
 						>
 					</div>
 					<ul class="game-list">
@@ -939,7 +943,7 @@
 					><ClipboardPaste size={18} /> {t('analysis.paste')}</button
 				>
 			</div>
-			<a class="link" href={resolve('/import')}
+			<a class="link hit44" href={resolve('/import')}
 				><CloudDownload size={16} /> {t('analysis.importLink')}</a
 			>
 		</aside>
@@ -949,7 +953,9 @@
 	<a class="btn" href={resolve('/analysis')}>{t('analysis.toGames')}</a>
 {:else if game && row}
 	<div class="top-line">
-		<a class="back" href={resolve('/analysis')}><ArrowLeft size={18} /> {t('analysis.games')}</a>
+		<a class="back hit44" href={resolve('/analysis')}
+			><ArrowLeft size={18} /> {t('analysis.games')}</a
+		>
 		{#if opening}<span class="opening" title={opening.eco}>{opening.name}</span>{/if}
 		<a
 			class="btn secondary small to-board"
@@ -1309,10 +1315,8 @@
 	}
 
 	.day-score {
-		font-family: var(--font-num);
 		font-size: 0.8rem;
 		color: var(--text-3);
-		word-spacing: 0.2rem;
 	}
 
 	.hub-actions {

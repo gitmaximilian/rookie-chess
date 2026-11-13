@@ -61,6 +61,16 @@ describe('Partie-Statistik', () => {
 		expect(ins.some((x) => x.key === 'betterWhite')).toBe(true);
 	});
 
+	it('Eröffnungs-Erkenntnisse nennen die eigene Farbe (gleiche Eröffnung, verschiedene Seiten)', () => {
+		const games = [
+			...Array.from({ length: 4 }, () => row({ myColor: 'black', result: '0-1' })),
+			...Array.from({ length: 3 }, () => row({ myColor: 'white', result: '0-1' }))
+		];
+		const ins = insights(computeStats(games, () => 'French Defense'));
+		expect(ins.find((x) => x.key === 'bestOpening')?.params?.color).toBe('black');
+		expect(ins.find((x) => x.key === 'worstOpening')?.params?.color).toBe('white');
+	});
+
 	it('Phasen nach Material: Grundreihen leer → Mittelspiel, wenig Figuren → Endspiel, nur vorwärts', () => {
 		const start = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 		// beide Seiten entwickelt und rochiert: weiße Grundreihe nur noch Türme und König

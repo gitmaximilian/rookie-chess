@@ -301,13 +301,13 @@ export function insights(s: GameStats): Insight[] {
 		out.push({
 			kind: 'good',
 			key: 'bestOpening',
-			params: { name: best.name, pct: best.score, n: best.n }
+			params: { name: best.name, pct: best.score, n: best.n, color: best.color }
 		});
 	if (worst && worst !== best && worst.score <= 45)
 		out.push({
 			kind: 'bad',
 			key: 'worstOpening',
-			params: { name: worst.name, pct: worst.score, n: worst.n }
+			params: { name: worst.name, pct: worst.score, n: worst.n, color: worst.color }
 		});
 
 	const phases = (Object.entries(s.phaseAccuracy) as [Phase, number | null][]).filter(

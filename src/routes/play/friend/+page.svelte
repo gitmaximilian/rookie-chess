@@ -139,7 +139,7 @@
 
 <svelte:head><title>{t('friend.title')} – Rookie</title></svelte:head>
 
-<a class="back" href={resolve('/play')}><ArrowLeft size={18} /> {t('nav.play')}</a>
+<a class="back hit44" href={resolve('/play')}><ArrowLeft size={18} /> {t('nav.play')}</a>
 
 <div class="arena">
 	<div class="board-col">

@@ -263,7 +263,7 @@
 
 {#if lesson}
 	<div class="top-line">
-		<a class="back" href={resolve('/learn')}><ArrowLeft size={18} /> {t('endgame.back')}</a>
+		<a class="back hit44" href={resolve('/learn')}><ArrowLeft size={18} /> {t('endgame.back')}</a>
 		{#if lesson.positions.length > 1}
 			<span class="pos">{t('endgame.position', { i: posIdx + 1, n: lesson.positions.length })}</span
 			>

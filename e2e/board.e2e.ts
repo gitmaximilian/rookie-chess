@@ -37,3 +37,39 @@ test('Analysebrett: beide Farben ziehen, Stockfish rechnet live, Variante spiele
 	await expect.poll(() => fen(page)).toContain('PP2PPPP');
 	await expect(page.locator('.opening')).toContainText(/Queen/);
 });
+
+test('Brettbeschriftung: jede Koordinate hebt sich von ihrem Feld ab (a1 dunkel, h1 hell)', async ({
+	page
+}) => {
+	await page.goto('/play/friend');
+	await expect(page.locator('coords.files coord')).toHaveCount(8);
+	const colors = await page.evaluate(() => {
+		const css = getComputedStyle(document.documentElement);
+		const probe = document.createElement('span');
+		document.body.append(probe);
+		const resolve = (v: string) => {
+			probe.style.color = css.getPropertyValue(v);
+			return getComputedStyle(probe).color;
+		};
+		const out = {
+			onDark: resolve('--sq-coord-dark'),
+			onLight: resolve('--sq-coord-light'),
+			files: [...document.querySelectorAll('coords.files coord')].map(
+				(c) => getComputedStyle(c).color
+			),
+			ranks: [...document.querySelectorAll('coords.ranks coord')].map(
+				(c) => getComputedStyle(c).color
+			)
+		};
+		probe.remove();
+		return out;
+	});
+	// untere Reihe (Weiß unten): a1, c1, e1, g1 dunkel → helle Schrift
+	expect(colors.files).toEqual(
+		[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (i % 2 ? colors.onLight : colors.onDark))
+	);
+	// rechte Spalte: h1 hell, h2 dunkel …
+	expect(colors.ranks).toEqual(
+		[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (i % 2 ? colors.onDark : colors.onLight))
+	);
+});

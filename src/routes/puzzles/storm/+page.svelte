@@ -157,7 +157,7 @@
 
 <svelte:head><title>{t('storm.title')} – Rookie</title></svelte:head>
 
-<a class="back" href={resolve('/puzzles')}><ArrowLeft size={18} /> {t('nav.puzzles')}</a>
+<a class="back hit44" href={resolve('/puzzles')}><ArrowLeft size={18} /> {t('nav.puzzles')}</a>
 
 <div class="arena">
 	<div class="board-col">

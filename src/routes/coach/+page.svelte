@@ -411,7 +411,8 @@
 			<StatTile
 				tone="puzzle"
 				label={t('coachTab.puzzle')}
-				value={`${d.puzzle.rating}${d.puzzle.provisional ? '?' : ''}`}
+				value={d.puzzle.rating}
+				sub={d.puzzle.provisional ? t('common.provisional') : undefined}
 				spark={d.puzzleHist.slice(-30).map((p) => p.rating)}
 				href={resolve('/puzzles')}
 			/>
