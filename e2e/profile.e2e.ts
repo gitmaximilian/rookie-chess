@@ -1,18 +1,35 @@
 import { expect, test } from '@playwright/test';
 
+// Am Handy steht der Kommentar über dem Brett (CommentBar), am Desktop in der Seitenspalte:
+// Tests suchen deshalb den sichtbaren Text, egal an welcher Stelle.
+
 test('Profil zeigt Kennzahlen, Diagramme und Links', async ({ page }) => {
 	// ein Puzzle lösen lassen (Lösung zeigen) → Rating-Historie entsteht
 	await page.goto('/puzzles');
-	await expect(page.getByText(/to move – find the best move/)).toBeVisible({ timeout: 10000 });
+	await expect(
+		page
+			.getByText(/to move – find the best move/)
+			.locator('visible=true')
+			.first()
+	).toBeVisible({ timeout: 10000 });
 	await page.getByRole('button', { name: 'Solution' }).click();
-	await expect(page.getByText('Not quite – here’s how')).toBeVisible({ timeout: 15000 });
+	await expect(
+		page.getByText('Not quite – here’s how').locator('visible=true').first()
+	).toBeVisible({ timeout: 15000 });
 	await page.getByRole('button', { name: /Next/ }).click();
-	await expect(page.getByText(/to move – find the best move/)).toBeVisible({ timeout: 10000 });
+	await expect(
+		page
+			.getByText(/to move – find the best move/)
+			.locator('visible=true')
+			.first()
+	).toBeVisible({ timeout: 10000 });
 	await page.getByRole('button', { name: 'Solution' }).click();
-	await expect(page.getByText('Not quite – here’s how')).toBeVisible({ timeout: 15000 });
+	await expect(
+		page.getByText('Not quite – here’s how').locator('visible=true').first()
+	).toBeVisible({ timeout: 15000 });
 
 	await page.goto('/profile');
-	await expect(page.getByText('Puzzle rating')).toBeVisible();
+	await expect(page.getByText('Puzzle rating').locator('visible=true').first()).toBeVisible();
 	await expect(page.locator('[data-testid="profile-tiles"] > .tile')).toHaveCount(7);
 	await expect(page.locator('.chart svg')).toBeVisible();
 	await expect(page.locator('.heat .cell.l1, .heat .cell.l2').first()).toBeVisible();

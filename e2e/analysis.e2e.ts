@@ -1,5 +1,8 @@
 import { expect, test } from '@playwright/test';
 
+// Am Handy steht der Kommentar über dem Brett (CommentBar), am Desktop in der Seitenspalte:
+// Tests suchen deshalb den sichtbaren Text, egal an welcher Stelle.
+
 const LEGAL = `[White "Legal"]
 [Black "Saint Brie"]
 [Result "1-0"]
@@ -17,18 +20,31 @@ test('PGN analysieren: Patzer wird erkannt und erklärt', async ({ page }) => {
 	// Abzeichen am Brett und Kommentar in der Besprechungskarte
 	await expect(page.locator('.sq-badge')).toHaveAttribute('aria-label', 'Blunder');
 	await expect(page.locator('.rp .head')).toContainText('is a blunder');
-	await expect(page.locator('.rp').getByText(/Allowed mate/)).toBeVisible();
+	await expect(
+		page
+			.getByText(/Allowed mate/)
+			.locator('visible=true')
+			.first()
+	).toBeVisible();
 	// Live-Engine: mehrere Kandidatenzüge
 	await expect(page.locator('.rp .line:not(.ph)').first()).toBeVisible({ timeout: 30_000 });
 	// Tastatur-Navigation
 	await page.keyboard.press('Home');
-	await expect(page.getByText('Starting position')).toBeVisible();
+	await expect(page.getByText('Starting position').locator('visible=true').first()).toBeVisible();
 	// Partie erscheint in der Liste
 	await page.getByRole('main').getByRole('link', { name: 'Games' }).click();
-	await expect(page.locator('.gli .name').getByText('Saint Brie', { exact: true })).toBeVisible();
+	await expect(
+		page
+			.locator('.gli .name')
+			.getByText('Saint Brie', { exact: true })
+			.locator('visible=true')
+			.first()
+	).toBeVisible();
 	// Coach: zeigt, wie viele Partien ins Profil einfließen
 	await page.goto('/coach');
-	await expect(page.getByText('1 of 1 game analysed')).toBeVisible();
+	await expect(
+		page.getByText('1 of 1 game analysed').locator('visible=true').first()
+	).toBeVisible();
 });
 
 test('Weiterklicken in der Analyse scrollt die Seite nicht und das Brett springt nicht', async ({

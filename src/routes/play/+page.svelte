@@ -1,4 +1,5 @@
 <script lang="ts">
+	import CommentBar from '#lib/ui/CommentBar.svelte';
 	import Dock from '#lib/ui/Dock.svelte';
 	import { onDestroy, onMount, untrack } from 'svelte';
 	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
@@ -106,6 +107,92 @@
 	let helpBusy = $state(false);
 	let retryNote = $state<{ better: string; shown: boolean } | null>(null);
 	let threatAbort: AbortController | null = null;
+
+	// ── Kommentar über dem Brett (Handy): immer die eine wichtigste Coach-Nachricht ──
+	const JUDGE_COLOR: Record<string, string> = {
+		best: 'var(--k-best)',
+		excellent: 'var(--k-excellent)',
+		good: 'var(--k-good)',
+		inaccuracy: 'var(--k-inaccuracy)',
+		mistake: 'var(--k-mistake)',
+		blunder: 'var(--k-blunder)'
+	};
+	interface CoachBar {
+		kicker: string;
+		title: string;
+		text: string;
+		color: string;
+		state?: string;
+		act: string;
+	}
+	const coachBar = $derived.by((): CoachBar => {
+		const coach = t('coach.title');
+		// Fehler mit Angebot zum Zurücknehmen geht vor allem anderen
+		const judged = (opp: boolean): CoachBar => ({
+			kicker: `${coach} · ${t('review.yourMove')}`,
+			title: coachNote!.title,
+			// danach antwortet der Bot: sein Zug steht als Zusatz darunter, die Bewertung bleibt sichtbar
+			text: [
+				coachNote!.text,
+				opp && coachOpp ? `${t('coach.opponent')} ${figurine(coachOpp.san)}: ${coachOpp.text}` : '',
+				opp && coachOpp?.warn ? coachOpp.warn : '',
+				coachPending ? '' : coachTip
+			]
+				.filter(Boolean)
+				.join(' '),
+			color: JUDGE_COLOR[coachNote!.judgement] ?? 'var(--c-learn)',
+			state: 'judged',
+			act: ''
+		});
+		if (coachNote && coachPending) return judged(false);
+		if (coachThreat && myTurn)
+			return {
+				kicker: `${coach} · ${t('coach.warning')}`,
+				title:
+					coachThreat.kind === 'mate'
+						? t('coach.threatMate', { n: coachThreat.mateIn ?? 1 })
+						: t('coach.threatMaterial', {
+								piece: t(`pieces.Poss.${coachThreat.role ?? 'pawn'}`)
+							}),
+				text: threatShown ? coachThreat.san : '',
+				color: 'var(--k-mistake)',
+				act: threatShown ? '' : 'threat'
+			};
+		if (retryNote && myTurn)
+			return {
+				kicker: coach,
+				title: t('coach.retry'),
+				text: retryNote.shown
+					? t('coach.betterWas', { san: figurine(sanForUci(fen, retryNote.better)) })
+					: '',
+				color: 'var(--k-inaccuracy)',
+				act: retryNote.shown ? '' : 'better'
+			};
+		if (coachHelp && myTurn)
+			return {
+				kicker: `${coach} · ${t('coach.hint.label')}`,
+				title: coachHelp.idea,
+				text: coachHelp.level >= 2 ? coachHelp.piece : '',
+				color: 'var(--c-learn)',
+				act: ''
+			};
+		if (coachNote) return judged(true);
+		if (coachOpp)
+			return {
+				kicker: `${coach} · ${t('coach.opponent')} ${figurine(coachOpp.san)}`,
+				title: coachOpp.text,
+				text: [coachOpp.warn, coachTip].filter(Boolean).join(' '),
+				color: coachOpp.warn ? 'var(--k-mistake)' : 'var(--c-learn)',
+				act: ''
+			};
+		return {
+			kicker: coach,
+			title: coachBusy ? t('coach.thinking') : t('coach.welcome'),
+			text: '',
+			color: 'var(--c-learn)',
+			act: ''
+		};
+	});
 
 	function clearCoach() {
 		coachTip = '';
@@ -713,8 +800,27 @@
 		<button class="btn" onclick={start}>{t('play.start')}</button>
 	</div>
 {:else if phase === 'playing'}
+	{#if coachOn && !ended}
+		<CommentBar
+			kicker={coachBar.kicker}
+			title={coachBar.title}
+			text={coachBar.text}
+			color={coachBar.color}
+			status={coachBar.state ?? ''}
+			testid="coach-bar"
+		>
+			{#snippet icon()}<GraduationCap size={16} />{/snippet}
+			{#snippet action()}
+				{#if coachBar.act === 'threat'}
+					<button onclick={showThreat}>{t('coach.showThreat')}</button>
+				{:else if coachBar.act === 'better'}
+					<button onclick={showBetter}>{t('coach.showBetter')}</button>
+				{/if}
+			{/snippet}
+		</CommentBar>
+	{/if}
 	<div class="arena">
-		<div class="board-col">
+		<div class="board-col" class:with-bar={coachOn && !ended}>
 			<div class="player top">
 				<BotAvatar {bot} size={40} {thinking} />
 				<div class="pinfo">
@@ -913,9 +1019,9 @@
 					onSelect={(p) => (viewPly = p >= moves.length ? null : p)}
 				/>
 			</div>
-			<!-- mit Coach: Platz für Kommentar und Knöpfe vorab reservieren -->
-			<Dock order={1} reserve={coachOn ? 160 : 0}>
-				<div class="controls">
+			<!-- mit Coach: Platz für die Coach-Knöpfe vorab reservieren (der Text steht oben über dem Brett) -->
+			<Dock order={1} reserve={coachOn ? 64 : 0}>
+				<div class="controls" class:pending={coachPending && !ended}>
 					<button
 						class="ctl"
 						onclick={hint}
@@ -1114,15 +1220,11 @@
 		transform: translateX(18px);
 	}
 
-	/* in der mobilen Leiste: kompakt, ohne eigene Karte */
-	/* in der mobilen Leiste: feste Höhe, damit das Brett nicht springt */
+	/* in der mobilen Leiste: nur noch die Coach-Knöpfe (Text steht oben über dem Brett);
+	   Platz dafür reserviert die Steuerleiste vorab, das Brett springt also nicht */
 	:global(.docked) .coach-box {
-		height: 5.6rem;
-		overflow-y: auto;
 		margin: 0;
-		padding: 0.5rem 0.7rem;
-		gap: 0.25rem;
-		font-size: 0.9rem;
+		padding: 0;
 	}
 
 	:global(.docked) .cb-head,
@@ -1968,6 +2070,47 @@
 				100%,
 				calc(100dvh - var(--dock-h) - var(--tabbar-space) - var(--safe-top) - 130px)
 			);
+		}
+		/* mit Coach: Kommentar steht über dem Brett (feste Höhe) */
+		.board-col.with-bar {
+			max-width: min(
+				100%,
+				calc(
+					100dvh - var(--dock-h) - var(--tabbar-space) - var(--safe-top) - 130px -
+						var(--comment-h) - 0.5rem
+				)
+			);
+		}
+		/* Texte stehen oben im Kommentar – unten bleiben nur die Knöpfe */
+		.coach-box .cb-head,
+		.coach-box .cb-opp,
+		.coach-box .cb-warn,
+		.coach-box .cb-text,
+		.coach-box .cb-title,
+		.coach-box .cb-tip,
+		.coach-box .cb-help,
+		.coach-box .cb-link {
+			display: none;
+		}
+		/* nach einem Fehler: „Zurücknehmen / Weiterspielen“ ersetzen die Knopfzeile –
+		   die Leiste bleibt eine Zeile hoch */
+		.controls.pending {
+			display: none;
+		}
+		/* übrig bleiben nur Knöpfe: als ruhige Zeile ohne eigene Karte */
+		.coach-box,
+		.coach-box.warn {
+			flex-direction: row;
+			flex-wrap: wrap;
+			align-items: center;
+			gap: 0.45rem;
+			margin: 0;
+			padding: 0;
+			background: none;
+			border: none;
+		}
+		.coach-box .cb-actions {
+			margin: 0;
 		}
 	}
 </style>

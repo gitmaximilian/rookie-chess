@@ -20,6 +20,7 @@ export const en = {
 		legal: 'Legal notice & privacy'
 	},
 	common: {
+		more: 'More',
 		close: 'Close',
 		next: 'Next',
 		back: 'Back',
@@ -168,6 +169,7 @@ export const en = {
 		event: 'Rookie – game vs bot'
 	},
 	coach: {
+		warning: 'Watch out',
 		tip: {
 			queenEarly:
 				'Tip: bringing the queen out this early lets your opponent chase her while developing. Knights and bishops first!',
@@ -180,6 +182,7 @@ export const en = {
 			castle: 'Tip: it’s move 9 and your king is still in the centre – think about castling soon.'
 		},
 		hint: {
+			label: 'Hint',
 			ask: 'Ask coach',
 			more: 'More help',
 			show: 'Show move',

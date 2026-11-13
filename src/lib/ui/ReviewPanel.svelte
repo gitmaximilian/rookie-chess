@@ -312,4 +312,11 @@
 		height: 14px;
 		max-width: 70%;
 	}
+
+	/* Handy: der Kommentar steht über dem Brett (CommentBar), hier bleiben Bewertung und Varianten */
+	@media (max-width: 767px) {
+		.coach {
+			display: none;
+		}
+	}
 </style>

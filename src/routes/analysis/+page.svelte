@@ -17,6 +17,8 @@
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import CloudDownload from '@lucide/svelte/icons/cloud-download';
 	import PageHeader from '#lib/ui/PageHeader.svelte';
+	import CommentBar from '#lib/ui/CommentBar.svelte';
+	import GraduationCap from '@lucide/svelte/icons/graduation-cap';
 	import BentoGrid from '#lib/ui/bento/BentoGrid.svelte';
 	import StatTile from '#lib/ui/bento/StatTile.svelte';
 	import Board, { type Shape } from '#lib/ui/board/Board.svelte';
@@ -631,6 +633,74 @@
 		if (gameId) await goto(resolve('/analysis'));
 	}
 
+	// ── Kommentar über dem Brett (Handy) ──
+	const reviewBar = $derived.by(() => {
+		if (!row || retry || !comment) return null;
+		const kind = ply > 0 ? (currentReview?.kind ?? null) : null;
+		const who =
+			ply > 0 && currentReview
+				? currentReview.mover === row.myColor
+					? t('review.yourMove')
+					: t('review.opponentMove', { name: row.opponent })
+				: '';
+		return {
+			kind,
+			kicker: [who, kind ? t(`review.kind.${kind}`) : ''].filter(Boolean).join(' · '),
+			title: comment.headline,
+			text: comment.text,
+			color: kind ? kindColor(kind) : 'var(--c-learn)'
+		};
+	});
+	// Nachspielen der eigenen Fehler: Aufgabe und Rückmeldung stehen ebenfalls oben
+	const retryBar = $derived.by(() => {
+		if (!retry || !row || !game) return null;
+		if (retry.status === 'done')
+			return {
+				kicker: t('retry.doneTitle'),
+				title: t('retry.doneText', { n: retry.found, m: myMistakes.length }),
+				text: '',
+				color: 'var(--k-best)'
+			};
+		if (!retryItem) return null;
+		const mv = game.moves[retryItem.ply - 1];
+		const kicker = t('retry.step', { i: retry.idx + 1, n: myMistakes.length });
+		const prompt = t('retry.prompt', {
+			move: `${Math.ceil(retryItem.ply / 2)}${retryItem.ply % 2 === 1 ? '.' : '…'} ${figurine(mv.san)}`
+		});
+		if (retry.status === 'solved')
+			return {
+				kicker,
+				title: t('retry.solved'),
+				text: retryItem.explanation
+					? `${retryItem.explanation.title}: ${retryItem.explanation.text}`
+					: '',
+				color: 'var(--k-best)'
+			};
+		if (retry.status === 'shown')
+			return {
+				kicker,
+				title: t('retry.best', { san: figurine(sanForUci(retryFen, retryBest)) }),
+				text: [
+					retry.fb ? `${retry.fb.title} ${retry.fb.text}` : '',
+					retryItem.explanation?.text ?? ''
+				]
+					.filter(Boolean)
+					.join(' '),
+				color: 'var(--k-mistake)'
+			};
+		return {
+			kicker,
+			title: prompt,
+			text: retry.fb
+				? `${retry.fb.title} ${retry.fb.text}`
+				: retry.status === 'checking'
+					? t('course.checking')
+					: t('retry.hint'),
+			color: retry.fb ? 'var(--k-mistake)' : 'var(--c-learn)'
+		};
+	});
+	const bar = $derived(retryBar ?? reviewBar);
+
 	/** nächster eigener Fehler nach dem aktuellen Zug (danach wieder von vorn) */
 	const nextMistake = $derived(myMistakes.find((r) => r.ply > ply) ?? myMistakes[0] ?? null);
 	function goNextMistake() {
@@ -800,8 +870,25 @@
 		>
 	</div>
 
+	{#if bar}
+		<CommentBar
+			kicker={bar.kicker}
+			title={bar.title}
+			text={bar.text}
+			color={bar.color}
+			testid="review-bar"
+		>
+			{#snippet icon()}
+				{@const k = reviewBar && !retryBar ? reviewBar.kind : null}
+				{@const KI = k ? KIND_ICON[k] : null}
+				{#if k && KI}<KI size={16} strokeWidth={3} />{:else if k}{KIND_GLYPH[
+						k
+					]}{:else}<GraduationCap size={16} />{/if}
+			{/snippet}
+		</CommentBar>
+	{/if}
 	<div class="arena">
-		<div class="board-col">
+		<div class="board-col" class:with-bar={!!bar}>
 			<div class="board-row">
 				<EvalBar score={evalHere} {orientation} />
 				<div class="board-wrap">
@@ -1624,6 +1711,25 @@
 				100%,
 				calc(100dvh - var(--dock-h) - var(--tabbar-space) - var(--safe-top) - 80px)
 			);
+		}
+		/* Kommentar steht über dem Brett (feste Höhe) */
+		.board-col.with-bar {
+			max-width: min(
+				100%,
+				calc(
+					100dvh - var(--dock-h) - var(--tabbar-space) - var(--safe-top) - 80px - var(--comment-h) -
+						0.5rem
+				)
+			);
+		}
+		/* beim Nachspielen: Aufgabe und Rückmeldung stehen oben, unten nur die Knöpfe */
+		.retry .r-step,
+		.retry .m-title,
+		.retry .m-text,
+		.retry .ok,
+		.retry .bad,
+		.retry .muted {
+			display: none;
 		}
 	}
 </style>

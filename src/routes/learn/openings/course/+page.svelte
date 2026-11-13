@@ -3,6 +3,8 @@
 	import { lineStars } from '#lib/training/stars.js';
 	import Stars from '#lib/ui/Stars.svelte';
 	import ColorBadge from '#lib/ui/ColorBadge.svelte';
+	import CommentBar from '#lib/ui/CommentBar.svelte';
+	import GraduationCap from '@lucide/svelte/icons/graduation-cap';
 	import Dock from '#lib/ui/Dock.svelte';
 	import { onMount, onDestroy, untrack } from 'svelte';
 	import { page } from '$app/state';
@@ -399,6 +401,92 @@
 		study = null;
 		view = 'overview';
 	}
+
+	// ── Kommentar über dem Brett (Handy): Erklärung, Rückmeldung oder Aufgabe ──
+	const FB_COLOR = {
+		playable: 'var(--k-good)',
+		dubious: 'var(--k-inaccuracy)',
+		bad: 'var(--k-mistake)'
+	};
+	const courseBar = $derived.by(() => {
+		if (view === 'study' && study) {
+			const name = study.kind === 'line' ? loc(study.line!.name) : loc(study.trap!.name);
+			if (si === 0)
+				return { kicker: name, title: t('course.studyIntro'), text: '', color: 'var(--c-learn)' };
+			const own = isOwnPly(course, si - 1);
+			const mistake = study.kind === 'trap' && si - 1 === study.trap!.mistake;
+			return {
+				kicker: mistake ? t('course.theMistake') : own ? t('course.you') : t('course.opponent'),
+				title: `${Math.ceil(si / 2)}${si % 2 === 1 ? '.' : '…'} ${figurine(studySan)}`,
+				text: studyNote ?? '',
+				color: mistake ? 'var(--k-mistake)' : own ? 'var(--c-learn)' : 'var(--text-3)'
+			};
+		}
+		if (view === 'quiz') {
+			const it = quiz[qi];
+			if (qState === 'done')
+				return {
+					kicker: t('course.quizTitle'),
+					title: t('course.quizDone', { n: qScore, m: quiz.length }),
+					text: '',
+					color: 'var(--k-best)'
+				};
+			if (!it) return null;
+			const kicker = `${t('course.quizTitle')} · ${qi + 1}/${quiz.length}`;
+			const note = it.line.notes[it.ply] ? loc(it.line.notes[it.ply]) : '';
+			if (qState === 'right')
+				return { kicker, title: t('course.quizCorrect'), text: note, color: 'var(--k-best)' };
+			if (qState === 'wrong')
+				return {
+					kicker,
+					title: t('course.quizWrong', { san: figurine(sanForUci(it.fen, it.uci)) }),
+					text: [qFeedback ? `${qFeedback.title} ${qFeedback.text}` : '', note]
+						.filter(Boolean)
+						.join(' '),
+					color: 'var(--k-mistake)'
+				};
+			return {
+				kicker,
+				title: t('course.quizPrompt', { line: loc(it.line.name) }),
+				text: '',
+				color: 'var(--c-learn)'
+			};
+		}
+		if (view === 'done')
+			return {
+				kicker: line ? loc(line.name) : loc(course.name),
+				title: t('course.lineDone'),
+				text: t('course.lineDoneText', { n: firstTry, m: ownTotal }),
+				color: 'var(--k-best)'
+			};
+		if (view === 'learn') {
+			const kicker = `${line ? loc(line.name) : loc(course.name)} · ${
+				status === 'await'
+					? t('course.yourMove')
+					: status === 'checking'
+						? t('course.checking')
+						: t('course.watch')
+			}`;
+			if (feedback)
+				return {
+					kicker,
+					title: feedback.title,
+					text: feedback.text,
+					color: FB_COLOR[feedback.kind],
+					state: 'feedback'
+				};
+			const last = log[0];
+			if (last)
+				return {
+					kicker,
+					title: `${last.who === 'you' ? t('course.you') : t('course.opponent')}: ${figurine(last.san)}`,
+					text: view === 'learn' ? last.text : '',
+					color: last.who === 'you' ? 'var(--c-learn)' : 'var(--text-3)'
+				};
+			return { kicker, title: t('course.yourMove'), text: '', color: 'var(--c-learn)' };
+		}
+		return null;
+	});
 </script>
 
 <svelte:head><title>{loc(course.name)} – Rookie</title></svelte:head>
@@ -520,8 +608,20 @@
 	<button class="back" onclick={toOverview}
 		><ArrowLeft size={18} /> {t('course.backToCourse')}</button
 	>
+	{#if courseBar}
+		<CommentBar
+			kicker={courseBar.kicker}
+			title={courseBar.title}
+			text={courseBar.text}
+			color={courseBar.color}
+			status={courseBar.state ?? ''}
+			testid="course-bar"
+		>
+			{#snippet icon()}<GraduationCap size={16} />{/snippet}
+		</CommentBar>
+	{/if}
 	<div class="arena">
-		<div class="board-col">
+		<div class="board-col" class:with-bar={!!courseBar}>
 			<Board
 				fen={studyGame.fen}
 				orientation={course.color}
@@ -604,8 +704,20 @@
 	<button class="back" onclick={toOverview}
 		><ArrowLeft size={18} /> {t('course.backToCourse')}</button
 	>
+	{#if courseBar}
+		<CommentBar
+			kicker={courseBar.kicker}
+			title={courseBar.title}
+			text={courseBar.text}
+			color={courseBar.color}
+			status={courseBar.state ?? ''}
+			testid="course-bar"
+		>
+			{#snippet icon()}<GraduationCap size={16} />{/snippet}
+		</CommentBar>
+	{/if}
 	<div class="arena">
-		<div class="board-col">
+		<div class="board-col" class:with-bar={!!courseBar}>
 			{#key qv}
 				<Board
 					fen={qGame?.fen ?? quiz[0]?.fen ?? ''}
@@ -641,16 +753,20 @@
 					<p class="prompt waiting">{t('course.quizPrompt', { line: loc(it.line.name) })}</p>
 					{#if qState === 'right'}
 						<p class="ok-text">{t('course.quizCorrect')}</p>
-						{#if it.line.notes[it.ply]}<p class="muted">{loc(it.line.notes[it.ply])}</p>{/if}
+						{#if it.line.notes[it.ply]}<p class="muted quiz-text">
+								{loc(it.line.notes[it.ply])}
+							</p>{/if}
 					{:else if qState === 'wrong'}
 						{#if qFeedback}<div class="fb {qFeedback.kind}">
 								<b>{qFeedback.title}</b>
 								<p>{qFeedback.text}</p>
 							</div>{/if}
-						<p>
+						<p class="quiz-text">
 							{t('course.quizWrong', { san: figurine(sanForUci(it.fen, it.uci)) })}
 						</p>
-						{#if it.line.notes[it.ply]}<p class="muted">{loc(it.line.notes[it.ply])}</p>{/if}
+						{#if it.line.notes[it.ply]}<p class="muted quiz-text">
+								{loc(it.line.notes[it.ply])}
+							</p>{/if}
 					{/if}
 					{#if qState !== 'await'}
 						<button
@@ -669,8 +785,20 @@
 	<button class="back" onclick={toOverview}
 		><ArrowLeft size={18} /> {t('course.backToCourse')}</button
 	>
+	{#if courseBar}
+		<CommentBar
+			kicker={courseBar.kicker}
+			title={courseBar.title}
+			text={courseBar.text}
+			color={courseBar.color}
+			status={courseBar.state ?? ''}
+			testid="course-bar"
+		>
+			{#snippet icon()}<GraduationCap size={16} />{/snippet}
+		</CommentBar>
+	{/if}
 	<div class="arena">
-		<div class="board-col">
+		<div class="board-col" class:with-bar={!!courseBar}>
 			<Board
 				{fen}
 				orientation={course.color}
@@ -718,8 +846,8 @@
 					</div>
 				</div>
 			{:else}
-				<!-- Platz für Anweisung, Rückmeldung und Tipp vorab reservieren (gemessen: bis 132 px) -->
-				<Dock reserve={136}>
+				<!-- Platz für Tipp-Knöpfe und Tipp-Text vorab reservieren; Anweisung und Rückmeldung stehen am Handy oben -->
+				<Dock reserve={96}>
 					<div class="prompt" class:waiting={status === 'await'}>
 						{#if status === 'checking'}
 							{t('course.checking')}
@@ -1336,6 +1464,27 @@
 				100%,
 				calc(100dvh - var(--dock-h) - var(--tabbar-space) - var(--safe-top) - 75px)
 			);
+		}
+		/* Kommentar über dem Brett (feste Höhe) */
+		.board-col.with-bar {
+			max-width: min(
+				100%,
+				calc(
+					100dvh - var(--dock-h) - var(--tabbar-space) - var(--safe-top) - 75px - var(--comment-h) -
+						0.5rem
+				)
+			);
+		}
+		/* diese Texte stehen am Handy oben im Kommentar */
+		.strip,
+		.study-card,
+		.prompt,
+		.ok-text,
+		.done-ico,
+		.done h2,
+		.fb,
+		.quiz-text {
+			display: none;
 		}
 	}
 </style>

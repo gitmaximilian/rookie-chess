@@ -1,5 +1,8 @@
 import { expect, test } from '@playwright/test';
 
+// Am Handy steht der Kommentar über dem Brett (CommentBar), am Desktop in der Seitenspalte:
+// Tests suchen deshalb den sichtbaren Text, egal an welcher Stelle.
+
 const PGN = `[White "alice"]
 [Black "rookietester"]
 [Result "1-0"]
@@ -29,15 +32,30 @@ test('Aus eigener Partie lernen: Fehler nachspielen', async ({ page, browserName
 	await page.goto('/import');
 	await page.getByLabel('Username', { exact: true }).fill('rookietester');
 	await page.getByRole('button', { name: /Import games/ }).click();
-	await expect(page.getByText(/1 new game imported/)).toBeVisible({ timeout: 120_000 });
+	await expect(
+		page
+			.getByText(/1 new game imported/)
+			.locator('visible=true')
+			.first()
+	).toBeVisible({ timeout: 120_000 });
 
 	await page.getByRole('link', { name: /View games/ }).click();
 	await page.locator('.gli').first().click();
 	const cta = page.getByRole('button', { name: /Replay your \d+ mistake/ });
 	await expect(cta).toBeVisible({ timeout: 60_000 });
 	await cta.click();
-	await expect(page.getByText(/Mistake 1 of \d+/)).toBeVisible();
-	await expect(page.getByText(/You played .+ Find a better move!/)).toBeVisible();
+	await expect(
+		page
+			.getByText(/Mistake 1 of \d+/)
+			.locator('visible=true')
+			.first()
+	).toBeVisible();
+	await expect(
+		page
+			.getByText(/You played .+ Find a better move!/)
+			.locator('visible=true')
+			.first()
+	).toBeVisible();
 	await page.getByRole('button', { name: 'Back to the analysis' }).click();
 	await expect(cta).toBeVisible();
 });

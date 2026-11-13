@@ -109,6 +109,8 @@
 	--tabbar-h: 58px;
 	--tabbar-gap: max(6px, calc(var(--safe-bottom) - 10px));
 	--tabbar-space: calc(var(--tabbar-h) + var(--tabbar-gap));
+	/* Kommentar über dem Brett (CommentBar.svelte, nur Handy): feste Höhe, damit das Brett nie springt */
+	--comment-h: 96px;
 	--sidebar-w: 248px;
 	--safe-top: env(safe-area-inset-top, 0px);
 	--safe-bottom: env(safe-area-inset-bottom, 0px);

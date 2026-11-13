@@ -28,6 +28,7 @@ export const de: Shape<typeof en> = {
 		legal: 'Impressum & Datenschutz'
 	},
 	common: {
+		more: 'Mehr',
 		close: 'Schließen',
 		next: 'Weiter',
 		back: 'Zurück',
@@ -179,6 +180,7 @@ export const de: Shape<typeof en> = {
 		event: 'Rookie – Partie gegen Bot'
 	},
 	coach: {
+		warning: 'Achtung',
 		tip: {
 			queenEarly:
 				'Tipp: Die Dame so früh herauszubringen, lässt den Gegner sie mit Tempo jagen. Erst Springer und Läufer!',
@@ -191,6 +193,7 @@ export const de: Shape<typeof en> = {
 			castle: 'Tipp: Schon Zug 9 und dein König steht noch in der Mitte – denk bald an die Rochade.'
 		},
 		hint: {
+			label: 'Tipp',
 			ask: 'Coach fragen',
 			more: 'Mehr Hilfe',
 			show: 'Zug zeigen',

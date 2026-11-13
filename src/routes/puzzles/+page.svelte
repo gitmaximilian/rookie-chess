@@ -1,4 +1,5 @@
 <script lang="ts">
+	import CommentBar from '#lib/ui/CommentBar.svelte';
 	import Dock from '#lib/ui/Dock.svelte';
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
@@ -15,6 +16,7 @@
 	import CalendarDays from '@lucide/svelte/icons/calendar-days';
 	import Target from '@lucide/svelte/icons/target';
 	import Check from '@lucide/svelte/icons/check';
+	import PuzzleIcon from '@lucide/svelte/icons/puzzle';
 	import X from '@lucide/svelte/icons/x';
 	import Info from '@lucide/svelte/icons/info';
 	import Board, { type Shape } from '#lib/ui/board/Board.svelte';
@@ -334,6 +336,40 @@
 						: t('puzzles.blackToMove')
 	);
 
+	// ── Kommentar über dem Brett (Handy): Aufgabe und Rückmeldung ──
+	const puzzleBar = $derived.by(() => {
+		if (!puzzle || status === 'empty' || status === 'error') return null;
+		const kicker =
+			puzzle.source === 'mistake'
+				? t('puzzles.fromGame')
+				: t('puzzles.puzzleRating', { r: puzzle.rating });
+		if (status === 'solved')
+			return {
+				kicker: `${kicker} · ${prompt}`,
+				title: usedHint ? t('puzzles.withHint') : t('puzzles.praise').split('|')[praiseIdx],
+				text: nextReview ? t('puzzles.reviewIn', { when: nextReview }) : '',
+				color: 'var(--k-best)'
+			};
+		if (status === 'failed')
+			return {
+				kicker: `${kicker} · ${prompt}`,
+				title: t('puzzles.noProblem'),
+				text: nextReview ? t('puzzles.reviewIn', { when: nextReview }) : '',
+				color: 'var(--k-mistake)'
+			};
+		return {
+			kicker,
+			title: prompt,
+			text:
+				run && run.mistakes > 0
+					? t('puzzles.tryAgain')
+					: puzzle.source === 'mistake'
+						? (puzzle.note ?? '')
+						: '',
+			color: run && run.mistakes > 0 ? 'var(--k-inaccuracy)' : 'var(--c-puzzle)'
+		};
+	});
+
 	function onKey(e: KeyboardEvent) {
 		if ((e.target as HTMLElement)?.tagName === 'INPUT') return;
 		if (
@@ -412,8 +448,25 @@
 		</button>
 	</nav>
 
+	{#if puzzleBar}
+		<CommentBar
+			kicker={puzzleBar.kicker}
+			title={puzzleBar.title}
+			text={puzzleBar.text}
+			color={puzzleBar.color}
+			testid="puzzle-bar"
+		>
+			{#snippet icon()}{#if status === 'solved'}<Check
+						size={16}
+						strokeWidth={3}
+					/>{:else if status === 'failed'}<Info size={16} />{:else}<PuzzleIcon
+						size={16}
+					/>{/if}{/snippet}
+		</CommentBar>
+	{/if}
+
 	<div class="arena">
-		<div class="board-col">
+		<div class="board-col" class:with-bar={!!puzzleBar}>
 			<Board
 				{fen}
 				{orientation}
@@ -480,7 +533,7 @@
 				{/if}
 
 				{#if status === 'solved' || status === 'failed'}
-					<Dock class="pz-dock" reserve={130}>
+					<Dock class="pz-dock" reserve={72}>
 						<div class="result" class:good={status === 'solved'}>
 							{#if status === 'solved'}
 								<p class="big">
@@ -516,7 +569,7 @@
 					</Dock>
 					<p class="kbd">{t('common.enterNext')}</p>
 				{:else}
-					<Dock class="pz-dock" reserve={130}>
+					<Dock class="pz-dock" reserve={72}>
 						{#if run && run.mistakes > 0}
 							<p class="try-again">{t('puzzles.tryAgain')}</p>
 						{/if}
@@ -970,6 +1023,23 @@
 				100%,
 				calc(100dvh - var(--dock-h) - var(--tabbar-space) - var(--safe-top) - 190px)
 			);
+		}
+		/* Aufgabe und Rückmeldung stehen über dem Brett (feste Höhe) */
+		.board-col.with-bar {
+			max-width: min(
+				100%,
+				calc(
+					100dvh - var(--dock-h) - var(--tabbar-space) - var(--safe-top) - 190px -
+						var(--comment-h) - 0.5rem
+				)
+			);
+		}
+		.turn-pill,
+		.meta .tag,
+		.result .big,
+		.result .sub,
+		.try-again {
+			display: none;
 		}
 	}
 </style>

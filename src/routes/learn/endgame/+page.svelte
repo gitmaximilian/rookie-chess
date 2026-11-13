@@ -7,6 +7,7 @@
 	import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import WifiOff from '@lucide/svelte/icons/wifi-off';
+	import CommentBar from '#lib/ui/CommentBar.svelte';
 	import Board, { type Shape } from '#lib/ui/board/Board.svelte';
 	import LessonIcon from '#lib/ui/LessonIcon.svelte';
 	import Stars from '#lib/ui/Stars.svelte';
@@ -217,6 +218,43 @@
 		verdict && verdict.status !== 'continue' ? t(verdict.message, verdict.params) : ''
 	);
 	const left = $derived(lesson ? Math.max(0, lesson.maxMoves - playerMoves) : 0);
+
+	// ── Kommentar über dem Brett (Handy): Theorie, Zug-Kommentar oder Ergebnis – feste Höhe ──
+	const EG_COLOR = {
+		best: 'var(--k-best)',
+		good: 'var(--k-good)',
+		slow: 'var(--k-inaccuracy)',
+		holds: 'var(--c-learn)',
+		warn: 'var(--k-mistake)'
+	};
+	const egBar = $derived.by(() => {
+		if (!lesson) return null;
+		if (theoryStep && theoryIdx !== null)
+			return {
+				kicker: t('endgame.theoryStep', { i: theoryIdx + 1, n: lesson.theory.length }),
+				title: lessonSteps(lesson)[theoryIdx],
+				text: '',
+				color: 'var(--c-learn)'
+			};
+		if (status === 'done' && verdict)
+			return {
+				kicker: goalText(lesson),
+				title: verdict.status === 'success' ? t('endgame.success') : t('endgame.fail'),
+				text: msg,
+				color: verdict.status === 'success' ? 'var(--k-best)' : 'var(--k-mistake)'
+			};
+		const kicker =
+			status === 'thinking'
+				? t('endgame.opponent')
+				: `${t('endgame.yourTurn')} · ${t('endgame.movesLeft', { n: left })}`;
+		if (coach) return { kicker, title: coach.text, text: '', color: EG_COLOR[coach.kind] };
+		return {
+			kicker,
+			title: goalText(lesson),
+			text: t('endgame.youPlay', { side: colorName(lesson.player) }),
+			color: 'var(--c-learn)'
+		};
+	});
 </script>
 
 <svelte:head
@@ -232,6 +270,17 @@
 		{/if}
 	</div>
 
+	{#if egBar}
+		<CommentBar
+			kicker={egBar.kicker}
+			title={egBar.title}
+			text={egBar.text}
+			color={egBar.color}
+			testid="endgame-bar"
+		>
+			{#snippet icon()}{#if lesson}<LessonIcon icon={lesson.icon} size={16} />{/if}{/snippet}
+		</CommentBar>
+	{/if}
 	<div class="arena">
 		<div class="board-col">
 			<Board
@@ -670,6 +719,17 @@
 		from {
 			opacity: 0;
 			transform: translateY(6px);
+		}
+	}
+
+	/* Handy: Zug-Kommentar, Theorie und Ergebnis stehen über dem Brett (CommentBar) */
+	@media (max-width: 767px) {
+		.coach,
+		.t-text,
+		.result h2,
+		.result p,
+		.state {
+			display: none;
 		}
 	}
 </style>
