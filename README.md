@@ -2,12 +2,19 @@
 
 A chess trainer for beginners as a Progressive Web App for iPhone, iPad and Mac – completely free, offline-capable, no App Store, no account, no tracking. English and German.
 
-**Live:** https://chess.maximilianauer.at · **Version:** 0.2.0
+**Live:** https://chess.maximilianauer.at · **Version:** 0.2.1
 
 | Home                                                                                                                                                    | Coach                                                                                                                    | Play                                                                                                   | Game review                                                                                                       |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
 | <img src="docs/screenshots/home-light.png" width="200" alt="Home: daily plan as the largest tile, then puzzle rating, strength, daily goal and streak"> | <img src="docs/screenshots/coach-light.png" width="200" alt="Coach tab: current rating, win rate and accuracy as tiles"> | <img src="docs/screenshots/play-light.png" width="200" alt="Playing a bot with the coach switched on"> | <img src="docs/screenshots/analysis-light.png" width="200" alt="Game review: each move classified and explained"> |
 | <img src="docs/screenshots/home-dark.png" width="200" alt="Home in dark mode">                                                                          | <img src="docs/screenshots/coach-dark.png" width="200" alt="Coach tab in dark mode">                                     | <img src="docs/screenshots/play-dark.png" width="200" alt="Play in dark mode">                         | <img src="docs/screenshots/analysis-dark.png" width="200" alt="Game review in dark mode">                         |
+
+**Desktop** (Mac, iPad landscape)
+
+| Light                                                                                                                                                                                     | Dark                                                                                                         |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| <img src="docs/screenshots/desktop-home-light.png" width="420" alt="Home on desktop in light mode: sidebar, daily plan, daily goal, streak, puzzle rating, strength, form and stars">     | <img src="docs/screenshots/desktop-home-dark.png" width="420" alt="Home on desktop in dark mode">            |
+| <img src="docs/screenshots/desktop-analysis-light.png" width="420" alt="Game review on desktop in light mode: a mistake on the board, the engine's top moves and accuracy per move type"> | <img src="docs/screenshots/desktop-analysis-dark.png" width="420" alt="Game review on desktop in dark mode"> |
 
 Screenshots use generated sample data (`scripts/screenshots/`), not real games.
 
