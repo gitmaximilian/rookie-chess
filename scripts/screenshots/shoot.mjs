@@ -16,7 +16,10 @@ const args = Object.fromEntries(
 	process.argv
 		.slice(3)
 		.filter((a) => a.startsWith('--'))
-		.map((a) => a.slice(2).split('='))
+		.map((a) => {
+			const i = a.indexOf('=');
+			return i < 0 ? [a.slice(2), '1'] : [a.slice(2, i), a.slice(i + 1)];
+		})
 );
 const out = process.argv[2] ?? 'screens';
 const base = args.base ?? 'http://localhost:4173';
@@ -41,6 +44,21 @@ const DEFAULT_ROUTES = [
 ];
 const routes = args.routes ? args.routes.split(',') : DEFAULT_ROUTES;
 const fixture = JSON.parse(readFileSync(new URL('./fixture.json', import.meta.url), 'utf8'));
+// --playing=1: laufende Partie gegen Tina (für das Play-Bild)
+if (args.playing === '1') {
+	const g = fixture.games.find((x) => x.myColor === 'white');
+	fixture.settings.currentGame = {
+		botId: 'tina',
+		myColor: 'white',
+		moves: g.moves.slice(0, 14),
+		startFen: g.startFen,
+		tc: null,
+		clocks: null,
+		hints: 0,
+		undos: 0,
+		coach: true
+	};
+}
 
 mkdirSync(out, { recursive: true });
 
@@ -132,12 +150,19 @@ for (const theme of themes) {
 			await page.goto(base + r);
 			await page.waitForLoadState('networkidle').catch(() => {});
 			await page.waitForTimeout(r.includes('game=') ? 2500 : 1200);
+			// --press=N: in einer Partie N Züge vorspulen (Pfeil rechts)
+			if (args.press && r.includes('game=')) {
+				for (let k = 0; k < Number(args.press); k++) await page.keyboard.press('ArrowRight');
+				await page.waitForTimeout(800);
+			}
 			const o = await page.evaluate(() => ({
 				sw: document.documentElement.scrollWidth,
 				cw: document.documentElement.clientWidth
 			}));
 			if (o.sw > o.cw) overflow.push(`${theme} ${w}x${h} ${r}: ${o.sw} > ${o.cw}`);
-			const name = `${(r === '/' ? 'home' : r.slice(1)).replace(/[/?=&]/g, '_')}-${w}x${h}-${theme}.png`;
+			const name = args.names
+				? `${args.names.split(',')[routes.indexOf(r)]}-${theme}.png`
+				: `${(r === '/' ? 'home' : r.slice(1)).replace(/[/?=&]/g, '_')}-${w}x${h}-${theme}.png`;
 			await page.screenshot({ path: join(out, name), fullPage: args.full === '1' });
 		}
 		await ctx.close();
