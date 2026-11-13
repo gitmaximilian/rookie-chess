@@ -1357,7 +1357,8 @@ export const de: Shape<typeof en> = {
 		finish: 'Fertig',
 		exit: 'Beenden',
 		goTo: (p: P) => `Zu Fehler ${p.n}`,
-		cta: (p: P) => `Deine ${p.n} ${p.n === 1 ? 'Fehler' : 'Fehler'} nachspielen`,
+		cta: (p: P) =>
+			Number(p.n) === 1 ? 'Deinen Fehler nachspielen' : `Deine ${p.n} Fehler nachspielen`,
 		ctaText: 'Finde den besseren Zug selbst – so lernst du am meisten aus einer Partie.',
 		step: (p: P) => `Fehler ${p.i} von ${p.n}`,
 		prompt: (p: P) => `Du hast ${p.move} gespielt. Finde einen besseren Zug!`,

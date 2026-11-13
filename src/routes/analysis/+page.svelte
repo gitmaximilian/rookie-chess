@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Dock from '#lib/ui/Dock.svelte';
-	import { onDestroy, onMount } from 'svelte';
+	import { onDestroy, onMount, tick } from 'svelte';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -460,14 +460,16 @@
 			fb: null
 		};
 		retryV++;
-		toBoard();
+		void toBoard();
 	}
 
 	/** Brett und Aufgabe in den Blick holen (der Start-Knopf liegt am Handy unter dem Brett) */
-	function toBoard() {
+	async function toBoard() {
 		if (typeof window === 'undefined') return;
-		const smooth = !matchMedia('(prefers-reduced-motion: reduce)').matches;
-		window.scrollTo({ top: 0, behavior: smooth ? 'smooth' : 'auto' });
+		// erst nach dem Umbau der Seite scrollen (Kommentar, Brett, Leiste wechseln) –
+		// sonst bricht Safari das Scrollen ab oder die Scroll-Verankerung holt es zurück
+		await tick();
+		requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'instant' }));
 	}
 
 	/** zu einem Fehler springen – schon gelöste zeigen ihr Ergebnis */
@@ -539,7 +541,7 @@
 		const target = retryItem?.ply;
 		retry = null;
 		if (target) go(target);
-		toBoard();
+		void toBoard();
 	}
 
 	const retryShapes = $derived.by<Shape[]>(() => {
