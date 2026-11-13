@@ -1,7 +1,7 @@
 /**
  * Simuliert den Umzug chess.maximilianauer.at → rookie.maximilianauer.at lokal:
  * beide Adressen werden per Playwright auf den Vorschau-Server umgeleitet (mit den Headern aus static/_headers).
- *   node scripts/screenshots/move-sim.mjs [webkit|chromium]
+ *   node scripts/screenshots/move-sim.mjs [webkit|chromium] [--live]   (--live: echte Adressen)
  */
 import { webkit, chromium } from '@playwright/test';
 import { readFileSync } from 'node:fs';
@@ -10,25 +10,33 @@ const engine = process.argv[2] === 'chromium' ? chromium : webkit;
 const base = 'http://localhost:4173';
 const fixture = JSON.parse(readFileSync(new URL('./fixture.json', import.meta.url), 'utf8'));
 const browser = await engine.launch();
-const ctx = await browser.newContext({ serviceWorkers: 'block', viewport: { width: 393, height: 852 } });
-await ctx.route(/https:\/\/(chess|rookie)\.maximilianauer\.at\/.*/, async (route) => {
-	const u = new URL(route.request().url());
-	const path = u.pathname === '/move-out' ? '/move-out.html' : u.pathname;
-	const res = await fetch(base + path + u.search);
-	const headers = Object.fromEntries(res.headers);
-	delete headers['content-encoding'];
-	delete headers['content-length'];
-	// wie static/_headers
-	if (!/^\/move-(in|out)/.test(u.pathname)) {
-		headers['cross-origin-opener-policy'] = 'same-origin';
-		headers['cross-origin-embedder-policy'] = 'require-corp';
-	} else {
-		delete headers['cross-origin-opener-policy'];
-		delete headers['cross-origin-embedder-policy'];
-	}
-	headers['cross-origin-resource-policy'] = 'same-origin';
-	await route.fulfill({ status: res.status, headers, body: Buffer.from(await res.arrayBuffer()) });
+const ctx = await browser.newContext({
+	serviceWorkers: 'block',
+	viewport: { width: 393, height: 852 }
 });
+if (!process.argv.includes('--live'))
+	await ctx.route(/https:\/\/(chess|rookie)\.maximilianauer\.at\/.*/, async (route) => {
+		const u = new URL(route.request().url());
+		const path = u.pathname === '/move-out' ? '/move-out.html' : u.pathname;
+		const res = await fetch(base + path + u.search);
+		const headers = Object.fromEntries(res.headers);
+		delete headers['content-encoding'];
+		delete headers['content-length'];
+		// wie static/_headers
+		if (!/^\/move-(in|out)/.test(u.pathname)) {
+			headers['cross-origin-opener-policy'] = 'same-origin';
+			headers['cross-origin-embedder-policy'] = 'require-corp';
+		} else {
+			delete headers['cross-origin-opener-policy'];
+			delete headers['cross-origin-embedder-policy'];
+		}
+		headers['cross-origin-resource-policy'] = 'same-origin';
+		await route.fulfill({
+			status: res.status,
+			headers,
+			body: Buffer.from(await res.arrayBuffer())
+		});
+	});
 const page = await ctx.newPage();
 page.on('console', (m) => console.log('console:', m.type(), m.text()));
 // 1. Daten auf der alten Adresse anlegen (vor dem Laden der App: Umzug abschalten über leere Seite)
@@ -49,7 +57,7 @@ await page.route('https://chess.maximilianauer.at/move-off', (r) => r.fulfill({ 
 const seedPage = await ctx.newPage();
 // 204 auf die Weiterleitung: Seite bleibt stehen, damit Dexie das Schema anlegt
 await seedPage.route('https://rookie.maximilianauer.at/**', (r) => r.fulfill({ status: 204 }));
-await seedPage.goto('https://chess.maximilianauer.at/about');
+await seedPage.goto('https://chess.maximilianauer.at/about', { waitUntil: 'domcontentloaded' });
 await seedPage.waitForFunction(async () => {
 	const dbs = await indexedDB.databases();
 	return dbs.some((d) => d.name === 'rookie');
@@ -67,8 +75,14 @@ const n = await seedPage.evaluate(async (f) => {
 			tx.oncomplete = res;
 			tx.onerror = () => rej(tx.error);
 		});
-	await put('games', f.games.map((g, i) => ({ ...g, id: i + 1 })));
-	await put('puzzleAttempts', f.puzzleAttempts.map((a, i) => ({ ...a, id: i + 1 })));
+	await put(
+		'games',
+		f.games.map((g, i) => ({ ...g, id: i + 1 }))
+	);
+	await put(
+		'puzzleAttempts',
+		f.puzzleAttempts.map((a, i) => ({ ...a, id: i + 1 }))
+	);
 	await put('activity', f.activity);
 	db.close();
 	return f.games.length;
