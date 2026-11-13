@@ -33,7 +33,19 @@ const MAX_BLOB = 1_900_000;
 const SESSION_COOKIE = 'rk_session';
 const CHALLENGE_COOKIE = 'rk_challenge';
 
-const ALLOWED_HOSTS = new Set(['chess.maximilianauer.at', 'localhost', '127.0.0.1']);
+const ALLOWED_HOSTS = new Set([
+	'rookie.maximilianauer.at',
+	'chess.maximilianauer.at',
+	'localhost',
+	'127.0.0.1'
+]);
+/**
+ * Passkeys wurden unter der früheren Adresse chess.maximilianauer.at angelegt und bleiben an sie gebunden.
+ * Die neue Adresse nutzt dieselbe Relying-Party-ID; erlaubt wird das über
+ * https://chess.maximilianauer.at/.well-known/webauthn („Related Origin Requests“).
+ */
+const PASSKEY_RP_ID = 'chess.maximilianauer.at';
+const PASSKEY_HOSTS = new Set(['rookie.maximilianauer.at', 'chess.maximilianauer.at']);
 
 // ───────────────────────────── Hilfen ─────────────────────────────
 
@@ -84,7 +96,10 @@ interface Rp {
 function relyingParty(req: Request): Rp | null {
 	const url = new URL(req.url);
 	if (!ALLOWED_HOSTS.has(url.hostname) && !url.hostname.endsWith('.pages.dev')) return null;
-	return { rpID: url.hostname, origin: url.origin };
+	return {
+		rpID: PASSKEY_HOSTS.has(url.hostname) ? PASSKEY_RP_ID : url.hostname,
+		origin: url.origin
+	};
 }
 
 /** Schutz vor Cross-Site-Anfragen: nur gleiche Herkunft, nur JSON/Binär */

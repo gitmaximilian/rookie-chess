@@ -4,7 +4,7 @@
  */
 import { webkit, devices } from '@playwright/test';
 const out = process.argv[2] ?? 'live.png';
-const url = process.argv[3] ?? 'https://chess.maximilianauer.at/';
+const url = process.argv[3] ?? 'https://rookie.maximilianauer.at/';
 const b = await webkit.launch();
 const ctx = await b.newContext({ ...devices['iPhone 15'] });
 await ctx.addInitScript(() => {

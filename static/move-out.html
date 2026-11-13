@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="de">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="robots" content="noindex" />
+		<title>Rookie</title>
+		<style>
+			body {
+				margin: 0;
+				min-height: 100dvh;
+				display: grid;
+				place-items: center;
+				font: 600 1rem/1.4 system-ui, sans-serif;
+				background: #f6f3ee;
+				color: #1d1b18;
+			}
+			@media (prefers-color-scheme: dark) {
+				body {
+					background: #141311;
+					color: #f2efe9;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<p>Rookie zieht um … / Rookie is moving …</p>
+		<script>
+			// Umzug chess.maximilianauer.at → rookie.maximilianauer.at (siehe src/lib/move/move.ts):
+			// alle Daten dieser Adresse lesen und im selben Tab per window.name mitnehmen.
+			(async () => {
+				const NEW = 'https://rookie.maximilianauer.at';
+				const to = new URLSearchParams(location.search).get('to') || '/';
+				const fail = () => location.replace('/?move=failed');
+				try {
+					const db = await new Promise((res, rej) => {
+						const r = indexedDB.open('rookie');
+						r.onsuccess = () => res(r.result);
+						r.onerror = () => rej(r.error);
+					});
+					const tables = {};
+					for (const name of db.objectStoreNames) {
+						tables[name] = await new Promise((res, rej) => {
+							const q = db.transaction(name).objectStore(name).getAll();
+							q.onsuccess = () => res(q.result);
+							q.onerror = () => rej(q.error);
+						});
+					}
+					db.close();
+					const local = {};
+					for (const k of ['board', 'lang', 'onboarded', 'sound', 'soundStyle', 'theme']) {
+						const v = localStorage.getItem('rookie:' + k);
+						if (v !== null) local['rookie:' + k] = v;
+					}
+					const json = JSON.stringify({ tables, local });
+					// zwei Wege, damit es in jedem Browser ankommt: window.name (Chrome, Firefox)
+					// und gepackt im #-Teil der Adresse (Safari) – der #-Teil geht nie an einen Server
+					window.name = 'rookie-move:' + json;
+					let hash = '';
+					try {
+						const gz = await new Response(
+							new Blob([json]).stream().pipeThrough(new CompressionStream('gzip'))
+						).arrayBuffer();
+						let bin = '';
+						const bytes = new Uint8Array(gz);
+						for (let i = 0; i < bytes.length; i += 0x8000)
+							bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+						const b64 = btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+						if (b64.length < 1_800_000) hash = '#d=' + b64;
+					} catch (e) {
+						/* ohne Kompression bleibt window.name */
+					}
+					localStorage.setItem('rookie:moved', '1');
+					location.replace(NEW + '/move-in?to=' + encodeURIComponent(to) + hash);
+				} catch (e) {
+					fail();
+				}
+			})();
+		</script>
+	</body>
+</html>

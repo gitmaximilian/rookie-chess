@@ -25,6 +25,8 @@
 		syncState
 	} from '#lib/import/sync.svelte.js';
 	import type { LayoutProps } from './$types';
+	import MoveNotice from '#lib/move/MoveNotice.svelte';
+	import { isOldHost, isStandalone } from '#lib/move/move.js';
 
 	let { children }: LayoutProps = $props();
 	let needRefresh = $state(false);
@@ -32,6 +34,9 @@
 
 	let newGames = $state(0);
 	let onboarding = $state(false);
+	// Umzug: /move-in ist nur der unsichtbare Empfänger, die alte Adresse leitet weiter
+	const receiver = page.url.pathname === '/move-in';
+	let oldHost = $state(false);
 
 	async function sync() {
 		await autoSync(page.url.pathname);
@@ -43,7 +48,11 @@
 	}
 
 	onMount(async () => {
+		if (receiver) return;
 		i18n.init();
+		oldHost = isOldHost();
+		// im Browser übernimmt die Umzugs-Anzeige; nur die Home-Bildschirm-App läuft hier weiter
+		if (oldHost && !isStandalone()) return;
 		initInstall();
 		// Einstieg nur für ganz neue Nutzer (Test-/Sync-Umgebungen können ihn per localStorage abschalten)
 		let seen = false;
@@ -87,7 +96,7 @@
 
 	// Weicher Seitenwechsel ohne View Transitions: Safari fotografiert dabei die Seite,
 	// wodurch die Tab-Leiste kurz verschwindet. Hier bewegt sich nur der Inhalt.
-	let mainEl: HTMLElement;
+	let mainEl = $state<HTMLElement>();
 	afterNavigate(({ from, to, type }) => {
 		if (to && busyRoute(to.url.pathname)) pauseBackground();
 		else if (type !== 'enter') void analyseInBackground();
@@ -107,35 +116,41 @@
 	{#if pwaInfo}<link rel="manifest" href="/manifest.webmanifest" />{/if}
 </svelte:head>
 
-<Sidebar />
-
-<main bind:this={mainEl}>
+{#if receiver}
 	{@render children()}
-</main>
+{:else}
+	<Sidebar />
 
-<TabBar />
+	<main bind:this={mainEl}>
+		{@render children()}
+	</main>
 
-{#if onboarding}<Onboarding
-		onclose={() => {
-			onboarding = false;
-			document.documentElement.removeAttribute('data-first-run');
-		}}
-	/>{:else}<InstallPrompt />{/if}
+	<TabBar />
 
-{#if newGames > 0}
-	<div role="status">
-		<a class="update synced" href={resolve('/analysis')} onclick={() => (newGames = 0)}>
-			{t('import.synced', { n: newGames })}
-		</a>
-	</div>
-{/if}
+	{#if onboarding}<Onboarding
+			onclose={() => {
+				onboarding = false;
+				document.documentElement.removeAttribute('data-first-run');
+			}}
+		/>{:else}<InstallPrompt />{/if}
 
-{#if needRefresh}
-	<div class="update" role="status">
-		<span>{t('common.updateAvailable')}</span>
-		<button onclick={() => updateSW?.(true)}>{t('common.reload')}</button>
-		<button class="x" onclick={() => (needRefresh = false)} aria-label="×">×</button>
-	</div>
+	{#if newGames > 0}
+		<div role="status">
+			<a class="update synced" href={resolve('/analysis')} onclick={() => (newGames = 0)}>
+				{t('import.synced', { n: newGames })}
+			</a>
+		</div>
+	{/if}
+
+	{#if needRefresh}
+		<div class="update" role="status">
+			<span>{t('common.updateAvailable')}</span>
+			<button onclick={() => updateSW?.(true)}>{t('common.reload')}</button>
+			<button class="x" onclick={() => (needRefresh = false)} aria-label="×">×</button>
+		</div>
+	{/if}
+
+	{#if oldHost}<MoveNotice />{/if}
 {/if}
 
 <style>

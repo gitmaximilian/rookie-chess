@@ -27,6 +27,23 @@ export const de: Shape<typeof en> = {
 		foot: 'Kostenlos & Open Source',
 		legal: 'Impressum & Datenschutz'
 	},
+	move: {
+		title: 'Rookie hat eine neue Adresse',
+		sending: 'Rookie zieht um – deine Daten kommen mit …',
+		address: 'rookie.maximilianauer.at',
+		pwaText:
+			'Diese App läuft noch unter der alten Adresse. Lege Rookie neu auf den Home-Bildschirm und nimm deine Daten mit:',
+		step1: 'Sicherung speichern (Knopf unten).',
+		step2: 'In Safari rookie.maximilianauer.at öffnen → Teilen → Zum Home-Bildschirm.',
+		step3: 'In der neuen App: Einstellungen → Sicherung laden. Danach kannst du diese App löschen.',
+		account: 'Mit Rookie-Konto genügt es, dich in der neuen App anzumelden.',
+		failText:
+			'Die Daten konnten nicht automatisch übertragen werden. Speichere eine Sicherung und lade sie unter der neuen Adresse in den Einstellungen.',
+		save: 'Sicherung speichern',
+		open: 'Neue Adresse öffnen',
+		retry: 'Nochmal versuchen',
+		later: 'Später'
+	},
 	common: {
 		more: 'Mehr',
 		close: 'Schließen',

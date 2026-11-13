@@ -19,6 +19,23 @@ export const en = {
 		foot: 'Free & open source',
 		legal: 'Legal notice & privacy'
 	},
+	move: {
+		title: 'Rookie has a new address',
+		sending: 'Rookie is moving – bringing your data along …',
+		address: 'rookie.maximilianauer.at',
+		pwaText:
+			'This app still runs on the old address. Add Rookie to your Home Screen again and take your data with you:',
+		step1: 'Save a backup (button below).',
+		step2: 'Open rookie.maximilianauer.at in Safari → Share → Add to Home Screen.',
+		step3: 'In the new app: Settings → Load backup. Then you can delete this app.',
+		account: 'With a Rookie account, just sign in in the new app.',
+		failText:
+			'Your data could not be moved automatically. Save a backup and load it on the new address in Settings.',
+		save: 'Save backup',
+		open: 'Open new address',
+		retry: 'Try again',
+		later: 'Later'
+	},
 	common: {
 		more: 'More',
 		close: 'Close',

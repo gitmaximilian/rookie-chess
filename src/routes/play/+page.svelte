@@ -612,7 +612,7 @@
 				date: Date.now(),
 				pgn: game.toPgn({
 					Event: t('play.event'),
-					Site: 'chess.maximilianauer.at',
+					Site: 'rookie.maximilianauer.at',
 					Date: new Date().toISOString().slice(0, 10).replaceAll('-', '.'),
 					White: myColor === 'white' ? t('common.you') : bot.name,
 					Black: myColor === 'black' ? t('common.you') : bot.name,

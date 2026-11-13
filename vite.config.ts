@@ -82,6 +82,8 @@ export default defineConfig({
 					globPatterns: ['**/*.{woff2,wasm}', '**/openings.json'],
 					globIgnores: ['**/*vietnamese*', '**/sw.js', '**/workbox-*.js'],
 					navigateFallback: '/',
+					// Umzugs-Empfänger immer frisch vom Server (eigene Header, siehe static/_headers)
+					navigateFallbackDenylist: [/^\/move-(in|out)/],
 					// /learn/endgame?id=… usw. sollen die vorgerenderte Seite treffen
 					ignoreURLParametersMatching: [/.*/],
 					cleanupOutdatedCaches: true,

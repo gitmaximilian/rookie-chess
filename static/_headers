@@ -17,3 +17,19 @@
 
 /sw.js
   Cache-Control: no-cache
+
+# Passkeys der früheren Adresse auch unter rookie.maximilianauer.at (Related Origin Requests)
+/.well-known/webauthn
+  Content-Type: application/json
+  ! Cross-Origin-Resource-Policy
+  Cross-Origin-Resource-Policy: cross-origin
+
+# Umzugs-Empfänger (siehe src/lib/move/move.ts)
+/move-in
+  ! Cross-Origin-Opener-Policy
+  ! Cross-Origin-Embedder-Policy
+
+# Umzug im selben Tab: ohne Isolation, sonst leert der Browser window.name beim Wechsel
+/move-out
+  ! Cross-Origin-Opener-Policy
+  ! Cross-Origin-Embedder-Policy

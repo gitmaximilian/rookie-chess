@@ -2,7 +2,7 @@
 
 A chess trainer for beginners as a Progressive Web App for iPhone, iPad and Mac – completely free, offline-capable, no App Store, no account, no tracking. English and German.
 
-**Live:** https://chess.maximilianauer.at · **Version:** 0.2.1
+**Live:** https://rookie.maximilianauer.at · **Version:** 0.2.1
 
 | Home                                                                                                                                                    | Coach                                                                                                                    | Play                                                                                                   | Game review                                                                                                       |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
@@ -88,14 +88,14 @@ All UI text lives in `src/lib/i18n/en.ts` (default) and `src/lib/i18n/de.ts`. A 
 
 1. Repository on GitHub, connected to a Cloudflare Pages project.
 2. Build command `npm run build`, output directory `build`, environment variable `NODE_VERSION = 22`.
-3. Custom domain `chess.maximilianauer.at` (Pages → Custom domains).
+3. Custom domains `rookie.maximilianauer.at` (and the former `chess.maximilianauer.at`, which hands data over and redirects) (Pages → Custom domains).
 4. Every push to `main` deploys automatically.
 
 [`static/_headers`](static/_headers) sets COOP/COEP so Stockfish can use multiple threads.
 
 ### Install on iPhone / iPad
 
-Safari → open https://chess.maximilianauer.at → **Share** → **Add to Home Screen**.
+Safari → open https://rookie.maximilianauer.at → **Share** → **Add to Home Screen**.
 
 ### Install on Mac
 

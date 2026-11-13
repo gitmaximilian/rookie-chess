@@ -8,7 +8,7 @@ await ctx.addInitScript(() => {
 	localStorage.setItem('rookie:installDismissed', '9999999999999');
 });
 const p = await ctx.newPage();
-await p.goto('https://chess.maximilianauer.at/play', { waitUntil: 'networkidle' });
+await p.goto('https://rookie.maximilianauer.at/play', { waitUntil: 'networkidle' });
 await p
 	.getByRole('button', { name: /Start game|Partie starten/ })
 	.first()
