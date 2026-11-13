@@ -2,7 +2,7 @@
 
 A chess trainer for beginners as a Progressive Web App for iPhone, iPad and Mac – completely free, offline-capable, no App Store, no account, no tracking. English and German.
 
-**Live:** https://rookie.maximilianauer.at · **Version:** 0.2.1
+**Live:** https://rookie.maximilianauer.at · **Version:** 0.3.0
 
 | Home                                                                                                                                                    | Coach                                                                                                                    | Play                                                                                                   | Game review                                                                                                       |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
@@ -22,9 +22,10 @@ Screenshots use generated sample data (`scripts/screenshots/`), not real games.
 
 - **Play** against 8 bots with personality (≈ 400–1650) – Stockfish 19 (WebAssembly) in the browser, hints, takebacks, optional clock
 - **Play with a coach** – feedback on every move, warnings about attacked pieces, take back mistakes with an explanation
-- **Daily plan** – a personal training plan every day, built from your weaknesses and due reviews; it is always the first tile on Home, with one clear next step
+- **Daily plan** – a personal training plan every day with one clear next step: puzzles on your focus, due reviews, a game with the coach when you haven't played for a while, and the next lesson
+- **One focus** – Rookie picks the single most important thing to work on (the mistake you make most in your own games, otherwise your weakest puzzle theme); Home and the Coach tab always name the same one
 - **Progress at a glance** – Home shows puzzle rating with trend, estimated strength on the way to 1200, daily goal, streak, form and stars as tiles
-- **Coach tab** – how you are playing right now (rating, win rate, accuracy, blunders per game), a five-sided skill profile, your last 30 games, accuracy per game and concrete things to work on
+- **Coach tab** – how you are playing right now (rating, win rate, accuracy, blunders per game), your focus and next steps, a five-sided skill profile and your last 30 games; details (rating history, accuracy per game, typical mistakes, insights, openings) in Statistics
 - **Stars** – every lesson, opening line and endgame earns up to three stars; progress per area in your profile
 - **Tactics** – fork, pin, skewer, discovered attack, back-rank mate: explained, then practised with puzzles
 - **Puzzle Storm** and **play a friend** on one device
@@ -40,7 +41,7 @@ Screenshots use generated sample data (`scripts/screenshots/`), not real games.
 - **Optional account** – passkey sign-in (no email, no password), progress synced across devices; export and delete at any time
 - **Install prompt** on phones – one-tap install on Android, step-by-step guide on iPhone/iPad
 - Calm tile-based design with pastel areas and monospace numbers; contrast checked against WCAG AA (`node scripts/contrast.mjs`)
-- Light/dark mode, English/German, 7 board themes, 6 piece sets, animation speed, 3 sound styles, backup export/import, works offline
+- Light/dark mode, English/German, 7 board themes, 6 piece sets, animation speed, 3 sound styles, backup export/import (restoring merges with your current data – nothing is lost), works offline
 
 ## Development
 
