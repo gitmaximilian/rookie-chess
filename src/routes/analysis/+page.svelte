@@ -649,7 +649,8 @@
 	/>
 
 	<div class="hub">
-		<LinkedAccounts collapsed={gameCount > 0} />
+		<!-- ohne Partien ist das Verknüpfen der erste Schritt, sonst erst nach den Kennzahlen -->
+		{#if !loading && gameCount === 0}<LinkedAccounts />{/if}
 		{#if form.length >= 3 || brilliant || mistakeCount > 0}
 			<BentoGrid label={t('analysis.title')} testid="games-bento">
 				{#if form.length >= 3}
@@ -702,6 +703,7 @@
 				{/if}
 			</BentoGrid>
 		{/if}
+		{#if !loading && gameCount > 0}<LinkedAccounts collapsed />{/if}
 		{#if loading || gameCount > 0 || filter !== 'all'}
 			<div class="hub-actions">
 				<a class="btn secondary board-btn" href={resolve('/analysis/board')}

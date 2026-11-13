@@ -111,8 +111,6 @@
 </PageHeader>
 
 <div class="wrap">
-	<LinkedAccounts collapsed />
-
 	<BentoGrid label={t('profile.title')} testid="profile-tiles">
 		{#each tiles as tile (tile.label)}
 			<StatTile
@@ -141,6 +139,8 @@
 			<ActivityHeatmap rows={activity} />
 		</section>
 	</div>
+
+	<StarsOverview />
 
 	<div class="duo">
 		{#each [{ title: t('profile.weakest'), list: weak, cls: 'weak' }, { title: t('profile.strongest'), list: strong, cls: 'strong' }] as grp (grp.cls)}
@@ -172,7 +172,7 @@
 		{/each}
 	</div>
 
-	<StarsOverview />
+	<LinkedAccounts collapsed />
 
 	<nav class="links">
 		<a href={resolve('/analysis')} class="row card pressable">

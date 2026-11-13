@@ -109,6 +109,32 @@
 	{#each [0, 1, 2, 3] as i (i)}<div class="skeleton tile-sk" data-size="s"></div>{/each}
 {:else}
 	<StatTile
+		tone="learn"
+		label={t('summary.goal')}
+		value={d.todayPuzzles}
+		unit={`/${d.goal}`}
+		sub={d.todayPuzzles >= d.goal
+			? t('summary.goalDone')
+			: t('summary.goalLeft', { n: d.goal - d.todayPuzzles })}
+		href={resolve('/puzzles')}
+		testid="tile-goal"
+	>
+		<span class="bar" aria-hidden="true"><i style:width="{goalPct}%"></i></span>
+	</StatTile>
+
+	<StatTile
+		tone="play"
+		label={t('summary.streak')}
+		value={d.streak.days}
+		unit={` ${t('summary.streakDays', { n: d.streak.days })}`}
+		sub={d.streak.todayDone ? t('summary.streakDone') : t('summary.streakOpen')}
+		spark={d.last14}
+		bars
+		aria={t('home.streak')}
+		testid="tile-streak"
+	/>
+
+	<StatTile
 		tone="puzzle"
 		label={t('summary.puzzle')}
 		value={`${d.puzzle.rating}${d.puzzle.provisional ? '?' : ''}`}
@@ -136,32 +162,6 @@
 			>
 		{/if}
 	</StatTile>
-
-	<StatTile
-		tone="learn"
-		label={t('summary.goal')}
-		value={d.todayPuzzles}
-		unit={`/${d.goal}`}
-		sub={d.todayPuzzles >= d.goal
-			? t('summary.goalDone')
-			: t('summary.goalLeft', { n: d.goal - d.todayPuzzles })}
-		href={resolve('/puzzles')}
-		testid="tile-goal"
-	>
-		<span class="bar" aria-hidden="true"><i style:width="{goalPct}%"></i></span>
-	</StatTile>
-
-	<StatTile
-		tone="play"
-		label={t('summary.streak')}
-		value={d.streak.days}
-		unit={` ${t('summary.streakDays', { n: d.streak.days })}`}
-		sub={d.streak.todayDone ? t('summary.streakDone') : t('summary.streakOpen')}
-		spark={d.last14}
-		bars
-		aria={t('home.streak')}
-		testid="tile-streak"
-	/>
 
 	<StatTile
 		tone="games"

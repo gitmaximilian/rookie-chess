@@ -112,12 +112,6 @@
 					: ' '}</span
 			>
 		</div>
-		{#if next}
-			<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- href() liefert bereits resolve()-Pfade -->
-			<a class="btn go" href={href(next.task)}
-				>{doneCount ? t('plan.continue') : t('plan.start')} <ArrowRight size={17} /></a
-			>
-		{/if}
 	</div>
 
 	{#if !ctx}
@@ -140,6 +134,13 @@
 				</li>
 			{/each}
 		</ol>
+		<!-- Hauptaktion unten und über die volle Breite: der eine nächste Schritt -->
+		{#if next}
+			<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- href() liefert bereits resolve()-Pfade -->
+			<a class="btn big go" href={href(next.task)}
+				>{doneCount ? t('plan.continue') : t('plan.start')} <ArrowRight size={18} /></a
+			>
+		{/if}
 	{/if}
 </section>
 
@@ -182,9 +183,8 @@
 	}
 
 	.go {
-		flex: none;
-		height: 44px;
-		padding-inline: 1.1rem;
+		width: 100%;
+		margin-top: auto;
 	}
 
 	.tasks {

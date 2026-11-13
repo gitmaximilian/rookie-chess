@@ -360,7 +360,7 @@
 	<div class="wrap">
 		<!-- Wie du spielst: eine Kennzahl je Kachel -->
 		<div class="who">
-			<span class="who-ini" aria-hidden="true">{(d.name || 'R')[0].toUpperCase()}</span>
+			{#if d.name}<span class="who-ini" aria-hidden="true">{d.name[0].toUpperCase()}</span>{/if}
 			<div>
 				<b class="who-name">{d.name || t('coachTab.you')}</b>
 				<span class="muted num-line">
@@ -417,6 +417,23 @@
 			/>
 		</BentoGrid>
 
+		<!-- Woran arbeiten -->
+		{#if d.advice.length}
+			<section class="card block advice">
+				<h2>{t('coachTab.work')}</h2>
+				<ul>
+					{#each d.advice as a (a.title)}
+						<li style:--c={a.c}>
+							<span class="a-ico"><a.icon size={19} /></span>
+							<span class="a-text"><b>{a.title}</b><span>{a.text}</span></span>
+							<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- a.href ist bereits aufgelöst -->
+							<a class="btn small a-go" href={a.href}>{a.cta} <ArrowRight size={15} /></a>
+						</li>
+					{/each}
+				</ul>
+			</section>
+		{/if}
+
 		<!-- Spielerprofil als Fünfeck -->
 		<section class="tone-coach block skills">
 			<div class="sk-head">
@@ -440,23 +457,6 @@
 				<p class="muted">{t('skills.needData', { n: d.stats.analysed })}</p>
 			{/if}
 		</section>
-
-		<!-- Woran arbeiten -->
-		{#if d.advice.length}
-			<section class="card block advice">
-				<h2>{t('coachTab.work')}</h2>
-				<ul>
-					{#each d.advice as a (a.title)}
-						<li style:--c={a.c}>
-							<span class="a-ico"><a.icon size={19} /></span>
-							<span class="a-text"><b>{a.title}</b><span>{a.text}</span></span>
-							<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- a.href ist bereits aufgelöst -->
-							<a class="btn small a-go" href={a.href}>{a.cta} <ArrowRight size={15} /></a>
-						</li>
-					{/each}
-				</ul>
-			</section>
-		{/if}
 
 		<!-- Letzte 30 Partien -->
 		{#if d.last.length}
