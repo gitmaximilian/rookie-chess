@@ -2,7 +2,7 @@
 
 A chess trainer for beginners as a Progressive Web App for iPhone, iPad and Mac – completely free, offline-capable, no App Store, no account, no tracking. English and German.
 
-**Live:** https://rookie.maximilianauer.at · **Version:** 0.6.1
+**Live:** https://rookie.maximilianauer.at · **Version:** 0.7.0
 
 | Home                                                                                                                           | Coach                                                                                                                                             | Play                                                                                                   | Game review                                                                                                                                | Blunder check                                                                                            |
 | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
@@ -20,9 +20,9 @@ Screenshots use generated sample data (`scripts/screenshots/`), not real games.
 
 ## Features
 
-Rookie's goal: take beginners to **1600** – with methods that learning research and real game data support ([research](docs/research-2026-11-13.md), [review](docs/learning-review-2026-11-13.md), [plan](docs/learning-plan-2026-11-13.md)).
+Rookie's goal: take beginners to **1600** – with methods that learning research and real game data support ([research](docs/research-2026-11-13.md), [review](docs/learning-review-2026-11-13.md), [plan](docs/learning-plan-2026-11-13.md), [product review](docs/product-review-2026-11-14.md)).
 
-- **Skill penta** – your game as five skills (safety, tactics, opening, strategy, endgame), each as an Elo equivalent calibrated on 1,560 Lichess games from 400 to 3200; 100 = world elite. Tap a corner: what it measures, where you stand, values at other levels, why it matters at your level and how many Elo improving it is worth
+- **Skill penta** – your game as five skills (safety, tactics, opening, positional play, endgame), each as an Elo equivalent calibrated on 1,560 Lichess games from 400 to 3200; 100 = world elite. **Checked on 139 real players outside the calibration:** overall level within ±230 Elo from about 12 games (guessing: ±500); a corner only appears once it beats guessing. Tap a corner: one number, values at other levels and one next step – if your opening or endgame losses are mostly blunders, it sends you to the blunder check instead of more theory
 - **What counts at your level** – four stages on the way to 1600 and beyond; the weight of each skill comes from real games (below 1200, safety and tactics explain most of the gap to the next level)
 - **Board scan** – see checks, captures and hanging pieces in seconds, for you and your opponent (CCA), on real positions; daily in the plan below 1200
 - **Positional play** – five lessons with Stockfish-checked tasks: active pieces and outposts, open files, passed pawns, king safety, pawn structure
@@ -39,7 +39,8 @@ Rookie's goal: take beginners to **1600** – with methods that learning researc
 - **Play** against 8 bots with personality (≈ 400–1650) – Stockfish 19 (WebAssembly) in the browser, hints, takebacks, optional clock
 - **Game review** – every move classified and explained in plain language, the engine's best moves, evaluation graph, PGN import/export; **replay your mistakes** and find the better move
 - **What stands out** – only statements backed by enough games and beyond chance (e.g. an opening at least 8 games and clearly below your average), most important first, each with a matching exercise
-- **Progress at a glance** – strength estimate with milestones (800 → 1000 → 1200 → 1400 → 1600), puzzle rating, daily goal, streak
+- **One strength, one scale** – your games, puzzles, online rating and bots combined on the Lichess scale (the scale all of Rookie is calibrated on), with milestones 800 → 1000 → 1200 → 1400 → 1600; coach and lessons always show the same level
+- **One blunder number** – “blunders per 30 moves” means the same everywhere (moves in still-open positions), plus **converted**: how many clearly won positions you actually won (Lichess players up to 1400: ≈ 69 %)
 - **Tactics** – fork, pin, skewer, discovered attack, back-rank mate: explained, then practised with puzzles; **Puzzle Storm**; **play a friend** on one device
 - **Chess basics** – 15 interactive lessons from zero
 - **Puzzles** – 38,400 puzzles from the free Lichess database, Glicko-2 rating, theme filter, puzzle of the day

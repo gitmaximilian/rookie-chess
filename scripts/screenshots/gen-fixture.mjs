@@ -143,7 +143,9 @@ async function playGame(eng, i) {
 	const date = NOW - (31 - i) * DAY * 0.9 - 3600000 * (i % 5);
 	let pgn = `[Event "Rookie"]\n[White "${myColor === 'white' ? 'You' : opponent}"]\n[Black "${myColor === 'black' ? 'You' : opponent}"]\n[Result "${result}"]\n\n`;
 	pgn += sans.map((s, k) => (k % 2 === 0 ? `${k / 2 + 1}. ${s}` : s)).join(' ') + ` ${result}`;
-	const myRating = 930 + Math.round(i * 4.2 + (rnd() - 0.5) * 30);
+	// Wertungen passend zur gespielten Qualität (Penta aus diesen Partien ≈ 1450, Lichess-Skala) – sonst zeigen
+	// Bilder Widersprüche wie „Spielstärke ≈ 900“ neben „aus Partien ≈ 1450“ (Produkt-Review 14.11.2026)
+	const myRating = 1330 + Math.round(i * 4.2 + (rnd() - 0.5) * 30);
 	return {
 		date: Math.round(date),
 		pgn,
@@ -179,7 +181,7 @@ console.log();
 const THEMES = ['fork', 'pin', 'hangingPiece', 'mateIn1', 'mateIn2', 'skewer', 'discoveredAttack'];
 const attempts = [];
 const ratings = [];
-let rating = 820;
+let rating = 1070;
 for (let k = 0; k < 140; k++) {
 	const date = NOW - (140 - k) * DAY * 0.2;
 	const th = THEMES[k % THEMES.length];

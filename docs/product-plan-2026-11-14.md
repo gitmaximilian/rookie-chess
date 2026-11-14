@@ -1,5 +1,7 @@
 # Rookie – Plan nach dem Produkt-Review (14. November 2026)
 
+> **Stand der Umsetzung (v0.7.0):** Etappen 1–5 umgesetzt. Zwei Änderungen gegenüber dem Plan, beide aus Messungen: (1) Etappe 2 eicht **nicht** neu – ohne Patzer gerechnet sind Eröffnung und Endspiel von 400 bis 1900 fast flach (Endspiel 89,5–91,5 %); die Ecken bleiben deshalb mit Patzern (beste Vorhersage im Holdout), und der Rat führt bei ≥ 50 % Patzer-Anteil zum Blunder-Check. (2) Nach Rückmeldung „zu viel Text“: Penta-Detailkarte zeigt nur noch eine Zahl, die Skala und einen nächsten Schritt; Erklärungen unter „Mehr dazu“; Coach-Einleitungen gekürzt.
+
 Grundlage: [product-review-2026-11-14.md](product-review-2026-11-14.md). Ziel dieser Runde: **eine ehrliche Zahl für dein Niveau, ein Penta, dem man trauen kann, keine falschen Lektionen.** Neue Funktionen nur, wo die Messung sie trägt.
 
 Je Etappe: `npm run check`, `npm run lint`, Vitest, Playwright grün; Unit-Tests für jede geänderte Lernlogik; Screenshots in 393×659, 393×852, 820×1180, 1280×800 hell/dunkel ohne Überlauf; Persona-Simulation (`personas.spec.ts`); deutscher Commit, Push auf `main`, Live-Check.
