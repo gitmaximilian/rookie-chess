@@ -63,7 +63,7 @@
 		safety: '/puzzles/safety',
 		tactics: '/puzzles',
 		opening: '/learn/openings',
-		strategy: '/play',
+		strategy: '/learn/basics?set=positional',
 		endgame: '/learn/endgame'
 	};
 </script>

@@ -23,7 +23,7 @@ const base: PlanContext = {
 	safetyFirst: false,
 	checkupDue: false,
 	checkupToday: false,
-	strength: null,
+	strength: 1500,
 	minutes: 30
 };
 
@@ -161,5 +161,28 @@ describe('Spielstärke', () => {
 		expect(nextMilestone(1000)).toMatchObject({ goal: 1200, from: 1000, progress: 0 });
 		expect(nextMilestone(1100).progress).toBeCloseTo(0.5);
 		expect(nextMilestone(1700)).toMatchObject({ goal: 1600, progress: 1 });
+	});
+
+	it('unter 1200: Brett-Scan täglich, Blunder-Check kürzer; ab 1150 Stellungsspiel-Lektionen', () => {
+		const low = buildPlan({ ...base, strength: 800, safetyFirst: true });
+		expect(low.tasks.slice(0, 2).map((t) => t.kind)).toEqual(['scan', 'safety']);
+		expect(low.tasks.find((t) => t.kind === 'safety')).toMatchObject({ target: 4 });
+		const mid = buildPlan({ ...base, strength: 1300, safetyFirst: true, minutes: 60 });
+		expect(mid.tasks.map((t) => t.kind)).not.toContain('scan');
+		expect(mid.tasks.find((t) => t.kind === 'positional')).toMatchObject({ lesson: 'pos-pieces' });
+		const done = buildPlan({
+			...base,
+			strength: 1300,
+			minutes: 60,
+			positionalDone: ['pos-pieces', 'pos-files', 'pos-passer', 'pos-king', 'pos-structure']
+		});
+		expect(done.tasks.map((t) => t.kind)).not.toContain('positional');
+		expect(
+			progressOf(
+				{ id: 'scan', kind: 'scan', target: 3 },
+				{ ...base, scanToday: 2 },
+				{ dueReview: 0, dueRepertoire: 0 }
+			)
+		).toEqual({ done: 2, target: 3 });
 	});
 });

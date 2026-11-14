@@ -2,7 +2,7 @@
 
 A chess trainer for beginners as a Progressive Web App for iPhone, iPad and Mac – completely free, offline-capable, no App Store, no account, no tracking. English and German.
 
-**Live:** https://rookie.maximilianauer.at · **Version:** 0.5.1
+**Live:** https://rookie.maximilianauer.at · **Version:** 0.6.0
 
 | Home                                                                                                                           | Coach                                                                                                                                             | Play                                                                                                   | Game review                                                                                                                                | Blunder check                                                                                            |
 | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
@@ -22,6 +22,10 @@ Screenshots use generated sample data (`scripts/screenshots/`), not real games.
 
 Rookie's goal: take beginners to **1600** – with methods that learning research and real game data support ([research](docs/research-2026-11-13.md), [review](docs/learning-review-2026-11-13.md), [plan](docs/learning-plan-2026-11-13.md)).
 
+- **Skill penta** – your game as five skills (safety, tactics, opening, strategy, endgame), each as an Elo equivalent calibrated on 1,560 Lichess games from 400 to 3200; 100 = world elite. Tap a corner: what it measures, where you stand, values at other levels, why it matters at your level and how many Elo improving it is worth
+- **What counts at your level** – four stages on the way to 1600 and beyond; the weight of each skill comes from real games (below 1200, safety and tactics explain most of the gap to the next level)
+- **Board scan** – see checks, captures and hanging pieces in seconds, for you and your opponent (CCA), on real positions; daily in the plan below 1200
+- **Positional play** – five lessons with Stockfish-checked tasks: active pieces and outposts, open files, passed pawns, king safety, pawn structure
 - **Blunder check** – “You want to play ♘c4. Is it safe?” Real moments from Lichess games (the move a human actually blundered with, or a Stockfish-verified safe move); say “not safe” and you have to show the refutation on the board. Below 1000, over half of all blunders are pieces or mates lost within two moves – this trains exactly that
 - **Daily plan with a time budget** (30 min by default) – blunder check, your own mistakes due for review, mixed tactics, a game every other day, then theory only if it fits and matches your level; shows how many minutes are left
 - **You first** – after a game from your plan you first mark up to three moves you think were mistakes (no engine ratings shown), then Stockfish reveals what you found, missed or got right, and you replay the mistakes; “mistakes spotted” becomes a progress metric

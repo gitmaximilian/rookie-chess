@@ -3,6 +3,9 @@ import { parseSquare, makeSquare } from 'chessops/util';
 import { SquareSet } from 'chessops/squareSet';
 import type { Role } from 'chessops/types';
 import type { L } from '#lib/openings/courses.js';
+import { POSITIONAL } from './positional.js';
+
+export { POSITIONAL };
 
 const N = (en: string, de: string): L => ({ en, de });
 const START = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
@@ -752,7 +755,15 @@ export const TACTICS: BasicLesson[] = [
 ];
 
 export function basicById(id: string): BasicLesson | undefined {
-	return BASICS.find((l) => l.id === id) ?? TACTICS.find((l) => l.id === id);
+	return (
+		BASICS.find((l) => l.id === id) ??
+		TACTICS.find((l) => l.id === id) ??
+		POSITIONAL.find((l) => l.id === id)
+	);
+}
+
+export function isPositional(l: BasicLesson): boolean {
+	return POSITIONAL.includes(l);
 }
 
 export function isTactic(l: BasicLesson): boolean {

@@ -13,6 +13,8 @@
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
 	import Sparkles from '@lucide/svelte/icons/sparkles';
 	import ClipboardCheck from '@lucide/svelte/icons/clipboard-check';
+	import ScanEye from '@lucide/svelte/icons/scan-eye';
+	import Compass from '@lucide/svelte/icons/compass';
 	import type { Component } from 'svelte';
 	import GoalRing from '#lib/ui/GoalRing.svelte';
 	import { loadPlanContext, todayPlan } from '#lib/training/planData.js';
@@ -63,7 +65,9 @@
 		play: ChessKnight,
 		safety: ShieldCheck,
 		mistakes: Sparkles,
-		checkup: ClipboardCheck
+		checkup: ClipboardCheck,
+		scan: ScanEye,
+		positional: Compass
 	};
 	const minutesLeft = $derived(
 		rows.filter((r) => !r.finished).reduce((s, r) => s + minutesOf(r.task), 0)
@@ -100,6 +104,10 @@
 				return t('plan.mistakes', { n: task.target });
 			case 'checkup':
 				return t('plan.checkup');
+			case 'scan':
+				return t('plan.scan', { n: task.target });
+			case 'positional':
+				return t('plan.positional', { name: loc(basicById(task.lesson)?.title) });
 		}
 	}
 
@@ -128,6 +136,10 @@
 				return resolve('/puzzles?mode=mistakes');
 			case 'checkup':
 				return resolve('/puzzles/safety?test=1');
+			case 'scan':
+				return resolve('/puzzles/scan?mode=opponent');
+			case 'positional':
+				return resolve(`/learn/basics?id=${task.lesson}`);
 		}
 	}
 </script>

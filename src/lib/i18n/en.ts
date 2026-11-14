@@ -1211,6 +1211,8 @@ export const en = {
 		play: 'Play a game with the coach',
 		safety: (p: P) => `Blunder check: ${p.n} moves – safe or not?`,
 		mistakes: (p: P) => `Your own mistakes: ${p.n} to repeat`,
+		scan: (p: P) => `Board scan: ${p.n} positions – what can your opponent do?`,
+		positional: (p: P) => `Positional play: ${p.name}`,
 		checkup: 'Safety check-up (12 tasks, every 2 weeks)',
 		progressMin: (p: P) => `${p.n} of ${p.m} done · about ${p.min} min left`,
 		start: 'Start',
@@ -1351,7 +1353,7 @@ export const en = {
 			opening:
 				'Principles (develop, centre, castle, queen not too early) and one opening course per colour – no memorising lines.',
 			strategy:
-				'Learning games with time, then “You first”: find the critical moments yourself, then replay them.',
+				'Positional lessons (active pieces, open files, passed pawns), then learning games with time and “You first”: find the critical moments yourself.',
 			endgame:
 				'Basic endgames against the tablebase: mate with queen and rook, rule of the square, opposition – then rook endgames.'
 		},
@@ -1359,7 +1361,7 @@ export const en = {
 			safety: 'Practise blunder check',
 			tactics: 'Solve puzzles',
 			opening: 'Learn openings',
-			strategy: 'Play a learning game',
+			strategy: 'Learn positional play',
 			endgame: 'Practise endgames'
 		},
 		gain: (p: P) =>
@@ -1456,6 +1458,74 @@ export const en = {
 		selfSub: 'of your mistakes seen before the reveal',
 		target: 'hit rate · target ≈ 80 %',
 		targetSelf: 'solved yourself · target ≈ 80 %'
+	},
+	positional: {
+		title: 'Positional play',
+		subtitle:
+			'Active pieces, open files, passed pawns, king safety, pawn structure – with tasks checked by Stockfish.',
+		hubText: 'What to do when there is nothing to take? The core ideas from about 1200.'
+	},
+	levels: {
+		title: 'What counts at your level',
+		stage: {
+			foundation: 'Foundation (up to 800)',
+			vision: 'Seeing the board (800–1200)',
+			solid: 'Playing safely, first plans (1200–1600)',
+			plans: 'Strategy and technique (from 1600)'
+		},
+		intro: (p: P) =>
+			`Around ≈ ${p.elo}, the gap to players 200 Elo stronger comes mostly from these skills (Lichess data):`,
+		introNone: 'Without an estimate of your strength Rookie shows the beginner stage.',
+		next: 'What matters now',
+		focus: {
+			hanging: 'See hanging pieces – yours and your opponent’s',
+			safety: 'Blunder check before every move',
+			mates: 'Basic mates: queen and rook against king',
+			tactics: 'Simple tactics: mate in 1, win a piece',
+			cca: 'Board scan: checks, captures, attacks – for your opponent too',
+			motifs: 'Tactical motifs: fork, pin, skewer, discovery',
+			punish: 'Punish your opponent’s mistakes right away',
+			principles: 'Opening principles instead of lines',
+			repertoire: 'One opening per colour, played solidly',
+			positional: 'Positional play: active pieces, open files, passed pawns',
+			endgames: 'Pawn endgames and opposition',
+			rookEndgames: 'Rook endgames (Lucena, Philidor)',
+			calculation: 'Calculation: longer combinations',
+			review: 'Review your own games thoroughly'
+		}
+	},
+	scan: {
+		eyebrow: 'Board vision',
+		title: 'Board scan',
+		hubText: 'See checks, captures and hanging pieces in seconds – the basis against blunders.',
+		kicker: 'Board scan',
+		board: 'Board: find everything',
+		modeLabel: 'What are you looking for?',
+		mode: { hanging: 'Hanging', checks: 'Checks', captures: 'Captures', opponent: 'Opponent' },
+		prompt: {
+			hanging: (p: P) => `Tap every hanging piece – yours and your opponent’s (${p.n}).`,
+			checks: (p: P) => `Find every check you have (${p.n}).`,
+			captures: (p: P) => `Find every capture you have (${p.n}).`,
+			opponent: (p: P) => `What can your opponent do? Find all their checks and captures (${p.n}).`
+		},
+		how: {
+			hanging:
+				'Hanging = attacked and undefended, or attacked by a cheaper piece. Go through every piece once.',
+			checks:
+				'Play every move that gives check – the board springs back. Look for discovered checks too.',
+			captures: 'Play every capture – even the ones that look bad. Seeing comes before judging.',
+			opponent:
+				'This is the blunder check: before your move you check which checks and captures your opponent has.'
+		},
+		progress: (p: P) => `${p.n}/${p.m} found`,
+		wrong: (p: P) => `${p.n} wrong ${Number(p.n) === 1 ? 'try' : 'tries'}`,
+		session: (p: P) => `${p.n} positions · ${p.pct} %`,
+		done: 'Done – that is all I see',
+		result: (p: P) => `${p.n} of ${p.m} found · ${p.s} s`,
+		missed: 'Red: missed.',
+		perfect: 'You saw everything!',
+		whyTitle: 'Why this helps',
+		why: 'Strong players see checks, captures and attacks in seconds – for themselves and their opponent (Checks, Captures, Attacks). Below 1000, over half of all blunders lose a piece or get mated within two moves – exactly what this scan finds. Do it before every move until it runs by itself.'
 	},
 	safety: {
 		eyebrow: 'Blunder check',

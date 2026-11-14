@@ -1268,6 +1268,8 @@ export const de: Shape<typeof en> = {
 		play: 'Eine Partie mit Coach spielen',
 		safety: (p: P) => `Blunder-Check: ${p.n} Züge – sicher oder nicht?`,
 		mistakes: (p: P) => `Deine eigenen Fehler: ${p.n} wiederholen`,
+		scan: (p: P) => `Brett-Scan: ${p.n} Stellungen – was kann der Gegner?`,
+		positional: (p: P) => `Stellungsspiel: ${p.name}`,
 		checkup: 'Kontrolltest Sicherheit (12 Aufgaben, alle 2 Wochen)',
 		progressMin: (p: P) => `${p.n} von ${p.m} erledigt · noch ca. ${p.min} min`,
 		start: 'Los',
@@ -1412,7 +1414,7 @@ export const de: Shape<typeof en> = {
 			opening:
 				'Prinzipien (entwickeln, Zentrum, rochieren, Dame nicht zu früh) und ein Eröffnungskurs je Farbe – kein Varianten-Pauken.',
 			strategy:
-				'Lernpartien mit Zeit und danach „Erst du“: die kritischen Momente selbst finden, dann nachspielen.',
+				'Stellungsspiel-Lektionen (aktive Figuren, offene Linien, Freibauer), dann Lernpartien mit Zeit und „Erst du“: die kritischen Momente selbst finden.',
 			endgame:
 				'Grundendspiele gegen die Tablebase: Matt mit Dame und Turm, Quadratregel, Opposition – dann Turmendspiele.'
 		},
@@ -1420,7 +1422,7 @@ export const de: Shape<typeof en> = {
 			safety: 'Blunder-Check üben',
 			tactics: 'Puzzles lösen',
 			opening: 'Eröffnungen lernen',
-			strategy: 'Lernpartie spielen',
+			strategy: 'Stellungsspiel lernen',
 			endgame: 'Endspiele üben'
 		},
 		gain: (p: P) =>
@@ -1518,6 +1520,75 @@ export const de: Shape<typeof en> = {
 		selfSub: 'deiner Fehler vor der Auflösung erkannt',
 		target: 'Trefferquote · Ziel ≈ 80 %',
 		targetSelf: 'selbst gelöst · Ziel ≈ 80 %'
+	},
+	positional: {
+		title: 'Stellungsspiel',
+		subtitle:
+			'Aktive Figuren, offene Linien, Freibauer, Königssicherheit, Bauernstruktur – mit von Stockfish geprüften Aufgaben.',
+		hubText: 'Was tun, wenn es nichts zu schlagen gibt? Die Grundideen ab etwa 1200.'
+	},
+	levels: {
+		title: 'Was auf deinem Niveau zählt',
+		stage: {
+			foundation: 'Fundament (bis 800)',
+			vision: 'Das Brett sehen (800–1200)',
+			solid: 'Sicher spielen, erste Pläne (1200–1600)',
+			plans: 'Strategie und Technik (ab 1600)'
+		},
+		intro: (p: P) =>
+			`Bei ≈ ${p.elo} geht der Abstand zu Spielern, die 200 Elo stärker sind, laut Lichess-Daten vor allem auf diese Fähigkeiten zurück:`,
+		introNone: 'Ohne Einschätzung deiner Stärke zeigt Rookie die Stufe für Einsteiger.',
+		next: 'Darauf kommt es jetzt an',
+		focus: {
+			hanging: 'Hängende Figuren sehen – deine und die des Gegners',
+			safety: 'Blunder-Check vor jedem Zug',
+			mates: 'Grundmatts: Dame und Turm gegen König',
+			tactics: 'Einfache Taktik: Matt in 1, Figur gewinnen',
+			cca: 'Brett-Scan: Schachs, Schlagzüge, Angriffe – auch für den Gegner',
+			motifs: 'Taktikmotive: Gabel, Fesselung, Spieß, Abzug',
+			punish: 'Fehler des Gegners sofort bestrafen',
+			principles: 'Eröffnungsprinzipien statt Varianten',
+			repertoire: 'Eine Eröffnung je Farbe, solide gespielt',
+			positional: 'Stellungsspiel: aktive Figuren, offene Linien, Freibauer',
+			endgames: 'Bauernendspiele und Opposition',
+			rookEndgames: 'Turmendspiele (Lucena, Philidor)',
+			calculation: 'Rechnen: längere Kombinationen',
+			review: 'Eigene Partien gründlich besprechen'
+		}
+	},
+	scan: {
+		eyebrow: 'Brett sehen',
+		title: 'Brett-Scan',
+		hubText:
+			'Schachs, Schlagzüge, hängende Figuren in Sekunden sehen – die Grundlage gegen Patzer.',
+		kicker: 'Brett-Scan',
+		board: 'Brett: alles finden',
+		modeLabel: 'Was suchst du?',
+		mode: { hanging: 'Hängt', checks: 'Schachs', captures: 'Schlagen', opponent: 'Gegner' },
+		prompt: {
+			hanging: (p: P) => `Tippe alle hängenden Figuren an – deine und die des Gegners (${p.n}).`,
+			checks: (p: P) => `Finde alle Schachs, die du hast (${p.n}).`,
+			captures: (p: P) => `Finde alle Schlagzüge, die du hast (${p.n}).`,
+			opponent: (p: P) => `Was kann dein Gegner? Finde alle seine Schachs und Schlagzüge (${p.n}).`
+		},
+		how: {
+			hanging:
+				'Hängend = angegriffen und ungedeckt, oder von einer billigeren Figur angegriffen. Geh jede Figur einmal durch.',
+			checks:
+				'Zieh jeden Zug, der Schach gibt – das Brett springt danach zurück. Schau auch nach Abzugsschachs.',
+			captures: 'Zieh jeden Schlagzug – auch die, die schlecht aussehen. Sehen kommt vor Bewerten.',
+			opponent:
+				'Das ist der Blunder-Check: Vor deinem Zug prüfst du, welche Schachs und Schlagzüge dein Gegner hat.'
+		},
+		progress: (p: P) => `${p.n}/${p.m} gefunden`,
+		wrong: (p: P) => `${p.n} ${Number(p.n) === 1 ? 'Fehlgriff' : 'Fehlgriffe'}`,
+		session: (p: P) => `${p.n} Stellungen · ${p.pct} %`,
+		done: 'Fertig – mehr sehe ich nicht',
+		result: (p: P) => `${p.n} von ${p.m} gefunden · ${p.s} s`,
+		missed: 'Rot: übersehen.',
+		perfect: 'Alles gesehen!',
+		whyTitle: 'Warum das hilft',
+		why: 'Starke Spieler sehen Schachs, Schlagzüge und Angriffe in Sekunden – für sich und den Gegner (Checks, Captures, Attacks). Unter 1000 ist über die Hälfte aller Patzer ein Figuren- oder Mattverlust in höchstens zwei Zügen – genau das findet dieser Scan. Mach ihn vor jedem Zug, bis er von allein läuft.'
 	},
 	safety: {
 		eyebrow: 'Blunder-Check',

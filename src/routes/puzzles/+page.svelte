@@ -3,6 +3,7 @@
 	import Dock from '#lib/ui/Dock.svelte';
 	import { onMount } from 'svelte';
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
+	import ScanEye from '@lucide/svelte/icons/scan-eye';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import Lightbulb from '@lucide/svelte/icons/lightbulb';
@@ -458,6 +459,9 @@
 		</button>
 		<a class="chip" href={resolve('/puzzles/safety')} data-testid="chip-safety"
 			><ShieldCheck size={15} /> {t('safety.eyebrow')}</a
+		>
+		<a class="chip" href={resolve('/puzzles/scan')} data-testid="chip-scan"
+			><ScanEye size={15} /> {t('scan.title')}</a
 		>
 		<a class="chip storm" href={resolve('/puzzles/storm')}><Zap size={15} /> {t('storm.title')}</a>
 		<span class="sep" aria-hidden="true"></span>

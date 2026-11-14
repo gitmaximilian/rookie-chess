@@ -37,6 +37,8 @@
 		/** Wird für Bauernumwandlungen gefragt */
 		isPromotion?: (from: string, to: string) => boolean;
 		onMove?: (uci: string) => void;
+		/** Antippen eines Feldes (z. B. „Welche Figuren hängen?“) */
+		onSquare?: (square: string) => void;
 		/** Zusätzliche CSS-Klasse für Rückmeldungen (z. B. 'flash-good') */
 		flash?: '' | 'good' | 'bad';
 		label?: string;
@@ -65,6 +67,7 @@
 		coordinates = true,
 		isPromotion,
 		onMove,
+		onSquare,
 		flash = '',
 		label,
 		badge = null,
@@ -146,6 +149,7 @@
 			blockTouchScroll: true,
 			addDimensionsCssVarsTo: el,
 			drawable: { enabled: true, brushes, autoShapes: toDrawShapes(shapes) },
+			events: { select: (key: Key) => onSquare?.(key) },
 			movable: {
 				...config().movable,
 				events: {

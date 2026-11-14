@@ -16,6 +16,7 @@
 import { BASICS } from '#lib/basics/lessons.js';
 import { COURSES } from '#lib/openings/courses.js';
 import { LESSONS } from '#lib/endgames/lessons.js';
+import { POSITIONAL } from '#lib/basics/positional.js';
 
 export type PlanTask =
 	| { id: string; kind: 'safety'; target: number }
@@ -28,7 +29,9 @@ export type PlanTask =
 	| { id: string; kind: 'endgame'; lesson: string }
 	| { id: string; kind: 'game'; gameId: number }
 	| { id: string; kind: 'play' }
-	| { id: string; kind: 'checkup' };
+	| { id: string; kind: 'checkup' }
+	| { id: string; kind: 'scan'; target: number }
+	| { id: string; kind: 'positional'; lesson: string };
 
 export interface DailyPlan {
 	day: string;
@@ -55,12 +58,16 @@ export interface PlanContext {
 	puzzlesToday: number;
 	/** heute erledigte Blunder-Checks */
 	safetyToday: number;
+	/** heute gescannte Stellungen (Brett-Scan) */
+	scanToday?: number;
 	/** Blunder-Check gehört in den Plan (Spielstärke < 1400 oder noch viele Patzer) */
 	safetyFirst: boolean;
 	/** Kontrolltest fällig / heute erledigt */
 	checkupDue: boolean;
 	checkupToday: boolean;
 	basicsDone: string[];
+	/** erledigte Stellungsspiel-Lektionen */
+	positionalDone?: string[];
 	courseProgress: Record<string, Record<string, unknown>>;
 	endgameStars: Record<string, number>;
 	rulesKnown: 'no' | 'some' | 'yes' | null;
@@ -87,6 +94,12 @@ export const DEFAULT_MINUTES = 30;
 export const MAX_TASKS = 5;
 /** Blunder-Checks pro Tag */
 export const SAFETY_PER_DAY = 6;
+/** unter dieser Stärke: täglich Brett-Scan (Stufen „Fundament“ und „Brett sehen“) */
+export const SCAN_UNTIL = 1200;
+/** Stellungen im täglichen Brett-Scan */
+export const SCAN_PER_DAY = 3;
+/** ab dieser Stärke schlägt der Plan Stellungsspiel-Lektionen vor */
+export const POSITIONAL_FROM = 1150;
 
 /** geschätzte Minuten je Aufgabe (für das Zeitbudget und die Anzeige) */
 export function minutesOf(task: PlanTask): number {
@@ -107,6 +120,10 @@ export function minutesOf(task: PlanTask): number {
 			// erst selbst suchen, dann nachspielen
 			return 7;
 		case 'checkup':
+			return 6;
+		case 'scan':
+			return task.target;
+		case 'positional':
 			return 6;
 		case 'basics':
 			return 6;
@@ -131,6 +148,11 @@ function nextLesson(c: PlanContext): PlanTask | null {
 		return { id: `basics:${basicsOpen.id}`, kind: 'basics', lesson: basicsOpen.id };
 
 	const max = levelFor(c.strength);
+	// ab ~1150 zählt Stellungsspiel (Lichess-Daten: Strategie und Eröffnung gewinnen an Gewicht) –
+	// erst die Ideen, dann weitere Endspiele und Kurse
+	const pos = POSITIONAL.find((l) => !(c.positionalDone ?? []).includes(l.id));
+	if (pos && c.focus !== 'openings' && c.strength !== null && c.strength >= POSITIONAL_FROM)
+		return { id: `positional:${pos.id}`, kind: 'positional', lesson: pos.id };
 	const courseFirst = c.focus === 'openings';
 	const course = () => {
 		// angefangene Kurse zuerst fertig machen, sonst die einfachsten
@@ -165,6 +187,7 @@ function nextLesson(c: PlanContext): PlanTask | null {
 /** Reihenfolge im Plan: Aufwärmen → Wiederholen → Taktik → Partie → Nacharbeit → Theorie */
 const ORDER: PlanTask['kind'][] = [
 	'checkup',
+	'scan',
 	'safety',
 	'mistakes',
 	'review',
@@ -173,6 +196,7 @@ const ORDER: PlanTask['kind'][] = [
 	'play',
 	'repertoire',
 	'basics',
+	'positional',
 	'course',
 	'endgame'
 ];
@@ -190,13 +214,16 @@ export function buildPlan(c: PlanContext): DailyPlan {
 		add({ id: 'puzzles', kind: 'puzzles', target: n }, 1);
 	} else {
 		if (c.checkupDue) add({ id: 'checkup', kind: 'checkup' }, 0.5);
-		if (c.safetyFirst) add({ id: 'safety', kind: 'safety', target: SAFETY_PER_DAY }, 1);
+		// unter 1200: das Brett sehen (Brett-Scan) gehört täglich dazu, der Blunder-Check wird kürzer
+		const scan = c.strength === null || c.strength < SCAN_UNTIL;
+		if (c.safetyFirst) add({ id: 'safety', kind: 'safety', target: scan ? 4 : SAFETY_PER_DAY }, 1);
+		if (scan) add({ id: 'scan', kind: 'scan', target: SCAN_PER_DAY }, 1.2);
 		if (c.dueMistakes > 0)
 			add({ id: 'mistakes', kind: 'mistakes', target: Math.min(c.dueMistakes, 5) }, 2);
 		// Partie alle zwei Tage (≈ 4 pro Woche, ≈ 30 % der Zeit); Schwerpunkt „Partien“ macht sie
 		// nur wichtiger – mehr spielen kann man jederzeit, der Plan hält Platz für Übung frei
 		const play = c.daysSinceGame === null || c.daysSinceGame >= PLAY_AFTER_DAYS;
-		if (play) add({ id: 'play', kind: 'play' }, c.focus === 'play' ? 1.5 : 2.6);
+		if (play) add({ id: 'play', kind: 'play' }, c.focus === 'play' ? 1.1 : 2.6);
 		if (c.gameToReview !== null && !c.reviewedGames.includes(c.gameToReview))
 			add({ id: `game:${c.gameToReview}`, kind: 'game', gameId: c.gameToReview }, 3);
 		add(
@@ -262,6 +289,10 @@ export function progressOf(
 			return { done: Math.min(1, c.gamesToday), target: 1 };
 		case 'checkup':
 			return { done: Number(c.checkupToday), target: 1 };
+		case 'scan':
+			return { done: Math.min(task.target, c.scanToday ?? 0), target: task.target };
+		case 'positional':
+			return { done: Number((c.positionalDone ?? []).includes(task.lesson)), target: 1 };
 		case 'basics':
 			return { done: Number(c.basicsDone.includes(task.lesson)), target: 1 };
 		case 'course':

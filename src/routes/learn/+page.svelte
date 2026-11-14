@@ -3,7 +3,11 @@
 	import { resolve } from '$app/paths';
 	import BookOpen from '@lucide/svelte/icons/book-open';
 	import GraduationCap from '@lucide/svelte/icons/graduation-cap';
-	import { BASICS, TACTICS } from '#lib/basics/lessons.js';
+	import { BASICS, TACTICS, POSITIONAL } from '#lib/basics/lessons.js';
+	import ScanEye from '@lucide/svelte/icons/scan-eye';
+	import Compass from '@lucide/svelte/icons/compass';
+	import LevelFocus from '#lib/ui/LevelFocus.svelte';
+	import { currentStrength } from '#lib/training/planData.js';
 	import { loc } from '#lib/openings/courses.js';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
@@ -25,13 +29,16 @@
 	let repDue = $state(0);
 	let basicsDone = $state(0);
 	let tacticsDone = $state(0);
+	let positionalDone = $state(0);
 	let doneIds = $state<string[]>([]);
 	let loaded = $state(false);
 	let starAreas = $state<AreaStars[]>([]);
 	const starsOf = (a: StarArea) => starAreas.find((x) => x.area === a);
 	const allStars = $derived(totalStars(starAreas));
 
+	let strength = $state<number | null>(null);
 	onMount(async () => {
+		strength = (await currentStrength())?.value ?? null;
 		const rows = await db.endgames.toArray();
 		stars = Object.fromEntries(rows.map((r) => [r.id, r.stars]));
 		repCount = await db.repertoire.filter((r) => r.mine).count();
@@ -40,6 +47,7 @@
 		const tc = await getSetting<string[]>('tacticsDone', []);
 		basicsDone = b.length;
 		tacticsDone = tc.length;
+		positionalDone = (await getSetting<string[]>('positionalDone', [])).length;
 		doneIds = [...b, ...tc];
 		starAreas = await loadStars();
 		loaded = true;
@@ -125,6 +133,8 @@
 		<div class="skeleton" style:height="76px"></div>
 	{/if}
 
+	{#if loaded}<LevelFocus elo={strength} />{/if}
+
 	<div class="paths">
 		<a class="path tone-puzzle pressable" href={resolve('/learn/basics')}>
 			<span class="p-icon"><GraduationCap size={22} /></span>
@@ -154,6 +164,28 @@
 						n: tacticsDone,
 						m: TACTICS.length
 					})}</span
+				>
+			</span>
+			<ChevronRight size={18} class="chev" />
+		</a>
+		<a class="path tone-coach pressable" href={resolve('/puzzles/scan')}>
+			<span class="p-icon"><ScanEye size={22} /></span>
+			<span class="p-main">
+				<b>{t('scan.title')}</b>
+				<span class="p-text">{t('scan.hubText')}</span>
+			</span>
+			<ChevronRight size={18} class="chev" />
+		</a>
+		<a class="path tone-games pressable" href={resolve('/learn/basics?set=positional')}>
+			<span class="p-icon"><Compass size={22} /></span>
+			<span class="p-main">
+				<b>{t('positional.title')}</b>
+				<span class="p-text">{t('positional.hubText')}</span>
+				<span class="p-bar"
+					><span style:width="{(positionalDone / POSITIONAL.length) * 100}%"></span></span
+				>
+				<span class="p-meta"
+					>{t('basics.progress', { n: positionalDone, m: POSITIONAL.length })}</span
 				>
 			</span>
 			<ChevronRight size={18} class="chev" />

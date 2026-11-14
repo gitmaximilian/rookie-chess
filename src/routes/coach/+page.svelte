@@ -16,6 +16,7 @@
 	import CoachTabs from '#lib/ui/CoachTabs.svelte';
 	import AvatarButton from '#lib/ui/AvatarButton.svelte';
 	import SkillPenta from '#lib/ui/SkillPenta.svelte';
+	import LevelFocus from '#lib/ui/LevelFocus.svelte';
 	import ProgressCheck from '#lib/ui/ProgressCheck.svelte';
 	import type { AccPoint } from '#lib/ui/AccuracyTrend.svelte';
 	import {
@@ -443,6 +444,9 @@
 		{/if}
 
 		<!-- Spielerprofil als Fünfeck -->
+		<!-- was auf deinem Niveau zählt (Lichess-Daten) -->
+		<LevelFocus elo={d.skillOverall?.elo ?? d.strength} />
+
 		<section class="tone-coach block skills">
 			{@render coverage()}
 			<SkillPenta

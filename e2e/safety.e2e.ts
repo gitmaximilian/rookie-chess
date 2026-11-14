@@ -58,7 +58,9 @@ test('Kontrolltest: 12 Aufgaben ohne Zwischenauswertung, dann Ergebnis und Forts
 test('Tagesplan: Blunder-Check steht vorn und führt zur Übung', async ({ page }) => {
 	await page.goto('/');
 	const plan = page.locator('.plan');
-	const task = plan.getByRole('link', { name: /Blunder check: 6 moves/ });
+	// Einsteiger (noch keine Stärke-Schätzung): erst Brett-Scan, dann ein kürzerer Blunder-Check
+	await expect(plan.getByRole('link', { name: /Board scan: 3 positions/ })).toBeVisible();
+	const task = plan.getByRole('link', { name: /Blunder check: 4 moves/ });
 	await expect(task).toBeVisible();
 	await task.click();
 	await expect(page).toHaveURL(/puzzles\/safety/);

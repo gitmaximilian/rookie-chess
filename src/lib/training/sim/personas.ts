@@ -80,6 +80,7 @@ export interface WeekLog {
 		/** wie viele eigene Fehler am Wochenende nie geübt wurden */
 		ownMistakesNeverPractised: number;
 		blunderChecks: number;
+		scans: number;
 	};
 }
 
@@ -110,6 +111,7 @@ export interface SimState {
 	courseProgress: Record<string, Record<string, unknown>>;
 	puzzleReviewsDue: number;
 	blunderChecks: number;
+	scans: number;
 	mistakesPractised: number;
 	mistakesCreated: number;
 	blundersPerGame: number;
@@ -128,6 +130,7 @@ export function simulateWeek(p: Persona, hooks: SimHooks = {}, days = 7): WeekLo
 		courseProgress: {},
 		puzzleReviewsDue: 0,
 		blunderChecks: 0,
+		scans: 0,
 		mistakesPractised: 0,
 		mistakesCreated: 0,
 		blundersPerGame: p.blundersPerGame
@@ -298,6 +301,9 @@ export function simulateWeek(p: Persona, hooks: SimHooks = {}, days = 7): WeekLo
 						});
 						s.mistakesPractised += due.length;
 						add(task, Math.max(1, due.length) * 1.2, 'retrieval', `${due.length} eigene Fehler`);
+					} else if ((task.kind as string) === 'scan') {
+						s.scans += n;
+						add(task, n, 'retrieval', `${n} Brett-Scans`);
 					} else if ((task.kind as string) === 'safety') {
 						s.blunderChecks += n;
 						add(task, n * 0.8, 'retrieval', `${n} Blunder-Checks`);
@@ -328,7 +334,8 @@ export function simulateWeek(p: Persona, hooks: SimHooks = {}, days = 7): WeekLo
 			ownMistakesCreated: s.mistakesCreated,
 			ownMistakesPractised: s.mistakesPractised,
 			ownMistakesNeverPractised: s.mistakeQueue.filter((m) => m.reps === 0).length,
-			blunderChecks: s.blunderChecks
+			blunderChecks: s.blunderChecks,
+			scans: s.scans
 		}
 	};
 }
@@ -348,7 +355,7 @@ export function formatWeek(w: WeekLog): string {
 		'',
 		`Summe: ${s.minutes} min · Abrufen ${s.share.retrieval} % · Lesen ${s.share.reading} % · Spielen ${s.share.playing} % · ` +
 			`${s.puzzles} Puzzles (${s.puzzleSuccess} % gelöst) · ${s.games} Partien · eigene Fehler: ${s.ownMistakesCreated} entstanden, ` +
-			`${s.ownMistakesPractised}× geübt, ${s.ownMistakesNeverPractised} nie geübt · Blunder-Checks ${s.blunderChecks}`
+			`${s.ownMistakesPractised}× geübt, ${s.ownMistakesNeverPractised} nie geübt · Blunder-Checks ${s.blunderChecks} · Brett-Scans ${s.scans}`
 	);
 	return lines.join('\n');
 }

@@ -16,6 +16,8 @@
 		TACTICS,
 		basicById,
 		isTactic,
+		isPositional,
+		POSITIONAL,
 		soloDests,
 		soloFen,
 		type BasicLesson
@@ -28,9 +30,11 @@
 	import { t } from '#lib/i18n/i18n.svelte.js';
 
 	let done = $state<string[]>([]);
-	let set = $state<'basics' | 'tactics'>('basics');
-	const SET = $derived(set === 'tactics' ? TACTICS : BASICS);
-	const doneKey = $derived(set === 'tactics' ? 'tacticsDone' : 'basicsDone');
+	let set = $state<'basics' | 'tactics' | 'positional'>('basics');
+	const SET = $derived(set === 'tactics' ? TACTICS : set === 'positional' ? POSITIONAL : BASICS);
+	const doneKey = $derived(
+		set === 'tactics' ? 'tacticsDone' : set === 'positional' ? 'positionalDone' : 'basicsDone'
+	);
 	let lesson = $state.raw<BasicLesson | null>(null);
 	let si = $state(0);
 	let finished = $state(false);
@@ -47,11 +51,24 @@
 	let flash = $state<'' | 'good' | 'bad'>('');
 
 	const step = $derived(lesson ? lesson.steps[si] : null);
+	/** Aufgaben können auch mit Schwarz am Zug sein (z. B. Stellungsspiel: Zurückschlagen) */
+	const side = $derived<'white' | 'black'>(
+		step?.kind === 'find' && step.fen.split(' ')[1] === 'b' ? 'black' : 'white'
+	);
 
 	onMount(async () => {
 		const id = page.url.searchParams.get('id');
 		const l = id ? basicById(id) : null;
-		set = (l ? isTactic(l) : page.url.searchParams.get('set') === 'tactics') ? 'tactics' : 'basics';
+		const q = page.url.searchParams.get('set');
+		set = l
+			? isTactic(l)
+				? 'tactics'
+				: isPositional(l)
+					? 'positional'
+					: 'basics'
+			: q === 'tactics' || q === 'positional'
+				? q
+				: 'basics';
 		done = await getSetting<string[]>(doneKey, []);
 		if (l) open(l);
 	});
@@ -197,8 +214,16 @@
 {#if !lesson}
 	<a class="back hit44" href={resolve('/learn')}><ArrowLeft size={18} /> {t('endgame.back')}</a>
 	<PageHeader
-		title={set === 'tactics' ? t('tactics.title') : t('basics.title')}
-		subtitle={set === 'tactics' ? t('tactics.subtitle') : t('basics.subtitle')}
+		title={set === 'tactics'
+			? t('tactics.title')
+			: set === 'positional'
+				? t('positional.title')
+				: t('basics.title')}
+		subtitle={set === 'tactics'
+			? t('tactics.subtitle')
+			: set === 'positional'
+				? t('positional.subtitle')
+				: t('basics.subtitle')}
 	/>
 	<p class="meta">{t('basics.progress', { n: done.length, m: SET.length })}</p>
 	<ol class="path">
@@ -233,10 +258,10 @@
 		<div class="board-col">
 			<Board
 				fen={boardFen}
-				orientation="white"
-				turnColor="white"
+				orientation={side}
+				turnColor={side}
 				dests={boardDests}
-				movableColor="white"
+				movableColor={side}
 				shapes={boardShapes}
 				{flash}
 				isPromotion={(f, to) =>

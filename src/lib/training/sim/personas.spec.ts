@@ -15,8 +15,9 @@ describe('Persona-Woche', () => {
 		expect(s.share.retrieval).toBeGreaterThanOrEqual(55);
 		expect(s.share.reading).toBeLessThanOrEqual(15);
 		expect(s.share.playing).toBeLessThanOrEqual(40);
-		// Blunder-Check jeden Tag
-		expect(s.blunderChecks).toBeGreaterThanOrEqual(30);
+		// Sicherheit jeden Tag: Blunder-Check, unter 1200 dazu Brett-Scan
+		expect(s.blunderChecks).toBeGreaterThanOrEqual(25);
+		if (p.strength < 1200) expect(s.scans).toBeGreaterThanOrEqual(15);
 		// eigene Fehler werden geübt – höchstens ein Drittel bleibt in der ersten Woche liegen
 		expect(s.ownMistakesNeverPractised).toBeLessThanOrEqual(Math.ceil(s.ownMistakesCreated / 3));
 		// Taktik im Zielbereich (Simulation: grob 70–95 %)

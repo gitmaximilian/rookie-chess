@@ -57,6 +57,8 @@ export async function loadPlanContext(): Promise<PlanContext> {
 		weakTheme: focus?.theme ?? null,
 		puzzlesToday: (await db.activity.get(day))?.puzzles ?? 0,
 		safetyToday: safetyAttempts.filter((a) => a.date >= start.getTime()).length,
+		scanToday: attempts.filter((a) => a.source === 'scan' && a.date >= start.getTime()).length,
+		positionalDone: await getSetting<string[]>('positionalDone', []),
 		safetyFirst: needsSafety(strength?.value ?? null, stats.blundersPer30),
 		checkupDue: safetyAttempts.length >= CHECKUP_AFTER && checkupDue(checkups),
 		checkupToday: (await getSetting<string>('checkupDay', '')) === day,
