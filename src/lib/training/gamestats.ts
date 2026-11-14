@@ -74,6 +74,10 @@ export interface GameStats {
 	/** Fehler des Gegners (Fehler/Patzer) und wie oft du sie sofort bestraft hast */
 	chances: { taken: number; total: number };
 	motifs: { motif: Motif; n: number }[];
+	/** Genauigkeit je analysierter Partie, älteste zuerst (für Trends mit Zufallsbereich) */
+	accuracySeries: number[];
+	/** eigene Züge je Phase (Mindestmengen für Phasen-Vergleiche) */
+	phaseMoves: Record<Phase, number>;
 }
 
 function ending(g: GameRow): Ending {
@@ -271,7 +275,13 @@ export function computeStats(
 			mistakes: Math.round((counts.mistakes / nA) * 10) / 10,
 			inaccuracies: Math.round((counts.inaccuracies / nA) * 10) / 10
 		},
-		motifs: [...motifMap].map(([motif, n]) => ({ motif, n })).sort((a, b) => b.n - a.n)
+		motifs: [...motifMap].map(([motif, n]) => ({ motif, n })).sort((a, b) => b.n - a.n),
+		accuracySeries: gameAcc,
+		phaseMoves: {
+			opening: phaseLoss.opening.length,
+			middlegame: phaseLoss.middlegame.length,
+			endgame: phaseLoss.endgame.length
+		}
 	};
 }
 
@@ -279,75 +289,177 @@ export interface Insight {
 	kind: 'good' | 'bad' | 'info';
 	key: string;
 	params?: Record<string, string | number>;
+	/** Wie viel ändert es? (betroffene Partien × Abstand) – zum Sortieren */
+	weight?: number;
+	/** passende Übung in Rookie */
+	action?: 'course' | 'safety' | 'puzzles' | 'endgame' | 'slower' | 'mistakes';
 }
 
-/** Die auffälligsten Erkenntnisse als kurze Sätze (i18n-Schlüssel unter stats.insight.*) */
+/** Mindestmengen: darunter ist ein Unterschied fast immer Zufall */
+export const INSIGHT_MIN = {
+	games: 15,
+	opening: 8,
+	color: 10,
+	phaseMoves: 60,
+	phaseGames: 5,
+	losses: 8,
+	accuracyWindow: 10
+};
+
+/** Punkte-Anteil 0..1 aus Sieg/Remis/Niederlage */
+const pts = (x: WDL) => (x.n ? (x.w + x.d / 2) / x.n : 0);
+
+/**
+ * Weicht eine Gruppe (Eröffnung, Farbe) deutlich vom eigenen Schnitt ab?
+ * Normalnäherung der Binomialverteilung: |p − p0| > 1,96 · √(p0(1−p0)/n).
+ */
+export function clearlyDifferent(group: WDL, p0: number): boolean {
+	if (!group.n) return false;
+	const se = Math.sqrt(Math.max(0.05, p0 * (1 - p0)) / group.n);
+	return Math.abs(pts(group) - p0) > 1.96 * se;
+}
+
+const mean = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
+const variance = (xs: number[]) =>
+	xs.length < 2 ? 0 : xs.reduce((a, b) => a + (b - mean(xs)) ** 2, 0) / (xs.length - 1);
+
+/**
+ * Die Erkenntnisse, die wirklich etwas aussagen – als kurze Sätze (i18n-Schlüssel unter stats.insight.*).
+ *
+ * Regeln (statt „was auffällt“ aus drei Partien):
+ * - erst ab 15 beendeten Partien überhaupt;
+ * - jede Aussage braucht eine Mindestmenge **und** einen Unterschied, der größer ist als der
+ *   95-%-Zufallsbereich (Eröffnung/Farbe gegen den eigenen Schnitt, Genauigkeit jüngste 10 gegen die 10 davor);
+ * - Stellungsfehler („positional“) sind kein Motiv, an dem man üben kann – genannt wird das häufigste
+ *   konkrete Motiv (Figur hängt, Gabel, Matt …);
+ * - sortiert nach Wirkung (betroffene Partien × Abstand), höchstens vier; jede mit passender Übung.
+ */
 export function insights(s: GameStats): Insight[] {
 	const out: Insight[] = [];
-	if (s.total.n < 5) return out;
+	if (s.total.n < INSIGHT_MIN.games) return out;
+	const p0 = pts(s.total);
 
 	const { white, black } = s.byColor;
-	if (white.n >= 5 && black.n >= 5 && Math.abs(white.score - black.score) >= 12)
-		out.push({
-			kind: 'info',
-			key: white.score > black.score ? 'betterWhite' : 'betterBlack',
-			params: { a: Math.max(white.score, black.score), b: Math.min(white.score, black.score) }
-		});
+	if (white.n >= INSIGHT_MIN.color && black.n >= INSIGHT_MIN.color) {
+		// zwei Anteile vergleichen
+		const pw = pts(white);
+		const pb = pts(black);
+		const se = Math.sqrt(Math.max(0.05, p0 * (1 - p0)) * (1 / white.n + 1 / black.n));
+		if (Math.abs(pw - pb) > 1.96 * se)
+			out.push({
+				kind: 'info',
+				key: pw > pb ? 'betterWhite' : 'betterBlack',
+				params: { a: Math.max(white.score, black.score), b: Math.min(white.score, black.score) },
+				weight: Math.abs(pw - pb) * Math.min(white.n, black.n)
+			});
+	}
 
-	const solid = s.openings.filter((o) => o.n >= 3);
-	const best = [...solid].sort((a, b) => b.score - a.score)[0];
-	const worst = [...solid].sort((a, b) => a.score - b.score)[0];
-	if (best && best.score >= 55)
+	const solid = s.openings.filter((o) => o.n >= INSIGHT_MIN.opening && clearlyDifferent(o, p0));
+	const best = [...solid].filter((o) => pts(o) > p0).sort((a, b) => b.score - a.score)[0];
+	const worst = [...solid].filter((o) => pts(o) < p0).sort((a, b) => a.score - b.score)[0];
+	if (best)
 		out.push({
 			kind: 'good',
 			key: 'bestOpening',
-			params: { name: best.name, pct: best.score, n: best.n, color: best.color }
+			params: {
+				name: best.name,
+				pct: best.score,
+				n: best.n,
+				color: best.color,
+				avg: s.total.score
+			},
+			weight: (pts(best) - p0) * best.n
 		});
-	if (worst && worst !== best && worst.score <= 45)
+	if (worst)
 		out.push({
 			kind: 'bad',
 			key: 'worstOpening',
-			params: { name: worst.name, pct: worst.score, n: worst.n, color: worst.color }
+			params: {
+				name: worst.name,
+				pct: worst.score,
+				n: worst.n,
+				color: worst.color,
+				avg: s.total.score
+			},
+			weight: (p0 - pts(worst)) * worst.n,
+			action: 'course'
 		});
 
+	// Phase: genug Züge in jeder Phase und ein deutlicher Abstand (≥ 8 Punkte Genauigkeit)
 	const phases = (Object.entries(s.phaseAccuracy) as [Phase, number | null][]).filter(
-		(e): e is [Phase, number] => e[1] !== null
+		(e): e is [Phase, number] => e[1] !== null && s.phaseMoves[e[0]] >= INSIGHT_MIN.phaseMoves
 	);
 	if (phases.length >= 2) {
 		const [weak] = [...phases].sort((a, b) => a[1] - b[1]);
 		const [strong] = [...phases].sort((a, b) => b[1] - a[1]);
-		if (strong[1] - weak[1] >= 5)
+		if (strong[1] - weak[1] >= 8)
 			out.push({
 				kind: 'bad',
 				key: 'weakPhase',
-				params: { phase: weak[0], acc: weak[1], best: strong[1] }
+				params: { phase: weak[0], acc: weak[1], best: strong[1] },
+				weight: ((strong[1] - weak[1]) / 100) * s.analysed,
+				action: weak[0] === 'endgame' ? 'endgame' : weak[0] === 'opening' ? 'course' : 'safety'
 			});
 	}
 
-	if (s.motifs[0] && s.motifs[0].n >= 3)
-		out.push({ kind: 'bad', key: 'motif', params: { motif: s.motifs[0].motif, n: s.motifs[0].n } });
+	// häufigstes konkretes Motiv (ohne „Stellungsfehler“), mit Anteil an allen konkreten Fehlern
+	const concrete = s.motifs.filter((m) => m.motif !== 'positional');
+	const allConcrete = concrete.reduce((a, m) => a + m.n, 0);
+	const top = concrete[0];
+	if (top && top.n >= 5 && s.analysed >= 5)
+		out.push({
+			kind: 'bad',
+			key: 'motif',
+			params: {
+				motif: top.motif,
+				n: top.n,
+				games: s.analysed,
+				share: Math.round((top.n / allConcrete) * 100)
+			},
+			weight: top.n / 2,
+			action: top.motif === 'hanging' || top.motif === 'mate-allowed' ? 'safety' : 'mistakes'
+		});
 
 	const losses = s.total.l;
-	if (losses >= 5 && s.lossEndings.time / losses >= 0.25)
+	if (
+		losses >= INSIGHT_MIN.losses &&
+		s.lossEndings.time >= 3 &&
+		s.lossEndings.time / losses >= 0.25
+	)
 		out.push({
 			kind: 'bad',
 			key: 'time',
-			params: { pct: Math.round((s.lossEndings.time / losses) * 100) }
+			params: { pct: Math.round((s.lossEndings.time / losses) * 100), n: s.lossEndings.time },
+			weight: s.lossEndings.time,
+			action: 'slower'
 		});
 
-	if (s.accuracyRecent !== null && s.accuracyPrevious !== null) {
-		const d = s.accuracyRecent - s.accuracyPrevious;
-		if (Math.abs(d) >= 3)
+	// Genauigkeit: jüngste 10 gegen die 10 davor, nur wenn größer als der Zufallsbereich (Welch)
+	const w = INSIGHT_MIN.accuracyWindow;
+	const acc = s.accuracySeries;
+	if (acc.length >= 2 * w) {
+		const a = acc.slice(-w);
+		const b = acc.slice(-2 * w, -w);
+		const d = mean(a) - mean(b);
+		const margin = 1.96 * Math.sqrt(variance(a) / w + variance(b) / w);
+		if (Math.abs(d) > margin)
 			out.push({
 				kind: d > 0 ? 'good' : 'bad',
 				key: d > 0 ? 'improving' : 'declining',
-				params: { d: Math.abs(d) }
+				params: { d: Math.round(Math.abs(d)) },
+				weight: Math.abs(d) / 2
 			});
 	}
 
 	const stronger = s.vsStrength.find((x) => x.key === 'stronger');
-	if (stronger && stronger.wdl.n >= 5 && stronger.wdl.score >= 40)
-		out.push({ kind: 'good', key: 'giantKiller', params: { pct: stronger.wdl.score } });
+	// gegen > 100 stärkere Gegner erwartet man < 36 %; ab 10 Partien und ≥ 50 % ist das bemerkenswert
+	if (stronger && stronger.wdl.n >= 10 && stronger.wdl.score >= 50)
+		out.push({
+			kind: 'good',
+			key: 'giantKiller',
+			params: { pct: stronger.wdl.score, n: stronger.wdl.n },
+			weight: stronger.wdl.n * 0.15
+		});
 
-	return out;
+	return out.sort((a, b) => (b.weight ?? 0) - (a.weight ?? 0)).slice(0, 4);
 }

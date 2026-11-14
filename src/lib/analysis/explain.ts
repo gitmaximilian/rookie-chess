@@ -109,9 +109,23 @@ export function explain(
 				reply: san(fenAfter, after.best!)
 			};
 			const justMoved = reply.to === mv.to;
+			// fachlich genau: „ungeschützt“ nur, wenn die Figur wirklich ungedeckt ist – sonst wird sie
+			// von einer billigeren Figur geschlagen, und Zurückschlagen gleicht den Verlust nicht aus
+			const defended = isDefended(afterPos, reply.to, me);
+			const attacker = afterPos.board.get(reply.from);
+			const cheaper = !!attacker && defended && VALUE[attacker.role] < VALUE[victim.role];
+			const textKey = cheaper
+				? 'explain.cheaperText'
+				: justMoved
+					? 'explain.blunderedText'
+					: 'explain.hangingText';
 			return {
 				title: t(justMoved ? 'explain.blunderedTitle' : 'explain.hangingTitle', params),
-				text: t(justMoved ? 'explain.blunderedText' : 'explain.hangingText', params) + better,
+				text:
+					t(textKey, {
+						...params,
+						attacker: attacker ? t(`pieces.name.${attacker.role}`) : ''
+					}) + better,
 				motif: 'hanging'
 			};
 		}
@@ -195,6 +209,16 @@ function winsMaterial(pos: ReturnType<typeof positionFromFen>, mv: NormalMove): 
 		}
 	}
 	return true;
+}
+
+/** Ist das Feld von einer eigenen Figur gedeckt (ohne die Figur darauf selbst)? */
+function isDefended(pos: ReturnType<typeof positionFromFen>, sq: number, color: 'white' | 'black') {
+	for (const from of pos.board[color]) {
+		if (from === sq) continue;
+		const p = pos.board.get(from);
+		if (p && attacks(p, from, pos.board.occupied).has(sq)) return true;
+	}
+	return false;
 }
 
 /** Akkusativ mit Possessiv: „deinen Springer“ / „your knight“ */

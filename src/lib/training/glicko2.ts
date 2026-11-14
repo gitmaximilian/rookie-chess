@@ -98,7 +98,12 @@ export function update(player: Rating, opponents: Opponent[]): Rating {
 	};
 }
 
-/** Ergebnis für ein einzelnes Puzzle */
-export function updateForPuzzle(player: Rating, puzzleRating: number, solved: boolean): Rating {
-	return update(player, [{ rating: puzzleRating, rd: 75, score: solved ? 1 : 0 }]);
+/** Ergebnis für ein einzelnes Puzzle (true/false oder Punktzahl 0 … 1, z. B. ½ mit Hinweis) */
+export function updateForPuzzle(
+	player: Rating,
+	puzzleRating: number,
+	solved: boolean | number
+): Rating {
+	const score = typeof solved === 'number' ? solved : solved ? 1 : 0;
+	return update(player, [{ rating: puzzleRating, rd: 75, score }]);
 }

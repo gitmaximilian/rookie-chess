@@ -267,7 +267,12 @@ export function commentFor(a: {
 		case 'excellent':
 		case 'good': {
 			const does = whatItDoes(a.fenBefore, a.played, a.ply);
-			const alt = a.kind !== 'best' && bestSan ? ' ' + t('review.text.alt', { san: bestSan }) : '';
+			// kein Tadel: auch der zweit- oder drittbeste Zug ist oft völlig in Ordnung
+			const alt =
+				a.kind !== 'best' && bestSan
+					? ' ' +
+						t(a.kind === 'excellent' ? 'review.text.altEqual' : 'review.text.alt', { san: bestSan })
+					: '';
 			text = (does || t(`review.text.${a.kind}`)) + alt;
 			break;
 		}

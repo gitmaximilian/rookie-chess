@@ -79,6 +79,23 @@
 		);
 	}
 
+	function actionHref(a: NonNullable<Insight['action']>): string {
+		switch (a) {
+			case 'course':
+				return resolve('/learn/openings');
+			case 'safety':
+				return resolve('/puzzles/safety');
+			case 'endgame':
+				return resolve('/learn/endgame');
+			case 'slower':
+				return resolve('/play');
+			case 'mistakes':
+				return resolve('/puzzles?mode=mistakes');
+			default:
+				return resolve('/puzzles');
+		}
+	}
+
 	function insightText(i: Insight): string {
 		const p = { ...i.params };
 		if (i.key === 'weakPhase') p.phase = t(`stats.phase.${p.phase}`);
@@ -153,13 +170,22 @@
 										size={16}
 									/>{/if}
 							</span>
-							{insightText(i)}
+							<span class="ins-text"
+								>{insightText(i)}
+								{#if i.action}
+									<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- actionHref liefert resolve()-Pfade -->
+									<a class="ins-go" href={actionHref(i.action)}
+										>{t(`stats.insightAction.${i.action}`)} →</a
+									>
+								{/if}</span
+							>
 						</li>
 					{/each}
 				</ul>
 			{:else}
 				<p class="muted">{t('stats.noInsights')}</p>
 			{/if}
+			<p class="muted ins-rule">{t('stats.insightRule')}</p>
 		</section>
 
 		<!-- Ergebnisse -->
@@ -407,6 +433,23 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.5rem;
+	}
+
+	.ins-text {
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+	}
+
+	.ins-go {
+		font-weight: 650;
+		font-size: 0.88rem;
+		color: var(--accent-text, var(--accent));
+	}
+
+	.ins-rule {
+		margin-top: 0.75rem;
+		font-size: 0.82rem;
 	}
 
 	.insights li {

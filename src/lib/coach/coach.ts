@@ -29,10 +29,13 @@ async function evalFen(fen: string, signal?: AbortSignal): Promise<PlyEval> {
 	const end = g.end();
 	if (end?.kind === 'checkmate') return { cp: g.turn === 'white' ? -10000 : 10000 };
 	if (end) return { cp: 0 };
-	const res = await engine.analyse({ fen, depth: 11, multipv: 1, signal });
+	// zwei Linien: so erkennt die Bewertung, wenn es mehrere gleich gute Züge gibt (classify.ts)
+	const res = await engine.analyse({ fen, depth: 11, multipv: 2, signal });
 	const top = res.lines[0];
+	const alt = res.lines[1];
 	const score = top ? toWhite({ cp: top.cp, mate: top.mate }, turnFromFen(fen)) : { cp: 0 };
 	const e: PlyEval = { ...score, best: res.bestmove ?? undefined, pv: top?.pv.slice(0, 8) };
+	if (alt) e.second = toWhite({ cp: alt.cp, mate: alt.mate }, turnFromFen(fen));
 	if (cache.size > 400) cache.clear();
 	cache.set(fen, e);
 	return e;

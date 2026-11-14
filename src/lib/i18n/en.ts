@@ -228,6 +228,23 @@ export const en = {
 		showBetter: 'Show better move',
 		betterWas: (p: P) => `Better was ${p.san}.`,
 		title: 'Coach',
+		levelLabel: 'Coach help',
+		levelAuto: 'Auto',
+		levelWarn: 'Warn me',
+		levelCheck: 'I check',
+		levelWarnText:
+			'The coach warns you about attacked pieces and threats and shows mistakes right away.',
+		levelCheckText:
+			'The coach only asks “what does your opponent threaten?” – you do the blunder check yourself and can ask for the answer.',
+		checkPrompt: 'Your blunder check: what is your opponent up to?',
+		checkPromptText:
+			'Before you move: can your opponent give check, capture something or threaten something?',
+		reveal: 'What is the threat?',
+		unsafeTitle: 'Stop – that move is not safe.',
+		unsafeText:
+			'What can your opponent capture or threaten now? Take it back and look yourself – or let me show you why.',
+		why: 'Show me why',
+		takebackSelf: 'Take back, find it myself',
 		toggle: 'Play with coach',
 		toggleText: 'Feedback on every move, warnings and explanations.',
 		welcome: 'I’ll comment on every move. If something goes wrong, you can take it back.',
@@ -450,7 +467,8 @@ export const en = {
 			excellent: 'Almost as strong as the top engine move.',
 			good: 'A solid move.',
 			punish: (p: P) => `you can punish it with ${p.san}.`,
-			alt: (p: P) => `Even stronger was ${p.san}.`
+			alt: (p: P) => `Slightly more precise was ${p.san}.`,
+			altEqual: (p: P) => `Just as strong: ${p.san}.`
 		},
 		does: {
 			castle: 'The king is safe and the rook joins the game.',
@@ -512,6 +530,8 @@ export const en = {
 		blunderedTitle: (p: P) => `${cap(p.name)} blundered`,
 		hangingTitle: (p: P) => `${cap(p.name)} hanging`,
 		blunderedText: (p: P) => `${p.Piece} on ${p.sq} is unprotected – ${p.reply} takes ${p.pron}.`,
+		cheaperText: (p: P) =>
+			`${p.Piece} on ${p.sq} is protected, but ${p.reply} captures it with a ${p.attacker} – taking back does not make up for it.`,
 		hangingText: (p: P) => `After your move ${p.piece} on ${p.sq} hangs: ${p.reply}.`,
 		forkTitle: 'Allowed a fork',
 		forkText: (p: P) => `Your opponent has ${p.reply} – attacking ${p.a} and ${p.b} at once.`,
@@ -583,6 +603,10 @@ export const en = {
 		sound: 'Sounds',
 		soundStyle: 'Sound style',
 		soundStyles: { wood: 'Wood', soft: 'Soft', chime: 'Chime' },
+		minutes: 'Time per day',
+		minutesText:
+			'Time per day for your daily plan – Rookie picks the most important tasks until it is full.',
+		minutesN: (p: P) => `${p.n} min`,
 		goal: 'Daily goal',
 		goalText: 'How many puzzles do you want to solve per day?',
 		data: 'Your data',
@@ -1080,19 +1104,36 @@ export const en = {
 		avgMoves: (p: P) => `On average ${p.n} moves per game`,
 		practise: 'Practise my mistakes',
 		insight: {
-			betterWhite: (p: P) => `You score ${p.a}% with White but only ${p.b}% with Black.`,
-			betterBlack: (p: P) => `You score ${p.a}% with Black but only ${p.b}% with White.`,
+			betterWhite: (p: P) =>
+				`With White you score ${p.a} %, with Black only ${p.b} % – a clear difference.`,
+			betterBlack: (p: P) =>
+				`With Black you score ${p.a} %, with White only ${p.b} % – a clear difference.`,
 			bestOpening: (p: P) =>
-				`Your best opening as ${p.color === 'white' ? 'White' : 'Black'}: ${p.name} – ${p.pct}% from ${p.n} games.`,
+				`Your strongest opening as ${p.color === 'white' ? 'White' : 'Black'}: ${p.name} – ${p.pct} % from ${p.n} games (your average: ${p.avg} %).`,
 			worstOpening: (p: P) =>
-				`${p.name} (you as ${p.color === 'white' ? 'White' : 'Black'}) is giving you trouble: only ${p.pct}% from ${p.n} games. A course could help.`,
+				`${p.name} (you as ${p.color === 'white' ? 'White' : 'Black'}): only ${p.pct} % from ${p.n} games – clearly below your average of ${p.avg} %.`,
 			weakPhase: (p: P) =>
-				`Weakest game phase: ${p.phase} – ${p.acc}% accuracy (best phase: ${p.best}%).`,
-			motif: (p: P) => `Your most common mistake: ${p.motif} (${p.n}×).`,
-			time: (p: P) => `${p.pct}% of your losses are on time – keep an eye on the clock.`,
-			improving: (p: P) => `Your accuracy is improving: +${p.d} points in your last 10 games.`,
-			declining: (p: P) => `Your accuracy dropped by ${p.d} points in your last 10 games.`,
-			giantKiller: (p: P) => `You score ${p.pct}% against stronger opponents – impressive!`
+				`Weakest game phase: ${p.phase} – ${p.acc} % accuracy (best phase: ${p.best} %).`,
+			motif: (p: P) =>
+				`Your most common concrete mistake: ${p.motif} – ${p.n}× in ${p.games} analysed games (${p.share} % of your mistakes with a clear motif).`,
+			time: (p: P) =>
+				`${p.pct} % of your losses (${p.n}) are on time – play longer time controls or move faster in clear positions.`,
+			improving: (p: P) =>
+				`Your accuracy is rising: +${p.d} points over the last 10 games – more than chance.`,
+			declining: (p: P) =>
+				`Your accuracy dropped by ${p.d} points over the last 10 games – more than chance.`,
+			giantKiller: (p: P) =>
+				`Against stronger opponents you score ${p.pct} % from ${p.n} games – impressive!`
+		},
+		insightRule:
+			'Only what is clearly beyond chance with enough games is shown – at most four points, most important first.',
+		insightAction: {
+			course: 'Opening course',
+			safety: 'Practise blunder check',
+			puzzles: 'Puzzles',
+			endgame: 'Practise endgames',
+			slower: 'Game with more time',
+			mistakes: 'Practise your mistakes'
 		}
 	},
 	install: {
@@ -1164,6 +1205,10 @@ export const en = {
 		endgame: (p: P) => `Endgame: ${p.name}`,
 		game: 'Learn from your last game',
 		play: 'Play a game with the coach',
+		safety: (p: P) => `Blunder check: ${p.n} moves – safe or not?`,
+		mistakes: (p: P) => `Your own mistakes: ${p.n} to repeat`,
+		checkup: 'Safety check-up (12 tasks, every 2 weeks)',
+		progressMin: (p: P) => `${p.n} of ${p.m} done · about ${p.min} min left`,
 		start: 'Start',
 		continue: 'Continue',
 		allDone: 'All done for today – great work!',
@@ -1280,6 +1325,85 @@ export const en = {
 		howEndgames: 'Per lesson: 1–3 stars, depending on how efficiently you win',
 		all: 'All stars collected – brilliant!'
 	},
+	report: {
+		title: 'Game rating',
+		level: (p: P) => `accuracy typical of ≈ ${p.elo}`,
+		levelBelow: (p: P) => `accuracy typical of ${p.elo} or below`,
+		levelAbove: (p: P) => `accuracy typical of ${p.elo} or above`,
+		tooShort: 'too short to rate',
+		percentile: (p: P) => `more accurate than ${p.p} % of games at ≈ ${p.r}`,
+		phases: 'Your phases',
+		turning: 'Turning point',
+		byYou: '(you)',
+		byOpp: '(opponent)',
+		lost: (p: P) => `−${p.pct} % winning chance`,
+		chances: 'Chances',
+		chancesText: (p: P) => `${p.n} of ${p.m} opponent mistakes punished at once`,
+		noChances: 'Your opponent made no serious mistake',
+		missed: (p: P) => `missed at ${p.move}`,
+		lesson: 'Lesson',
+		lessonText: (p: P) => `${p.motif} (${p.n}×) – practise now`,
+		note: 'Rating: accuracy of this game compared with 1,440 real Lichess games (400–2200, same engine depth). A single game varies a lot – even players around 1000 exceed 87 % in one game in four. A “performance Elo” from one game would mostly be chance; what counts is how the game was for your level, and the trend over many games.'
+	},
+	progress: {
+		title: 'Is your training working?',
+		text: 'Stars, streak and puzzle rating show effort. Whether you play better shows here – with honest minimum sample sizes.',
+		blunders: 'Blunders per 30 moves',
+		better: (p: P) => `▼ ${p.d} fewer than before (${p.p}) – a real improvement`,
+		worse: (p: P) => `▲ ${p.d} more than before (${p.p}) – more than chance`,
+		same: (p: P) => `before ${p.p} – the difference is still within chance`,
+		baseline: (p: P) => `starting value after 10 analysed games (${p.n} to go)`,
+		compareIn: (p: P) => `first comparison after ${p.n} more games`,
+		checkup: 'Check-up',
+		checkupNone: 'no check-up yet – take one now',
+		checkupDue: 'next one is due',
+		checkupNext: (p: P) => `next in ${p.n} days`,
+		checkupFrom: (p: P) => `first ${p.first} %`,
+		safety: 'Blunder check',
+		puzzles: 'Puzzles',
+		target: 'hit rate · target ≈ 80 %',
+		targetSelf: 'solved yourself · target ≈ 80 %'
+	},
+	safety: {
+		eyebrow: 'Blunder check',
+		title: 'Is it safe?',
+		testTitle: 'Safety check-up',
+		kicker: 'Blunder check',
+		testKicker: (p: P) => `Check-up · ${p.n} of ${p.m}`,
+		teaser:
+			'Before every move: can my opponent take something or mate me? Train the check that saves the most games.',
+		prompt: (p: P) => `You plan ${p.san}. Is it safe?`,
+		routine: 'Imagine it played: can your opponent check, capture or threaten something?',
+		safe: 'Safe',
+		unsafe: 'Not safe',
+		refuteTitle: 'Right feeling! Now show it: how does your opponent punish the move?',
+		refuteText: 'Play your opponent’s best reply on the board.',
+		refuteAgain: 'Not that one – look for a capture, a check or a fork.',
+		showReply: 'Show me',
+		rightSafe: 'Right – the move is safe.',
+		wrongSafe: 'The move was safe after all.',
+		wrongUnsafe: 'Careful – that move loses.',
+		rightUnsafe: 'Exactly – you found the refutation!',
+		halfUnsafe: 'Not safe, well sensed – here is why.',
+		whySafe: (p: P) =>
+			`After ${p.san} your opponent wins nothing: every capture can be answered and there is no mate.`,
+		whyUnsafe: (p: P) =>
+			`After ${p.san} comes ${p.reply} (${p.theme}). Check before every move what your opponent can do next.`,
+		saved: 'Answer saved – results at the end.',
+		testScore: (p: P) => `${p.n} of ${p.m} points`,
+		testTrend: (p: P) => `First check-up ${p.first} %, now ${p.last} %.`,
+		trendUp: 'That is a real improvement.',
+		trendDown: 'Lower than before – keep doing the daily blunder check.',
+		trendNoise:
+			'With 12 tasks a difference this size can still be chance – the trend over several check-ups counts.',
+		testFirst:
+			'Your first check-up. Rookie suggests the next one in two weeks – then you will see whether your training works.',
+		toCoach: 'To your progress',
+		board: 'Board: is the planned move safe?',
+		empty: 'You have seen all tasks – great work!',
+		today: (p: P) => `today ${p.n}`,
+		session: (p: P) => `${p.n}/${p.m} right`
+	},
 	storm: {
 		title: 'Puzzle Storm',
 		teaser: 'As many puzzles as you can in 3 minutes.',
@@ -1386,7 +1510,7 @@ export const en = {
 		stars: 'Stars',
 		starsSub: 'from learning',
 		formLast: (p: P) => `last ${p.n} ${s(p.n, 'game', 'games')}`,
-		strengthGoal: 'from games and puzzles · goal 1200',
+		strengthGoal: (p: P) => `next ${p.goal} · goal 1600`,
 		streak: 'Streak',
 		streakDays: (p: P) => s(p.n, 'day', 'days'),
 		streakDone: 'today done',
@@ -1412,7 +1536,8 @@ export const en = {
 			stockfishjs: 'WebAssembly build',
 			chessground: 'Chessboard',
 			chessops: 'Chess rules & PGN',
-			puzzles: 'Tactics puzzles',
+			puzzles: 'Tactics puzzles and blunder-check positions',
+			games: 'Research data: blunder types and accuracy by rating (docs/research)',
 			openings: 'Opening names',
 			tablebase: 'Endgame tablebase',
 			lucide: 'Icons',

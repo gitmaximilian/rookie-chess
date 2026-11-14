@@ -2,6 +2,7 @@
 	import CommentBar from '#lib/ui/CommentBar.svelte';
 	import Dock from '#lib/ui/Dock.svelte';
 	import { onMount } from 'svelte';
+	import ShieldCheck from '@lucide/svelte/icons/shield-check';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import Lightbulb from '@lucide/svelte/icons/lightbulb';
@@ -22,7 +23,13 @@
 	import Info from '@lucide/svelte/icons/info';
 	import Board, { type Shape } from '#lib/ui/board/Board.svelte';
 	import { PuzzleRun, pickPuzzle, dailyPuzzle, type Puzzle } from '#lib/training/puzzles.js';
-	import { applyPuzzleResult, getPuzzleRating, isProvisional } from '#lib/training/rating.js';
+	import {
+		applyPuzzleResult,
+		getPuzzleRating,
+		isProvisional,
+		recentPuzzleResults
+	} from '#lib/training/rating.js';
+	import { puzzleScore, puzzleTarget } from '#lib/training/difficulty.js';
 	import { review, dueCards, formatInterval } from '#lib/training/srs.js';
 	import { THEMES, themeName, themeAbout } from '#lib/data/themes.js';
 	import { t } from '#lib/i18n/i18n.svelte.js';
@@ -35,6 +42,9 @@
 	type Mode = 'rated' | 'review' | 'daily' | 'mistakes' | 'theme';
 
 	let mode = $state<Mode>('rated');
+	/** Schwerpunkt-Puzzles mit beigemischten anderen Themen (aus dem Tagesplan) */
+	let mixFocus = false;
+	let mixCount = 0;
 	let theme = $state<string | null>(null);
 	let showAllThemes = $state(false);
 	// Themen-Chips eingeklappt, außer ein Thema ist gerade gewählt (z. B. aus dem Tagesplan)
@@ -96,6 +106,7 @@
 		if (q.get('theme')) {
 			mode = 'theme';
 			theme = q.get('theme');
+			mixFocus = q.get('mix') === '1';
 		} else if (m && ['rated', 'review', 'daily', 'mistakes'].includes(m)) mode = m;
 		rating = await getPuzzleRating();
 		await refreshCounts();
@@ -129,9 +140,12 @@
 			return (pick?.data as Puzzle) ?? null;
 		}
 		if (mode === 'daily') return dailyPuzzle(today());
+		// Ziel ca. 80 % Erfolg: etwas unter der eigenen Wertung, nachgeregelt nach den letzten Ergebnissen
 		return pickPuzzle({
-			rating: rating?.rating ?? 800,
-			theme: mode === 'theme' ? theme : null,
+			rating: puzzleTarget(rating?.rating ?? 800, await recentPuzzleResults()),
+			// Schwerpunkt aus dem Tagesplan gemischt: jedes dritte Puzzle aus allen Themen –
+			// im Spiel steht auch nicht dran, welches Motiv kommt (gemischtes Üben, Rohrer et al.)
+			theme: mode === 'theme' && !(mixFocus && ++mixCount % 3 === 0) ? theme : null,
 			exclude: await seenIds()
 		});
 	}
@@ -237,8 +251,10 @@
 		const p = run.puzzle;
 		const rated = (mode === 'rated' || mode === 'theme') && p.source === 'lichess';
 		let ratingAfter = rating?.rating ?? 0;
+		// mit Hinweis gelöst zählt halb – selbst gefunden ist es dann nicht
+		const hinted = solved && usedHint;
 		if (rated) {
-			const r = await applyPuzzleResult(p.rating, solved);
+			const r = await applyPuzzleResult(p.rating, puzzleScore(solved, hinted));
 			rating = r.after;
 			ratingAfter = r.after.rating;
 			delta = Math.round(r.after.rating - r.before.rating);
@@ -249,13 +265,15 @@
 			solved,
 			ratingAfter: Math.round(ratingAfter),
 			themes: p.themes,
-			source: p.source
+			source: p.source,
+			...(hinted ? { hinted: true } : {})
 		});
 		// Wiederholung planen
 		const kind = p.source === 'mistake' ? 'mistake' : 'puzzle';
 		const id = `${kind}:${p.id}`;
 		const existing = await db.reviewCards.get(id);
-		if (!solved || existing) {
+		// verfehlt oder nur mit Hinweis gelöst → kommt wieder (in Tagen, siehe srs.ts)
+		if (!solved || hinted || existing) {
 			const row = await review(id, kind, solved ? (usedHint ? 'hard' : 'good') : 'again', p);
 			nextReview = formatInterval(row.due);
 		}
@@ -323,6 +341,7 @@
 	}
 
 	function setMode(m: Mode, t: string | null = null) {
+		mixFocus = false;
 		mode = m;
 		theme = t;
 		streak = 0;
@@ -437,6 +456,9 @@
 			{t('puzzles.mistakes')}
 			{#if mistakeCount}<span class="count">{mistakeCount}</span>{/if}
 		</button>
+		<a class="chip" href={resolve('/puzzles/safety')} data-testid="chip-safety"
+			><ShieldCheck size={15} /> {t('safety.eyebrow')}</a
+		>
 		<a class="chip storm" href={resolve('/puzzles/storm')}><Zap size={15} /> {t('storm.title')}</a>
 		<span class="sep" aria-hidden="true"></span>
 		<!-- Themen erst auf Wunsch: „Für dich“ wählt für Einsteiger schon passende Puzzles -->
@@ -779,7 +801,7 @@
 
 	.board-col {
 		width: 100%;
-		max-width: min(640px, calc(100dvh - 260px));
+		max-width: min(640px, calc(100svh - 260px));
 		margin: 0 auto;
 	}
 
@@ -789,7 +811,7 @@
 			align-items: start;
 		}
 		.board-col {
-			max-width: min(680px, calc(100dvh - 220px));
+			max-width: min(680px, calc(100svh - 220px));
 		}
 		.panel {
 			position: sticky;
@@ -1010,7 +1032,7 @@
 		.board-col {
 			max-width: min(
 				100%,
-				calc(100dvh - var(--dock-h) - var(--tabbar-space) - var(--safe-top) - 190px)
+				calc(100svh - var(--dock-h) - var(--tabbar-space) - var(--safe-top) - 190px)
 			);
 		}
 		/* Aufgabe und Rückmeldung stehen über dem Brett (feste Höhe) */
@@ -1018,7 +1040,7 @@
 			max-width: min(
 				100%,
 				calc(
-					100dvh - var(--dock-h) - var(--tabbar-space) - var(--safe-top) - 190px -
+					100svh - var(--dock-h) - var(--tabbar-space) - var(--safe-top) - 190px -
 						var(--comment-h) - 0.5rem
 				)
 			);

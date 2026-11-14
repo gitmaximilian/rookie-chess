@@ -26,6 +26,7 @@
 	import EvalGraph from '#lib/ui/EvalGraph.svelte';
 	import MoveList from '#lib/ui/MoveList.svelte';
 	import { db, addTombstone, type GameRow } from '#lib/db/db.js';
+	import { review } from '#lib/training/srs.js';
 	import { Game, sanForUci } from '#lib/chess/game.js';
 	import { figurine } from '#lib/chess/notation.js';
 	import {
@@ -34,13 +35,16 @@
 		createMistakePuzzles,
 		type MoveReview
 	} from '#lib/analysis/run.js';
-	import { accuracy, type PlyEval } from '#lib/analysis/classify.js';
+	import { accuracy, whiteWin, type PlyEval } from '#lib/analysis/classify.js';
 	import { t, intlLocale } from '#lib/i18n/i18n.svelte.js';
 	import { outcomeOf } from '#lib/training/gamestats.js';
 	import { toWhite } from '#lib/engine/uci.js';
 	import { engine } from '#lib/engine/engine.js';
 	import { positionFromFen, turnFromFen } from '#lib/chess/game.js';
 	import ReviewPanel, { type LiveLine } from '#lib/ui/ReviewPanel.svelte';
+	import GameReport from '#lib/ui/GameReport.svelte';
+	import { gameReport } from '#lib/analysis/report.js';
+	import { currentStrength } from '#lib/training/planData.js';
 	import {
 		KINDS,
 		KIND_GLYPH,
@@ -239,6 +243,9 @@
 	let liveAbort: AbortController | null = null;
 	const liveDepth = /iPhone|iPad|Android/.test(globalThis.navigator?.userAgent ?? '') ? 13 : 16;
 
+	/** ab dieser Tiefe ersetzt die Live-Engine die gespeicherte Bewertung */
+	const LIVE_MIN_DEPTH = 12;
+
 	function toLines(f: string, raw: { cp?: number; mate?: number; pv: string[] }[]): LiveLine[] {
 		const turn = turnFromFen(f);
 		return raw
@@ -284,6 +291,9 @@
 				signal: ac.signal,
 				onInfo: (ls) => {
 					if (ac.signal.aborted || ls.length < 1) return;
+					// flache Zwischenstände (Tiefe 1–11) nicht zeigen: sie wechseln ständig und sind oft falsch –
+					// bis dahin bleibt die gespeicherte Bewertung der Partie-Analyse stehen
+					if (ls[0].depth < LIVE_MIN_DEPTH && live?.fen === f && live.lines.length) return;
 					live = { fen: f, lines: toLines(f, ls), depth: ls[0].depth, done: false };
 				}
 			});
@@ -299,6 +309,9 @@
 	});
 
 	const liveLines = $derived(live && live.fen === fen ? live.lines : []);
+
+	/** Gewinnchance-Abstand (0..1), bis zu dem ein Zug als „genauso gut“ gilt */
+	const EQUAL_WIN = 0.03;
 
 	const shapes = $derived.by<Shape[]>(() => {
 		const s: Shape[] = [];
@@ -316,22 +329,31 @@
 			);
 			return s;
 		}
-		// schlechter Zug: was stattdessen richtig gewesen wäre
+		// schlechter Zug: gespielter Zug (rot) und was stattdessen besser gewesen wäre (grün) – beide
+		// beziehen sich auf die Stellung davor; nur der rote Pfeil dazu macht das auf dem Brett eindeutig
 		if (currentReview && isBad(currentReview.kind)) {
 			const best = evals[ply - 1]?.best;
+			const played = game.moves[ply - 1]?.uci;
+			if (played && best && best !== played)
+				s.push({ orig: played.slice(0, 2), dest: played.slice(2, 4), brush: 'bad' });
 			if (best) s.push({ orig: best.slice(0, 2), dest: best.slice(2, 4), brush: 'good' });
 			return s;
 		}
 		if (!showBest || ply >= total - 1) return s;
-		// sonst: die besten Züge von hier – stärkster kräftig, die anderen blass
+		// sonst: der beste Zug von hier – und weitere nur, wenn sie praktisch gleich gut sind
+		// (es gibt oft mehrere gute Züge; ein Pfeil heißt nicht „nur dieser“)
+		const top = liveLines[0];
+		if (!top) return s;
+		const turn = turnFromFen(fen);
+		const w = (l: LiveLine) => {
+			const x = whiteWin(l.score);
+			return turn === 'white' ? x : 1 - x;
+		};
 		liveLines.slice(0, 3).forEach((l, i) => {
 			const u = l.uci[0];
 			if (!u || s.some((x) => x.orig === u.slice(0, 2) && x.dest === u.slice(2, 4))) return;
-			s.push({
-				orig: u.slice(0, 2),
-				dest: u.slice(2, 4),
-				brush: i === 0 ? 'info' : 'paleBlue'
-			});
+			if (i > 0 && w(top) - w(l) > EQUAL_WIN) return;
+			s.push({ orig: u.slice(0, 2), dest: u.slice(2, 4), brush: i === 0 ? 'info' : 'paleBlue' });
 		});
 		return s;
 	});
@@ -391,6 +413,20 @@
 		};
 		for (const r of reviews) c[r.mover][r.kind]++;
 		return c;
+	});
+
+	// Partie-Bewertung: gespielte Elo, Phasen, Wendepunkt, Chancen, Lernpunkt (lib/analysis/report.ts)
+	const report = $derived(row && reviews.length && !analysing ? gameReport(row, reviews) : null);
+	/** eigene Stärke für Bot-Partien (Rookies Schätzung) – zum Einordnen der Partie */
+	let myStrength = $state<number | null>(null);
+	onMount(() => void currentStrength().then((s) => (myStrength = s?.value ?? null)));
+	/** Wertung des Gegners: online aus dem Import, bei Bots aus dem PGN (Bot-Stärke) */
+	const oppElo = $derived.by(() => {
+		if (!row) return null;
+		if (row.oppRating) return row.oppRating;
+		const tag = row.myColor === 'white' ? 'BlackElo' : 'WhiteElo';
+		const m = row.pgn.match(new RegExp(`\\[${tag}\\s+"(\\d+)"\\]`));
+		return m ? Number(m[1]) : null;
 	});
 
 	const summary = $derived.by(() => {
@@ -506,9 +542,21 @@
 	function solved() {
 		if (!retry) return;
 		// beim ersten Versuch ohne Tipp zählt es als gefunden
-		retry.res[retry.list[retry.pos]] = retry.tries === 0 && !retry.hint ? 'solved' : 'hinted';
+		const clean = retry.tries === 0 && !retry.hint;
+		retry.res[retry.list[retry.pos]] = clean ? 'solved' : 'hinted';
 		retry.status = 'solved';
 		retry.fb = null;
+		void scheduleMistake(clean ? 'good' : 'hard');
+	}
+
+	/**
+	 * Der nachgespielte Fehler ist auch eine Wiederholungskarte („Deine eigenen Fehler“):
+	 * Ergebnis dort eintragen, damit er im richtigen Abstand wiederkommt (nicht morgen erneut, wenn gelöst).
+	 */
+	async function scheduleMistake(recall: 'good' | 'hard' | 'again') {
+		if (!row?.id || !retryItem) return;
+		const id = `mistake:${row.source}-${row.id}-${retryItem.ply}`;
+		if (await db.reviewCards.get(id)) await review(id, 'mistake', recall);
 	}
 
 	function retryHint() {
@@ -521,6 +569,7 @@
 		retry.res[retry.list[retry.pos]] = 'shown';
 		retry.status = 'shown';
 		retry.fb = null;
+		void scheduleMistake('again');
 	}
 
 	async function nextRetry() {
@@ -787,7 +836,20 @@
 			color: retry.fb ? 'var(--k-mistake)' : 'var(--c-learn)'
 		};
 	});
-	const bar = $derived(retryBar ?? reviewBar);
+	// Leiste bleibt stehen, auch wenn ein Zug noch nicht analysiert ist – sonst wächst und schrumpft das Brett
+	const bar = $derived(
+		retryBar ??
+			reviewBar ??
+			(row && game && !retry
+				? {
+						kind: null,
+						kicker: '',
+						title: t('analysis.running'),
+						text: '',
+						color: 'var(--c-learn)'
+					}
+				: null)
+	);
 
 	/** nächster eigener Fehler nach dem aktuellen Zug (danach wieder von vorn) */
 	const nextMistake = $derived(myMistakes.find((r) => r.ply > ply) ?? myMistakes[0] ?? null);
@@ -1188,6 +1250,21 @@
 				<div class="card graph-card">
 					<EvalGraph {evals} {total} current={ply} {reviews} myColor={row.myColor} onSelect={go} />
 				</div>
+			{/if}
+
+			{#if report && row}
+				<GameReport
+					{report}
+					myColor={row.myColor}
+					opponent={row.opponent}
+					myRating={row.myRating ?? myStrength}
+					oppRating={oppElo}
+					{moveLabel}
+					onGo={(p) => {
+						go(p);
+						void toBoard();
+					}}
+				/>
 			{/if}
 
 			{#if reviews.length && !analysing}
@@ -1659,7 +1736,7 @@
 		flex-direction: column;
 		gap: 0.6rem;
 		width: 100%;
-		max-width: min(660px, calc(100dvh - 200px));
+		max-width: min(660px, calc(100svh - 200px));
 		margin: 0 auto;
 	}
 
@@ -1917,7 +1994,7 @@
 		.board-col {
 			max-width: min(
 				100%,
-				calc(100dvh - var(--dock-h) - var(--tabbar-space) - var(--safe-top) - 80px)
+				calc(100svh - var(--dock-h) - var(--tabbar-space) - var(--safe-top) - 80px)
 			);
 		}
 		/* Kommentar steht über dem Brett (feste Höhe) */
@@ -1925,7 +2002,7 @@
 			max-width: min(
 				100%,
 				calc(
-					100dvh - var(--dock-h) - var(--tabbar-space) - var(--safe-top) - 80px - var(--comment-h) -
+					100svh - var(--dock-h) - var(--tabbar-space) - var(--safe-top) - 80px - var(--comment-h) -
 						0.5rem
 				)
 			);

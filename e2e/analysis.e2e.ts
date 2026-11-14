@@ -16,7 +16,7 @@ test('PGN analysieren: Patzer wird erkannt und erklärt', async ({ page }) => {
 	await page.getByRole('button', { name: 'Analyse' }).click();
 	await expect(page).toHaveURL(/analysis\?game=\d+/);
 	await expect(page.locator('.summary')).toBeVisible({ timeout: 60_000 });
-	await page.getByRole('button', { name: /xd1/ }).click();
+	await page.locator('.moves-card').getByRole('button', { name: /xd1/ }).click();
 	// Abzeichen am Brett und Kommentar in der Besprechungskarte
 	await expect(page.locator('.sq-badge')).toHaveAttribute('aria-label', 'Blunder');
 	await expect(page.locator('.rp .head')).toContainText('is a blunder');
@@ -61,7 +61,7 @@ test('Weiterklicken in der Analyse scrollt die Seite nicht und das Brett springt
 	await expect(next).toBeVisible();
 	await page.evaluate(() => window.scrollTo(0, 0));
 	const board = page.locator('.cg-host').first();
-	await next.click();
+	// schon ab der Startstellung und während die Analyse noch läuft (früher fehlte die Leiste dann)
 	await page.waitForTimeout(300);
 	const start = await board.boundingBox();
 	const boxes = new Set<string>();
@@ -74,4 +74,26 @@ test('Weiterklicken in der Analyse scrollt die Seite nicht und das Brett springt
 	expect(await page.evaluate(() => window.scrollY)).toBe(0);
 	// Brett bleibt gleich groß und an derselben Stelle (früher sprang es mit der Kommentarlänge)
 	expect([...boxes]).toEqual([`${Math.round(start!.y)}:${Math.round(start!.width)}`]);
+});
+
+test('Analyse: bei einem Fehler zeigt das Brett den gespielten (rot) und den besseren Zug (grün)', async ({
+	page
+}) => {
+	test.setTimeout(90_000);
+	await page.goto('/analysis');
+	await page.locator('textarea').fill(LEGAL);
+	await page.getByRole('button', { name: 'Analyse' }).click();
+	await expect(page.locator('.summary')).toBeVisible({ timeout: 60_000 });
+	await page.locator('.moves-card').getByRole('button', { name: /xd1/ }).click();
+	// chessground zeichnet Pfeile als SVG-Linien mit der Pinselfarbe
+	const arrows = page.locator('.cg-host svg.cg-shapes line');
+	await expect(arrows).toHaveCount(2);
+	const colors = await arrows.evaluateAll((ls) => ls.map((l) => l.getAttribute('stroke')));
+	expect(colors).toContain('#d64545');
+	expect(colors).toContain('#2b9a66');
+	// Partie-Bewertung mit Einordnung, Wendepunkt und Lernpunkt
+	const report = page.getByTestId('game-report');
+	await expect(report).toBeVisible();
+	await expect(report).toContainText('Turning point');
+	await expect(report).toContainText(/accuracy typical of|too short/);
 });

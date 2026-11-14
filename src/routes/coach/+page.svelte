@@ -16,6 +16,7 @@
 	import CoachTabs from '#lib/ui/CoachTabs.svelte';
 	import AvatarButton from '#lib/ui/AvatarButton.svelte';
 	import SkillRadar from '#lib/ui/SkillRadar.svelte';
+	import ProgressCheck from '#lib/ui/ProgressCheck.svelte';
 	import type { AccPoint } from '#lib/ui/AccuracyTrend.svelte';
 	import { skillProfile, weakestSkill, type SkillValue } from '#lib/training/skills.js';
 	import { quality } from '#lib/import/ratings.js';
@@ -137,9 +138,13 @@
 			icon: Bomb,
 			title: t('coachTab.adv.motifTitle', { motif: t(`stats.motif.${motif}`), n }),
 			text: t(`coachTab.adv.motif.${motif}`),
-			href: MOTIF_THEME[motif]
-				? resolve(`/puzzles?theme=${MOTIF_THEME[motif]}`)
-				: resolve('/puzzles'),
+			// eigene Figur/Matt verloren → das Gegenmittel ist der Blunder-Check, nicht der Angriff
+			href:
+				motif === 'hanging' || motif === 'mate-allowed' || motif === 'fork'
+					? resolve('/puzzles/safety')
+					: MOTIF_THEME[motif]
+						? resolve(`/puzzles?theme=${MOTIF_THEME[motif]}`)
+						: resolve('/puzzles'),
 			cta: t('coachTab.adv.train'),
 			c: 'var(--warn)'
 		});
@@ -350,6 +355,9 @@
 				</span>
 			</div>
 		</div>
+
+		<!-- Lernkennzahlen zuerst: Wirkt das Training? -->
+		<ProgressCheck />
 
 		<h2 class="how-title">{t('coachTab.how')}</h2>
 		<BentoGrid label={t('coachTab.how')} testid="coach-kpis">

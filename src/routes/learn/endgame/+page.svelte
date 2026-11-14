@@ -524,7 +524,7 @@
 
 	.board-col {
 		width: 100%;
-		max-width: min(640px, calc(100dvh - 220px));
+		max-width: min(640px, calc(100svh - 220px));
 		margin: 0 auto;
 	}
 
@@ -534,7 +534,7 @@
 			align-items: start;
 		}
 		.board-col {
-			max-width: min(680px, calc(100dvh - 160px));
+			max-width: min(680px, calc(100svh - 160px));
 		}
 		.panel {
 			position: sticky;

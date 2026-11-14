@@ -1274,7 +1274,7 @@
 
 	.board-col {
 		width: 100%;
-		max-width: min(620px, calc(100dvh - 220px));
+		max-width: min(620px, calc(100svh - 220px));
 		margin: 0 auto;
 	}
 
@@ -1464,7 +1464,7 @@
 		.board-col {
 			max-width: min(
 				100%,
-				calc(100dvh - var(--dock-h) - var(--tabbar-space) - var(--safe-top) - 75px)
+				calc(100svh - var(--dock-h) - var(--tabbar-space) - var(--safe-top) - 75px)
 			);
 		}
 		/* Kommentar über dem Brett (feste Höhe) */
@@ -1472,7 +1472,7 @@
 			max-width: min(
 				100%,
 				calc(
-					100dvh - var(--dock-h) - var(--tabbar-space) - var(--safe-top) - 75px - var(--comment-h) -
+					100svh - var(--dock-h) - var(--tabbar-space) - var(--safe-top) - 75px - var(--comment-h) -
 						0.5rem
 				)
 			);

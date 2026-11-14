@@ -124,6 +124,10 @@ export async function createMistakePuzzles(row: GameRow, evals: PlyEval[]): Prom
 	for (const r of reviews) {
 		if (r.mover !== row.myColor) continue;
 		if (r.judgement !== 'blunder' && r.judgement !== 'mistake') continue;
+		// „Fehler“ ohne greifbares Motiv (Stellungsfehler) sind als Aufgabe kaum lernbar – nur Patzer
+		// und Fehler mit Motiv (Figur hängt, Gabel, Matt, Gewinn verpasst) werden zu Wiederholungen
+		if (r.judgement === 'mistake' && (!r.explanation || r.explanation.motif === 'positional'))
+			continue;
 		const before = evals[r.ply - 1];
 		if (!before?.best) continue;
 		const id = `${row.source}-${row.id}-${r.ply}`;

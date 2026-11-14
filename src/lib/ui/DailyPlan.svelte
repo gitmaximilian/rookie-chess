@@ -10,10 +10,19 @@
 	import Crown from '@lucide/svelte/icons/crown';
 	import ChartLine from '@lucide/svelte/icons/chart-line';
 	import ChessKnight from '@lucide/svelte/icons/chess-knight';
+	import ShieldCheck from '@lucide/svelte/icons/shield-check';
+	import Sparkles from '@lucide/svelte/icons/sparkles';
+	import ClipboardCheck from '@lucide/svelte/icons/clipboard-check';
 	import type { Component } from 'svelte';
 	import GoalRing from '#lib/ui/GoalRing.svelte';
 	import { loadPlanContext, todayPlan } from '#lib/training/planData.js';
-	import { progressOf, type PlanContext, type PlanTask } from '#lib/training/plan.js';
+	import {
+		minutesOf,
+		progressOf,
+		type PlanContext,
+		type PlanInitial,
+		type PlanTask
+	} from '#lib/training/plan.js';
 	import { basicById } from '#lib/basics/lessons.js';
 	import { courseById, loc } from '#lib/openings/courses.js';
 	import { lessonById, lessonTitle } from '#lib/endgames/lessons.js';
@@ -22,7 +31,7 @@
 
 	let ctx = $state<PlanContext | null>(null);
 	let tasks = $state<PlanTask[]>([]);
-	let initial = { dueReview: 0, dueRepertoire: 0 };
+	let initial: PlanInitial = { dueReview: 0, dueRepertoire: 0, dueMistakes: 0 };
 
 	onMount(async () => {
 		const c = await loadPlanContext();
@@ -51,8 +60,14 @@
 		course: BookOpen,
 		endgame: Crown,
 		game: ChartLine,
-		play: ChessKnight
+		play: ChessKnight,
+		safety: ShieldCheck,
+		mistakes: Sparkles,
+		checkup: ClipboardCheck
 	};
+	const minutesLeft = $derived(
+		rows.filter((r) => !r.finished).reduce((s, r) => s + minutesOf(r.task), 0)
+	);
 
 	function title(task: PlanTask): string {
 		switch (task.kind) {
@@ -79,6 +94,12 @@
 				return t('plan.game');
 			case 'play':
 				return t('plan.play');
+			case 'safety':
+				return t('plan.safety', { n: task.target });
+			case 'mistakes':
+				return t('plan.mistakes', { n: task.target });
+			case 'checkup':
+				return t('plan.checkup');
 		}
 	}
 
@@ -87,7 +108,8 @@
 			case 'review':
 				return resolve('/puzzles?mode=review');
 			case 'puzzles':
-				return task.theme ? resolve(`/puzzles?theme=${task.theme}`) : resolve('/puzzles');
+				// Schwerpunkt gemischt: zwei von drei Puzzles zum Thema, eins aus allen Themen
+				return task.theme ? resolve(`/puzzles?theme=${task.theme}&mix=1`) : resolve('/puzzles');
 			case 'repertoire':
 				return resolve('/learn/openings?train=due');
 			case 'basics':
@@ -100,6 +122,12 @@
 				return resolve(`/analysis?game=${task.gameId}&retry=1`);
 			case 'play':
 				return resolve('/play');
+			case 'safety':
+				return resolve('/puzzles/safety');
+			case 'mistakes':
+				return resolve('/puzzles?mode=mistakes');
+			case 'checkup':
+				return resolve('/puzzles/safety?test=1');
 		}
 	}
 </script>
@@ -113,7 +141,7 @@
 			<span
 				>{ctx
 					? next
-						? t('plan.progress', { n: doneCount, m: rows.length })
+						? t('plan.progressMin', { n: doneCount, m: rows.length, min: minutesLeft })
 						: t('plan.allDone')
 					: ' '}</span
 			>

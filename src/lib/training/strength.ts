@@ -42,3 +42,16 @@ export function estimateStrength(input: StrengthInput): Strength | null {
 		confidence: Math.min(1, total / 2.5)
 	};
 }
+
+/** Ziel der App: Einsteiger auf 1600 – in Etappen, damit das nächste Ziel erreichbar wirkt */
+export const GOAL = 1600;
+export const MILESTONES = [800, 1000, 1200, 1400, 1600];
+
+/** nächstes Etappenziel und Fortschritt dorthin (0..1) ab dem vorigen */
+export function nextMilestone(value: number): { goal: number; from: number; progress: number } {
+	const goal = MILESTONES.find((m) => m > value) ?? GOAL;
+	const i = MILESTONES.indexOf(goal);
+	const from = i > 0 ? MILESTONES[i - 1] : Math.min(value, goal - 200);
+	const progress = value >= goal ? 1 : Math.max(0, Math.min(1, (value - from) / (goal - from)));
+	return { goal, from, progress };
+}

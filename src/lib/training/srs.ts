@@ -3,6 +3,19 @@ import { db, type ReviewCardRow } from '#lib/db/db.js';
 import { t } from '#lib/i18n/i18n.svelte.js';
 
 const scheduler = fsrs({ enable_fuzz: true, request_retention: 0.9 });
+/**
+ * Puzzles und eigene Fehler: ohne Kurzzeit-Lernschritte. Ein verfehltes Puzzle kommt morgen wieder,
+ * nicht nach einer Minute – sonst „löst“ man es aus dem Arbeitsgedächtnis, ohne das Muster abzurufen
+ * (Roediger & Karpicke 2006: der Abruf-Vorteil zeigt sich erst nach Tagen). Folge: 1 → 3 → 8 → 22 Tage.
+ */
+const dayScheduler = fsrs({ enable_fuzz: true, request_retention: 0.9, enable_short_term: false });
+
+/** Kartenarten, die in Tagen statt Minuten wiederholt werden */
+export const DAY_KINDS: ReadonlySet<ReviewCardRow['kind']> = new Set([
+	'puzzle',
+	'mistake',
+	'safety'
+]);
 
 export type Recall = 'again' | 'hard' | 'good' | 'easy';
 
@@ -22,9 +35,14 @@ function reviveCard(c: Card): Card {
 	};
 }
 
-export function schedule(card: Card | null, recall: Recall, now = new Date()): Card {
+export function schedule(
+	card: Card | null,
+	recall: Recall,
+	now = new Date(),
+	byDays = false
+): Card {
 	const base = card ? reviveCard(card) : createEmptyCard(now);
-	return scheduler.next(base, now, GRADE[recall]).card;
+	return (byDays ? dayScheduler : scheduler).next(base, now, GRADE[recall]).card;
 }
 
 /** Bewertet eine Karte (legt sie bei Bedarf an) */
@@ -35,7 +53,7 @@ export async function review(
 	data?: unknown
 ): Promise<ReviewCardRow> {
 	const existing = await db.reviewCards.get(id);
-	const card = schedule(existing?.card ?? null, recall);
+	const card = schedule(existing?.card ?? null, recall, new Date(), DAY_KINDS.has(kind));
 	const row: ReviewCardRow = {
 		id,
 		kind,

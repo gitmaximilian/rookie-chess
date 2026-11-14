@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { nextMilestone } from '#lib/training/strength.js';
 	/**
 	 * Kennzahl-Kacheln der Startseite. Rendert direkt ins umgebende BentoGrid
 	 * (keine eigene Hülle), damit sich die Kacheln neben den Tagesplan legen.
@@ -154,12 +155,12 @@
 			tone="coach"
 			label={t('summary.strength')}
 			value={`≈${d.strength}`}
-			sub={t('summary.strengthGoal')}
+			sub={t('summary.strengthGoal', { goal: nextMilestone(d.strength).goal })}
 			href={resolve('/coach')}
 			testid="tile-strength"
 		>
 			<span class="bar" aria-hidden="true"
-				><i style:width="{Math.min(100, (d.strength / 1200) * 100)}%"></i></span
+				><i style:width="{nextMilestone(d.strength).progress * 100}%"></i></span
 			>
 		</StatTile>{/if}
 

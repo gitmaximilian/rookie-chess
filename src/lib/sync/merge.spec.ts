@@ -106,4 +106,44 @@ describe('Abgleich zwischen Geräten', () => {
 		const once = mergeSnapshots(a, {});
 		expect(JSON.stringify(mergeSnapshots(once, once))).toBe(JSON.stringify(once));
 	});
+
+	it('neue Lerndaten: Blunder-Check-Versuche, Kontrolltests und safety-Karten gehen nicht verloren', () => {
+		const card = (due: number, reps: number) => ({
+			id: 'safety:abc',
+			kind: 'safety',
+			due,
+			card: { due: new Date(due), reps, last_review: new Date(due - 1000) },
+			data: { id: 'abc' }
+		});
+		const iphone = {
+			puzzleAttempts: [
+				{ puzzleId: 'abc', date: 5, solved: false, source: 'safety', themes: ['fork'] }
+			],
+			reviewCards: [card(1000, 1)],
+			settings: [
+				{ key: 'checkups', value: [{ date: 1, form: 'A', score: 7, total: 12 }], t: 1 },
+				{ key: 'coachedGames', value: 4, t: 3 }
+			]
+		};
+		const mac = {
+			puzzleAttempts: [{ puzzleId: 'xyz', date: 6, solved: true, source: 'checkup', themes: [] }],
+			reviewCards: [card(5000, 2)],
+			settings: [
+				{
+					key: 'checkups',
+					value: [
+						{ date: 1, form: 'A', score: 7, total: 12 },
+						{ date: 9, form: 'B', score: 9, total: 12 }
+					],
+					t: 9
+				}
+			]
+		};
+		const m = mergeSnapshots(iphone, mac);
+		expect(m.puzzleAttempts).toHaveLength(2);
+		expect(m.reviewCards).toHaveLength(1);
+		const settings = m.settings as { key: string; value: unknown }[];
+		expect((settings.find((x) => x.key === 'checkups')?.value as unknown[]).length).toBe(2);
+		expect(settings.find((x) => x.key === 'coachedGames')?.value).toBe(4);
+	});
 });

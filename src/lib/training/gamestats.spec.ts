@@ -54,21 +54,42 @@ describe('Partie-Statistik', () => {
 		expect(phaseOf(10)).toBe('opening');
 		expect(phaseOf(40)).toBe('middlegame');
 		expect(phaseOf(80)).toBe('endgame');
-		const many = Array.from({ length: 12 }, (_, i) =>
-			row({ myColor: i < 6 ? 'white' : 'black', result: '1-0' })
+		// 14 Weiß-Siege, 14 Schwarz-Niederlagen: deutlicher Farbunterschied
+		const many = Array.from({ length: 28 }, (_, i) =>
+			row({ myColor: i < 14 ? 'white' : 'black', result: '1-0' })
 		);
 		const ins = insights(computeStats(many, () => 'Italian Game'));
 		expect(ins.some((x) => x.key === 'betterWhite')).toBe(true);
 	});
 
-	it('Eröffnungs-Erkenntnisse nennen die eigene Farbe (gleiche Eröffnung, verschiedene Seiten)', () => {
+	it('zu wenige Partien: keine „Erkenntnisse“ aus Zufall', () => {
+		const few = Array.from({ length: 12 }, (_, i) =>
+			row({ myColor: i < 6 ? 'white' : 'black', result: '1-0' })
+		);
+		expect(insights(computeStats(few, () => 'Italian Game'))).toEqual([]);
+	});
+
+	it('Eröffnung nur ab 8 Partien und deutlich vom Schnitt entfernt; Farbe steht dabei', () => {
+		// 10 × Französisch mit Schwarz verloren, 10 × anderes gewonnen/remis
 		const games = [
-			...Array.from({ length: 4 }, () => row({ myColor: 'black', result: '0-1' })),
-			...Array.from({ length: 3 }, () => row({ myColor: 'white', result: '0-1' }))
+			...Array.from({ length: 10 }, () => row({ myColor: 'black', result: '1-0' })),
+			...Array.from({ length: 10 }, (_, i) =>
+				row({ myColor: 'white', result: i % 2 ? '1-0' : '1/2-1/2', moves: ['d2d4'] })
+			)
 		];
-		const ins = insights(computeStats(games, () => 'French Defense'));
-		expect(ins.find((x) => x.key === 'bestOpening')?.params?.color).toBe('black');
-		expect(ins.find((x) => x.key === 'worstOpening')?.params?.color).toBe('white');
+		const ins = insights(
+			computeStats(games, (m) => (m[0] === 'd2d4' ? "Queen's Pawn Game" : 'French Defense'))
+		);
+		const worst = ins.find((x) => x.key === 'worstOpening');
+		expect(worst?.params).toMatchObject({ name: 'French Defense', color: 'black', n: 10 });
+		expect(worst?.action).toBe('course');
+		// nur 3 Partien → nie eine Eröffnungs-Erkenntnis
+		const three = insights(
+			computeStats([...games.slice(0, 3), ...games.slice(10), ...games.slice(10)], (m) =>
+				m[0] === 'd2d4' ? "Queen's Pawn Game" : 'Van’t Kruijs'
+			)
+		);
+		expect(three.some((x) => x.params?.name === 'Van’t Kruijs')).toBe(false);
 	});
 
 	it('Phasen nach Material: Grundreihen leer → Mittelspiel, wenig Figuren → Endspiel, nur vorwärts', () => {

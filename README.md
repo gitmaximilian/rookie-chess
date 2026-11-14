@@ -2,12 +2,12 @@
 
 A chess trainer for beginners as a Progressive Web App for iPhone, iPad and Mac – completely free, offline-capable, no App Store, no account, no tracking. English and German.
 
-**Live:** https://rookie.maximilianauer.at · **Version:** 0.3.0
+**Live:** https://rookie.maximilianauer.at · **Version:** 0.4.0
 
-| Home                                                                                                                                                    | Coach                                                                                                                    | Play                                                                                                   | Game review                                                                                                       |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
-| <img src="docs/screenshots/home-light.png" width="200" alt="Home: daily plan as the largest tile, then puzzle rating, strength, daily goal and streak"> | <img src="docs/screenshots/coach-light.png" width="200" alt="Coach tab: current rating, win rate and accuracy as tiles"> | <img src="docs/screenshots/play-light.png" width="200" alt="Playing a bot with the coach switched on"> | <img src="docs/screenshots/analysis-light.png" width="200" alt="Game review: each move classified and explained"> |
-| <img src="docs/screenshots/home-dark.png" width="200" alt="Home in dark mode">                                                                          | <img src="docs/screenshots/coach-dark.png" width="200" alt="Coach tab in dark mode">                                     | <img src="docs/screenshots/play-dark.png" width="200" alt="Play in dark mode">                         | <img src="docs/screenshots/analysis-dark.png" width="200" alt="Game review in dark mode">                         |
+| Home                                                                                                                           | Coach                                                                                                                                             | Play                                                                                                   | Game review                                                                                                                                | Blunder check                                                                                            |
+| ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| <img src="docs/screenshots/home-light.png" width="200" alt="Home: daily plan with blunder check, focus puzzles and time left"> | <img src="docs/screenshots/coach-light.png" width="200" alt="Coach tab: is your training working? Blunders per 30 moves, check-up and hit rates"> | <img src="docs/screenshots/play-light.png" width="200" alt="Playing a bot with the coach switched on"> | <img src="docs/screenshots/analysis-light.png" width="200" alt="Game review: each move classified and explained, with a game rating card"> | <img src="docs/screenshots/safety-light.png" width="200" alt="Blunder check: is the planned move safe?"> |
+| <img src="docs/screenshots/home-dark.png" width="200" alt="Home in dark mode">                                                 | <img src="docs/screenshots/coach-dark.png" width="200" alt="Coach tab in dark mode">                                                              | <img src="docs/screenshots/play-dark.png" width="200" alt="Play in dark mode">                         | <img src="docs/screenshots/analysis-dark.png" width="200" alt="Game review in dark mode">                                                  | <img src="docs/screenshots/safety-dark.png" width="200" alt="Blunder check in dark mode">                |
 
 **Desktop** (Mac, iPad landscape)
 
@@ -20,28 +20,28 @@ Screenshots use generated sample data (`scripts/screenshots/`), not real games.
 
 ## Features
 
+Rookie's goal: take beginners to **1600** – with methods that learning research and real game data support ([research](docs/research-2026-11-13.md), [review](docs/learning-review-2026-11-13.md), [plan](docs/learning-plan-2026-11-13.md)).
+
+- **Blunder check** – “You want to play ♘c4. Is it safe?” Real moments from Lichess games (the move a human actually blundered with, or a Stockfish-verified safe move); say “not safe” and you have to show the refutation on the board. Below 1000, over half of all blunders are pieces or mates lost within two moves – this trains exactly that
+- **Daily plan with a time budget** (30 min by default) – blunder check, your own mistakes due for review, mixed tactics, a game every other day, then theory only if it fits and matches your level; shows how many minutes are left
+- **Your mistakes come back** – every blunder from your games (bot games are analysed automatically in the background) returns as a task after 1, 3, 8 and 22 days until it sticks
+- **Puzzles at the right difficulty** – aimed at ~80 % success instead of 50 %, adjusted to your recent results; a hint counts half; the plan's focus is mixed with other themes
+- **Coach that steps back** – warns about threats in your first games, then only asks “what is your opponent up to?” and says “stop – not safe” without giving the answer away (you can still ask). Wins with takebacks or hints don't count towards your strength
+- **Is your training working?** – blunders per 30 moves (last 10 games vs the 10 before, with an honest “still within chance”), a safety check-up every two weeks (fixed tasks, two alternating forms) and hit rates in training
+- **Game rating** – for each game: accuracy and the level it is typical of, how good the game was for players of your strength (percentile), accuracy per phase, the turning point, chances taken or missed and one lesson to practise. No fake “performance Elo” – measured on 1,440 Lichess games, a single game's accuracy barely predicts rating (R² = 0.14)
+- **Fair move ratings** – if two moves were practically equal, yours isn't a mistake; small slips in decided positions don't count; good moves get “just as strong: …” instead of “even stronger was …”
 - **Play** against 8 bots with personality (≈ 400–1650) – Stockfish 19 (WebAssembly) in the browser, hints, takebacks, optional clock
-- **Play with a coach** – feedback on every move, warnings about attacked pieces, take back mistakes with an explanation
-- **Daily plan** – a personal training plan every day with one clear next step: puzzles on your focus, due reviews, a game with the coach when you haven't played for a while, and the next lesson
-- **One focus** – Rookie picks the single most important thing to work on (the mistake you make most in your own games, otherwise your weakest puzzle theme); Home and the Coach tab always name the same one
-- **Progress at a glance** – Home shows puzzle rating with trend, estimated strength on the way to 1200, daily goal, streak, form and stars as tiles
-- **Coach tab** – how you are playing right now (rating, win rate, accuracy, blunders per game), your focus and next steps, a five-sided skill profile and your last 30 games; details (rating history, accuracy per game, typical mistakes, insights, openings) in Statistics
-- **Stars** – every lesson, opening line and endgame earns up to three stars; progress per area in your profile
-- **Tactics** – fork, pin, skewer, discovered attack, back-rank mate: explained, then practised with puzzles
-- **Puzzle Storm** and **play a friend** on one device
-- **Replay your mistakes** from your own games and find the better move
-- **Chess basics** – 15 interactive lessons from zero (piece mini-games, check, mate, castling, promotion, en passant)
-- **Puzzles** – 38,400 hand-picked puzzles from the free Lichess database, Glicko-2 rating, theme filter, puzzle of the day, spaced repetition (FSRS) for missed ones
-- **Game review** – every move classified (brilliant to blunder) and explained in plain language („your knight on g5 is unprotected“), the engine's top 3 moves for each position, evaluation graph, PGN import/export
-- **Your mistakes become puzzles** – from bot games and imported games
-- **Endgame trainer** – 10 lessons with the technique explained step by step, then practice against perfect tablebase play with live feedback on every move
-- **Opening courses** – 14 openings and defences with explained lines; guided learning with hints, Stockfish explains wrong moves; learned lines go into your repertoire for spaced repetition
-- **Linked accounts** – link your Lichess / Chess.com username once, new games are imported and analysed automatically
-- **Profile & statistics** – rating history, activity, results by colour/time control/opponent strength, openings, accuracy by game phase, typical mistakes, personal insights
-- **Optional account** – passkey sign-in (no email, no password), progress synced across devices; export and delete at any time
-- **Install prompt** on phones – one-tap install on Android, step-by-step guide on iPhone/iPad
-- Calm tile-based design with pastel areas and monospace numbers; contrast checked against WCAG AA (`node scripts/contrast.mjs`)
-- Light/dark mode, English/German, 7 board themes, 6 piece sets, animation speed, 3 sound styles, backup export/import (restoring merges with your current data – nothing is lost), works offline
+- **Game review** – every move classified and explained in plain language, the engine's best moves, evaluation graph, PGN import/export; **replay your mistakes** and find the better move
+- **What stands out** – only statements backed by enough games and beyond chance (e.g. an opening at least 8 games and clearly below your average), most important first, each with a matching exercise
+- **Progress at a glance** – strength estimate with milestones (800 → 1000 → 1200 → 1400 → 1600), puzzle rating, daily goal, streak
+- **Tactics** – fork, pin, skewer, discovered attack, back-rank mate: explained, then practised with puzzles; **Puzzle Storm**; **play a friend** on one device
+- **Chess basics** – 15 interactive lessons from zero
+- **Puzzles** – 38,400 puzzles from the free Lichess database, Glicko-2 rating, theme filter, puzzle of the day
+- **Endgame trainer** – 10 lessons against perfect tablebase play (two thirds of beginner games reach an endgame)
+- **Opening courses** – 14 openings and defences; learned lines go into your repertoire for spaced repetition
+- **Linked accounts** – link your Lichess / Chess.com username, new games are imported and analysed automatically
+- **Optional account** – passkey sign-in, sync across devices; export and delete at any time
+- Light/dark mode, English/German, board themes and piece sets, sounds, backup export/import (restoring merges – nothing is lost), works offline, no tracking – all measurements stay on your device
 
 ## Development
 
@@ -77,6 +77,15 @@ node scripts/build-puzzles.ts
 
 # Opening names from lichess-org/chess-openings (CC0)
 node scripts/build-openings.ts
+
+# Blunder-check tasks from the puzzle packs, verified with Stockfish
+node scripts/build-safety.mjs
+
+# Research: blunder types and accuracy by rating on real Lichess games (see docs/research-*.md)
+node scripts/research/blunder-study.mjs sample.pgn > result.json
+node scripts/research/blunder-report.mjs result.json sample.pgn
+node scripts/research/performance-study.mjs rapid.pgn > perf.json
+node scripts/research/performance-fit.mjs perf.json
 ```
 
 > Running Node 23 locally? Use `npm install --engine-strict=false`. Node 22 or 24 is recommended (see `.nvmrc`).

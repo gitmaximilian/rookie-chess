@@ -30,6 +30,12 @@
 			url: 'https://database.lichess.org'
 		},
 		{
+			name: 'Lichess game database',
+			key: 'games',
+			license: 'CC0',
+			url: 'https://database.lichess.org'
+		},
+		{
 			name: 'Lichess chess-openings',
 			key: 'openings',
 			license: 'CC0',

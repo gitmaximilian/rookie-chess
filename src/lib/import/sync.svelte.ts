@@ -183,18 +183,26 @@ async function syncSource(
 let bgAbort: AbortController | null = null;
 let analysedThisSession = 0;
 
-/** Analysiert importierte, noch nicht analysierte Partien – neueste zuerst */
+/**
+ * Analysiert noch nicht analysierte eigene Partien im Hintergrund – Bot-Partien zuerst, dann
+ * importierte; jeweils neueste zuerst. So werden eigene Fehler zu Wiederholungsaufgaben, auch wenn
+ * man die Analyse nie öffnet (Grundsatz „Eigene Fehler werden Training“).
+ */
 export async function analyseInBackground(): Promise<void> {
 	if (syncState.analysing || analysedThisSession >= ANALYSE_PER_SESSION) return;
-	const acc = await getLinked();
-	if (!acc.lichess && !acc.chesscom) return;
 	syncState.analysing = true;
 	bgAbort = new AbortController();
 	const signal = bgAbort.signal;
 	try {
-		const pending = (await db.games.orderBy('date').reverse().toArray()).filter(
-			(g) => (g.source === 'lichess' || g.source === 'chesscom') && !g.analysis?.done
+		const acc = await getLinked();
+		const online = !!(acc.lichess || acc.chesscom);
+		const all = (await db.games.orderBy('date').reverse().toArray()).filter(
+			(g) => !g.analysis?.done && g.result !== '*' && g.moves.length >= 6
 		);
+		const pending = [
+			...all.filter((g) => g.source === 'bot'),
+			...(online ? all.filter((g) => g.source === 'lichess' || g.source === 'chesscom') : [])
+		];
 		for (const row of pending) {
 			if (signal.aborted || analysedThisSession >= ANALYSE_PER_SESSION) break;
 			const evals = await analyseGame(row, () => {}, signal);
@@ -253,7 +261,11 @@ export function pauseBackground(): void {
 /** Beim App-Start bzw. Zurückkehren: abrufen, wenn der letzte Abruf länger her ist */
 export async function autoSync(path: string): Promise<void> {
 	const acc = await getLinked();
-	if (!acc.lichess && !acc.chesscom) return;
+	if (!acc.lichess && !acc.chesscom) {
+		// ohne verknüpftes Konto: trotzdem eigene Bot-Partien analysieren
+		if (!busyRoute(path)) void analyseInBackground();
+		return;
+	}
 	const linked = (['lichess', 'chesscom'] as const).filter((s) => acc[s]);
 	const last = Math.min(...linked.map((s) => acc.lastSync?.[s] ?? 0));
 	// unvollständige Historie (z. B. App während des Imports geschlossen) sofort fortsetzen

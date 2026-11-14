@@ -40,6 +40,8 @@
 		type CoachNote,
 		type Threat
 	} from '#lib/coach/coach.js';
+	import { coachLevel, type CoachPref } from '#lib/coach/fading.js';
+	import SegmentedSwitch from '#lib/ui/bento/SegmentedSwitch.svelte';
 	import GraduationCap from '@lucide/svelte/icons/graduation-cap';
 	import Users from '@lucide/svelte/icons/users';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
@@ -106,6 +108,15 @@
 	let coachHelp = $state<{ idea: string; piece: string; uci: string; level: number } | null>(null);
 	let helpBusy = $state(false);
 	let retryNote = $state<{ better: string; shown: boolean } | null>(null);
+	// Hilfe ausschleichen (lib/coach/fading.ts): „check“ = Coach fragt nur, zeigt auf Wunsch
+	let coachPref = $state<CoachPref>('auto');
+	let coachedGames = $state(0);
+	const selfCheck = $derived(coachLevel(coachPref, coachedGames) === 'check');
+	/** Drohungen nach dem Gegnerzug aufgedeckt (nur bei „selbst prüfen“) */
+	let revealed = $state(false);
+	/** Erklärung und Pfeile zum eigenen Patzer aufgedeckt (nur bei „selbst prüfen“) */
+	let whyShown = $state(false);
+	let pendingShapes: typeof hintShapes = [];
 	let threatAbort: AbortController | null = null;
 
 	// ── Kommentar über dem Brett (Handy): immer die eine wichtigste Coach-Nachricht ──
@@ -128,13 +139,24 @@
 	const coachBar = $derived.by((): CoachBar => {
 		const coach = t('coach.title');
 		// Fehler mit Angebot zum Zurücknehmen geht vor allem anderen
+		// selbst prüfen: bei einem Patzer erst „Halt“, Erklärung erst auf Wunsch
+		if (coachNote && coachPending && selfCheck && !whyShown)
+			return {
+				kicker: `${coach} · ${t('review.yourMove')}`,
+				title: t('coach.unsafeTitle'),
+				text: t('coach.unsafeText'),
+				color: 'var(--k-mistake)',
+				state: 'judged',
+				act: 'why'
+			};
+		const hideWarn = selfCheck && !revealed;
 		const judged = (opp: boolean): CoachBar => ({
 			kicker: `${coach} · ${t('review.yourMove')}`,
 			title: coachNote!.title,
 			// danach antwortet der Bot: eine Warnung zu seinem Zug kommt zuerst (sonst wird sie abgeschnitten),
 			// dann die Erklärung zum eigenen Zug, dann was der Gegner gezogen hat
 			text: [
-				opp && coachOpp?.warn ? coachOpp.warn : '',
+				opp && coachOpp?.warn && !hideWarn ? coachOpp.warn : '',
 				coachNote!.text,
 				opp && coachOpp ? `${t('coach.opponent')} ${figurine(coachOpp.san)}: ${coachOpp.text}` : '',
 				coachPending ? '' : coachTip
@@ -146,7 +168,7 @@
 			act: ''
 		});
 		if (coachNote && coachPending) return judged(false);
-		if (coachThreat && myTurn)
+		if (coachThreat && myTurn && !hideWarn)
 			return {
 				kicker: `${coach} · ${t('coach.warning')}`,
 				title:
@@ -177,7 +199,18 @@
 				color: 'var(--c-learn)',
 				act: ''
 			};
-		if (coachNote) return judged(true);
+		if (coachNote && !(hideWarn && myTurn && coachOpp)) return judged(true);
+		// selbst prüfen: statt der Warnung die Frage – die Antwort gibt es auf Wunsch
+		if (coachOpp && hideWarn && myTurn)
+			return {
+				kicker: `${coach} · ${t('coach.opponent')} ${figurine(coachOpp.san)}`,
+				title: t('coach.checkPrompt'),
+				text: [coachNote ? `${coachNote.title}.` : '', t('coach.checkPromptText'), coachTip]
+					.filter(Boolean)
+					.join(' '),
+				color: 'var(--c-learn)',
+				act: 'reveal'
+			};
 		if (coachOpp)
 			return {
 				kicker: `${coach} · ${t('coach.opponent')} ${figurine(coachOpp.san)}`,
@@ -196,6 +229,7 @@
 	});
 
 	function clearCoach() {
+		whyShown = false;
 		coachTip = '';
 		coachThreat = null;
 		threatShown = false;
@@ -221,6 +255,18 @@
 		helpBusy = false;
 		if (!h || game.fen !== fenNow) return;
 		coachHelp = { ...h, level: 1 };
+	}
+
+	/** selbst prüfen: Warnungen nach dem Gegnerzug aufdecken */
+	function reveal() {
+		revealed = true;
+		if (coachThreat) showThreat();
+	}
+
+	/** selbst prüfen: Erklärung und Pfeile zum eigenen Patzer zeigen */
+	function showWhy() {
+		whyShown = true;
+		hintShapes = pendingShapes;
 	}
 
 	function showThreat() {
@@ -306,6 +352,8 @@
 		const saved = await getSetting<SavedGame | null>('currentGame', null);
 		botId = await getSetting('lastBotId', 'tina');
 		coachOn = await getSetting('coachOn', true);
+		coachPref = await getSetting<CoachPref>('coachPref', 'auto');
+		coachedGames = await getSetting('coachedGames', 0);
 		if (saved && saved.moves) {
 			resume(saved);
 		} else {
@@ -357,6 +405,7 @@
 		v++;
 		await setSetting('lastBotId', bot.id);
 		await setSetting('coachOn', coachOn);
+		await setSetting('coachPref', coachPref);
 		coachNote = null;
 		coachOpp = null;
 		coachPending = false;
@@ -449,12 +498,15 @@
 			if (coachAbort.signal.aborted || game.fen !== fenNow) return;
 			coachPending = true;
 			sound.bad();
-			hintShapes = [
+			pendingShapes = [
 				{ orig: uci.slice(0, 2), dest: uci.slice(2, 4), brush: 'bad' },
 				...(reply
 					? [{ orig: reply.slice(0, 2), dest: reply.slice(2, 4), brush: 'bad' as const }]
 					: [])
 			];
+			// selbst prüfen: erst „Halt“, Pfeile erst auf Wunsch
+			whyShown = !selfCheck;
+			hintShapes = selfCheck ? [] : pendingShapes;
 			if (reply && coachNote)
 				coachNote = {
 					...coachNote,
@@ -523,6 +575,7 @@
 				sound.move(!!played.captured, game.isCheck);
 				addIncrement(myColor === 'white' ? 'black' : 'white');
 				if (coachOn && !game.end()) {
+					revealed = false;
 					const danger = threats(game.fen)[0];
 					coachOpp = {
 						san: played.san,
@@ -628,7 +681,12 @@
 				source: 'bot'
 			})) as number;
 			await bumpActivity('games');
-			if (verdictFor(e, myColor) === 'win') {
+			if (coachOn) {
+				coachedGames++;
+				await setSetting('coachedGames', coachedGames);
+			}
+			// zählt für die Spielstärke nur ohne Hilfe: kein Zurücknehmen, kein Hinweis
+			if (verdictFor(e, myColor) === 'win' && undos === 0 && hints === 0) {
 				const beaten = await getSetting<string[]>('botsBeaten', []);
 				if (!beaten.includes(bot.id)) await setSetting('botsBeaten', [...beaten, bot.id]);
 			}
@@ -781,6 +839,26 @@
 				<span class="switch" class:on={coachOn} aria-hidden="true"><span></span></span>
 			</button>
 
+			{#if coachOn}
+				<div class="opt coach-level">
+					<span class="opt-label">{t('coach.levelLabel')}</span>
+					<SegmentedSwitch
+						label={t('coach.levelLabel')}
+						bind:value={coachPref}
+						options={[
+							{ value: 'auto', label: t('coach.levelAuto') },
+							{ value: 'warn', label: t('coach.levelWarn') },
+							{ value: 'check', label: t('coach.levelCheck') }
+						]}
+					/>
+					<span class="level-note"
+						>{coachLevel(coachPref, coachedGames) === 'check'
+							? t('coach.levelCheckText')
+							: t('coach.levelWarnText')}</span
+					>
+				</div>
+			{/if}
+
 			<button class="btn big" onclick={start}>{t('play.start')}</button>
 		</aside>
 	</div>
@@ -816,6 +894,10 @@
 					<button onclick={showThreat}>{t('coach.showThreat')}</button>
 				{:else if coachBar.act === 'better'}
 					<button onclick={showBetter}>{t('coach.showBetter')}</button>
+				{:else if coachBar.act === 'reveal'}
+					<button onclick={reveal}>{t('coach.reveal')}</button>
+				{:else if coachBar.act === 'why'}
+					<button onclick={showWhy}>{t('coach.why')}</button>
 				{/if}
 			{/snippet}
 		</CommentBar>
@@ -919,14 +1001,21 @@
 							<b>{t('coach.title')}</b>
 							{#if coachBusy}<span class="cb-busy">{t('coach.thinking')}</span>{/if}
 						</div>
-						{#if coachOpp}
+						{#if coachOpp && selfCheck && !revealed && myTurn}
+							<p class="cb-opp">
+								<span class="cb-label">{t('coach.opponent')} {figurine(coachOpp.san)}</span>
+								{t('coach.checkPrompt')}
+							</p>
+							<p class="cb-text">{t('coach.checkPromptText')}</p>
+							<button class="cb-link" onclick={reveal}>{t('coach.reveal')}</button>
+						{:else if coachOpp}
 							<p class="cb-opp">
 								<span class="cb-label">{t('coach.opponent')} {figurine(coachOpp.san)}</span>
 								{coachOpp.text}
 							</p>
 							{#if coachOpp.warn}<p class="cb-warn">{coachOpp.warn}</p>{/if}
 						{/if}
-						{#if coachThreat && myTurn}
+						{#if coachThreat && myTurn && (!selfCheck || revealed)}
 							<p class="cb-warn">
 								{coachThreat.kind === 'mate'
 									? t('coach.threatMate', { n: coachThreat.mateIn ?? 1 })
@@ -950,7 +1039,16 @@
 								<button class="cb-link" onclick={showBetter}>{t('coach.showBetter')}</button>
 							{/if}
 						{/if}
-						{#if coachNote}
+						{#if coachNote && coachPending && selfCheck && !whyShown}
+							<p class="cb-title j-blunder">{t('coach.unsafeTitle')}</p>
+							<p class="cb-text">{t('coach.unsafeText')}</p>
+							<div class="cb-actions">
+								<button class="btn" onclick={coachTakeback}
+									><Undo2 size={17} /> {t('coach.takebackSelf')}</button
+								>
+								<button class="btn secondary" onclick={showWhy}>{t('coach.why')}</button>
+							</div>
+						{:else if coachNote}
 							<p class="cb-title j-{coachNote.judgement}">{coachNote.title}</p>
 							<p class="cb-text">{coachNote.text}</p>
 							{#if coachPending}
@@ -1564,6 +1662,12 @@
 		gap: 0.45rem;
 	}
 
+	.level-note {
+		font-size: 0.82rem;
+		color: var(--text-2);
+		line-height: 1.35;
+	}
+
 	.opt-label {
 		display: inline-flex;
 		align-items: center;
@@ -1647,7 +1751,7 @@
 		flex-direction: column;
 		gap: 0.6rem;
 		width: 100%;
-		max-width: min(640px, calc(100dvh - 210px));
+		max-width: min(640px, calc(100svh - 210px));
 		margin: 0 auto;
 	}
 
@@ -1657,12 +1761,12 @@
 			align-items: start;
 		}
 		.board-col {
-			max-width: min(680px, calc(100dvh - 150px));
+			max-width: min(680px, calc(100svh - 150px));
 		}
 		.side {
 			position: sticky;
 			top: 2rem;
-			height: min(560px, calc(100dvh - 120px));
+			height: min(560px, calc(100svh - 120px));
 		}
 	}
 
@@ -2085,7 +2189,7 @@
 		.board-col {
 			max-width: min(
 				100%,
-				calc(100dvh - var(--dock-h) - var(--tabbar-space) - var(--safe-top) - 130px)
+				calc(100svh - var(--dock-h) - var(--tabbar-space) - var(--safe-top) - 130px)
 			);
 		}
 		/* mit Coach: Kommentar steht über dem Brett (feste Höhe) */
@@ -2093,7 +2197,7 @@
 			max-width: min(
 				100%,
 				calc(
-					100dvh - var(--dock-h) - var(--tabbar-space) - var(--safe-top) - 130px -
+					100svh - var(--dock-h) - var(--tabbar-space) - var(--safe-top) - 130px -
 						var(--comment-h) - 0.5rem
 				)
 			);

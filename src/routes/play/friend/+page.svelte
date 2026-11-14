@@ -211,7 +211,7 @@
 
 	.board-col {
 		width: 100%;
-		max-width: min(620px, calc(100dvh - 240px));
+		max-width: min(620px, calc(100svh - 240px));
 		margin: 0 auto;
 	}
 

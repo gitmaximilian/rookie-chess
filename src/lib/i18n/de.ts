@@ -238,6 +238,23 @@ export const de: Shape<typeof en> = {
 		showBetter: 'Besseren Zug zeigen',
 		betterWas: (p: P) => `Besser war ${p.san}.`,
 		title: 'Coach',
+		levelLabel: 'Hilfe des Coachs',
+		levelAuto: 'Auto',
+		levelWarn: 'Warnen',
+		levelCheck: 'Ich prüfe',
+		levelWarnText:
+			'Der Coach warnt vor angegriffenen Figuren und Drohungen und zeigt Fehler sofort.',
+		levelCheckText:
+			'Der Coach fragt nur „Was droht?“ – den Blunder-Check machst du selbst, die Antwort gibt es auf Wunsch.',
+		checkPrompt: 'Dein Blunder-Check: Was hat der Gegner vor?',
+		checkPromptText:
+			'Vor deinem Zug: Kann der Gegner Schach geben, etwas schlagen oder etwas bedrohen?',
+		reveal: 'Was droht?',
+		unsafeTitle: 'Halt – dieser Zug ist nicht sicher.',
+		unsafeText:
+			'Was kann der Gegner jetzt schlagen oder drohen? Nimm zurück und such selbst – oder lass dir zeigen, warum.',
+		why: 'Zeig warum',
+		takebackSelf: 'Zurück, selbst finden',
 		toggle: 'Mit Coach spielen',
 		toggleText: 'Rückmeldung zu jedem Zug, Warnungen und Erklärungen.',
 		welcome: 'Ich kommentiere jeden deiner Züge. Geht etwas schief, kannst du ihn zurücknehmen.',
@@ -484,7 +501,8 @@ export const de: Shape<typeof en> = {
 			excellent: 'Fast so stark wie der Engine-Zug.',
 			good: 'Ein solider Zug.',
 			punish: (p) => `das bestrafst du mit ${p.san}.`,
-			alt: (p) => `Noch stärker war ${p.san}.`
+			alt: (p) => `Etwas genauer war ${p.san}.`,
+			altEqual: (p) => `Ebenfalls stark: ${p.san}.`
 		},
 		does: {
 			castle: 'Der König steht sicher, und der Turm kommt ins Spiel.',
@@ -547,6 +565,17 @@ export const de: Shape<typeof en> = {
 		blunderedTitle: (p) => `${p.name} eingestellt`,
 		hangingTitle: (p) => `${p.name} hängt`,
 		blunderedText: (p) => `${p.Piece} auf ${p.sq} ist ungeschützt – ${p.reply} schlägt ${p.pron}.`,
+		cheaperText: (p: P) =>
+			`${p.Piece} auf ${p.sq} ist zwar gedeckt, aber ${p.reply} schlägt ${
+				{
+					Bauer: 'mit einem Bauern',
+					Springer: 'mit einem Springer',
+					Läufer: 'mit einem Läufer',
+					Turm: 'mit einem Turm',
+					Dame: 'mit der Dame',
+					König: 'mit dem König'
+				}[String(p.attacker)] ?? ''
+			} – Zurückschlagen gleicht das nicht aus.`,
 		hangingText: (p) => `Nach deinem Zug hängt ${p.piece} auf ${p.sq}: ${p.reply}.`,
 		forkTitle: 'Gabel zugelassen',
 		forkText: (p) =>
@@ -621,6 +650,10 @@ export const de: Shape<typeof en> = {
 		sound: 'Töne',
 		soundStyle: 'Klangstil',
 		soundStyles: { wood: 'Holz', soft: 'Sanft', chime: 'Glocke' },
+		minutes: 'Zeit pro Tag',
+		minutesText:
+			'Zeit pro Tag für den Tagesplan – Rookie wählt die wichtigsten Aufgaben, bis sie voll ist.',
+		minutesN: (p: P) => `${p.n} min`,
 		goal: 'Tagesziel',
 		goalText: 'Wie viele Puzzles möchtest du pro Tag lösen?',
 		data: 'Deine Daten',
@@ -1129,21 +1162,35 @@ export const de: Shape<typeof en> = {
 		avgMoves: (p: P) => `Im Schnitt ${p.n} Züge pro Partie`,
 		practise: 'Meine Fehler üben',
 		insight: {
-			betterWhite: (p: P) => `Mit Weiß holst du ${p.a} % der Punkte, mit Schwarz nur ${p.b} %.`,
-			betterBlack: (p: P) => `Mit Schwarz holst du ${p.a} % der Punkte, mit Weiß nur ${p.b} %.`,
+			betterWhite: (p: P) =>
+				`Mit Weiß holst du ${p.a} % der Punkte, mit Schwarz nur ${p.b} % – ein deutlicher Unterschied.`,
+			betterBlack: (p: P) =>
+				`Mit Schwarz holst du ${p.a} % der Punkte, mit Weiß nur ${p.b} % – ein deutlicher Unterschied.`,
 			bestOpening: (p: P) =>
-				`Deine beste Eröffnung mit ${p.color === 'white' ? 'Weiß' : 'Schwarz'}: ${p.name} – ${p.pct} % aus ${p.n} Partien.`,
+				`Stärkste Eröffnung mit ${p.color === 'white' ? 'Weiß' : 'Schwarz'}: ${p.name} – ${p.pct} % aus ${p.n} Partien (dein Schnitt: ${p.avg} %).`,
 			worstOpening: (p: P) =>
-				`${p.name} (du mit ${p.color === 'white' ? 'Weiß' : 'Schwarz'}) macht dir Probleme: nur ${p.pct} % aus ${p.n} Partien. Ein Kurs könnte helfen.`,
+				`${p.name} (du mit ${p.color === 'white' ? 'Weiß' : 'Schwarz'}): nur ${p.pct} % aus ${p.n} Partien – deutlich unter deinem Schnitt von ${p.avg} %.`,
 			weakPhase: (p: P) =>
 				`Schwächste Partiephase: ${p.phase} – ${p.acc} % Genauigkeit (beste Phase: ${p.best} %).`,
-			motif: (p: P) => `Dein häufigster Fehler: ${p.motif} (${p.n}×).`,
+			motif: (p: P) =>
+				`Dein häufigster konkreter Fehler: ${p.motif} – ${p.n}× in ${p.games} analysierten Partien (${p.share} % deiner Fehler mit klarem Motiv).`,
 			time: (p: P) =>
-				`${p.pct} % deiner Niederlagen passieren auf Zeit – behalte die Uhr im Blick.`,
-			improving: (p: P) => `Deine Genauigkeit steigt: +${p.d} Punkte in den letzten 10 Partien.`,
+				`${p.pct} % deiner Niederlagen (${p.n}) passieren auf Zeit – spiel längere Bedenkzeiten oder schneller in klaren Stellungen.`,
+			improving: (p: P) =>
+				`Deine Genauigkeit steigt: +${p.d} Punkte in den letzten 10 Partien – mehr als Zufall.`,
 			declining: (p: P) =>
-				`Deine Genauigkeit ist in den letzten 10 Partien um ${p.d} Punkte gesunken.`,
-			giantKiller: (p: P) => `Gegen stärkere Gegner holst du ${p.pct} % – stark!`
+				`Deine Genauigkeit ist in den letzten 10 Partien um ${p.d} Punkte gesunken – mehr als Zufall.`,
+			giantKiller: (p: P) => `Gegen stärkere Gegner holst du ${p.pct} % aus ${p.n} Partien – stark!`
+		},
+		insightRule:
+			'Gezeigt wird nur, was mit genug Partien deutlich über dem Zufall liegt – höchstens vier Punkte, das Wichtigste zuerst.',
+		insightAction: {
+			course: 'Eröffnungskurs',
+			safety: 'Blunder-Check üben',
+			puzzles: 'Puzzles',
+			endgame: 'Endspiele üben',
+			slower: 'Partie mit mehr Zeit',
+			mistakes: 'Eigene Fehler üben'
 		}
 	},
 	install: {
@@ -1215,6 +1262,10 @@ export const de: Shape<typeof en> = {
 		endgame: (p: P) => `Endspiel: ${p.name}`,
 		game: 'Aus deiner letzten Partie lernen',
 		play: 'Eine Partie mit Coach spielen',
+		safety: (p: P) => `Blunder-Check: ${p.n} Züge – sicher oder nicht?`,
+		mistakes: (p: P) => `Deine eigenen Fehler: ${p.n} wiederholen`,
+		checkup: 'Kontrolltest Sicherheit (12 Aufgaben, alle 2 Wochen)',
+		progressMin: (p: P) => `${p.n} von ${p.m} erledigt · noch ca. ${p.min} min`,
 		start: 'Los',
 		continue: 'Weiter',
 		allDone: 'Alles erledigt für heute – stark!',
@@ -1336,6 +1387,86 @@ export const de: Shape<typeof en> = {
 		howEndgames: 'Je Lektion 1–3 Sterne, je nachdem, wie effizient du gewinnst',
 		all: 'Alle Sterne gesammelt – großartig!'
 	},
+	report: {
+		title: 'Partie-Bewertung',
+		level: (p: P) => `Genauigkeit wie typisch bei ≈ ${p.elo}`,
+		levelBelow: (p: P) => `Genauigkeit wie typisch bei ${p.elo} oder darunter`,
+		levelAbove: (p: P) => `Genauigkeit wie typisch bei ${p.elo} oder darüber`,
+		tooShort: 'zu kurz für eine Einordnung',
+		percentile: (p: P) => `genauer als ${p.p} % der Partien bei ≈ ${p.r}`,
+		phases: 'Deine Phasen',
+		turning: 'Wendepunkt',
+		byYou: '(du)',
+		byOpp: '(Gegner)',
+		lost: (p: P) => `−${p.pct} % Gewinnchance`,
+		chances: 'Chancen',
+		chancesText: (p: P) => `${p.n} von ${p.m} Fehlern des Gegners sofort bestraft`,
+		noChances: 'Der Gegner hat keinen groben Fehler gemacht',
+		missed: (p: P) => `verpasst bei ${p.move}`,
+		lesson: 'Lernpunkt',
+		lessonText: (p: P) => `${p.motif} (${p.n}×) – jetzt üben`,
+		note: 'Einordnung: Genauigkeit dieser Partie im Vergleich zu 1 440 echten Lichess-Partien (400–2200, gleiche Rechentiefe). Eine einzelne Partie schwankt stark – auch Spieler um 1000 erreichen in jeder vierten Partie über 87 %. Eine „gespielte Elo“ aus einer Partie wäre deshalb Zufall; aussagekräftig ist, wie die Partie für deine Stärke war, und der Verlauf über viele Partien.'
+	},
+	progress: {
+		title: 'Wirkt dein Training?',
+		text: 'Sterne, Serie und Puzzle-Wertung zeigen Fleiß. Ob du besser spielst, zeigt sich hier – mit ehrlichen Mindestmengen.',
+		blunders: 'Patzer je 30 Züge',
+		better: (p: P) => `▼ ${p.d} weniger als vorher (${p.p}) – echte Verbesserung`,
+		worse: (p: P) => `▲ ${p.d} mehr als vorher (${p.p}) – mehr als Zufall`,
+		same: (p: P) => `vorher ${p.p} – der Unterschied liegt noch im Zufallsbereich`,
+		baseline: (p: P) => `Ausgangswert nach 10 analysierten Partien (noch ${p.n})`,
+		compareIn: (p: P) => `erster Vergleich nach ${p.n} weiteren Partien`,
+		checkup: 'Kontrolltest',
+		checkupNone: 'noch kein Test – jetzt machen',
+		checkupDue: 'nächster ist fällig',
+		checkupNext: (p: P) => `nächster in ${p.n} Tagen`,
+		checkupFrom: (p: P) => `erster ${p.first} %`,
+		safety: 'Blunder-Check',
+		puzzles: 'Puzzles',
+		target: 'Trefferquote · Ziel ≈ 80 %',
+		targetSelf: 'selbst gelöst · Ziel ≈ 80 %'
+	},
+	safety: {
+		eyebrow: 'Blunder-Check',
+		title: 'Ist der Zug sicher?',
+		testTitle: 'Kontrolltest Sicherheit',
+		kicker: 'Blunder-Check',
+		testKicker: (p: P) => `Kontrolltest · ${p.n} von ${p.m}`,
+		teaser:
+			'Vor jedem Zug: Kann der Gegner etwas schlagen oder mattsetzen? Übe den Check, der die meisten Partien rettet.',
+		prompt: (p: P) => `Du planst ${p.san}. Ist das sicher?`,
+		routine:
+			'Denk dir den Zug gespielt: Kann der Gegner Schach geben, etwas schlagen, etwas bedrohen?',
+		safe: 'Sicher',
+		unsafe: 'Nicht sicher',
+		refuteTitle: 'Gutes Gespür! Jetzt zeig es: Wie bestraft der Gegner den Zug?',
+		refuteText: 'Spiel die beste Antwort des Gegners auf dem Brett.',
+		refuteAgain: 'Der nicht – such nach einem Schlagzug, einem Schach oder einer Gabel.',
+		showReply: 'Zeig es mir',
+		rightSafe: 'Richtig – der Zug ist sicher.',
+		wrongSafe: 'Der Zug war doch sicher.',
+		wrongUnsafe: 'Vorsicht – dieser Zug verliert.',
+		rightUnsafe: 'Genau – du hast die Widerlegung gefunden!',
+		halfUnsafe: 'Nicht sicher, gut gespürt – hier ist der Grund.',
+		whySafe: (p: P) =>
+			`Nach ${p.san} gewinnt der Gegner nichts: Jeder Schlagzug lässt sich beantworten, und es gibt kein Matt.`,
+		whyUnsafe: (p: P) =>
+			`Nach ${p.san} kommt ${p.reply} (${p.theme}). Prüf vor jedem Zug, was der Gegner danach kann.`,
+		saved: 'Antwort gespeichert – Auswertung am Ende.',
+		testScore: (p: P) => `${p.n} von ${p.m} Punkten`,
+		testTrend: (p: P) => `Erster Kontrolltest ${p.first} %, jetzt ${p.last} %.`,
+		trendUp: 'Das ist eine echte Verbesserung.',
+		trendDown: 'Weniger als zuvor – bleib beim täglichen Blunder-Check.',
+		trendNoise:
+			'Bei 12 Aufgaben kann ein Unterschied dieser Größe noch Zufall sein – zählen wird der Verlauf über mehrere Tests.',
+		testFirst:
+			'Dein erster Kontrolltest. Rookie schlägt den nächsten in zwei Wochen vor – dann siehst du, ob dein Training wirkt.',
+		toCoach: 'Zu deinem Fortschritt',
+		board: 'Brett: Ist der geplante Zug sicher?',
+		empty: 'Du hast alle Aufgaben gesehen – stark!',
+		today: (p: P) => `heute ${p.n}`,
+		session: (p: P) => `${p.n}/${p.m} richtig`
+	},
 	storm: {
 		title: 'Puzzle-Sturm',
 		teaser: 'So viele Puzzles wie möglich in 3 Minuten.',
@@ -1445,7 +1576,7 @@ export const de: Shape<typeof en> = {
 		stars: 'Sterne',
 		starsSub: 'beim Lernen',
 		formLast: (p: P) => `letzte ${p.n} ${Number(p.n) === 1 ? 'Partie' : 'Partien'}`,
-		strengthGoal: 'aus Partien und Puzzles · Ziel 1200',
+		strengthGoal: (p: P) => `Etappe ${p.goal} · Ziel 1600`,
 		streak: 'Serie',
 		streakDays: (p: P) => (Number(p.n) === 1 ? 'Tag' : 'Tage'),
 		streakDone: 'heute erledigt',
@@ -1471,7 +1602,8 @@ export const de: Shape<typeof en> = {
 			stockfishjs: 'WebAssembly-Version',
 			chessground: 'Schachbrett',
 			chessops: 'Schachregeln & PGN',
-			puzzles: 'Taktik-Aufgaben',
+			puzzles: 'Taktik-Aufgaben und Blunder-Check-Stellungen',
+			games: 'Forschungsdaten: Fehlerarten und Genauigkeit nach Wertung (docs/research)',
 			openings: 'Eröffnungsnamen',
 			tablebase: 'Endspiel-Datenbank',
 			lucide: 'Icons',

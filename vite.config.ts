@@ -79,7 +79,8 @@ export default defineConfig({
 				},
 				generateSW: {
 					// App-Shell, Schrift und Engine vorab speichern → startet komplett offline
-					globPatterns: ['**/*.{woff2,wasm}', '**/openings.json'],
+					// Blunder-Check-Aufgaben (klein) gleich mit – die tägliche Übung soll offline gehen
+					globPatterns: ['**/*.{woff2,wasm}', '**/openings.json', '**/safety/items.json'],
 					globIgnores: ['**/*vietnamese*', '**/sw.js', '**/workbox-*.js'],
 					navigateFallback: '/',
 					// Umzugs-Empfänger immer frisch vom Server (eigene Header, siehe static/_headers)

@@ -383,7 +383,7 @@
 	.board-col {
 		min-width: 0;
 		width: 100%;
-		max-width: min(640px, calc(100dvh - 200px));
+		max-width: min(640px, calc(100svh - 200px));
 		margin: 0 auto;
 	}
 

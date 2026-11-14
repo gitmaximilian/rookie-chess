@@ -44,6 +44,23 @@ describe('Erklärungen', () => {
 		expect(e?.text).toContain('g5');
 	});
 
+	it('gedeckte Figur, von billigerer Figur geschlagen: nicht „ungeschützt“', () => {
+		// Weiß zieht die Dame nach f5: gedeckt vom Bauern g4, aber exf5 schlägt sie mit einem Bauern
+		const fen = '4k3/8/4p3/8/6P1/5Q2/8/4K3 w - - 0 1';
+		const e = explain(
+			fen,
+			'f3f5',
+			{ cp: 900, best: 'f3b7' },
+			{ cp: -800, best: 'e6f5' },
+			'blunder'
+		);
+		expect(e?.motif).toBe('hanging');
+		expect(e?.title).toBe('Dame eingestellt');
+		expect(e?.text).not.toContain('ungeschützt');
+		expect(e?.text).toContain('gedeckt');
+		expect(e?.text).toContain('Bauer');
+	});
+
 	it('Matt in 1 übersehen', () => {
 		const fen = '6k1/5ppp/8/8/8/8/5PPP/3R2K1 w - - 0 1';
 		const e = explain(fen, 'h2h3', { mate: 1, best: 'd1d8', pv: ['d1d8'] }, { cp: 500 }, 'mistake');

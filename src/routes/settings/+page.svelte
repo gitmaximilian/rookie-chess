@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { DEFAULT_MINUTES } from '#lib/training/plan.js';
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 	import Download from '@lucide/svelte/icons/download';
@@ -64,6 +65,7 @@
 		soundOn = sound.enabled;
 		soundStyle = sound.style;
 		goal = await getSetting('dailyGoal', 5);
+		minutes = await getSetting('minutesPerDay', DEFAULT_MINUTES);
 		lastBackup = await getSetting<number | null>('lastBackupAt', null);
 		try {
 			persisted = (await navigator.storage?.persisted?.()) ?? false;
@@ -94,6 +96,14 @@
 		// Hörprobe: normaler Zug, dann Schlagzug
 		sound.move();
 		setTimeout(() => sound.move(true), 380);
+	}
+
+	let minutes = $state(DEFAULT_MINUTES);
+	async function saveMinutes(n: number) {
+		minutes = n;
+		await setSetting('minutesPerDay', n);
+		// heutigen Plan neu zusammenstellen lassen
+		await setSetting('dailyPlan', null);
 	}
 
 	async function saveGoal(n: number) {
@@ -345,6 +355,18 @@
 					aria-checked={goal === n}
 					class:on={goal === n}
 					onclick={() => saveGoal(n)}>{n}</button
+				>
+			{/each}
+		</div>
+		<!-- Zeitbudget des Tagesplans: bestimmt, wie viele Aufgaben Rookie täglich vorschlägt -->
+		<p class="hint minutes-hint">{t('settings.minutesText')}</p>
+		<div class="seg" role="radiogroup" aria-label={t('settings.minutes')}>
+			{#each [15, 20, 30, 45] as n (n)}
+				<button
+					role="radio"
+					aria-checked={minutes === n}
+					class:on={minutes === n}
+					onclick={() => saveMinutes(n)}>{t('settings.minutesN', { n })}</button
 				>
 			{/each}
 		</div>
@@ -672,6 +694,10 @@
 	}
 
 	/* gleiche Form wie SegmentedSwitch */
+	.minutes-hint {
+		margin-top: 1rem;
+	}
+
 	.seg {
 		display: flex;
 		gap: 2px;

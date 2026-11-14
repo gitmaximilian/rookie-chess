@@ -46,13 +46,17 @@ export interface PuzzleAttemptRow {
 	solved: boolean;
 	ratingAfter: number;
 	themes: string[];
-	source: 'lichess' | 'mistake';
+	/** safety = Blunder-Check, checkup = Kontrolltest (zählt nicht für Puzzle-Wertung und Themen) */
+	source: 'lichess' | 'mistake' | 'safety' | 'checkup';
+	/** mit Hinweis gelöst (ältere Einträge: fehlt) */
+	hinted?: boolean;
 }
 
 export interface ReviewCardRow {
 	/** z. B. "puzzle:00sHx" oder "rep:white:<fen>" */
 	id: string;
-	kind: 'puzzle' | 'repertoire' | 'mistake';
+	/** safety = Blunder-Check-Aufgabe (Zug sicher?) */
+	kind: 'puzzle' | 'repertoire' | 'mistake' | 'safety';
 	card: Card;
 	/** fällig ab (ms) – für Indexabfragen */
 	due: number;

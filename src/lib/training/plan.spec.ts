@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { buildPlan, isDone, progressOf, type PlanContext } from './plan';
-import { estimateStrength } from './strength';
+import { buildPlan, isDone, minutesOf, progressOf, type PlanContext } from './plan';
+import { estimateStrength, nextMilestone } from './strength';
 
 const base: PlanContext = {
 	day: '2026-11-11',
@@ -17,7 +17,14 @@ const base: PlanContext = {
 	gameToReview: null,
 	reviewedGames: [],
 	daysSinceGame: 0,
-	gamesToday: 0
+	gamesToday: 0,
+	dueMistakes: 0,
+	safetyToday: 0,
+	safetyFirst: false,
+	checkupDue: false,
+	checkupToday: false,
+	strength: null,
+	minutes: 30
 };
 
 describe('Tagesplan', () => {
@@ -28,17 +35,47 @@ describe('Tagesplan', () => {
 		expect(p.tasks[1]).toMatchObject({ lesson: 'board' });
 	});
 
-	it('mit Daten: Wiederholung, Schwäche, Repertoire, Partie – höchstens 4 Aufgaben', () => {
+	it('Sicherheit zuerst: Blunder-Check, eigene Fehler, Taktik – in dieser Reihenfolge', () => {
 		const p = buildPlan({
 			...base,
-			dueReview: 25,
-			dueRepertoire: 3,
+			safetyFirst: true,
+			dueMistakes: 9,
+			dueReview: 4,
 			weakTheme: 'pin',
 			gameToReview: 7
 		});
-		expect(p.tasks.map((t) => t.kind)).toEqual(['review', 'puzzles', 'repertoire', 'game']);
-		expect(p.tasks[0]).toMatchObject({ target: 10 });
-		expect(p.tasks[1]).toMatchObject({ theme: 'pin' });
+		expect(p.tasks.map((t) => t.kind)).toEqual(['safety', 'mistakes', 'review', 'puzzles', 'game']);
+		expect(p.tasks[1]).toMatchObject({ target: 5 });
+		expect(p.tasks[3]).toMatchObject({ theme: 'pin' });
+	});
+
+	it('hält das Zeitbudget ein; Taktik schrumpft statt zu entfallen', () => {
+		const c = { ...base, safetyFirst: true, dueMistakes: 5, daysSinceGame: null, minutes: 30 };
+		const p = buildPlan(c);
+		const total = p.tasks.reduce((s, t) => s + minutesOf(t), 0);
+		expect(total).toBeLessThanOrEqual(30);
+		expect(p.tasks.map((t) => t.kind)).toContain('play');
+		const pz = p.tasks.find((t) => t.kind === 'puzzles');
+		expect(pz && 'target' in pz ? pz.target : 0).toBeGreaterThanOrEqual(3);
+	});
+
+	it('Kontrolltest steht vorn, wenn er fällig ist', () => {
+		const p = buildPlan({ ...base, safetyFirst: true, checkupDue: true });
+		expect(p.tasks[0]).toMatchObject({ kind: 'checkup' });
+		expect(
+			progressOf(p.tasks[0], { ...base, checkupToday: true }, { dueReview: 0, dueRepertoire: 0 })
+		).toEqual({
+			done: 1,
+			target: 1
+		});
+	});
+
+	it('Lektionen passend zur Spielstärke: unter 900 keine Stufe-2-Endspiele', () => {
+		const stars = { kqk: 3, kkrr: 3, square: 3 };
+		const low = buildPlan({ ...base, strength: 700, endgameStars: stars, minutes: 60 });
+		const mid = buildPlan({ ...base, strength: 1000, endgameStars: stars, minutes: 60 });
+		expect(low.tasks.find((t) => t.kind === 'endgame')).toBeUndefined();
+		expect(mid.tasks.find((t) => t.kind === 'endgame')).toMatchObject({ lesson: 'krk' });
 	});
 
 	it('Fokus Eröffnungen: angefangener Kurs wird fortgesetzt', () => {
@@ -51,13 +88,22 @@ describe('Tagesplan', () => {
 	});
 
 	it('Fortschritt wird live berechnet', () => {
-		const plan = buildPlan({ ...base, dueReview: 4, weakTheme: 'fork' });
-		const init = { dueReview: 4, dueRepertoire: 0 };
-		const now = { ...base, dueReview: 1, puzzlesToday: 3 };
-		expect(progressOf(plan.tasks[0], now, init)).toEqual({ done: 3, target: 4 });
+		const plan = buildPlan({
+			...base,
+			dueReview: 4,
+			dueMistakes: 3,
+			weakTheme: 'fork',
+			safetyFirst: true
+		});
+		const init = { dueReview: 4, dueRepertoire: 0, dueMistakes: 3 };
+		const now = { ...base, dueReview: 1, dueMistakes: 1, puzzlesToday: 3, safetyToday: 2 };
+		const by = (k: string) => plan.tasks.find((t) => t.kind === k)!;
+		expect(progressOf(by('review'), now, init)).toEqual({ done: 3, target: 4 });
+		expect(progressOf(by('mistakes'), now, init)).toEqual({ done: 2, target: 3 });
+		expect(progressOf(by('safety'), now, init)).toEqual({ done: 2, target: 6 });
 		// jedes heute gelöste Puzzle zählt (gleiche Zahl wie das Tagesziel)
-		expect(progressOf(plan.tasks[1], now, init)).toEqual({ done: 3, target: 5 });
-		expect(isDone(plan.tasks[0], { ...now, dueReview: 0 }, init)).toBe(true);
+		expect(progressOf(by('puzzles'), now, init)).toEqual({ done: 3, target: 5 });
+		expect(isDone(by('review'), { ...now, dueReview: 0 }, init)).toBe(true);
 	});
 });
 
@@ -77,24 +123,40 @@ describe('Spielstärke', () => {
 		expect(online.value).toBe(1250);
 	});
 
-	it('Schwerpunkt „Partien spielen“: Partie mit Coach steht zuerst', () => {
-		const p = buildPlan({ ...base, focus: 'play', weakTheme: 'fork' });
-		expect(p.tasks[0]).toMatchObject({ kind: 'play' });
+	it('Schwerpunkt „Partien spielen“: Partie kommt auch bei knappem Budget in den Plan', () => {
+		const p = buildPlan({
+			...base,
+			focus: 'play',
+			weakTheme: 'fork',
+			safetyFirst: true,
+			dueMistakes: 5,
+			daysSinceGame: 2,
+			minutes: 20
+		});
+		const play = p.tasks.find((t) => t.kind === 'play')!;
+		expect(play).toBeDefined();
 		expect(
-			progressOf(p.tasks[0], { ...base, gamesToday: 1 }, { dueReview: 0, dueRepertoire: 0 })
+			progressOf(play, { ...base, gamesToday: 1 }, { dueReview: 0, dueRepertoire: 0 })
 		).toEqual({
 			done: 1,
 			target: 1
 		});
 	});
 
-	it('länger nicht gespielt oder noch nie: Partie kommt nach den Puzzles dazu', () => {
+	it('Partie alle zwei Tage oder wenn noch nie gespielt', () => {
 		expect(buildPlan({ ...base, daysSinceGame: 3 }).tasks.map((t) => t.kind)).toContain('play');
-		expect(buildPlan({ ...base, daysSinceGame: null }).tasks[1]).toMatchObject({ kind: 'play' });
+		expect(buildPlan({ ...base, daysSinceGame: null }).tasks.map((t) => t.kind)).toContain('play');
 		expect(buildPlan({ ...base, daysSinceGame: 1 }).tasks.map((t) => t.kind)).not.toContain('play');
 		// wer die Regeln noch nicht kennt, lernt erst die Grundlagen
 		expect(
 			buildPlan({ ...base, rulesKnown: 'no', daysSinceGame: null }).tasks.map((t) => t.kind)
 		).not.toContain('play');
+	});
+
+	it('Etappenziele bis 1600', () => {
+		expect(nextMilestone(650)).toMatchObject({ goal: 800 });
+		expect(nextMilestone(1000)).toMatchObject({ goal: 1200, from: 1000, progress: 0 });
+		expect(nextMilestone(1100).progress).toBeCloseTo(0.5);
+		expect(nextMilestone(1700)).toMatchObject({ goal: 1600, progress: 1 });
 	});
 });

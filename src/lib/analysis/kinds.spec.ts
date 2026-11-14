@@ -101,7 +101,7 @@ describe('Kommentar', () => {
 		});
 		expect(c.headline).toContain('f3');
 		expect(c.text).toMatch(/Develops the knight/);
-		expect(c.text).toMatch(/Even stronger was e4/);
+		expect(c.text).toMatch(/Just as strong: e4/);
 	});
 
 	it('gegnerischer Fehler: zeigt, wie man ihn bestraft', () => {
@@ -131,5 +131,46 @@ describe('Kommentar', () => {
 
 	it('SAN-Variante bricht bei ungültigen Zügen ab', () => {
 		expect(sanMoves(START, ['e2e4', 'e7e5', 'e1e8'])).toEqual(['e4', 'e5']);
+	});
+});
+
+describe('Nachsicht: nicht nur der Top-Zug ist gut', () => {
+	it('gleichwertige Alternative ist kein Fehler (zweitbeste Linie fast gleichauf)', () => {
+		// bester Zug +0,6, zweitbester +0,5; gespielt wurde ein Zug, der +0,5 hält – nach der
+		// Bewertung nach dem Zug (Rauschen) wirkt er aber wie −1,0
+		const before = { cp: 60, best: 'g1f3', second: { cp: 50 } };
+		expect(judge(before, { cp: 50 }, 'white', 'b1c3').judgement).toBe('good');
+		// ohne zweite Linie (alte Analysen) bleibt es bei den Lichess-Schwellen
+		expect(judge({ cp: 60, best: 'g1f3' }, { cp: -150 }, 'white', 'b1c3').judgement).not.toBe(
+			'good'
+		);
+	});
+
+	it('nur ein guter Zug (zweitbeste Linie viel schlechter) → Fehler zählt', () => {
+		const before = { cp: 60, best: 'g1f3', second: { cp: -300 } };
+		expect(judge(before, { cp: -300 }, 'white', 'b1c3').judgement).toBe('blunder');
+	});
+
+	it('Matt in 7 ausgelassen, aber klar gewonnen → kein Fehler', () => {
+		const before = { mate: 7, best: 'd1d8' };
+		expect(judge(before, { cp: 1500 }, 'white', 'd1d7').judgement).toBe('good');
+	});
+
+	it('Matt in 2 ausgelassen und nur noch leicht besser → mindestens Fehler', () => {
+		const before = { mate: 2, best: 'd1d8' };
+		expect(['mistake', 'blunder']).toContain(judge(before, { cp: 250 }, 'white', 'd1d7').judgement);
+		// Matt in 2 verpasst, aber weiter klar gewonnen (+6): nur eine Ungenauigkeit
+		expect(judge(before, { cp: 600 }, 'white', 'd1d7').judgement).toBe('inaccuracy');
+	});
+
+	it('entschiedene Stellung: kleine Abweichung ist kein Fehler', () => {
+		// +9 → +5: weiter klar gewonnen
+		expect(judge({ cp: 900, best: 'a1a8' }, { cp: 500 }, 'white', 'a1a7').judgement).toBe('good');
+		// −9 → −14: ohnehin verloren
+		expect(judge({ cp: -900, best: 'a1a8' }, { cp: -1400 }, 'white', 'a1a7').judgement).toBe(
+			'good'
+		);
+		// aber: aus klar gewonnen wird ausgeglichen → Patzer bleibt Patzer
+		expect(judge({ cp: 900, best: 'a1a8' }, { cp: 0 }, 'white', 'a1a7').judgement).toBe('blunder');
 	});
 });
