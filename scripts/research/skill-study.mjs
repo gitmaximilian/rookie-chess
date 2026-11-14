@@ -121,9 +121,10 @@ async function analyse(engine, g) {
 				? { cp: 0 }
 				: await engine.eval(makeFen(pos.toSetup()))
 	);
+	// Name nur für die Holdout-Prüfung (Partien je Spieler bündeln, skill-holdout.mjs) – bleibt lokal
 	const side = {
-		white: empty(Number(h.get('WhiteElo'))),
-		black: empty(Number(h.get('BlackElo')))
+		white: { ...empty(Number(h.get('WhiteElo'))), name: h.get('White') },
+		black: { ...empty(Number(h.get('BlackElo'))), name: h.get('Black') }
 	};
 	const losses = plies.map((p, k) => {
 		const wBefore = win(evals[k].cp);

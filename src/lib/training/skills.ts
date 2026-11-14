@@ -172,14 +172,25 @@ export const MEAN_COUNT: Record<Skill, number> = {
  */
 export const ELO_PER_POINT = 10.7;
 
-/** Mindestmengen, ab denen eine Ecke gezeigt wird (sonst schwankt sie zu stark) */
+/**
+ * Mindestmengen, ab denen eine Ecke gezeigt wird. Geprüft an 139 echten Lichess-Spielern, die nicht in der
+ * Eichung stecken (Holdout, Produkt-Review 14.11.2026): Raten (immer den Mittelwert) liegt im Mittel 500 Elo
+ * daneben. Darunter war z. B. Taktik mit 10–19 Gegnerfehlern 621 Elo daneben – schlechter als Raten.
+ * Ab diesen Mengen liegt jede Ecke im Mittel unter ~440 Elo daneben, das Gesamtniveau ab ~12 Partien bei ~230.
+ */
 export const MIN_SAMPLE: Record<Skill, number> = {
-	safety: 150, // Züge in offener Stellung (≈ 5 Partien)
-	tactics: 10, // Fehler des Gegners
-	opening: 60, // Eröffnungszüge
-	strategy: 80, // Mittelspielzüge
-	endgame: 40 // Endspielzüge
+	safety: 250, // Züge in offener Stellung (≈ 9 Partien) – MAE 307, ab 400: 232
+	tactics: 35, // Fehler des Gegners (≈ 10 Partien) – MAE 437, ab 60: 329
+	opening: 60, // Eröffnungszüge (≈ 6 Partien) – MAE 232
+	strategy: 150, // ruhige Mittelspielzüge (≈ 25 Partien) – MAE 271
+	endgame: 80 // Endspielzüge (≈ 12 Partien) – MAE 293
 };
+
+/** unterste Elo-Entsprechung beim Fortschreiben unter das erste Band (400–600) */
+export const FLOOR = 300;
+
+/** ab diesem Anteil der verlorenen Gewinnchance durch Patzer ist eine Phase vor allem ein Sicherheitsproblem */
+export const BLUNDER_SHARE = 0.5;
 
 /** so viele jüngste analysierte Partien fließen ein */
 export const WINDOW = 30;
@@ -199,6 +210,12 @@ export type SkillRaw = Record<Skill, SkillSample> & {
 	games: number;
 	/** eigene Züge je Partie in jeder Kategorie (für die Elo-Wirkung) */
 	perGameCount: Record<Skill, number>;
+	/**
+	 * Anteil der verlorenen Gewinnchance in Eröffnung und Endspiel, der auf Patzer geht (0..1, null = keine
+	 * Daten). Unter ~1800 ist die Genauigkeit ohne Patzer in beiden Phasen fast gleich (Lichess-Daten) –
+	 * schwache Werte dort sind meist eingestellte Figuren, und dagegen hilft der Blunder-Check, kein Kurs.
+	 */
+	blunderShare: { opening: number | null; endgame: number | null };
 };
 
 /** Gewinnchance (0..1) aus Sicht von `side` */
@@ -221,7 +238,9 @@ export function collectSkills(games: GameRow[], window = WINDOW): SkillRaw {
 		taken: 0,
 		opening: [0, 0],
 		strategy: [0, 0],
-		endgame: [0, 0]
+		endgame: [0, 0],
+		/** Verlust durch Patzer je Phase (Eröffnung, Endspiel) */
+		blunderLoss: { opening: 0, endgame: 0 }
 	};
 	const cnt: Record<Skill, number> = { safety: 0, tactics: 0, opening: 0, strategy: 0, endgame: 0 };
 	const per: Record<Skill, number[]> = {
@@ -267,10 +286,15 @@ export function collectSkills(games: GameRow[], window = WINDOW): SkillRaw {
 			// Genauigkeit nur in offenen Stellungen (wie die Eichung)
 			const open = w >= 0.15 && w <= 0.85;
 			const p = phases[i];
-			if (open && p === 'opening') add(ph.opening, l);
-			else if (open && p === 'middlegame') {
+			if (open && p === 'opening') {
+				add(ph.opening, l);
+				if (l >= 0.3) acc.blunderLoss.opening += l;
+			} else if (open && p === 'middlegame') {
 				if (l < 0.3) add(ph.strategy, l);
-			} else if (open && p === 'endgame') add(ph.endgame, l);
+			} else if (open && p === 'endgame') {
+				add(ph.endgame, l);
+				if (l >= 0.3) acc.blunderLoss.endgame += l;
+			}
 			const chance = i > 0 && loss[i - 1] >= 0.2;
 			if (chance) {
 				g1.chances++;
@@ -295,9 +319,12 @@ export function collectSkills(games: GameRow[], window = WINDOW): SkillRaw {
 		if (g1.chances >= 2) per.tactics.push((g1.taken / g1.chances) * 100);
 	}
 	const accOf = (x: number[]) => (x[1] ? accuracy(Array(x[1]).fill(x[0] / x[1])) : null);
+	const shareOf = (k: 'opening' | 'endgame') =>
+		acc[k][0] > 0 ? acc.blunderLoss[k] / acc[k][0] : null;
 	const nGames = recent.length;
 	return {
 		games: nGames,
+		blunderShare: { opening: shareOf('opening'), endgame: shareOf('endgame') },
 		perGameCount: Object.fromEntries(
 			SKILLS.map((k) => [k, nGames ? cnt[k] / nGames : MEAN_COUNT[k]])
 		) as Record<Skill, number>,
@@ -329,12 +356,21 @@ const other = (c: 'white' | 'black') => (c === 'white' ? 'black' : 'white');
 /** Sicherheit: weniger ist besser; alles andere: mehr ist besser */
 const higherIsBetter = (s: Skill) => s !== 'safety';
 
-/** Elo-Entsprechung eines Werts (linear zwischen den Bändern, außen begrenzt) */
+/**
+ * Elo-Entsprechung eines Werts (linear zwischen den Bändern). Oben begrenzt; unter dem ersten Band (≈ 500)
+ * mit der Steigung der ersten beiden Bänder fortgeschrieben bis FLOOR – sonst landet jeder Neuling bei ≈ 500
+ * oder höher (Holdout: Band 400–600 im Mittel +350 zu hoch).
+ */
 export function eloFor(skill: Skill, v: number, table = SKILL_TABLE): number {
 	if (!table.length) return 0;
 	const xs = table.map((t) => t[skill]);
 	const better = (a: number, b: number) => (higherIsBetter(skill) ? a >= b : a <= b);
-	if (!better(v, xs[0])) return table[0].r;
+	if (!better(v, xs[0])) {
+		const [a, b] = [xs[0], xs[1]];
+		if (b === undefined || a === b) return table[0].r;
+		const slope = (table[1].r - table[0].r) / (b - a);
+		return Math.max(FLOOR, table[0].r + (v - a) * slope);
+	}
 	if (better(v, xs[xs.length - 1])) return table[table.length - 1].r;
 	for (let i = 1; i < xs.length; i++) {
 		const a = xs[i - 1];
@@ -471,10 +507,19 @@ export interface Advice {
 	/** Ziel: Elo-Entsprechung und Messwert, den Spieler dort im Schnitt haben */
 	target: number;
 	targetValue: number;
-	/** erwarteter Zuwachs in Elo (gerundet auf 5) */
+	/** erwarteter Zuwachs in Elo (gerundet auf 25) */
 	gain: number;
 	/** so viel Gewinnchance pro Partie verlierst du dann weniger (Prozentpunkte) */
 	points: number;
+	/** Eröffnung/Endspiel: der Verlust dort sind vor allem Patzer → zuerst Sicherheit trainieren */
+	viaSafety: boolean;
+}
+
+/** Kommt der Verlust in dieser Phase vor allem von Patzern? (dann hilft der Blunder-Check, kein Kurs) */
+export function mostlyBlunders(skill: Skill, raw: Pick<SkillRaw, 'blunderShare'>): boolean {
+	if (skill !== 'opening' && skill !== 'endgame') return false;
+	const share = raw.blunderShare?.[skill];
+	return share !== null && share !== undefined && share >= BLUNDER_SHARE;
 }
 
 /**
@@ -496,8 +541,10 @@ export function adviceFor(values: SkillValue[], raw: SkillRaw, table = SKILL_TAB
 				skill: v.skill,
 				target: r25(target),
 				targetValue: valueAt(v.skill, target, table),
-				gain: Math.max(0, Math.round((points * ELO_PER_POINT) / 5) * 5),
-				points: Math.round(points * 10) / 10
+				// auf 25 gerundet: das Niveau selbst ist nur auf ±230 Elo genau (Holdout), mehr wäre Scheingenauigkeit
+				gain: Math.max(0, Math.round((points * ELO_PER_POINT) / 25) * 25),
+				points: Math.round(points * 10) / 10,
+				viaSafety: mostlyBlunders(v.skill, raw)
 			};
 		})
 		.sort((a, b) => b.gain - a.gain || SKILLS.indexOf(a.skill) - SKILLS.indexOf(b.skill));

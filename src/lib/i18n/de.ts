@@ -1341,14 +1341,30 @@ export const de: Shape<typeof en> = {
 	},
 	skills: {
 		title: 'Dein Skill-Penta',
-		subtitle:
-			'100 = Weltspitze. Tippe auf eine Ecke: was sie misst, wo du stehst, was dich weiterbringt.',
+		subtitle: '100 = Weltspitze · tippe auf eine Ecke',
 		text: (p) => `Aus deinen letzten ${p.n} analysierten Partien.`,
 		overall: 'Gesamt',
-		overallTitle: 'Gewichtetes Mittel der fünf Fähigkeiten (Gewichte aus Lichess-Daten)',
+		overallTitle:
+			'Aus der Gewinnchance, die du je Fähigkeit verlierst (Lichess-Daten). Geprüft an echten Spielern: ab etwa 12 Partien im Mittel ±230 Elo genau.',
 		legendYou: 'du',
 		legendOverall: 'dein Gesamtniveau',
 		legendRings: 'Ringe: 1000 und 1600',
+		next: 'Dein nächster Schritt',
+		more: 'Mehr dazu',
+		gainShort: (p: P) => `etwa +${p.gain} Elo`,
+		viaSafetyShort: (p: P) => `${p.pct} % davon sind Patzer – zuerst der Blunder-Check.`,
+		needMoreShort: (p: P) =>
+			`Noch etwa ${p.n} ${Number(p.n) === 1 ? 'analysierte Partie' : 'analysierte Partien'}, dann zeigt Rookie diesen Wert.`,
+		howShort: {
+			safety: 'Täglich Blunder-Check – vor jedem Zug: Schach, Schlagen, Drohung?',
+			tactics: 'Gemischte Puzzles auf deinem Niveau.',
+			opening: 'Prinzipien und ein Eröffnungskurs je Farbe.',
+			strategy: 'Stellungsspiel-Lektionen, dann Partien mit „Erst du“.',
+			endgame: 'Grundendspiele gegen die Tablebase.'
+		},
+		legendMissing: '– = noch zu wenige Partien',
+		viaSafety: (p: P) =>
+			`${p.pct} % deines Verlusts hier sind Patzer. Ohne Patzer spielen Lichess-Spieler von 400 bis 1800 diese Phase fast gleich genau – dein Hebel ist deshalb der Blunder-Check, nicht mehr Theorie.`,
 		elite: 'Weltspitze',
 		lever: (p: P) => `Größter Hebel: ${p.name} – ≈ +${p.gain} Elo`,
 		leverText: 'Hier bringt dich Training jetzt am weitesten.',
@@ -1356,7 +1372,7 @@ export const de: Shape<typeof en> = {
 			safety: 'Sicherheit',
 			tactics: 'Taktik',
 			opening: 'Eröffnung',
-			strategy: 'Strategie',
+			strategy: 'Stellungsspiel',
 			endgame: 'Endspiel'
 		},
 		what: {
@@ -1426,8 +1442,8 @@ export const de: Shape<typeof en> = {
 			endgame: 'Endspiele üben'
 		},
 		gain: (p: P) =>
-			`Bringst du ${p.name} auf das Niveau von ≈ ${p.target} (${p.value}), verlierst du pro Partie ≈ ${p.points} Prozentpunkte weniger Gewinnchance – das sind ≈ +${p.gain} Elo.`,
-		note: 'Elo-Entsprechung: geeicht an 1 560 Lichess-Partien (Rapid/Classical, 400–3200) mit derselben Rechentiefe wie Rookie. Elo-Wirkung: 1 Prozentpunkt weniger verlorene Gewinnchance pro Partie ≈ 11 Elo (gleiche Daten). Ein Zusammenhang, keine Garantie.',
+			`Bringst du ${p.name} auf das Niveau von ≈ ${p.target} (${p.value}), verlierst du pro Partie ≈ ${p.points} Prozentpunkte weniger Gewinnchance – das sind etwa +${p.gain} Elo.`,
+		note: 'Elo-Entsprechung: geeicht an 1 560 Lichess-Partien (Rapid/Classical, 400–3200) mit derselben Rechentiefe wie Rookie. Elo-Wirkung: 1 Prozentpunkt weniger verlorene Gewinnchance pro Partie ≈ 11 Elo (gleiche Daten). Geprüft an 139 Lichess-Spielern außerhalb der Eichung: Gesamtniveau ab etwa 12 Partien im Mittel ±230 Elo genau. Ein Zusammenhang, keine Garantie.',
 		needData: (p) =>
 			`Dein Profil braucht mindestens 3 analysierte Partien (bisher ${p.n}). Öffne eine Partie unter „Games“, um sie zu analysieren.`,
 		coverage: (p) => `${p.n} von ${p.m} ${s(p.m, 'Partie', 'Partien')} analysiert`,

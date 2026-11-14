@@ -62,8 +62,12 @@ test('Skill-Penta: Ecke antippen zeigt Messung, Vergleich und Training', async (
 	await page.getByTestId('skill-endgame').dispatchEvent('click');
 	const detail = page.getByTestId('skill-detail');
 	await expect(detail.getByRole('heading', { name: 'Endgame' })).toBeVisible();
-	await expect(detail).toContainText('Not enough data yet');
+	await expect(detail).toContainText('then Rookie shows this value');
 	await expect(detail.getByRole('link', { name: 'Practise endgames' })).toBeVisible();
+	// Erklärungen erst auf Wunsch (keine Textwand)
+	await expect(detail.getByText('Not enough data yet')).toBeHidden();
+	await detail.getByText('More about this').click();
+	await expect(detail.getByText(/Not enough data yet/)).toBeVisible();
 	await page.getByRole('tab', { name: /Safety/ }).click();
 	await expect(detail.getByRole('heading', { name: 'Safety' })).toBeVisible();
 	await expect(detail).toContainText('World elite');

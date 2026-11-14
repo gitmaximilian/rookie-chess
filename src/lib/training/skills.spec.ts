@@ -5,7 +5,10 @@ import {
 	adviceFor,
 	collectSkills,
 	eloFor,
+	FLOOR,
 	lossPerMoveAt,
+	MIN_SAMPLE,
+	mostlyBlunders,
 	MEAN_COUNT,
 	overallLevel,
 	scoreFor,
@@ -25,8 +28,9 @@ const rawAt = (elo: number, p: Partial<SkillRaw> = {}): SkillRaw => ({
 	safety: sample(valueAt('safety', elo), 600, [2, 3, 4]),
 	tactics: sample(valueAt('tactics', elo), 60, [40, 60, 50]),
 	opening: sample(valueAt('opening', elo), 200, [70, 80, 75]),
-	strategy: sample(valueAt('strategy', elo), 120, [80, 85, 90]),
+	strategy: sample(valueAt('strategy', elo), 200, [80, 85, 90]),
 	endgame: sample(valueAt('endgame', elo), 120, [70, 80, 75]),
+	blunderShare: { opening: 0.2, endgame: 0.2 },
 	...p
 });
 
@@ -45,8 +49,22 @@ describe('Skill-Penta: Eichung', () => {
 	it('Elo-Entsprechung und Umkehrung passen zusammen; außen begrenzt', () => {
 		expect(eloFor('safety', valueAt('safety', 1200))).toBeCloseTo(1200, -1);
 		expect(eloFor('opening', valueAt('opening', 1800))).toBeCloseTo(1800, -1);
-		expect(eloFor('safety', 20)).toBe(SKILL_TABLE[0].r);
 		expect(eloFor('safety', 0)).toBe(SKILL_TABLE.at(-1)!.r);
+		// unter dem ersten Band fortgeschrieben, nicht abgeschnitten – aber nie unter FLOOR
+		const below = eloFor('safety', SKILL_TABLE[0].safety + 0.3);
+		expect(below).toBeLessThan(SKILL_TABLE[0].r);
+		expect(below).toBeGreaterThan(FLOOR);
+		expect(eloFor('safety', 20)).toBe(FLOOR);
+	});
+
+	it('Mindestmengen aus dem Holdout (Produkt-Review 14.11.2026)', () => {
+		expect(MIN_SAMPLE).toEqual({
+			safety: 250,
+			tactics: 35,
+			opening: 60,
+			strategy: 150,
+			endgame: 80
+		});
 	});
 
 	it('100 Punkte = Weltspitze (2800)', () => {
@@ -72,7 +90,7 @@ describe('Skill-Penta: Spiegel', () => {
 		const v = skillMirror(rawAt(1100, { endgame: sample(80, 25) }));
 		const eg = v.find((x) => x.skill === 'endgame')!;
 		expect(eg.score).toBeNull();
-		expect(eg.missing).toBe(15);
+		expect(eg.missing).toBe(55);
 		const s = v.find((x) => x.skill === 'safety')!;
 		expect(s.low! <= s.elo! && s.high! >= s.elo!).toBe(true);
 	});
@@ -86,10 +104,25 @@ describe('Skill-Penta: Spiegel', () => {
 		const a = adviceFor(v, raw);
 		expect(a[0].skill).toBe('safety');
 		expect(a[0].gain).toBeGreaterThan(30);
+		// keine Scheingenauigkeit: in 25er-Schritten
+		for (const x of a) expect(x.gain % 25).toBe(0);
 		// Gewinn folgt aus weniger verlorener Gewinnchance × eigener Zugzahl
 		const pts =
 			(lossPerMoveAt('safety', 700) - lossPerMoveAt('safety', a[0].target)) * MEAN_COUNT.safety;
 		expect(a[0].points).toBeCloseTo(pts, 0);
+	});
+
+	it('Eröffnung voller Patzer: Rat führt zur Sicherheit, nicht zum Kurs', () => {
+		const raw = rawAt(1100, {
+			opening: sample(valueAt('opening', 700), 200, [60, 70, 65]),
+			blunderShare: { opening: 0.7, endgame: 0.1 }
+		});
+		expect(mostlyBlunders('opening', raw)).toBe(true);
+		expect(mostlyBlunders('endgame', raw)).toBe(false);
+		expect(mostlyBlunders('safety', raw)).toBe(false);
+		const a = adviceFor(skillMirror(raw), raw);
+		expect(a.find((x) => x.skill === 'opening')!.viaSafety).toBe(true);
+		expect(a.find((x) => x.skill === 'tactics')!.viaSafety).toBe(false);
 	});
 
 	it('wer kaum Endspiele spielt, gewinnt durch Endspieltraining wenig', () => {
@@ -139,5 +172,8 @@ describe('Skill-Penta: Spiegel', () => {
 		expect(r.safety.n).toBe(2);
 		expect(r.safety.value).toBe(15);
 		expect(r.perGameCount.safety).toBe(2);
+		// fast der ganze Verlust in der Eröffnung ist der Patzer g4 (dazu das kleine f3)
+		expect(r.blunderShare.opening).toBeGreaterThan(0.8);
+		expect(r.blunderShare.endgame).toBeNull();
 	});
 });

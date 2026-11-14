@@ -112,6 +112,7 @@
 		<span><i class="lg-shape"></i>{t('skills.legendYou')}</span>
 		{#if overall !== null}<span><i class="lg-overall"></i>{t('skills.legendOverall')}</span>{/if}
 		<span><i class="lg-milestone"></i>{t('skills.legendRings')}</span>
+		{#if values.some((v) => v.score === null)}<span>{t('skills.legendMissing')}</span>{/if}
 	</figcaption>
 </figure>
 

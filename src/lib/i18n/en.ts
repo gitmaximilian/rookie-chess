@@ -1280,14 +1280,30 @@ export const en = {
 	},
 	skills: {
 		title: 'Your skill penta',
-		subtitle:
-			'100 = world elite. Tap a corner: what it measures, where you stand, what moves you forward.',
+		subtitle: '100 = world elite · tap a corner',
 		text: (p: P) => `From your last ${p.n} analysed games.`,
 		overall: 'Overall',
-		overallTitle: 'Weighted mean of the five skills (weights from Lichess data)',
+		overallTitle:
+			'From the winning chance you lose in each skill (Lichess data). Checked on real players: from about 12 games, ±230 Elo on average.',
 		legendYou: 'you',
 		legendOverall: 'your overall level',
 		legendRings: 'rings: 1000 and 1600',
+		next: 'Your next step',
+		more: 'More about this',
+		gainShort: (p: P) => `about +${p.gain} Elo`,
+		viaSafetyShort: (p: P) => `${p.pct} % of it are blunders – blunder check first.`,
+		needMoreShort: (p: P) =>
+			`About ${p.n} more analysed ${Number(p.n) === 1 ? 'game' : 'games'}, then Rookie shows this value.`,
+		howShort: {
+			safety: 'Daily blunder check – before every move: checks, captures, threats?',
+			tactics: 'Mixed puzzles at your level.',
+			opening: 'Principles and one opening course per colour.',
+			strategy: 'Positional lessons, then games with “You first”.',
+			endgame: 'Basic endgames against the tablebase.'
+		},
+		legendMissing: '– = not enough games yet',
+		viaSafety: (p: P) =>
+			`${p.pct} % of what you lose here are blunders. Without blunders, Lichess players from 400 to 1800 play this phase almost equally well – so your lever is the blunder check, not more theory.`,
 		elite: 'World elite',
 		lever: (p: P) => `Biggest lever: ${p.name} – ≈ +${p.gain} Elo`,
 		leverText: 'This is where training takes you furthest right now.',
@@ -1295,7 +1311,7 @@ export const en = {
 			safety: 'Safety',
 			tactics: 'Tactics',
 			opening: 'Opening',
-			strategy: 'Strategy',
+			strategy: 'Positional play',
 			endgame: 'Endgame'
 		},
 		what: {
@@ -1365,8 +1381,8 @@ export const en = {
 			endgame: 'Practise endgames'
 		},
 		gain: (p: P) =>
-			`Bring ${p.name} up to the level of ≈ ${p.target} (${p.value}) and you lose ≈ ${p.points} percentage points less winning chance per game – that is ≈ +${p.gain} Elo.`,
-		note: 'Elo equivalent: calibrated on 1,560 Lichess games (rapid/classical, 400–3200) at the same engine depth as Rookie. Elo effect: 1 percentage point less winning chance lost per game ≈ 11 Elo (same data). A relationship, not a guarantee.',
+			`Bring ${p.name} up to the level of ≈ ${p.target} (${p.value}) and you lose ≈ ${p.points} percentage points less winning chance per game – that is about +${p.gain} Elo.`,
+		note: 'Elo equivalent: calibrated on 1,560 Lichess games (rapid/classical, 400–3200) at the same engine depth as Rookie. Elo effect: 1 percentage point less winning chance lost per game ≈ 11 Elo (same data). Checked on 139 Lichess players outside the calibration: overall level within ±230 Elo on average from about 12 games. A relationship, not a guarantee.',
 		needData: (p: P) =>
 			`Your profile needs at least 3 analysed games (${p.n} so far). Open a game under Games to analyse it.`,
 		coverage: (p: P) => `${p.n} of ${p.m} ${s(p.m, 'game', 'games')} analysed`,

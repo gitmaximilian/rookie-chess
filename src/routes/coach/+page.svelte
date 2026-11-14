@@ -71,6 +71,7 @@
 		skillAdvice: SkillAdvice[];
 		skillOverall: { elo: number; score: number } | null;
 		skillGames: number;
+		skillBlunderShare: { opening: number | null; endgame: number | null };
 		accuracy: AccPoint[];
 		coverage: { done: number; total: number };
 		ratingSpark: number[];
@@ -231,6 +232,7 @@
 			skillAdvice: adviceFor(skills, skillRaw),
 			skillOverall: overallLevel(skills),
 			skillGames: skillRaw.games,
+			skillBlunderShare: skillRaw.blunderShare,
 			// Genauigkeit der letzten 20 analysierten Partien, älteste links
 			accuracy: sorted
 				.map((g) => {
@@ -457,6 +459,7 @@
 				values={d.skills}
 				advice={d.skillAdvice}
 				overall={d.skillOverall}
+				blunderShare={d.skillBlunderShare}
 				games={d.skillGames}
 			/>
 		</section>

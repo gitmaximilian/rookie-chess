@@ -6,11 +6,13 @@
 	import { resolve } from '$app/paths';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import TrendingUp from '@lucide/svelte/icons/trending-up';
+	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import SkillRadar from '#lib/ui/SkillRadar.svelte';
 	import {
 		valueAt,
 		shareAt,
 		SKILL_TABLE,
+		MEAN_COUNT,
 		MIN_SAMPLE,
 		SKILLS,
 		type Advice,
@@ -23,13 +25,16 @@
 		values,
 		advice,
 		overall,
-		games
+		games,
+		blunderShare = { opening: null, endgame: null }
 	}: {
 		values: SkillValue[];
 		advice: Advice[];
 		overall: { elo: number; score: number } | null;
 		/** analysierte Partien, die einfließen */
 		games: number;
+		/** Anteil der Patzer am Verlust in Eröffnung und Endspiel (collectSkills) */
+		blunderShare?: { opening: number | null; endgame: number | null };
 	} = $props();
 
 	let chosen = $state<Skill | null>(null);
@@ -50,14 +55,14 @@
 	const unit = (s: Skill, x: number) => t(`skills.unit.${s}`, { v: fmt(s, x) });
 
 	const LEVELS = [800, 1200, 1600, 2000, 2800];
-	/** grob: so viele Partien bis zur Mindestmenge (typische Mengen je Partie) */
-	const PER_GAME: Record<Skill, number> = {
-		safety: 30,
-		tactics: 1.5,
-		opening: 12,
-		strategy: 20,
-		endgame: 8
-	};
+	/** Eröffnung/Endspiel voller Patzer: dann führt der Rat zum Blunder-Check (lib/training/skills.ts) */
+	const viaSafety = $derived(adv?.viaSafety ?? false);
+	const blunderPct = $derived(
+		selected === 'opening' || selected === 'endgame'
+			? Math.round((blunderShare[selected] ?? 0) * 100)
+			: 0
+	);
+	const ctaSkill = $derived<Skill>(viaSafety ? 'safety' : selected);
 
 	const HREF: Record<Skill, string> = {
 		safety: '/puzzles/safety',
@@ -87,8 +92,7 @@
 		<button class="lever" onclick={() => (chosen = top.skill)} data-testid="skill-lever">
 			<TrendingUp size={18} />
 			<span
-				><b>{t('skills.lever', { name: t(`skills.name.${top.skill}`), gain: top.gain })}</b>
-				<span class="muted">{t('skills.leverText')}</span></span
+				><b>{t('skills.lever', { name: t(`skills.name.${top.skill}`), gain: top.gain })}</b></span
 			>
 		</button>
 	{/if}
@@ -115,27 +119,23 @@
 				<span class="d-score"><b>{v.score}</b>/100</span>
 			{/if}
 		</div>
-		<p class="d-what">{t(`skills.what.${selected}`)}</p>
 
 		{#if v.score !== null && v.value !== null}
-			<p class="d-you">
-				{t('skills.you', { value: unit(selected, v.value), n: games })}
-			</p>
-			<p class="d-elo">
+			<p class="d-you">{unit(selected, v.value)}</p>
+			<p class="d-elo muted">
 				{(v.elo ?? 0) <= bottom
 					? t('skills.eloEqLow', { elo: bottom })
 					: (v.elo ?? 0) >= topR
 						? t('skills.eloEqHigh', { elo: topR })
 						: t('skills.eloEq', { elo: v.elo ?? 0 })}
 				{#if v.low !== null && v.high !== null && v.high > v.low}
-					<span class="muted">{t('skills.range', { low: v.low, high: v.high })}</span>
+					{t('skills.range', { low: v.low, high: v.high })}
 				{/if}
 			</p>
 		{:else}
 			<p class="d-you muted">
-				{t('skills.needMore', {
-					n: Math.max(1, Math.ceil(v.missing / PER_GAME[selected])),
-					what: t(`skills.sample.${selected}`, { n: MIN_SAMPLE[selected] })
+				{t('skills.needMoreShort', {
+					n: Math.max(1, Math.ceil(v.missing / MEAN_COUNT[selected]))
 				})}
 			</p>
 		{/if}
@@ -150,38 +150,73 @@
 			{/each}
 		</div>
 
-		<h4>{t('skills.why')}</h4>
-		<p>{t(`skills.whyText.${selected}`)}</p>
-		{#if share && overall}
-			<p class="d-share">
-				{t('skills.share', {
-					name: t(`skills.name.${selected}`),
-					pct: Math.round(share[selected] * 100),
-					elo: overall.elo
-				})}
+		<!-- genau ein nächster Schritt; alles Erklärende steht unter „Mehr dazu“ -->
+		<div class="next" data-testid="skill-next">
+			<span class="mono-label">{t('skills.next')}</span>
+			<p>
+				{#if viaSafety}
+					<span data-testid="skill-via-safety"
+						>{t('skills.viaSafetyShort', { pct: blunderPct })}</span
+					>
+				{:else}
+					{t(`skills.howShort.${selected}`)}
+				{/if}
 			</p>
-		{/if}
-		<h4>{t('skills.how')}</h4>
-		<p>{t(`skills.howText.${selected}`)}</p>
+			<div class="next-row">
+				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- HREF wird hier aufgelöst -->
+				<a class="btn" href={resolve(HREF[ctaSkill] as '/')}
+					>{t(`skills.cta.${ctaSkill}`)} <ArrowRight size={16} /></a
+				>
+				{#if adv && adv.gain > 0}
+					<span class="gain" data-testid="skill-gain"
+						><TrendingUp size={16} /> {t('skills.gainShort', { gain: adv.gain })}</span
+					>
+				{/if}
+			</div>
+		</div>
 
-		{#if adv && adv.gain > 0}
-			<p class="gain" data-testid="skill-gain">
-				<TrendingUp size={16} />
-				{t('skills.gain', {
-					name: t(`skills.name.${selected}`),
-					target: adv.target,
-					value: unit(selected, adv.targetValue),
-					gain: adv.gain,
-					points: adv.points.toLocaleString(undefined, { maximumFractionDigits: 1 })
-				})}
+		<details class="more">
+			<summary>{t('skills.more')} <ChevronDown size={16} /></summary>
+			<p>{t(`skills.what.${selected}`)}</p>
+			{#if v.score !== null && v.value !== null}
+				<p>{t('skills.you', { value: unit(selected, v.value), n: games })}</p>
+			{/if}
+			<h4>{t('skills.why')}</h4>
+			<p>{t(`skills.whyText.${selected}`)}</p>
+			{#if share && overall}
+				<p>
+					{t('skills.share', {
+						name: t(`skills.name.${selected}`),
+						pct: Math.round(share[selected] * 100),
+						elo: overall.elo
+					})}
+				</p>
+			{/if}
+			<h4>{t('skills.how')}</h4>
+			<p>
+				{viaSafety ? t('skills.viaSafety', { pct: blunderPct }) : t(`skills.howText.${selected}`)}
 			</p>
-		{/if}
-
-		<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- HREF wird hier aufgelöst -->
-		<a class="btn" href={resolve(HREF[selected] as '/')}
-			>{t(`skills.cta.${selected}`)} <ArrowRight size={16} /></a
-		>
-		<p class="note">{t('skills.note')}</p>
+			{#if adv && adv.gain > 0}
+				<p>
+					{t('skills.gain', {
+						name: t(`skills.name.${selected}`),
+						target: adv.target,
+						value: unit(selected, adv.targetValue),
+						gain: adv.gain,
+						points: adv.points.toLocaleString(undefined, { maximumFractionDigits: 1 })
+					})}
+				</p>
+			{/if}
+			{#if v.score === null}
+				<p>
+					{t('skills.needMore', {
+						n: Math.max(1, Math.ceil(v.missing / MEAN_COUNT[selected])),
+						what: t(`skills.sample.${selected}`, { n: MIN_SAMPLE[selected] })
+					})}
+				</p>
+			{/if}
+			<p class="note">{t('skills.note')}</p>
+		</details>
 	</div>
 </section>
 
@@ -314,19 +349,15 @@
 		color: var(--text);
 	}
 
-	.d-what {
-		font-size: 0.9rem;
-		color: var(--text-2);
+	.d-you {
+		font-family: var(--font-num);
+		font-size: 1.25rem;
+		font-weight: 700;
 	}
 
-	.d-you,
 	.d-elo {
-		font-weight: 600;
-	}
-
-	.d-elo .muted {
-		font-weight: 500;
-		margin-left: 0.3rem;
+		font-size: 0.9rem;
+		margin-top: -0.35rem;
 	}
 
 	.scale {
@@ -361,39 +392,82 @@
 		outline: 2px solid var(--c-coach);
 	}
 
+	/* der eine nächste Schritt */
+	.next {
+		display: flex;
+		flex-direction: column;
+		gap: 0.45rem;
+		padding: 0.8rem 0.9rem;
+		border-radius: 14px;
+		background: color-mix(in srgb, var(--c-coach) 10%, transparent);
+	}
+
+	.next p {
+		font-weight: 600;
+		line-height: 1.35;
+	}
+
+	.next-row {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.5rem 0.9rem;
+	}
+
+	.gain {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
+		color: var(--good-text);
+		font-family: var(--font-num);
+		font-weight: 700;
+		white-space: nowrap;
+	}
+
+	.gain :global(svg) {
+		flex-shrink: 0;
+	}
+
+	/* Erklärungen nur auf Wunsch */
+	.more summary {
+		list-style: none;
+		gap: 0.3rem;
+		cursor: pointer;
+		font-weight: 600;
+		color: var(--text-2);
+		min-height: 44px;
+		display: flex;
+		align-items: center;
+	}
+
+	.more summary::-webkit-details-marker {
+		display: none;
+	}
+
+	.more summary :global(svg) {
+		transition: transform 0.2s;
+	}
+
+	.more[open] summary :global(svg) {
+		transform: rotate(180deg);
+	}
+
+	.more p {
+		font-size: 0.9rem;
+		line-height: 1.45;
+		color: var(--text-2);
+		margin-top: 0.45rem;
+	}
+
 	h4 {
 		font-size: 0.78rem;
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
 		color: var(--text-3);
-		margin-top: 0.3rem;
+		margin-top: 0.7rem;
 	}
 
-	.detail p {
-		line-height: 1.45;
-	}
-
-	.gain {
-		display: flex;
-		gap: 0.45rem;
-		align-items: flex-start;
-		padding: 0.6rem 0.75rem;
-		border-radius: 12px;
-		background: color-mix(in srgb, var(--good) 12%, transparent);
-		color: var(--good-text);
-		font-weight: 600;
-	}
-
-	.btn {
-		align-self: flex-start;
-	}
-
-	.d-share {
-		font-size: 0.9rem;
-		color: var(--text-2);
-	}
-
-	.note {
+	.more .note {
 		font-size: 0.76rem;
 		color: var(--text-3);
 	}
