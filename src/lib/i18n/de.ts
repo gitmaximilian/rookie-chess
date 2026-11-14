@@ -1377,6 +1377,7 @@ export const de: Shape<typeof en> = {
 		viaSafety: (p: P) =>
 			`${p.pct} % deines Verlusts hier sind Patzer. Ohne Patzer spielen Lichess-Spieler von 400 bis 1800 diese Phase fast gleich genau – dein Hebel ist deshalb der Blunder-Check, nicht mehr Theorie.`,
 		elite: 'Weltspitze',
+		eliteShort: 'Elite',
 		lever: (p: P) => `Größter Hebel: ${p.name} – ≈ +${p.gain} Elo`,
 		leverText: 'Hier bringt dich Training jetzt am weitesten.',
 		name: {

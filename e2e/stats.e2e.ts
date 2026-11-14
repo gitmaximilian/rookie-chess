@@ -70,5 +70,5 @@ test('Skill-Penta: Ecke antippen zeigt Messung, Vergleich und Training', async (
 	await expect(detail.getByText(/Not enough data yet/)).toBeVisible();
 	await page.getByRole('tab', { name: /Safety/ }).click();
 	await expect(detail.getByRole('heading', { name: 'Safety' })).toBeVisible();
-	await expect(detail).toContainText('World elite');
+	await expect(detail).toContainText('Elite');
 });

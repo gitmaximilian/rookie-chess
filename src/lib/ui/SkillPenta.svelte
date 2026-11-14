@@ -144,7 +144,7 @@
 		<div class="scale" aria-label={t('skills.scaleLabel')}>
 			{#each LEVELS as lv (lv)}
 				<span class="lv" class:mine={v.elo !== null && Math.abs(v.elo - lv) < 200}>
-					<small>{lv === 2800 ? t('skills.elite') : lv}</small>
+					<small>{lv === 2800 ? t('skills.eliteShort') : lv}</small>
 					<b>{fmt(selected, valueAt(selected, lv))}</b>
 				</span>
 			{/each}
@@ -381,6 +381,9 @@
 		font-size: 0.7rem;
 		color: var(--text-2);
 		white-space: nowrap;
+		max-width: 100%;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 
 	.lv b {

@@ -1315,6 +1315,7 @@ export const en = {
 		viaSafety: (p: P) =>
 			`${p.pct} % of what you lose here are blunders. Without blunders, Lichess players from 400 to 1800 play this phase almost equally well – so your lever is the blunder check, not more theory.`,
 		elite: 'World elite',
+		eliteShort: 'Elite',
 		lever: (p: P) => `Biggest lever: ${p.name} – ≈ +${p.gain} Elo`,
 		leverText: 'This is where training takes you furthest right now.',
 		name: {
