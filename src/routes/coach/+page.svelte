@@ -15,10 +15,17 @@
 	import StatTile from '#lib/ui/bento/StatTile.svelte';
 	import CoachTabs from '#lib/ui/CoachTabs.svelte';
 	import AvatarButton from '#lib/ui/AvatarButton.svelte';
-	import SkillRadar from '#lib/ui/SkillRadar.svelte';
+	import SkillPenta from '#lib/ui/SkillPenta.svelte';
 	import ProgressCheck from '#lib/ui/ProgressCheck.svelte';
 	import type { AccPoint } from '#lib/ui/AccuracyTrend.svelte';
-	import { skillProfile, weakestSkill, type SkillValue } from '#lib/training/skills.js';
+	import {
+		adviceFor,
+		collectSkills,
+		overallLevel,
+		skillMirror,
+		type Advice as SkillAdvice,
+		type SkillValue
+	} from '#lib/training/skills.js';
 	import { quality } from '#lib/import/ratings.js';
 	import { db } from '#lib/db/db.js';
 	import { loadOpenings, openingFor } from '#lib/data/openings.js';
@@ -60,6 +67,9 @@
 		advice: Advice[];
 		puzzleHist: { date: number; rating: number }[];
 		skills: SkillValue[];
+		skillAdvice: SkillAdvice[];
+		skillOverall: { elo: number; score: number } | null;
+		skillGames: number;
 		accuracy: AccPoint[];
 		coverage: { done: number; total: number };
 		ratingSpark: number[];
@@ -203,6 +213,8 @@
 				c: 'var(--c-play)'
 			});
 
+		const skillRaw = collectSkills(games);
+		const skills = skillMirror(skillRaw);
 		d = {
 			name: linked.lichess || linked.chesscom || '',
 			games: games.length,
@@ -214,7 +226,10 @@
 			mistakes,
 			advice: advice.slice(0, 3),
 			puzzleHist: ratingRows.map((r) => ({ date: r.date, rating: Math.round(r.rating) })),
-			skills: skillProfile(stats),
+			skills,
+			skillAdvice: adviceFor(skills, skillRaw),
+			skillOverall: overallLevel(skills),
+			skillGames: skillRaw.games,
 			// Genauigkeit der letzten 20 analysierten Partien, älteste links
 			accuracy: sorted
 				.map((g) => {
@@ -265,8 +280,6 @@
 			? d.stats.accuracyRecent - d.stats.accuracyPrevious
 			: null
 	);
-
-	const weakSkill = $derived(d ? weakestSkill(d.skills) : null);
 
 	const outcomeLabel = (o: Outcome) =>
 		t(o === 'w' ? 'stats.win' : o === 'd' ? 'stats.draw' : 'stats.loss');
@@ -431,22 +444,13 @@
 
 		<!-- Spielerprofil als Fünfeck -->
 		<section class="tone-coach block skills">
-			<div class="sk-head">
-				<h2>{t('skills.title')}</h2>
-				<p class="muted">{t('skills.text', { n: d.stats.analysed })}</p>
-			</div>
 			{@render coverage()}
-			<SkillRadar values={d.skills} />
-			{#if weakSkill}
-				<div class="sk-weak">
-					<span
-						>{t('skills.weakest', { name: t(`skills.name.${weakSkill.skill}`) })}
-						<span class="muted">{t(`skills.tip.${weakSkill.skill}`)}</span></span
-					>
-				</div>
-			{:else}
-				<p class="muted">{t('skills.needData', { n: d.stats.analysed })}</p>
-			{/if}
+			<SkillPenta
+				values={d.skills}
+				advice={d.skillAdvice}
+				overall={d.skillOverall}
+				games={d.skillGames}
+			/>
 		</section>
 
 		<!-- Letzte 30 Partien -->
@@ -631,24 +635,6 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.2rem;
-	}
-
-	.sk-weak {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 0.75rem;
-		padding: 0.7rem 0.8rem;
-		border-radius: var(--radius-m);
-		background: var(--c-coach-soft);
-		font-weight: 650;
-		font-size: 0.92rem;
-	}
-
-	.sk-weak > span {
-		display: flex;
-		flex-direction: column;
-		gap: 0.1rem;
 	}
 
 	/* Ratschläge */

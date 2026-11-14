@@ -52,3 +52,19 @@ test('Statistik zeigt Ergebnisse, Wertungsverlauf und Eröffnungen', async ({ pa
 	await page.getByRole('button', { name: /Games \(CSV\)/ }).click();
 	expect((await dl).suggestedFilename()).toMatch(/^rookie-games-.*\.csv$/);
 });
+
+test('Skill-Penta: Ecke antippen zeigt Messung, Vergleich und Training', async ({ page }) => {
+	test.setTimeout(90_000);
+	// eine analysierte eigene Partie reicht nicht für Werte – die Ecken sagen, was fehlt
+	await page.goto('/coach');
+	const penta = page.getByTestId('skill-penta');
+	await expect(penta).toBeVisible();
+	await page.getByTestId('skill-endgame').dispatchEvent('click');
+	const detail = page.getByTestId('skill-detail');
+	await expect(detail.getByRole('heading', { name: 'Endgame' })).toBeVisible();
+	await expect(detail).toContainText('Not enough data yet');
+	await expect(detail.getByRole('link', { name: 'Practise endgames' })).toBeVisible();
+	await page.getByRole('tab', { name: /Safety/ }).click();
+	await expect(detail.getByRole('heading', { name: 'Safety' })).toBeVisible();
+	await expect(detail).toContainText('World elite');
+});

@@ -35,7 +35,7 @@ test('Coach: Überblick und Statistik, alte Statistik-Adresse leitet weiter', as
 	await page.goto('/coach');
 	await expect(page.getByRole('heading', { name: 'How you are playing' })).toBeVisible();
 	// Spielerprofil als Fünfeck mit fünf antippbaren Ecken
-	await expect(page.getByRole('heading', { name: 'Your skill profile' })).toBeVisible();
+	await expect(page.getByRole('heading', { name: 'Your skill penta' })).toBeVisible();
 	await expect(page.locator('.radar .vertex')).toHaveCount(5);
 	await page.getByRole('link', { name: 'Statistics', exact: true }).click();
 	await expect(page.getByRole('heading', { name: 'Statistics', level: 1 })).toBeVisible();

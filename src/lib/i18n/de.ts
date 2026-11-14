@@ -1338,28 +1338,94 @@ export const de: Shape<typeof en> = {
 		}
 	},
 	skills: {
-		title: 'Dein Spielerprofil',
-		text: (p) => `Nur aus deinen ${p.n} analysierten Partien – tippe auf eine Ecke für Details.`,
+		title: 'Dein Skill-Penta',
+		subtitle:
+			'100 = Weltspitze. Tippe auf eine Ecke: was sie misst, wo du stehst, was dich weiterbringt.',
+		text: (p) => `Aus deinen letzten ${p.n} analysierten Partien.`,
+		overall: 'Gesamt',
+		overallTitle: 'Gewichtetes Mittel der fünf Fähigkeiten (Gewichte aus Lichess-Daten)',
+		legendYou: 'du',
+		legendOverall: 'dein Gesamtniveau',
+		legendRings: 'Ringe: 1000 und 1600',
+		elite: 'Weltspitze',
+		lever: (p: P) => `Größter Hebel: ${p.name} – ≈ +${p.gain} Elo`,
+		leverText: 'Hier bringt dich Training jetzt am weitesten.',
 		name: {
-			opening: 'Eröffnung',
-			middlegame: 'Mittelspiel',
+			safety: 'Sicherheit',
 			tactics: 'Taktik',
-			endgame: 'Endspiel',
-			safety: 'Sicherheit'
+			opening: 'Eröffnung',
+			strategy: 'Strategie',
+			endgame: 'Endspiel'
 		},
-		noData: 'noch keine Daten',
-		rawAccuracy: (p) => `${p.n} % Genauigkeit`,
-		rawTactics: (p: P) => `${p.n} % der Chancen genutzt`,
-		rawBlunders: (p: P) => `${p.n} Patzer je 30 Züge`,
-		weakest: (p) => `Am niedrigsten: ${p.name}`,
-		tip: {
-			opening: 'Lerne eine Eröffnung Variante für Variante.',
-			middlegame: 'Tägliche Puzzles schärfen den Blick für Taktik.',
+		what: {
+			safety:
+				'Wie selten du in noch offenen Stellungen patzt (Figur oder Partie in einem Zug verloren).',
+			tactics: 'Wie oft du einen Fehler deines Gegners sofort bestrafst.',
+			opening: 'Wie genau du die ersten Züge spielst, bis die Figuren entwickelt sind.',
+			strategy:
+				'Wie genau deine ruhigen Mittelspielzüge sind – ohne Patzer gezählt: Pläne, Figurenstellung, kleine Vorteile.',
+			endgame: 'Wie genau du spielst, wenn nur noch wenige Figuren übrig sind.'
+		},
+		unit: {
+			safety: (p: P) => `${p.v} Patzer je 30 Züge`,
+			tactics: (p: P) => `${p.v} % der Gegnerfehler bestraft`,
+			opening: (p: P) => `${p.v} % Genauigkeit`,
+			strategy: (p: P) => `${p.v} % Genauigkeit`,
+			endgame: (p: P) => `${p.v} % Genauigkeit`
+		},
+		sample: {
+			safety: (p: P) => `${p.n} Züge`,
+			tactics: (p: P) => `${p.n} Fehler deiner Gegner`,
+			opening: (p: P) => `${p.n} Eröffnungszüge`,
+			strategy: (p: P) => `${p.n} Mittelspielzüge`,
+			endgame: (p: P) => `${p.n} Endspielzüge`
+		},
+		you: (p: P) => `Du: ${p.value} (letzte ${p.n} Partien)`,
+		eloEq: (p: P) => `So spielen Lichess-Spieler um ≈ ${p.elo}`,
+		eloEqLow: (p: P) => `So spielen Lichess-Spieler um ${p.elo} oder darunter`,
+		eloEqHigh: (p: P) => `So spielen Lichess-Spieler um ${p.elo} und darüber`,
+		share: (p: P) =>
+			`Auf deinem Niveau (≈ ${p.elo}) macht ${p.name} ${p.pct} % des Unterschieds zu Spielern aus, die 200 Elo stärker sind.`,
+		range: (p: P) => `(Spanne ${p.low}–${p.high})`,
+		needMore: (p: P) =>
+			`Noch zu wenig Daten – ab ${p.what} ist der Wert verlässlich (etwa ${p.n} weitere analysierte ${Number(p.n) === 1 ? 'Partie' : 'Partien'}).`,
+		scaleLabel: 'Typische Werte auf anderen Niveaus',
+		why: 'Warum wichtig',
+		how: 'So trainierst du',
+		whyText: {
+			safety:
+				'Unter 1000 ist über die Hälfte aller Patzer ein Figuren- oder Mattverlust innerhalb von zwei Zügen. Jeder vermiedene Patzer ist oft eine gerettete Partie – deshalb der größte Hebel für Einsteiger.',
 			tactics:
-				'Fehler des Gegners bestrafen: Frag dich nach jedem seiner Züge, was er erlaubt – und übe es mit Puzzles.',
-			endgame: 'Mit Endspieltechnik gewinnst du gewonnene Stellungen.',
-			safety: 'Spiel die Stellungen nach, in denen du gepatzt hast.'
+				'Einsteiger lassen fast die Hälfte der gegnerischen Patzer ungestraft (Lichess-Daten). Das sind Punkte, die auf dem Brett liegen.',
+			opening:
+				'Eine solide Eröffnung bringt dich ohne Nachteil ins Mittelspiel. Unter 800 passiert fast die Hälfte der Patzer schon in der Eröffnung – meist hängende Figuren.',
+			strategy:
+				'Gute ruhige Züge sammeln kleine Vorteile. Ab etwa 1400 trennt vor allem das Spieler voneinander, denn grobe Patzer werden seltener.',
+			endgame:
+				'Zwei Drittel aller Partien erreichen ein Endspiel. Dort wird Vorteil zu Sieg – oder verschenkt.'
 		},
+		howText: {
+			safety:
+				'Täglich Blunder-Check. In deinen Partien vor jedem Zug: Kann der Gegner danach Schach geben, etwas schlagen, etwas bedrohen?',
+			tactics:
+				'Gemischte Puzzles im 80-%-Bereich. Nach jedem Gegnerzug fragen: Was hängt jetzt, was hat er erlaubt?',
+			opening:
+				'Prinzipien (entwickeln, Zentrum, rochieren, Dame nicht zu früh) und ein Eröffnungskurs je Farbe – kein Varianten-Pauken.',
+			strategy:
+				'Lernpartien mit Zeit und danach „Erst du“: die kritischen Momente selbst finden, dann nachspielen.',
+			endgame:
+				'Grundendspiele gegen die Tablebase: Matt mit Dame und Turm, Quadratregel, Opposition – dann Turmendspiele.'
+		},
+		cta: {
+			safety: 'Blunder-Check üben',
+			tactics: 'Puzzles lösen',
+			opening: 'Eröffnungen lernen',
+			strategy: 'Lernpartie spielen',
+			endgame: 'Endspiele üben'
+		},
+		gain: (p: P) =>
+			`Bringst du ${p.name} auf das Niveau von ≈ ${p.target} (${p.value}), verlierst du pro Partie ≈ ${p.points} Prozentpunkte weniger Gewinnchance – das sind ≈ +${p.gain} Elo.`,
+		note: 'Elo-Entsprechung: geeicht an 1 560 Lichess-Partien (Rapid/Classical, 400–3200) mit derselben Rechentiefe wie Rookie. Elo-Wirkung: 1 Prozentpunkt weniger verlorene Gewinnchance pro Partie ≈ 11 Elo (gleiche Daten). Ein Zusammenhang, keine Garantie.',
 		needData: (p) =>
 			`Dein Profil braucht mindestens 3 analysierte Partien (bisher ${p.n}). Öffne eine Partie unter „Games“, um sie zu analysieren.`,
 		coverage: (p) => `${p.n} von ${p.m} ${s(p.m, 'Partie', 'Partien')} analysiert`,

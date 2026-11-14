@@ -1277,28 +1277,94 @@ export const en = {
 		}
 	},
 	skills: {
-		title: 'Your skill profile',
-		text: (p: P) => `Based only on your ${p.n} analysed games – tap a corner for details.`,
+		title: 'Your skill penta',
+		subtitle:
+			'100 = world elite. Tap a corner: what it measures, where you stand, what moves you forward.',
+		text: (p: P) => `From your last ${p.n} analysed games.`,
+		overall: 'Overall',
+		overallTitle: 'Weighted mean of the five skills (weights from Lichess data)',
+		legendYou: 'you',
+		legendOverall: 'your overall level',
+		legendRings: 'rings: 1000 and 1600',
+		elite: 'World elite',
+		lever: (p: P) => `Biggest lever: ${p.name} – ≈ +${p.gain} Elo`,
+		leverText: 'This is where training takes you furthest right now.',
 		name: {
-			opening: 'Opening',
-			middlegame: 'Middlegame',
+			safety: 'Safety',
 			tactics: 'Tactics',
-			endgame: 'Endgame',
-			safety: 'Safety'
+			opening: 'Opening',
+			strategy: 'Strategy',
+			endgame: 'Endgame'
 		},
-		noData: 'no data yet',
-		rawAccuracy: (p: P) => `${p.n}% accuracy`,
-		rawTactics: (p: P) => `${p.n}% of chances taken`,
-		rawBlunders: (p: P) => `${p.n} blunders per 30 moves`,
-		weakest: (p: P) => `Lowest: ${p.name}`,
-		tip: {
-			opening: 'Learn one opening line by line.',
-			middlegame: 'Daily puzzles train your eye for tactics.',
+		what: {
+			safety:
+				'How rarely you blunder in positions that are still open (a piece or the game lost in one move).',
+			tactics: 'How often you punish your opponent’s mistake right away.',
+			opening: 'How accurately you play the first moves until your pieces are developed.',
+			strategy:
+				'How accurate your quiet middlegame moves are – blunders not counted: plans, piece placement, small advantages.',
+			endgame: 'How accurately you play when only a few pieces are left.'
+		},
+		unit: {
+			safety: (p: P) => `${p.v} blunders per 30 moves`,
+			tactics: (p: P) => `${p.v} % of opponent mistakes punished`,
+			opening: (p: P) => `${p.v} % accuracy`,
+			strategy: (p: P) => `${p.v} % accuracy`,
+			endgame: (p: P) => `${p.v} % accuracy`
+		},
+		sample: {
+			safety: (p: P) => `${p.n} moves`,
+			tactics: (p: P) => `${p.n} opponent mistakes`,
+			opening: (p: P) => `${p.n} opening moves`,
+			strategy: (p: P) => `${p.n} middlegame moves`,
+			endgame: (p: P) => `${p.n} endgame moves`
+		},
+		you: (p: P) => `You: ${p.value} (last ${p.n} games)`,
+		eloEq: (p: P) => `This is how Lichess players around ≈ ${p.elo} play`,
+		eloEqLow: (p: P) => `This is how Lichess players around ${p.elo} or below play`,
+		eloEqHigh: (p: P) => `This is how Lichess players around ${p.elo} and above play`,
+		share: (p: P) =>
+			`At your level (≈ ${p.elo}), ${p.name} accounts for ${p.pct} % of the difference to players 200 Elo stronger.`,
+		range: (p: P) => `(range ${p.low}–${p.high})`,
+		needMore: (p: P) =>
+			`Not enough data yet – reliable from ${p.what} (about ${p.n} more analysed ${Number(p.n) === 1 ? 'game' : 'games'}).`,
+		scaleLabel: 'Typical values at other levels',
+		why: 'Why it matters',
+		how: 'How to train',
+		whyText: {
+			safety:
+				'Below 1000, over half of all blunders lose a piece or get mated within two moves. Every avoided blunder is often a saved game – the biggest lever for beginners.',
 			tactics:
-				'Punish your opponent’s mistakes: after every move of theirs, ask what it allowed – then train it with puzzles.',
-			endgame: 'Basic endgame techniques win won positions.',
-			safety: 'Replay the positions where you blundered.'
+				'Beginners leave almost half of their opponents’ blunders unpunished (Lichess data). Those are points lying on the board.',
+			opening:
+				'A solid opening gets you into the middlegame without a disadvantage. Below 800, almost half of all blunders already happen in the opening – mostly hanging pieces.',
+			strategy:
+				'Good quiet moves collect small advantages. From about 1400 this is what separates players, as gross blunders become rarer.',
+			endgame:
+				'Two thirds of all games reach an endgame. That is where an advantage becomes a win – or is thrown away.'
 		},
+		howText: {
+			safety:
+				'Daily blunder check. In your games before every move: can your opponent then check, capture or threaten something?',
+			tactics:
+				'Mixed puzzles at about 80 % success. After every opponent move ask: what hangs now, what did they allow?',
+			opening:
+				'Principles (develop, centre, castle, queen not too early) and one opening course per colour – no memorising lines.',
+			strategy:
+				'Learning games with time, then “You first”: find the critical moments yourself, then replay them.',
+			endgame:
+				'Basic endgames against the tablebase: mate with queen and rook, rule of the square, opposition – then rook endgames.'
+		},
+		cta: {
+			safety: 'Practise blunder check',
+			tactics: 'Solve puzzles',
+			opening: 'Learn openings',
+			strategy: 'Play a learning game',
+			endgame: 'Practise endgames'
+		},
+		gain: (p: P) =>
+			`Bring ${p.name} up to the level of ≈ ${p.target} (${p.value}) and you lose ≈ ${p.points} percentage points less winning chance per game – that is ≈ +${p.gain} Elo.`,
+		note: 'Elo equivalent: calibrated on 1,560 Lichess games (rapid/classical, 400–3200) at the same engine depth as Rookie. Elo effect: 1 percentage point less winning chance lost per game ≈ 11 Elo (same data). A relationship, not a guarantee.',
 		needData: (p: P) =>
 			`Your profile needs at least 3 analysed games (${p.n} so far). Open a game under Games to analyse it.`,
 		coverage: (p: P) => `${p.n} of ${p.m} ${s(p.m, 'game', 'games')} analysed`,
