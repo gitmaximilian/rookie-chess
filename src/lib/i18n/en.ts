@@ -1219,7 +1219,7 @@ export const en = {
 		continue: 'Continue',
 		allDone: 'All done for today – great work!',
 		strength: (p: P) => `Estimated strength ≈ ${p.n}`,
-		strengthHint: 'Based on puzzles, bots beaten and online games.',
+		strengthHint: 'From your games, puzzles, online rating and bots beaten – on the Lichess scale.',
 		progress: (p: P) => `${p.n} of ${p.m} done`
 	},
 	coachTab: {
@@ -1230,6 +1230,12 @@ export const en = {
 		you: 'You',
 		gamesCount: (p: P) => `${p.n} ${s(p.n, 'game', 'games')}`,
 		strength: (p: P) => `≈ ${p.n} strength`,
+		part: {
+			online: (p: P) => `online ${p.n}`,
+			games: (p: P) => `games ≈ ${p.n}`,
+			puzzle: (p: P) => `puzzles ≈ ${p.n}`,
+			bots: (p: P) => `bots ≈ ${p.n}`
+		},
 		how: 'How you are playing',
 		rating: 'Current rating',
 		winRate: 'Win rate',
@@ -1301,6 +1307,7 @@ export const en = {
 			strategy: 'Positional lessons, then games with “You first”.',
 			endgame: 'Basic endgames against the tablebase.'
 		},
+		overallFrom: (p: P) => `from games ≈ ${p.elo}`,
 		legendMissing: '– = not enough games yet',
 		viaSafety: (p: P) =>
 			`${p.pct} % of what you lose here are blunders. Without blunders, Lichess players from 400 to 1800 play this phase almost equally well – so your lever is the blunder check, not more theory.`,
@@ -1489,8 +1496,7 @@ export const en = {
 			solid: 'Playing safely, first plans (1200–1600)',
 			plans: 'Strategy and technique (from 1600)'
 		},
-		intro: (p: P) =>
-			`Around ≈ ${p.elo}, the gap to players 200 Elo stronger comes mostly from these skills (Lichess data):`,
+		intro: (p: P) => `What moves you forward most at ≈ ${p.elo} (Lichess data):`,
 		introNone: 'Without an estimate of your strength Rookie shows the beginner stage.',
 		next: 'What matters now',
 		focus: {

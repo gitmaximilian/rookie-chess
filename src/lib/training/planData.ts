@@ -6,6 +6,7 @@ import { getProfile } from '#lib/onboarding/profile.js';
 import { getPuzzleRating } from './rating.js';
 import { BOTS } from '#lib/bots/bots.js';
 import { estimateStrength, type Strength } from './strength.js';
+import { gameLevel } from './skills.js';
 import {
 	buildPlan,
 	DEFAULT_MINUTES,
@@ -108,12 +109,15 @@ export async function todayPlan(ctx: PlanContext): Promise<StoredPlan> {
 	return plan;
 }
 
+/** die eine Spielstärke der App (Lichess-Skala): Start, Coach, Lernen, Profil und Tagesplan nutzen sie */
 export async function currentStrength(): Promise<Strength | null> {
 	const beatenIds = await getSetting<string[]>('botsBeaten', []);
-	const online = (await db.games.orderBy('date').reverse().toArray()).find(
+	const games = await db.games.orderBy('date').reverse().toArray();
+	const online = games.find(
 		(g) => g.myRating && (g.source === 'lichess' || g.source === 'chesscom')
 	);
 	return estimateStrength({
+		games: gameLevel(games),
 		puzzle: (await db.puzzleAttempts.count()) >= 5 ? await getPuzzleRating() : null,
 		botsBeaten: BOTS.filter((b) => beatenIds.includes(b.id)).map((b) => b.elo),
 		online: online

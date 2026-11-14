@@ -549,3 +549,10 @@ export function adviceFor(values: SkillValue[], raw: SkillRaw, table = SKILL_TAB
 		})
 		.sort((a, b) => b.gain - a.gain || SKILLS.indexOf(a.skill) - SKILLS.indexOf(b.skill));
 }
+
+/** Gesamtniveau aus den eigenen Partien – für die Spielstärke (lib/training/strength.ts) */
+export function gameLevel(games: GameRow[]): { elo: number; games: number } | null {
+	const raw = collectSkills(games);
+	const all = overallLevel(skillMirror(raw));
+	return all ? { elo: all.elo, games: raw.games } : null;
+}

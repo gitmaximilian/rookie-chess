@@ -83,7 +83,7 @@
 			<div class="overall" title={t('skills.overallTitle')}>
 				<span class="mono-label">{t('skills.overall')}</span>
 				<b>{overall.score}<small>/100</small></b>
-				<span>≈ {overall.elo}</span>
+				<span>{t('skills.overallFrom', { elo: overall.elo })}</span>
 			</div>
 		{/if}
 	</header>

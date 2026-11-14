@@ -111,19 +111,32 @@ describe('Spielstärke', () => {
 	it('ohne Daten keine Schätzung', () => {
 		expect(estimateStrength({})).toBeNull();
 	});
-	it('kombiniert Puzzle-Wertung, besiegte Bots und Online-Wertung', () => {
+	it('kombiniert Puzzle-Wertung, besiegte Bots und Online-Wertung (Lichess-Skala)', () => {
 		const s = estimateStrength({ puzzle: { rating: 1100, rd: 80, vol: 0.06 } })!;
-		expect(s.value).toBe(900);
+		expect(s.value).toBe(1050);
 		const withBot = estimateStrength({
 			puzzle: { rating: 1100, rd: 80, vol: 0.06 },
 			botsBeaten: [1150]
 		})!;
 		// ein besiegter Bot hebt die Schätzung etwas, setzt aber keine Untergrenze (Bot-Stärken sind Schätzungen)
-		expect(withBot.value).toBeGreaterThan(900);
-		expect(withBot.value).toBeLessThan(1150);
+		expect(withBot.value).toBeGreaterThan(1050);
+		expect(withBot.value).toBeLessThan(1300);
 		expect(estimateStrength({ botsBeaten: [1650] })!.confidence).toBeLessThan(0.2);
-		const online = estimateStrength({ online: { rating: 1400, source: 'lichess' } })!;
-		expect(online.value).toBe(1250);
+		// Lichess ist die Skala selbst, Chess.com liegt darunter
+		expect(estimateStrength({ online: { rating: 1400, source: 'lichess' } })!.value).toBe(1400);
+		expect(estimateStrength({ online: { rating: 1250, source: 'chesscom' } })!.value).toBe(1400);
+	});
+
+	it('eigene Partien fließen ein – mehr Partien, mehr Gewicht; unter 5 Partien gar nicht', () => {
+		const puzzle = { rating: 1050, rd: 80, vol: 0.06 };
+		const few = estimateStrength({ puzzle, games: { elo: 1500, games: 4 } })!;
+		expect(few.value).toBe(1000);
+		const some = estimateStrength({ puzzle, games: { elo: 1500, games: 8 } })!;
+		const many = estimateStrength({ puzzle, games: { elo: 1500, games: 30 } })!;
+		expect(some.value).toBeGreaterThan(1000);
+		expect(many.value).toBeGreaterThan(some.value);
+		expect(many.parts.map((p) => p.source)).toEqual(['games', 'puzzle']);
+		expect(many.parts[0].value).toBe(1500);
 	});
 
 	it('Schwerpunkt „Partien spielen“: Partie kommt auch bei knappem Budget in den Plan', () => {

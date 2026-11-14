@@ -1276,7 +1276,8 @@ export const de: Shape<typeof en> = {
 		continue: 'Weiter',
 		allDone: 'Alles erledigt für heute – stark!',
 		strength: (p: P) => `Geschätzte Spielstärke ≈ ${p.n}`,
-		strengthHint: 'Aus Puzzles, besiegten Bots und Online-Partien.',
+		strengthHint:
+			'Aus deinen Partien, Puzzles, Online-Wertung und besiegten Bots – auf der Lichess-Skala.',
 		progress: (p: P) => `${p.n} von ${p.m} erledigt`
 	},
 	coachTab: {
@@ -1287,6 +1288,12 @@ export const de: Shape<typeof en> = {
 		you: 'Du',
 		gamesCount: (p) => `${p.n} ${s(p.n, 'Partie', 'Partien')}`,
 		strength: (p) => `Spielstärke ≈ ${p.n}`,
+		part: {
+			online: (p: P) => `Online ${p.n}`,
+			games: (p: P) => `Partien ≈ ${p.n}`,
+			puzzle: (p: P) => `Puzzles ≈ ${p.n}`,
+			bots: (p: P) => `Bots ≈ ${p.n}`
+		},
 		how: 'So spielst du gerade',
 		rating: 'Aktuelle Wertung',
 		winRate: 'Siegquote',
@@ -1362,6 +1369,7 @@ export const de: Shape<typeof en> = {
 			strategy: 'Stellungsspiel-Lektionen, dann Partien mit „Erst du“.',
 			endgame: 'Grundendspiele gegen die Tablebase.'
 		},
+		overallFrom: (p: P) => `aus Partien ≈ ${p.elo}`,
 		legendMissing: '– = noch zu wenige Partien',
 		viaSafety: (p: P) =>
 			`${p.pct} % deines Verlusts hier sind Patzer. Ohne Patzer spielen Lichess-Spieler von 400 bis 1800 diese Phase fast gleich genau – dein Hebel ist deshalb der Blunder-Check, nicht mehr Theorie.`,
@@ -1551,8 +1559,7 @@ export const de: Shape<typeof en> = {
 			solid: 'Sicher spielen, erste Pläne (1200–1600)',
 			plans: 'Strategie und Technik (ab 1600)'
 		},
-		intro: (p: P) =>
-			`Bei ≈ ${p.elo} geht der Abstand zu Spielern, die 200 Elo stärker sind, laut Lichess-Daten vor allem auf diese Fähigkeiten zurück:`,
+		intro: (p: P) => `Was dich bei ≈ ${p.elo} am meisten weiterbringt (Lichess-Daten):`,
 		introNone: 'Ohne Einschätzung deiner Stärke zeigt Rookie die Stufe für Einsteiger.',
 		next: 'Darauf kommt es jetzt an',
 		focus: {

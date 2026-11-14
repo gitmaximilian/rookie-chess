@@ -41,6 +41,7 @@
 	import { themeName } from '#lib/data/themes.js';
 	import { getPuzzleRating, isProvisional } from '#lib/training/rating.js';
 	import { currentStrength } from '#lib/training/planData.js';
+	import type { StrengthSource } from '#lib/training/strength.js';
 	import { MOTIF_THEME, pickFocus } from '#lib/training/focus.js';
 	import { getLinked, syncState, analyseBatch, pauseBackground } from '#lib/import/sync.svelte.js';
 	import { t } from '#lib/i18n/i18n.svelte.js';
@@ -63,6 +64,8 @@
 		last: { id: number; o: Outcome }[];
 		rating: { value: number; label: string; delta: number | null } | null;
 		strength: number | null;
+		/** woraus die Spielstärke besteht */
+		strengthParts: { source: StrengthSource; value: number }[];
 		puzzle: { rating: number; provisional: boolean };
 		mistakes: number;
 		advice: Advice[];
@@ -224,6 +227,7 @@
 			last,
 			rating,
 			strength: strength?.value ?? null,
+			strengthParts: strength?.parts ?? [],
 			puzzle: { rating: Math.round(puzzle.rating), provisional: isProvisional(puzzle) },
 			mistakes,
 			advice: advice.slice(0, 3),
@@ -373,6 +377,14 @@
 							}
 						)}{/if}
 				</span>
+				{#if d.strengthParts.filter((p) => p.source !== 'bots').length > 1}
+					<span class="muted num-line parts" data-testid="strength-parts"
+						>{d.strengthParts
+							.filter((p) => p.source !== 'bots')
+							.map((p) => t(`coachTab.part.${p.source}`, { n: p.value }))
+							.join(' · ')}</span
+					>
+				{/if}
 			</div>
 		</div>
 
@@ -451,7 +463,8 @@
 
 		<!-- Spielerprofil als Fünfeck -->
 		<!-- was auf deinem Niveau zählt (Lichess-Daten) -->
-		<LevelFocus elo={d.skillOverall?.elo ?? d.strength} />
+		<!-- dieselbe Spielstärke wie überall – sonst zeigen Coach und Lernen verschiedene Stufen -->
+		<LevelFocus elo={d.strength} />
 
 		<section class="tone-coach block skills">
 			{@render coverage()}
