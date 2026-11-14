@@ -85,6 +85,21 @@ export async function assessMove(
 	};
 }
 
+/** War der Zug ein Patzer (≥ 30 Prozentpunkte Gewinnchance)? – für „Chance!“ nach einem Bot-Zug */
+export async function isBlunder(
+	fenBefore: string,
+	uci: string,
+	signal?: AbortSignal
+): Promise<boolean> {
+	const g = new Game(fenBefore);
+	const mover = g.turn;
+	if (!g.play(uci)) return false;
+	if (g.end()) return false;
+	const before = await evalFen(fenBefore, signal);
+	const after = await evalFen(g.fen, signal);
+	return judge(before, after, mover, uci).judgement === 'blunder';
+}
+
 /** Nach dem Gegnerzug: eigene Figuren, die angegriffen und nicht ausreichend gedeckt sind */
 export function threats(fen: string): { role: Role; square: string }[] {
 	const pos = positionFromFen(fen);

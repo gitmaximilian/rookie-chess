@@ -85,6 +85,23 @@ Datenhaltung: **keine Schemaänderung nötig.** Neue Werte nutzen bestehende Tab
 
 **Zielwerte (Einsteiger, nach 4–6 Wochen; aus der Streuung der Lichess-Daten abgeleitet):** Patzer je 30 Züge −1,0 gegenüber dem Ausgangswert (bei 1200–1400 liegen die Werte rund 1 niedriger als bei 800–1000); Kontrolltest +2 Punkte (≈ +17 %) über ≥ 3 Tests. Beides misst Rookie lokal; nichts verlässt das Gerät.
 
+## Etappe 5 – Erst du, und Chancen sehen (v0.5.0, Nachtrag)
+
+**Grundsätze:** 2 (selbst finden), 3 (eigene Fehler), 6 (besprechen), 1 (Chancen sind die andere Hälfte der Taktik).
+
+**Hypothesen:**
+
+- Wer nach der Partie zuerst selbst sucht, wo er Fehler gemacht hat, lernt aus der Auflösung mehr (Selbsterklären, Fehlversuch vor der Lösung) – und mit der Zeit sieht er seine Fehler früher, auch ohne Engine.
+- Einsteiger bestrafen nur ~51–60 % der gegnerischen Patzer (Lichess-Daten). Ein Hinweis „Chance!“ in den ersten, geführten Partien lenkt den Blick dorthin; in der Stufe „Ich prüfe“ bleibt er aus (Ausschleichen), die Rückmeldung kommt dann nach dem eigenen Zug („Gewinn verpasst“).
+
+| Änderung                                                                                                                                                                                                                                                                                                                              | Dateien                                                                                      | Fertig, wenn …                                                                      |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| **„Erst du“**: Aus dem Tagesplan öffnet die letzte Partie zuerst ohne Bewertungen; man markiert bis zu 3 eigene Züge, Stockfish rechnet im Hintergrund; „Auflösen“ zeigt gefunden/übersehen/war in Ordnung (Nachbarzug zählt), danach Fehler nachspielen. Ergebnis gespeichert (`selfReviews`, synchronisiert über die Einstellungen) | neu `lib/analysis/selfreview.ts`, `lib/ui/SelfReview.svelte`; `routes/analysis/+page.svelte` | Unit-Tests (Treffer, Nachbarzug, einmal zählen, Quote ab 3 Partien); E2E Narrenmatt |
+| **Neue Kennzahl** „Fehler selbst gesehen“ (Anteil der eigenen Fehler, die man vor der Auflösung erkannt hat; ab 3 Partien)                                                                                                                                                                                                            | `lib/ui/ProgressCheck.svelte`                                                                | sichtbar im Coach-Tab                                                               |
+| **„Chance!“** nach einem Bot-Patzer (≥ 30 Prozentpunkte), nur in der geführten Coach-Stufe                                                                                                                                                                                                                                            | `lib/coach/coach.ts` (`isBlunder`), `routes/play/+page.svelte`                               | kein Hinweis bei „Ich prüfe“                                                        |
+
+**Messgröße:** „Fehler selbst gesehen“ steigt über Wochen; Patzer je 30 Züge sinken.
+
 ## Etappe 4 – Abschluss
 
 Version 0.4.0, README (Features, neue Screenshots: Blunder-Check, Coach mit Fortschritt), Tag `v0.4.0`, GitHub-Release, Website-Status gemäß `portfolio/PUBLISHING.md`, Quellenangabe der Blunder-Check-Daten in `/about`.
@@ -94,7 +111,7 @@ Version 0.4.0, README (Features, neue Screenshots: Blunder-Check, Coach mit Fort
 ## Bewusst nicht in diesem Plan (und warum)
 
 - **Woodpecker-Zyklen** (fester Satz, immer schneller): Beleglage schwach (Einzelfall), und verkürzte Abstände widersprechen der verteilten Wiederholung. Rookie wiederholt stattdessen die _verfehlten_ Aufgaben mit wachsenden Abständen.
-- **Selbstanalyse vor der Engine** („Welche Züge waren kritisch?“): plausibel, aber keine Schach-Studie; der Umbau der 1 900-Zeilen-Analyseseite ist groß. Das bestehende „Fehler nachspielen“ ist bereits Abruf. Nächste Runde.
+- ~~Selbstanalyse vor der Engine~~ – umgesetzt in Etappe 5 (v0.5.0).
 - **Lektionen zu Abruf-Übungen umbauen**: lohnt bei Taktik-Lektionen, aber die Taktik wird ohnehin über gemischte Puzzles und den Blunder-Check geübt. Nächste Runde.
 - **Bot-Elo kalibrieren** (Turniere der Bots gegen Referenzgegner): nötig für eine belastbare „Spielstärke“, aber unter 1320 gibt es in Stockfish keine Referenz (`UCI_Elo`); bräuchte menschliche Daten. Bis dahin zählen Siege nur ohne Hilfe, und die Fortschrittsmessung stützt sich auf Patzer statt auf Elo.
 - **Sterne abschaffen**: Sie stören wenig, wenn sie nicht als Fortschritt verkauft werden. Die neue Karte stellt klar, was Fleiß und was Können misst. Sterne für Lektionen erst bei Aufgaben-Erfolg zu vergeben, wäre konsequent – niedrige Priorität.

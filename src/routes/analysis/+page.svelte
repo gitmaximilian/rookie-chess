@@ -44,6 +44,9 @@
 	import ReviewPanel, { type LiveLine } from '#lib/ui/ReviewPanel.svelte';
 	import GameReport from '#lib/ui/GameReport.svelte';
 	import { gameReport } from '#lib/analysis/report.js';
+	import SelfReview from '#lib/ui/SelfReview.svelte';
+	import type { SelfReviewResult, SelfReviewScore } from '#lib/analysis/selfreview.js';
+	import { resetDockReserve } from '#lib/ui/dock.js';
 	import { currentStrength } from '#lib/training/planData.js';
 	import {
 		KINDS,
@@ -606,11 +609,39 @@
 		return [];
 	});
 
+	// ── „Erst du“: eigene Fehler vor der Auflösung selbst suchen (lib/analysis/selfreview.ts) ──
+	let selfReview = $state<'off' | 'active' | 'done'>('off');
+	const selfMistakes = $derived(
+		!analysing && progress >= 1 && reviews.length ? myMistakes.map((r) => r.ply) : null
+	);
+
+	async function finishSelfReview(marked: number[], score: SelfReviewScore) {
+		if (!row?.id) return;
+		const list = await getSetting<SelfReviewResult[]>('selfReviews', []);
+		await setSetting('selfReviews', [
+			...list.filter((x) => x.gameId !== row!.id),
+			{
+				gameId: row.id,
+				date: Date.now(),
+				found: score.found.length,
+				total: score.total,
+				extra: score.extra.length
+			}
+		]);
+		void marked;
+	}
+
+	function leaveSelfReview() {
+		selfReview = 'done';
+		resetDockReserve();
+	}
+
 	// aus dem Tagesplan: ?retry=1 startet sofort, sobald die Analyse fertig ist
 	$effect(() => {
 		if (
 			typeof window !== 'undefined' &&
 			page.url.searchParams.get('retry') === '1' &&
+			selfReview !== 'active' &&
 			!retry &&
 			!analysing &&
 			progress >= 1 &&
@@ -648,6 +679,12 @@
 			return;
 		}
 		row = r;
+		// aus dem Tagesplan und noch nicht selbst besprochen → erst „Erst du“
+		const reviewed = await getSetting<SelfReviewResult[]>('selfReviews', []);
+		selfReview =
+			page.url.searchParams.get('retry') === '1' && !reviewed.some((x) => x.gameId === r.id)
+				? 'active'
+				: 'off';
 		game = Game.fromUciMoves(r.moves, r.startFen);
 		orientation = r.myColor;
 		ply = 0;
@@ -1013,6 +1050,20 @@
 {:else if !loading && !row}
 	<PageHeader title={t('analysis.notFound')} />
 	<a class="btn" href={resolve('/analysis')}>{t('analysis.toGames')}</a>
+{:else if game && row && selfReview === 'active'}
+	<div class="top-line">
+		<a class="back hit44" href={resolve('/analysis')}
+			><ArrowLeft size={18} /> {t('analysis.games')}</a
+		>
+	</div>
+	<SelfReview
+		{game}
+		myColor={row.myColor}
+		mistakes={selfMistakes}
+		{progress}
+		onFinish={(m, sc) => void finishSelfReview(m, sc)}
+		onSkip={leaveSelfReview}
+	/>
 {:else if game && row}
 	<div class="top-line">
 		<a class="back hit44" href={resolve('/analysis')}

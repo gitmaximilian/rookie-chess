@@ -31,6 +31,7 @@
 	import { engine } from '#lib/engine/engine.js';
 	import {
 		assessMove,
+		isBlunder,
 		threats,
 		opponentIdea,
 		findThreat,
@@ -99,6 +100,8 @@
 	// ── Coach ──
 	let coachNote = $state<CoachNote | null>(null);
 	let coachOpp = $state<{ san: string; text: string; warn: string } | null>(null);
+	/** der Gegner hat gerade gepatzt – nur in der geführten Stufe als Hinweis (siehe detectChance) */
+	let coachChance = $state(false);
 	let coachBusy = $state(false);
 	let coachPending = $state(false);
 	let coachAbort: AbortController | null = null;
@@ -168,6 +171,15 @@
 			act: ''
 		});
 		if (coachNote && coachPending) return judged(false);
+		// Chance zuerst: Einsteiger lassen fast die Hälfte der gegnerischen Patzer ungestraft (Lichess-Daten)
+		if (coachChance && myTurn && !selfCheck)
+			return {
+				kicker: `${coach} · ${t('coach.chanceKicker')}`,
+				title: t('coach.chanceTitle'),
+				text: t('coach.chanceText'),
+				color: 'var(--k-best)',
+				act: ''
+			};
 		if (coachThreat && myTurn && !hideWarn)
 			return {
 				kicker: `${coach} · ${t('coach.warning')}`,
@@ -230,6 +242,7 @@
 
 	function clearCoach() {
 		whyShown = false;
+		coachChance = false;
 		coachTip = '';
 		coachThreat = null;
 		threatShown = false;
@@ -585,6 +598,7 @@
 							: ''
 					};
 					void detectThreat(game.fen);
+					void detectChance(botFen, played.uci, game.fen);
 				}
 			}
 			v++;
@@ -593,6 +607,15 @@
 		} finally {
 			if (!signal.aborted) thinking = false;
 		}
+	}
+
+	/** Hat der Bot gerade gepatzt (≥ 30 Prozentpunkte)? Dann darf man etwas holen. */
+	async function detectChance(fenBefore: string, uci: string, fenNow: string) {
+		coachChance = false;
+		if (selfCheck) return;
+		const bad = await isBlunder(fenBefore, uci).catch(() => false);
+		if (game.fen !== fenNow) return;
+		coachChance = bad;
 	}
 
 	async function detectThreat(fenNow: string) {
@@ -1001,6 +1024,9 @@
 							<b>{t('coach.title')}</b>
 							{#if coachBusy}<span class="cb-busy">{t('coach.thinking')}</span>{/if}
 						</div>
+						{#if coachChance && myTurn && !selfCheck}
+							<p class="cb-chance"><b>{t('coach.chanceTitle')}</b> {t('coach.chanceText')}</p>
+						{/if}
 						{#if coachOpp && selfCheck && !revealed && myTurn}
 							<p class="cb-opp">
 								<span class="cb-label">{t('coach.opponent')} {figurine(coachOpp.san)}</span>
@@ -1662,6 +1688,12 @@
 		gap: 0.45rem;
 	}
 
+	.cb-chance {
+		font-size: 0.9rem;
+		line-height: 1.4;
+		color: var(--good-text);
+	}
+
 	.level-note {
 		font-size: 0.82rem;
 		color: var(--text-2);
@@ -2206,6 +2238,7 @@
 		.coach-box .cb-head,
 		.coach-box .cb-opp,
 		.coach-box .cb-warn,
+		.coach-box .cb-chance,
 		.coach-box .cb-text,
 		.coach-box .cb-title,
 		.coach-box .cb-tip,

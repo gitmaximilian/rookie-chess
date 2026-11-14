@@ -86,14 +86,53 @@ test('Analyse: bei einem Fehler zeigt das Brett den gespielten (rot) und den bes
 	await expect(page.locator('.summary')).toBeVisible({ timeout: 60_000 });
 	await page.locator('.moves-card').getByRole('button', { name: /xd1/ }).click();
 	// chessground zeichnet Pfeile als SVG-Linien mit der Pinselfarbe
+	// chessground zeichnet im nächsten Frame – auf die neuen Farben warten
 	const arrows = page.locator('.cg-host svg.cg-shapes line');
-	await expect(arrows).toHaveCount(2);
-	const colors = await arrows.evaluateAll((ls) => ls.map((l) => l.getAttribute('stroke')));
-	expect(colors).toContain('#d64545');
-	expect(colors).toContain('#2b9a66');
+	await expect
+		.poll(async () =>
+			(await arrows.evaluateAll((ls) => ls.map((l) => l.getAttribute('stroke')))).sort()
+		)
+		.toEqual(['#2b9a66', '#d64545']);
 	// Partie-Bewertung mit Einordnung, Wendepunkt und Lernpunkt
 	const report = page.getByTestId('game-report');
 	await expect(report).toBeVisible();
 	await expect(report).toContainText('Turning point');
 	await expect(report).toContainText(/accuracy typical of|too short/);
+});
+
+test('Erst du: eigene Fehler markieren, auflösen, dann nachspielen', async ({ page }) => {
+	test.setTimeout(90_000);
+	await page.goto('/analysis');
+	await page.locator('textarea').fill('1. f3 e5 2. g4 Qh4# 0-1');
+	await page.getByRole('button', { name: 'Analyse', exact: true }).click();
+	await expect(page).toHaveURL(/analysis\?game=\d+/);
+	const id = new URL(page.url()).searchParams.get('game');
+	// wie aus dem Tagesplan
+	await page.goto(`/analysis?game=${id}&retry=1`);
+	const panel = page.getByTestId('self-review');
+	await expect(panel).toBeVisible();
+	// keine Bewertungen sichtbar, solange man selbst sucht
+	await expect(page.locator('.sq-badge')).toHaveCount(0);
+	const fwd = page.getByRole('button', { name: 'Forward', exact: true }).locator('visible=true');
+	await fwd.first().click();
+	await fwd.first().click();
+	await fwd.first().click(); // 2. g4
+	await page.getByTestId('mark-move').locator('visible=true').first().click();
+	await expect(panel).toContainText('2. g4');
+	const resolveBtn = page.getByTestId('resolve').locator('visible=true').first();
+	await expect(resolveBtn).toBeEnabled({ timeout: 60_000 });
+	await resolveBtn.click();
+	await expect(
+		page
+			.getByText(/You found 1 of 1 mistakes yourself/)
+			.locator('visible=true')
+			.first()
+	).toBeVisible();
+	await page.getByTestId('self-review-next').locator('visible=true').first().click();
+	await expect(
+		page
+			.getByText(/Mistake 1 of 1/)
+			.locator('visible=true')
+			.first()
+	).toBeVisible();
 });

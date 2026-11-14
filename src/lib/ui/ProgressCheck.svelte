@@ -16,6 +16,7 @@
 		CHECKUP_EVERY_DAYS,
 		type CheckupResult
 	} from '#lib/training/safety.js';
+	import { selfReviewRate, type SelfReviewResult } from '#lib/analysis/selfreview.js';
 	import { t } from '#lib/i18n/i18n.svelte.js';
 
 	let { testid = 'progress-check' }: { testid?: string } = $props();
@@ -25,6 +26,7 @@
 	let checkups = $state<CheckupResult[]>([]);
 	let safetyRate = $state<number | null>(null);
 	let puzzleRate = $state<number | null>(null);
+	let selfRate = $state<number | null>(null);
 	let ready = $state(false);
 
 	onMount(async () => {
@@ -37,6 +39,7 @@
 		trend = blunderTrend(series);
 		spark = series.slice(-20).map((x) => x.per30);
 		checkups = ch;
+		selfRate = selfReviewRate(await getSetting<SelfReviewResult[]>('selfReviews', []));
 		safetyRate = successRate(
 			attempts
 				.filter((a) => a.source === 'safety')
@@ -130,6 +133,14 @@
 			muted={puzzleRate === null}
 			sub={t('progress.targetSelf')}
 			href={resolve('/puzzles')}
+		/>
+		<StatTile
+			tone="games"
+			label={t('progress.self')}
+			value={selfRate ?? '–'}
+			unit={selfRate === null ? '' : '%'}
+			muted={selfRate === null}
+			sub={selfRate === null ? t('progress.selfNone') : t('progress.selfSub')}
 		/>
 	</BentoGrid>
 </section>

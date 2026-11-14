@@ -228,6 +228,10 @@ export const en = {
 		showBetter: 'Show better move',
 		betterWas: (p: P) => `Better was ${p.san}.`,
 		title: 'Coach',
+		chanceKicker: 'Chance',
+		chanceTitle: 'Your opponent just blundered!',
+		chanceText:
+			'There is something to win: look for captures, checks and threats – find the best move.',
 		levelLabel: 'Coach help',
 		levelAuto: 'Auto',
 		levelWarn: 'Warn me',
@@ -1203,7 +1207,7 @@ export const en = {
 		basics: (p: P) => `Lesson: ${p.name}`,
 		course: (p: P) => `Opening: ${p.name}`,
 		endgame: (p: P) => `Endgame: ${p.name}`,
-		game: 'Learn from your last game',
+		game: 'Last game: find your mistakes, then replay them',
 		play: 'Play a game with the coach',
 		safety: (p: P) => `Blunder check: ${p.n} moves – safe or not?`,
 		mistakes: (p: P) => `Your own mistakes: ${p.n} to repeat`,
@@ -1325,6 +1329,26 @@ export const en = {
 		howEndgames: 'Per lesson: 1–3 stars, depending on how efficiently you win',
 		all: 'All stars collected – brilliant!'
 	},
+	selfReview: {
+		kicker: 'You first',
+		title: 'Where were your mistakes?',
+		text: (p: P) =>
+			`Step through the game and mark up to ${p.n} of your moves you think were mistakes. Only then does Stockfish show what really happened.`,
+		board: 'Board: your game without ratings',
+		mark: 'Mark',
+		unmark: 'Unmark',
+		marked: 'Your marks',
+		none: 'Nothing marked yet – step through the game with ›.',
+		resolve: 'Reveal',
+		waiting: (p: P) => `Stockfish is working … ${p.pct} %`,
+		skip: 'Skip',
+		result: (p: P) => `You found ${p.n} of ${p.m} mistakes yourself`,
+		resultText: 'Red: your mistakes. Now replay them – can you find the better move?',
+		noMistakes: 'No serious mistakes in this game – well played!',
+		toRetry: 'Replay mistakes',
+		toAnalysis: 'To the review',
+		state: { found: 'found', missed: 'missed', extra: 'was fine', marked: '' }
+	},
 	report: {
 		title: 'Game rating',
 		level: (p: P) => `accuracy typical of ≈ ${p.elo}`,
@@ -1361,6 +1385,9 @@ export const en = {
 		checkupFrom: (p: P) => `first ${p.first} %`,
 		safety: 'Blunder check',
 		puzzles: 'Puzzles',
+		self: 'Mistakes spotted',
+		selfNone: 'after 3 games with “You first”',
+		selfSub: 'of your mistakes seen before the reveal',
 		target: 'hit rate · target ≈ 80 %',
 		targetSelf: 'solved yourself · target ≈ 80 %'
 	},

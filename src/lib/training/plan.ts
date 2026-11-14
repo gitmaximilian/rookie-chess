@@ -104,7 +104,8 @@ export function minutesOf(task: PlanTask): number {
 		case 'play':
 			return 15;
 		case 'game':
-			return 5;
+			// erst selbst suchen, dann nachspielen
+			return 7;
 		case 'checkup':
 			return 6;
 		case 'basics':

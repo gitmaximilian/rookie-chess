@@ -238,6 +238,10 @@ export const de: Shape<typeof en> = {
 		showBetter: 'Besseren Zug zeigen',
 		betterWas: (p: P) => `Besser war ${p.san}.`,
 		title: 'Coach',
+		chanceKicker: 'Chance',
+		chanceTitle: 'Dein Gegner hat gerade gepatzt!',
+		chanceText:
+			'Hier gibt es etwas zu holen: Schau nach Schlagzügen, Schachs und Drohungen – such den besten Zug.',
 		levelLabel: 'Hilfe des Coachs',
 		levelAuto: 'Auto',
 		levelWarn: 'Warnen',
@@ -1260,7 +1264,7 @@ export const de: Shape<typeof en> = {
 		basics: (p: P) => `Lektion: ${p.name}`,
 		course: (p: P) => `Eröffnung: ${p.name}`,
 		endgame: (p: P) => `Endspiel: ${p.name}`,
-		game: 'Aus deiner letzten Partie lernen',
+		game: 'Letzte Partie: erst selbst Fehler suchen, dann nachspielen',
 		play: 'Eine Partie mit Coach spielen',
 		safety: (p: P) => `Blunder-Check: ${p.n} Züge – sicher oder nicht?`,
 		mistakes: (p: P) => `Deine eigenen Fehler: ${p.n} wiederholen`,
@@ -1387,6 +1391,26 @@ export const de: Shape<typeof en> = {
 		howEndgames: 'Je Lektion 1–3 Sterne, je nachdem, wie effizient du gewinnst',
 		all: 'Alle Sterne gesammelt – großartig!'
 	},
+	selfReview: {
+		kicker: 'Erst du',
+		title: 'Wo waren deine Fehler?',
+		text: (p: P) =>
+			`Geh die Partie durch und markiere bis zu ${p.n} deiner Züge, die du für Fehler hältst. Erst dann zeigt Stockfish, was wirklich passiert ist.`,
+		board: 'Brett: eigene Partie ohne Bewertungen',
+		mark: 'Markieren',
+		unmark: 'Entfernen',
+		marked: 'Deine Markierungen',
+		none: 'Noch nichts markiert – geh mit › durch die Partie.',
+		resolve: 'Auflösen',
+		waiting: (p: P) => `Stockfish rechnet … ${p.pct} %`,
+		skip: 'Überspringen',
+		result: (p: P) => `${p.n} von ${p.m} Fehlern selbst gefunden`,
+		resultText: 'Rot: deine Fehler. Jetzt spielst du sie nach – findest du den besseren Zug?',
+		noMistakes: 'Keine groben Fehler in dieser Partie – stark!',
+		toRetry: 'Fehler nachspielen',
+		toAnalysis: 'Zur Analyse',
+		state: { found: 'gefunden', missed: 'übersehen', extra: 'war in Ordnung', marked: '' }
+	},
 	report: {
 		title: 'Partie-Bewertung',
 		level: (p: P) => `Genauigkeit wie typisch bei ≈ ${p.elo}`,
@@ -1423,6 +1447,9 @@ export const de: Shape<typeof en> = {
 		checkupFrom: (p: P) => `erster ${p.first} %`,
 		safety: 'Blunder-Check',
 		puzzles: 'Puzzles',
+		self: 'Fehler selbst gesehen',
+		selfNone: 'nach 3 Partien mit „Erst du“',
+		selfSub: 'deiner Fehler vor der Auflösung erkannt',
 		target: 'Trefferquote · Ziel ≈ 80 %',
 		targetSelf: 'selbst gelöst · Ziel ≈ 80 %'
 	},
