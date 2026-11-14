@@ -4,6 +4,7 @@ import type { GameRow } from '#lib/db/db.js';
 import {
 	adviceFor,
 	collectSkills,
+	collectSkillsAdaptive,
 	eloFor,
 	FLOOR,
 	lossPerMoveAt,
@@ -19,6 +20,29 @@ import {
 	valueAt,
 	type SkillRaw
 } from './skills';
+
+/** Narrenmatt: Weiß patzt mit g4 */
+const fools = (date: number): GameRow => ({
+	date,
+	pgn: '',
+	moves: ['f2f3', 'e7e5', 'g2g4', 'd8h4'],
+	startFen: INITIAL_FEN,
+	result: '0-1',
+	myColor: 'white',
+	opponent: 'x',
+	source: 'pgn',
+	analysis: {
+		done: true,
+		depth: 11,
+		evals: [
+			{ cp: 20, best: 'e2e4' },
+			{ cp: -40, best: 'e7e5' },
+			{ cp: -50, best: 'b1c3' },
+			{ mate: -1, best: 'd8h4' },
+			{ cp: -10000 }
+		]
+	}
+});
 
 const sample = (value: number | null, n: number, perGame: number[] = []) => ({ value, n, perGame });
 /** Rohdaten, die genau dem typischen Spieler einer Wertung entsprechen */
@@ -145,28 +169,19 @@ describe('Skill-Penta: Spiegel', () => {
 		expect(adviceFor(v, raw)).toEqual([]);
 	});
 
+	it('zu wenig Daten in den letzten 30 Partien: diese Ecke greift auf ältere Partien zurück', () => {
+		const games = Array.from({ length: 40 }, (_, i) => fools(i));
+		const raw = collectSkillsAdaptive(games);
+		expect(raw.games).toBe(30);
+		// Stellungsspiel hat hier nie Züge → erweitert auf alle 40 Partien
+		expect(raw.windowGames?.strategy).toBe(40);
+		expect(skillMirror(raw).find((v) => v.skill === 'strategy')!.games).toBe(40);
+		// mit wenigen Partien bleibt alles beim Alten
+		expect(collectSkillsAdaptive(games.slice(0, 10)).windowGames).toBeUndefined();
+	});
+
 	it('sammelt Messwerte aus einer analysierten Partie (Narrenmatt, Weiß patzt mit g4)', () => {
-		const g: GameRow = {
-			date: 1,
-			pgn: '',
-			moves: ['f2f3', 'e7e5', 'g2g4', 'd8h4'],
-			startFen: INITIAL_FEN,
-			result: '0-1',
-			myColor: 'white',
-			opponent: 'x',
-			source: 'pgn',
-			analysis: {
-				done: true,
-				depth: 11,
-				evals: [
-					{ cp: 20, best: 'e2e4' },
-					{ cp: -40, best: 'e7e5' },
-					{ cp: -50, best: 'b1c3' },
-					{ mate: -1, best: 'd8h4' },
-					{ cp: -10000 }
-				]
-			}
-		};
+		const g: GameRow = fools(1);
 		const r = collectSkills([g]);
 		expect(r.games).toBe(1);
 		expect(r.safety.n).toBe(2);

@@ -20,7 +20,7 @@
 	import type { AccPoint } from '#lib/ui/AccuracyTrend.svelte';
 	import {
 		adviceFor,
-		collectSkills,
+		collectSkillsAdaptive,
 		overallLevel,
 		skillMirror,
 		type Advice as SkillAdvice,
@@ -198,7 +198,7 @@
 				c: 'var(--c-play)'
 			});
 
-		const skillRaw = collectSkills(games);
+		const skillRaw = collectSkillsAdaptive(games);
 		const skills = skillMirror(skillRaw);
 		d = {
 			name: linked.lichess || linked.chesscom || '',

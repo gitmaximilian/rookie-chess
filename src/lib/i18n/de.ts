@@ -412,7 +412,7 @@ export const de: Shape<typeof en> = {
 	analysis: {
 		eyebrow: 'Analyse',
 		title: 'Meine Partien',
-		subtitle: 'Jede Partie wird von Stockfish analysiert – mit Erklärungen in einfachem Deutsch.',
+		subtitle: 'Jede Partie von Stockfish analysiert und einfach erklärt.',
 		empty: 'Noch keine Partien',
 		emptyText: 'Spiel gegen einen Bot, importiere deine Online-Partien oder füge ein PGN ein.',
 		playGame: 'Partie spielen',
@@ -437,6 +437,8 @@ export const de: Shape<typeof en> = {
 			friend: 'Freunde',
 			mistakes: 'Mit Fehlern'
 		},
+		add: 'Partie hinzufügen',
+		thisWeek: 'Diese Woche',
 		today: 'Heute',
 		yesterday: 'Gestern',
 		brilliantLabel: 'Brillant',
@@ -1351,7 +1353,7 @@ export const de: Shape<typeof en> = {
 	},
 	skills: {
 		title: 'Dein Skill-Penta',
-		subtitle: '100 = Weltspitze · tippe auf eine Ecke',
+		subtitle: '100 = Weltspitze',
 		text: (p) => `Aus deinen letzten ${p.n} analysierten Partien.`,
 		overall: 'Gesamt',
 		overallTitle:
@@ -1373,6 +1375,21 @@ export const de: Shape<typeof en> = {
 			endgame: 'Grundendspiele gegen die Tablebase.'
 		},
 		overallFrom: (p: P) => `aus Partien ≈ ${p.elo}`,
+		calcTitle: 'So wird gerechnet',
+		calcSample: (p: P) =>
+			`Aus deinen letzten ${p.games} analysierten Partien: ${p.what} (gezeigt ab ${p.min}).`,
+		calc: {
+			safety:
+				'Patzer = ein Zug, der mindestens 30 Prozentpunkte Gewinnchance kostet (Stockfish). Gezählt je 30 eigene Züge – nur solange die Partie noch offen ist.',
+			tactics:
+				'Immer wenn dein Gegner einen Fehler macht (mindestens 20 Prozentpunkte), zählt Rookie, ob deine Antwort ihn sofort bestraft.',
+			opening:
+				'Genauigkeit deiner Züge, bis die Figuren entwickelt sind – nur in offenen Stellungen (15–85 % Gewinnchance).',
+			strategy:
+				'Genauigkeit deiner ruhigen Mittelspielzüge in offenen Stellungen – Patzer zählen hier nicht, die misst Sicherheit.',
+			endgame:
+				'Genauigkeit, sobald höchstens sechs Figuren (ohne Bauern und Könige) übrig sind – nur in offenen Stellungen.'
+		},
 		legendMissing: '– = noch zu wenige Partien',
 		viaSafety: (p: P) =>
 			`${p.pct} % deines Verlusts hier sind Patzer. Ohne Patzer spielen Lichess-Spieler von 400 bis 1800 diese Phase fast gleich genau – dein Hebel ist deshalb der Blunder-Check, nicht mehr Theorie.`,
@@ -1388,12 +1405,11 @@ export const de: Shape<typeof en> = {
 			endgame: 'Endspiel'
 		},
 		what: {
-			safety:
-				'Wie selten du in noch offenen Stellungen patzt (Figur oder Partie in einem Zug verloren).',
+			safety: 'Wie selten du eine Figur oder die Partie mit einem Zug verschenkst.',
 			tactics: 'Wie oft du einen Fehler deines Gegners sofort bestrafst.',
 			opening: 'Wie genau du die ersten Züge spielst, bis die Figuren entwickelt sind.',
 			strategy:
-				'Wie genau deine ruhigen Mittelspielzüge sind – ohne Patzer gezählt: Pläne, Figurenstellung, kleine Vorteile.',
+				'Wie gut deine ruhigen Mittelspielzüge sind: Pläne, Figurenstellung, kleine Vorteile.',
 			endgame: 'Wie genau du spielst, wenn nur noch wenige Figuren übrig sind.'
 		},
 		unit: {
@@ -1455,7 +1471,7 @@ export const de: Shape<typeof en> = {
 		},
 		gain: (p: P) =>
 			`Bringst du ${p.name} auf das Niveau von ≈ ${p.target} (${p.value}), verlierst du pro Partie ≈ ${p.points} Prozentpunkte weniger Gewinnchance – das sind etwa +${p.gain} Elo.`,
-		note: 'Elo-Entsprechung: geeicht an 1 560 Lichess-Partien (Rapid/Classical, 400–3200) mit derselben Rechentiefe wie Rookie. Elo-Wirkung: 1 Prozentpunkt weniger verlorene Gewinnchance pro Partie ≈ 11 Elo (gleiche Daten). Geprüft an 139 Lichess-Spielern außerhalb der Eichung: Gesamtniveau ab etwa 12 Partien im Mittel ±230 Elo genau. Ein Zusammenhang, keine Garantie.',
+		note: 'Vergleich mit 1 560 Lichess-Partien (400–3200), geprüft an 139 weiteren Spielern: ab etwa 12 Partien im Mittel ±230 Elo genau. Ein Zusammenhang, keine Garantie.',
 		needData: (p) =>
 			`Dein Profil braucht mindestens 3 analysierte Partien (bisher ${p.n}). Öffne eine Partie unter „Games“, um sie zu analysieren.`,
 		coverage: (p) => `${p.n} von ${p.m} ${s(p.m, 'Partie', 'Partien')} analysiert`,

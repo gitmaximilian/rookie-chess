@@ -10,7 +10,6 @@
 	import SkillRadar from '#lib/ui/SkillRadar.svelte';
 	import {
 		valueAt,
-		shareAt,
 		SKILL_TABLE,
 		MEAN_COUNT,
 		MIN_SAMPLE,
@@ -43,7 +42,6 @@
 	const adv = $derived(advice.find((a) => a.skill === selected) ?? null);
 	const top = $derived(advice[0] ?? null);
 	/** Anteil am Abstand zu Spielern 200 Elo über dir (aus Lichess-Daten) */
-	const share = $derived(overall ? shareAt(overall.elo) : null);
 	const bottom = SKILL_TABLE[0]?.r ?? 0;
 	const topR = SKILL_TABLE.at(-1)?.r ?? 0;
 
@@ -63,6 +61,11 @@
 			: 0
 	);
 	const ctaSkill = $derived<Skill>(viaSafety ? 'safety' : selected);
+	/** fehlende Partien bis zur Mindestmenge – aus deinem eigenen Tempo (Züge je Partie), sonst Mittelwert */
+	const gamesMissing = $derived.by(() => {
+		const perGame = v.n > 0 && v.games > 0 ? v.n / v.games : MEAN_COUNT[selected];
+		return Math.max(1, Math.ceil(v.missing / Math.max(0.5, perGame)));
+	});
 
 	const HREF: Record<Skill, string> = {
 		safety: '/puzzles/safety',
@@ -120,6 +123,8 @@
 			{/if}
 		</div>
 
+		<p class="d-what">{t(`skills.what.${selected}`)}</p>
+
 		{#if v.score !== null && v.value !== null}
 			<p class="d-you">{unit(selected, v.value)}</p>
 			<p class="d-elo muted">
@@ -133,10 +138,8 @@
 				{/if}
 			</p>
 		{:else}
-			<p class="d-you muted">
-				{t('skills.needMoreShort', {
-					n: Math.max(1, Math.ceil(v.missing / MEAN_COUNT[selected]))
-				})}
+			<p class="d-need">
+				{t('skills.needMoreShort', { n: gamesMissing })}
 			</p>
 		{/if}
 
@@ -176,45 +179,15 @@
 		</div>
 
 		<details class="more">
-			<summary>{t('skills.more')} <ChevronDown size={16} /></summary>
-			<p>{t(`skills.what.${selected}`)}</p>
-			{#if v.score !== null && v.value !== null}
-				<p>{t('skills.you', { value: unit(selected, v.value), n: games })}</p>
-			{/if}
-			<h4>{t('skills.why')}</h4>
-			<p>{t(`skills.whyText.${selected}`)}</p>
-			{#if share && overall}
-				<p>
-					{t('skills.share', {
-						name: t(`skills.name.${selected}`),
-						pct: Math.round(share[selected] * 100),
-						elo: overall.elo
-					})}
-				</p>
-			{/if}
-			<h4>{t('skills.how')}</h4>
+			<summary>{t('skills.calcTitle')} <ChevronDown size={16} /></summary>
+			<p>{t(`skills.calc.${selected}`)}</p>
 			<p>
-				{viaSafety ? t('skills.viaSafety', { pct: blunderPct }) : t(`skills.howText.${selected}`)}
+				{t('skills.calcSample', {
+					games: v.games,
+					what: t(`skills.sample.${selected}`, { n: v.n }),
+					min: MIN_SAMPLE[selected]
+				})}
 			</p>
-			{#if adv && adv.gain > 0}
-				<p>
-					{t('skills.gain', {
-						name: t(`skills.name.${selected}`),
-						target: adv.target,
-						value: unit(selected, adv.targetValue),
-						gain: adv.gain,
-						points: adv.points.toLocaleString(undefined, { maximumFractionDigits: 1 })
-					})}
-				</p>
-			{/if}
-			{#if v.score === null}
-				<p>
-					{t('skills.needMore', {
-						n: Math.max(1, Math.ceil(v.missing / MEAN_COUNT[selected])),
-						what: t(`skills.sample.${selected}`, { n: MIN_SAMPLE[selected] })
-					})}
-				</p>
-			{/if}
 			<p class="note">{t('skills.note')}</p>
 		</details>
 	</div>
@@ -349,6 +322,18 @@
 		color: var(--text);
 	}
 
+	.d-what {
+		font-size: 0.9rem;
+		color: var(--text-2);
+		line-height: 1.4;
+		margin-top: -0.2rem;
+	}
+
+	.d-need {
+		font-weight: 600;
+		color: var(--text-2);
+	}
+
 	.d-you {
 		font-family: var(--font-num);
 		font-size: 1.25rem;
@@ -460,14 +445,6 @@
 		line-height: 1.45;
 		color: var(--text-2);
 		margin-top: 0.45rem;
-	}
-
-	h4 {
-		font-size: 0.78rem;
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
-		color: var(--text-3);
-		margin-top: 0.7rem;
 	}
 
 	.more .note {

@@ -15,12 +15,11 @@
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import GameListItem from '#lib/ui/GameListItem.svelte';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import Plus from '@lucide/svelte/icons/plus';
 	import CloudDownload from '@lucide/svelte/icons/cloud-download';
 	import PageHeader from '#lib/ui/PageHeader.svelte';
 	import CommentBar from '#lib/ui/CommentBar.svelte';
 	import GraduationCap from '@lucide/svelte/icons/graduation-cap';
-	import BentoGrid from '#lib/ui/bento/BentoGrid.svelte';
-	import StatTile from '#lib/ui/bento/StatTile.svelte';
 	import Board, { type Shape } from '#lib/ui/board/Board.svelte';
 	import EvalBar from '#lib/ui/EvalBar.svelte';
 	import EvalGraph from '#lib/ui/EvalGraph.svelte';
@@ -98,50 +97,34 @@
 	let filter = $state<Filter>('all');
 	const FILTERS: Filter[] = ['all', 'lichess', 'chesscom', 'bot', 'friend', 'mistakes'];
 
-	// ── Übersicht im Stil einer Trainings-App: Form, Höhepunkte, Partien nach Tagen ──
-	const form = $derived(
-		filter === 'all'
-			? games
-					.slice(0, 10)
-					.map((g) => ({ id: g.id!, o: outcomeOf(g) }))
-					.filter((x) => x.o !== null)
-					.reverse()
-			: []
-	);
+	// ── Partien nach Zeitraum: Heute, Gestern, Diese Woche, dann je Monat ──
+	/** „Partie hinzufügen“ offen – ohne Partien immer */
+	let addOpen = $state(false);
+	const addShown = $derived(addOpen || (!loading && gameCount === 0));
 
-	const formScore = $derived(
-		form.length
-			? Math.round(
-					((form.filter((x) => x.o === 'w').length + form.filter((x) => x.o === 'd').length / 2) /
-						form.length) *
-						100
-				)
-			: 0
-	);
-
-	function dayLabel(ms: number): string {
+	function periodOf(ms: number): { key: string; label: string } {
 		const d = new Date(ms);
 		const now = new Date();
 		const startOf = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
 		const diff = Math.round((startOf(now) - startOf(d)) / 86_400_000);
-		if (diff === 0) return t('analysis.today');
-		if (diff === 1) return t('analysis.yesterday');
-		return d.toLocaleDateString(intlLocale(), {
-			day: 'numeric',
-			month: 'short',
+		if (diff <= 0) return { key: 'today', label: t('analysis.today') };
+		if (diff === 1) return { key: 'yesterday', label: t('analysis.yesterday') };
+		if (diff < 7) return { key: 'week', label: t('analysis.thisWeek') };
+		const label = d.toLocaleDateString(intlLocale(), {
+			month: 'long',
 			...(d.getFullYear() === now.getFullYear() ? {} : { year: 'numeric' })
 		});
+		return { key: `${d.getFullYear()}-${d.getMonth()}`, label };
 	}
 
 	const groups = $derived.by(() => {
 		const out: { key: string; label: string; games: GameRow[]; w: number; d: number; l: number }[] =
 			[];
 		for (const g of games) {
-			const d = new Date(g.date);
-			const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+			const p = periodOf(g.date);
 			let grp = out.at(-1);
-			if (!grp || grp.key !== key) {
-				grp = { key, label: dayLabel(g.date), games: [], w: 0, d: 0, l: 0 };
+			if (!grp || grp.key !== p.key) {
+				grp = { ...p, games: [], w: 0, d: 0, l: 0 };
 				out.push(grp);
 			}
 			grp.games.push(g);
@@ -155,25 +138,6 @@
 		void openingsReady;
 		return openingFor(g.moves)?.name ?? null;
 	}
-
-	/** Brillante Züge in den letzten analysierten Partien – als Höhepunkt oben */
-	let brilliant = $state<{ n: number; gameId: number } | null>(null);
-	async function findBrilliant() {
-		const recent = (await db.games.orderBy('date').reverse().limit(60).toArray()).filter(
-			(g) => g.analysis?.done
-		);
-		let n = 0;
-		let first: number | null = null;
-		for (const g of recent.slice(0, 30)) {
-			const r = reviewMoves(g, g.analysis!.evals as PlyEval[]).filter(
-				(x) => x.mover === g.myColor && x.kind === 'brilliant'
-			).length;
-			if (r && first === null) first = g.id!;
-			n += r;
-		}
-		brilliant = n && first !== null ? { n, gameId: first } : null;
-	}
-	onMount(() => void findBrilliant());
 
 	async function loadList() {
 		if (filter === 'all' || filter === 'mistakes') {
@@ -906,67 +870,57 @@
 	/>
 
 	<div class="hub">
-		<!-- ohne Partien ist das Verknüpfen der erste Schritt, sonst erst nach den Kennzahlen -->
-		{#if !loading && gameCount === 0}<LinkedAccounts />{/if}
-		{#if form.length >= 3 || brilliant || mistakeCount > 0}
-			<BentoGrid label={t('analysis.title')} testid="games-bento">
-				{#if form.length >= 3}
-					<StatTile
-						tone="games"
-						size="m"
-						label={t('summary.form')}
-						value={formScore}
-						unit="%"
-						sub={t('summary.formLast', { n: form.length })}
-					>
-						<div
-							class="form-strip"
-							role="img"
-							aria-label={t('analysis.formAria', { n: form.length })}
+		<!-- oben nur zwei Werkzeuge; alles zum Hinzufügen liegt an einem Ort -->
+		<div class="toolbar">
+			<button
+				class="btn"
+				class:secondary={gameCount > 0}
+				aria-expanded={addShown}
+				aria-controls="games-add-panel"
+				data-testid="games-add"
+				onclick={() => (addOpen = !addOpen)}><Plus size={18} /> {t('analysis.add')}</button
+			>
+			<a class="btn secondary" href={resolve('/analysis/board')}
+				><LayoutGrid size={18} /> {t('board2.open')}</a
+			>
+		</div>
+
+		{#if addShown}
+			<section class="add" id="games-add-panel" data-testid="games-add-panel">
+				<LinkedAccounts />
+				<div class="card pgn">
+					<h2>{t('analysis.pastePgn')}</h2>
+					<textarea
+						bind:value={pgnText}
+						rows="5"
+						placeholder="1. e4 e5 2. Nf3 Nc6 3. Bc4 …"
+						aria-label={t('analysis.pastePgn')}
+						spellcheck="false"></textarea>
+					{#if pgnError}<p class="err">{pgnError}</p>{/if}
+					<div class="row-btns">
+						<button class="btn" onclick={importPgn} disabled={!pgnText.trim()}
+							>{t('analysis.analyse')}</button
 						>
-							{#each form as x, i (x.id)}
-								<a
-									class="fs {x.o}"
-									class:newest={i === form.length - 1}
-									href={resolve(`/analysis?game=${x.id}`)}
-									aria-label={t(
-										`analysis.result.${x.o === 'w' ? 'win' : x.o === 'l' ? 'loss' : 'draw'}`
-									)}
-								></a>
-							{/each}
-						</div>
-					</StatTile>
-				{/if}
-				{#if brilliant}
-					<StatTile
-						tone="coach"
-						size={mistakeCount > 0 ? 's' : 'm'}
-						label={t('analysis.brilliantLabel')}
-						value={brilliant.n}
-						sub={t('analysis.brilliantMoves', { n: brilliant.n })}
-						href={resolve(`/analysis?game=${brilliant.gameId}`)}
-					/>
-				{/if}
-				{#if mistakeCount > 0}
-					<StatTile
-						tone="play"
-						size={brilliant ? 's' : 'm'}
-						label={t('analysis.practiceLabel')}
-						value={mistakeCount}
-						sub={t('analysis.hubPracticeText')}
-						href={resolve('/puzzles?mode=mistakes')}
-						aria={t('analysis.hubPractice', { n: mistakeCount })}
-					/>
-				{/if}
-			</BentoGrid>
+						<button class="btn secondary" onclick={pasteFromClipboard}
+							><ClipboardPaste size={18} /> {t('analysis.paste')}</button
+						>
+					</div>
+					<a class="link hit44" href={resolve('/import')}
+						><CloudDownload size={16} /> {t('analysis.importLink')}</a
+					>
+				</div>
+			</section>
 		{/if}
-		{#if !loading && gameCount > 0}<LinkedAccounts collapsed />{/if}
+
+		{#if mistakeCount > 0}
+			<a class="practice" href={resolve('/puzzles?mode=mistakes')} data-testid="games-practice">
+				<Target size={18} />
+				<span>{t('analysis.hubPractice', { n: mistakeCount })}</span>
+				<ChevronRight size={18} />
+			</a>
+		{/if}
+
 		{#if loading || gameCount > 0 || filter !== 'all'}
-			<div class="hub-actions">
-				<a class="btn secondary board-btn" href={resolve('/analysis/board')}
-					><LayoutGrid size={18} /> {t('board2.open')}</a
-				>
-			</div>
 			<nav class="filters" aria-label={t('analysis.games')}>
 				{#each FILTERS as f (f)}
 					<button class="chip" class:on={filter === f} onclick={() => setFilter(f)}
@@ -977,76 +931,46 @@
 		{/if}
 	</div>
 
-	<div class="list-layout">
-		<section class="games">
-			{#if loading}
-				<div class="sk-list" aria-busy="true" aria-label={t('common.loading')}>
-					{#each [0, 1, 2] as i (i)}<div class="skeleton" style:height="64px"></div>{/each}
-				</div>
-			{:else if games.length === 0}
-				<div class="card empty">
-					<h2>{t('analysis.empty')}</h2>
-					<p>{t('analysis.emptyText')}</p>
-					<div class="row-btns">
-						<a class="btn" href={resolve('/play')}>{t('analysis.playGame')}</a>
-						<a class="btn secondary" href={resolve('/import')}
-							><CloudDownload size={18} /> {t('analysis.import')}</a
-						>
-						<a class="btn secondary" href={resolve('/analysis/board')}
-							><LayoutGrid size={18} /> {t('board2.open')}</a
-						>
-					</div>
-				</div>
-			{:else}
-				{#each groups as grp (grp.key)}
-					<div class="day">
-						<h3>{grp.label}</h3>
-						<span class="day-score"
-							>{[
-								grp.w ? t('analysis.dayWins', { n: grp.w }) : '',
-								grp.l ? t('analysis.dayLosses', { n: grp.l }) : '',
-								grp.d ? t('analysis.dayDraws', { n: grp.d }) : ''
-							]
-								.filter(Boolean)
-								.join(' · ')}</span
-						>
-					</div>
-					<ul class="game-list">
-						{#each grp.games as g (g.id)}
-							<li><GameListItem game={g} detailed opening={openingName(g)} /></li>
-						{/each}
-					</ul>
-				{/each}
-				{#if gameCount > games.length}
-					<button class="btn secondary more" onclick={showMore}
-						>{t('analysis.showMore', { n: gameCount - games.length })}</button
-					>
-				{/if}
-			{/if}
-		</section>
-
-		<aside class="card pgn">
-			<h2>{t('analysis.pastePgn')}</h2>
-			<p class="muted">{t('analysis.pasteText')}</p>
-			<textarea
-				bind:value={pgnText}
-				rows="7"
-				placeholder="1. e4 e5 2. Nf3 Nc6 3. Bc4 …"
-				spellcheck="false"></textarea>
-			{#if pgnError}<p class="err">{pgnError}</p>{/if}
-			<div class="row-btns">
-				<button class="btn" onclick={importPgn} disabled={!pgnText.trim()}
-					>{t('analysis.analyse')}</button
-				>
-				<button class="btn secondary" onclick={pasteFromClipboard}
-					><ClipboardPaste size={18} /> {t('analysis.paste')}</button
-				>
+	<section class="games">
+		{#if loading}
+			<div class="sk-list" aria-busy="true" aria-label={t('common.loading')}>
+				{#each [0, 1, 2] as i (i)}<div class="skeleton" style:height="64px"></div>{/each}
 			</div>
-			<a class="link hit44" href={resolve('/import')}
-				><CloudDownload size={16} /> {t('analysis.importLink')}</a
-			>
-		</aside>
-	</div>
+		{:else if games.length === 0}
+			<div class="card empty">
+				<h2>{t('analysis.empty')}</h2>
+				<p>{t('analysis.emptyText')}</p>
+				<div class="row-btns">
+					<a class="btn" href={resolve('/play')}>{t('analysis.playGame')}</a>
+				</div>
+			</div>
+		{:else}
+			{#each groups as grp (grp.key)}
+				<div class="day">
+					<h3>{grp.label}</h3>
+					<span class="day-score"
+						>{[
+							grp.w ? t('analysis.dayWins', { n: grp.w }) : '',
+							grp.d ? t('analysis.dayDraws', { n: grp.d }) : '',
+							grp.l ? t('analysis.dayLosses', { n: grp.l }) : ''
+						]
+							.filter(Boolean)
+							.join(' · ')}</span
+					>
+				</div>
+				<ul class="game-list">
+					{#each grp.games as g (g.id)}
+						<li><GameListItem game={g} detailed opening={openingName(g)} /></li>
+					{/each}
+				</ul>
+			{/each}
+			{#if gameCount > games.length}
+				<button class="btn secondary more" onclick={showMore}
+					>{t('analysis.showMore', { n: gameCount - games.length })}</button
+				>
+			{/if}
+		{/if}
+	</section>
 {:else if !loading && !row}
 	<PageHeader title={t('analysis.notFound')} />
 	<a class="btn" href={resolve('/analysis')}>{t('analysis.toGames')}</a>
@@ -1389,37 +1313,65 @@
 		min-height: 13rem;
 	}
 
+	.hub,
+	.games {
+		max-width: 760px;
+	}
+
 	.hub {
 		display: flex;
 		flex-direction: column;
 		gap: 0.75rem;
-		max-width: 1100px;
 		margin-bottom: 1rem;
 	}
 
-	.form-strip {
-		display: grid;
-		grid-template-columns: repeat(10, minmax(0, 1fr));
-		gap: 4px;
-		margin: 0.6rem 0 0.35rem;
+	.toolbar {
+		display: flex;
+		gap: 0.5rem;
 	}
 
-	.fs {
-		height: 26px;
-		border-radius: 7px;
-		background: color-mix(in srgb, var(--tile-text) 22%, transparent);
+	.toolbar .btn {
+		flex: 1 1 0;
+		min-width: 0;
+		padding-inline: 0.8rem;
+		white-space: nowrap;
 	}
 
-	.fs.w {
-		background: var(--good);
+	.toolbar .btn :global(svg) {
+		flex-shrink: 0;
 	}
 
-	.fs.l {
-		background: color-mix(in srgb, var(--bad) 80%, var(--surface));
+	@media (min-width: 768px) {
+		.toolbar .btn {
+			flex: none;
+		}
 	}
 
-	.fs.newest {
-		box-shadow: inset 0 0 0 2px var(--tile-text);
+	.add {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
+
+	.add .pgn h2 {
+		font-size: 1.05rem;
+	}
+
+	/* eine schmale Zeile statt einer Kachel: eigene Fehler üben */
+	.practice {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+		min-height: 48px;
+		padding: 0.6rem 0.9rem;
+		border-radius: 16px;
+		background: color-mix(in srgb, var(--c-play) 14%, var(--surface));
+		color: var(--text);
+		font-weight: 600;
+	}
+
+	.practice span {
+		flex: 1;
 	}
 
 	.day {
@@ -1445,12 +1397,6 @@
 	.day-score {
 		font-size: 0.8rem;
 		color: var(--text-3);
-	}
-
-	.hub-actions {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.5rem;
 	}
 
 	.filters {
@@ -1499,21 +1445,6 @@
 	/* reserviert Platz, solange die Partien aus IndexedDB laden (kein Layout-Sprung) */
 	.games {
 		min-height: 13rem;
-	}
-
-	.list-layout {
-		display: grid;
-		/* minmax(0, …): lange Eröffnungsnamen dürfen die Spalte nicht aufblähen */
-		grid-template-columns: minmax(0, 1fr);
-		gap: 1rem;
-		max-width: 1100px;
-	}
-
-	@media (min-width: 1000px) {
-		.list-layout {
-			grid-template-columns: minmax(0, 1fr) 340px;
-			align-items: start;
-		}
 	}
 
 	.games {

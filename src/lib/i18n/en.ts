@@ -379,7 +379,7 @@ export const en = {
 	analysis: {
 		eyebrow: 'Analysis',
 		title: 'My games',
-		subtitle: 'Every game is analysed by Stockfish – with explanations in plain language.',
+		subtitle: 'Every game analysed by Stockfish and explained simply.',
 		empty: 'No games yet',
 		emptyText: 'Play a bot, import your online games or paste a PGN.',
 		playGame: 'Play a game',
@@ -404,6 +404,8 @@ export const en = {
 			friend: 'Friends',
 			mistakes: 'With mistakes'
 		},
+		add: 'Add a game',
+		thisWeek: 'This week',
 		today: 'Today',
 		yesterday: 'Yesterday',
 		brilliantLabel: 'Brilliant',
@@ -1289,7 +1291,7 @@ export const en = {
 	},
 	skills: {
 		title: 'Your skill penta',
-		subtitle: '100 = world elite · tap a corner',
+		subtitle: '100 = world elite',
 		text: (p: P) => `From your last ${p.n} analysed games.`,
 		overall: 'Overall',
 		overallTitle:
@@ -1311,6 +1313,21 @@ export const en = {
 			endgame: 'Basic endgames against the tablebase.'
 		},
 		overallFrom: (p: P) => `from games ≈ ${p.elo}`,
+		calcTitle: 'How it is calculated',
+		calcSample: (p: P) =>
+			`From your last ${p.games} analysed games: ${p.what} (shown from ${p.min}).`,
+		calc: {
+			safety:
+				'Blunder = a move that costs at least 30 percentage points of winning chance (Stockfish). Counted per 30 of your moves – only while the game is still open.',
+			tactics:
+				'Whenever your opponent makes a mistake (at least 20 percentage points), Rookie checks whether your reply punishes it right away.',
+			opening:
+				'Accuracy of your moves until the pieces are developed – only in open positions (15–85 % winning chance).',
+			strategy:
+				'Accuracy of your quiet middlegame moves in open positions – blunders don’t count here, safety measures those.',
+			endgame:
+				'Accuracy once at most six pieces (not counting pawns and kings) are left – only in open positions.'
+		},
 		legendMissing: '– = not enough games yet',
 		viaSafety: (p: P) =>
 			`${p.pct} % of what you lose here are blunders. Without blunders, Lichess players from 400 to 1800 play this phase almost equally well – so your lever is the blunder check, not more theory.`,
@@ -1326,12 +1343,11 @@ export const en = {
 			endgame: 'Endgame'
 		},
 		what: {
-			safety:
-				'How rarely you blunder in positions that are still open (a piece or the game lost in one move).',
+			safety: 'How rarely you throw away a piece or the game with one move.',
 			tactics: 'How often you punish your opponent’s mistake right away.',
 			opening: 'How accurately you play the first moves until your pieces are developed.',
 			strategy:
-				'How accurate your quiet middlegame moves are – blunders not counted: plans, piece placement, small advantages.',
+				'How good your quiet middlegame moves are: plans, piece placement, small advantages.',
 			endgame: 'How accurately you play when only a few pieces are left.'
 		},
 		unit: {
@@ -1393,7 +1409,7 @@ export const en = {
 		},
 		gain: (p: P) =>
 			`Bring ${p.name} up to the level of ≈ ${p.target} (${p.value}) and you lose ≈ ${p.points} percentage points less winning chance per game – that is about +${p.gain} Elo.`,
-		note: 'Elo equivalent: calibrated on 1,560 Lichess games (rapid/classical, 400–3200) at the same engine depth as Rookie. Elo effect: 1 percentage point less winning chance lost per game ≈ 11 Elo (same data). Checked on 139 Lichess players outside the calibration: overall level within ±230 Elo on average from about 12 games. A relationship, not a guarantee.',
+		note: 'Compared with 1,560 Lichess games (400–3200), checked on 139 other players: within ±230 Elo on average from about 12 games. A relationship, not a guarantee.',
 		needData: (p: P) =>
 			`Your profile needs at least 3 analysed games (${p.n} so far). Open a game under Games to analyse it.`,
 		coverage: (p: P) => `${p.n} of ${p.m} ${s(p.m, 'game', 'games')} analysed`,

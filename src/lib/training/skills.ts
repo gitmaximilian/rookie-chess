@@ -194,6 +194,11 @@ export const BLUNDER_SHARE = 0.5;
 
 /** so viele jüngste analysierte Partien fließen ein */
 export const WINDOW = 30;
+/**
+ * Reicht das für eine Ecke nicht (Stellungsspiel um 1000: nur ~3 ruhige Mittelspielzüge je Partie, Endspiel
+ * ~2 – Holdout-Daten), nimmt diese Ecke ältere Partien dazu, bis zu so vielen.
+ */
+export const WINDOW_MAX = 100;
 
 // ───────── Rohdaten aus eigenen Partien ─────────
 
@@ -216,6 +221,8 @@ export type SkillRaw = Record<Skill, SkillSample> & {
 	 * schwache Werte dort sind meist eingestellte Figuren, und dagegen hilft der Blunder-Check, kein Kurs.
 	 */
 	blunderShare: { opening: number | null; endgame: number | null };
+	/** aus wie vielen Partien jede Ecke stammt (Standard: games; mehr, wenn das Fenster erweitert wurde) */
+	windowGames?: Partial<Record<Skill, number>>;
 };
 
 /** Gewinnchance (0..1) aus Sicht von `side` */
@@ -344,6 +351,25 @@ export function collectSkills(games: GameRow[], window = WINDOW): SkillRaw {
 	};
 }
 
+/**
+ * Wie collectSkills, aber Ecken mit zu wenig Daten in den letzten WINDOW Partien greifen auf bis zu
+ * WINDOW_MAX Partien zurück – sonst bleibt z. B. Stellungsspiel bei Einsteigern trotz vieler Partien leer.
+ */
+export function collectSkillsAdaptive(games: GameRow[]): SkillRaw {
+	const raw = collectSkills(games, WINDOW);
+	const short = SKILLS.filter((k) => raw[k].n < MIN_SAMPLE[k]);
+	if (!short.length || raw.games < WINDOW) return raw;
+	const wide = collectSkills(games, WINDOW_MAX);
+	if (wide.games <= raw.games) return raw;
+	const out: SkillRaw = { ...raw, windowGames: {}, blunderShare: { ...raw.blunderShare } };
+	for (const k of short) {
+		out[k] = wide[k];
+		out.windowGames![k] = wide.games;
+		if (k === 'opening' || k === 'endgame') out.blunderShare[k] = wide.blunderShare[k];
+	}
+	return out;
+}
+
 function add(x: number[], l: number) {
 	x[0] += l;
 	x[1]++;
@@ -409,11 +435,14 @@ export interface SkillValue {
 	/** Stichprobe und was bis zur Mindestmenge fehlt */
 	n: number;
 	missing: number;
+	/** aus so vielen Partien */
+	games: number;
 }
 
 export function skillMirror(raw: SkillRaw, table = SKILL_TABLE): SkillValue[] {
 	return SKILLS.map((skill) => {
 		const s = raw[skill];
+		const games = raw.windowGames?.[skill] ?? raw.games;
 		const missing = Math.max(0, MIN_SAMPLE[skill] - s.n);
 		if (s.value === null || missing > 0 || !table.length)
 			return {
@@ -424,7 +453,8 @@ export function skillMirror(raw: SkillRaw, table = SKILL_TABLE): SkillValue[] {
 				high: null,
 				value: s.value,
 				n: s.n,
-				missing
+				missing,
+				games
 			};
 		const elo = eloFor(skill, s.value, table);
 		// Standardfehler aus der Streuung zwischen den Partien
@@ -444,7 +474,8 @@ export function skillMirror(raw: SkillRaw, table = SKILL_TABLE): SkillValue[] {
 			high: r25(Math.max(e1, e2)),
 			value: s.value,
 			n: s.n,
-			missing: 0
+			missing: 0,
+			games
 		};
 	});
 }
@@ -552,7 +583,7 @@ export function adviceFor(values: SkillValue[], raw: SkillRaw, table = SKILL_TAB
 
 /** Gesamtniveau aus den eigenen Partien – für die Spielstärke (lib/training/strength.ts) */
 export function gameLevel(games: GameRow[]): { elo: number; games: number } | null {
-	const raw = collectSkills(games);
+	const raw = collectSkillsAdaptive(games);
 	const all = overallLevel(skillMirror(raw));
 	return all ? { elo: all.elo, games: raw.games } : null;
 }

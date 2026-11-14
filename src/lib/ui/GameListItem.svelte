@@ -10,8 +10,8 @@
 	import { t, intlLocale } from '#lib/i18n/i18n.svelte.js';
 
 	/**
-	 * Eine Partie als Zeile – kompakt (Home) oder ausführlich (Partienliste, nach Tagen gruppiert:
-	 * dann ohne Datum, dafür mit Farbe, Bedenkzeit, Zügen und Eröffnung).
+	 * Eine Partie als Zeile – kompakt (Home) oder ausführlich (Partienliste, nach Zeitraum gruppiert:
+	 * dann ohne Datum, dafür mit Farbe, Bedenkzeit und Eröffnung – die Zugzahl hat die Zeile gesprengt).
 	 */
 	let {
 		game,
@@ -64,8 +64,6 @@
 				{#if SpeedIcon && game.speed}<span class="sp"
 						><SpeedIcon size={13} />{speedName(game.speed)}</span
 					>{:else}<span>{t(`analysis.source.${game.source}`)}</span>{/if}
-				<span class="dot" aria-hidden="true">·</span>
-				<span>{t('common.moves', { n: Math.ceil(game.moves.length / 2) })}</span>
 			</span>
 			{#if opening}<span class="op"><BookOpen size={12} /> {opening}</span>{/if}
 		{:else}
