@@ -25,6 +25,7 @@ for (const [w, h] of [
 					.map((i) => i.src),
 				status: document.querySelector('[data-copy="cardStatusRookie"]')?.textContent ?? null,
 				rk4: document.querySelector('[data-copy="rkP4"]')?.textContent?.slice(0, 50) ?? null,
+				rk5: document.querySelector('[data-copy="rkP5"]')?.textContent?.slice(0, 50) ?? null,
 				overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth
 			}));
 			if (r.broken.length || r.overflow) bad++;

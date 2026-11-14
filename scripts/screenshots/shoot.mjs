@@ -5,6 +5,7 @@
  *   npm run build && npm run preview -- --port 4173 &
  *   node scripts/screenshots/shoot.mjs <ausgabeordner> [--lang=en|de] [--sizes=393x659,...]
  *        [--routes=/,/coach] [--themes=light,dark] [--scale=1] [--base=http://localhost:4173]
+ *        [--scrollto=<css>] [--press=N] [--click=Text;…] [--names=a,b] [--full=1]
  *
  * Gibt am Ende alle Seiten mit Überlauf aus (scrollWidth > clientWidth) und beendet sich dann mit Code 1.
  */
@@ -163,6 +164,14 @@ for (const theme of themes) {
 			if (args.press && r.includes('game=')) {
 				for (let k = 0; k < Number(args.press); k++) await page.keyboard.press('ArrowRight');
 				await page.waitForTimeout(800);
+			}
+			// --scrollto=CSS-Selektor: Element knapp unter den oberen Rand scrollen (z. B. für Website-Bilder)
+			if (args.scrollto) {
+				await page.evaluate((sel) => {
+					const el = document.querySelector(sel);
+					if (el) window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 24);
+				}, args.scrollto);
+				await page.waitForTimeout(600);
 			}
 			const o = await page.evaluate(() => ({
 				sw: document.documentElement.scrollWidth,

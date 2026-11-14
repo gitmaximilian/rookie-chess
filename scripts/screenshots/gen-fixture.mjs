@@ -11,7 +11,7 @@ import { spawn } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import { Chess } from 'chessops/chess';
 import { parseFen, makeFen, INITIAL_FEN } from 'chessops/fen';
-import { parseUci } from 'chessops/util';
+import { makeUci, parseUci, squareRank } from 'chessops/util';
 import { makeSan } from 'chessops/san';
 
 const OUT = new URL('./fixture.json', import.meta.url);
@@ -106,7 +106,20 @@ async function playGame(eng, i) {
 		const s = turn === myColor ? skill : 0.6;
 		let pick = r < s ? 0 : r < s + 0.22 ? 1 : r < 0.96 ? 2 : 3;
 		pick = Math.min(pick, lines.length - 1);
-		const uci = lines[pick].pv[0];
+		let uci = lines[pick].pv[0];
+		// Echte Patzer wie bei ~900 (Lichess-Studie: ~3–4 Blunder je 30 Züge): manchmal ein beliebiger
+		// legaler Zug statt einer Engine-Wahl; späte Partien etwas seltener (Fortschritt)
+		const pBlunder = turn === myColor ? 0.22 - (i / 32) * 0.06 : 0.2;
+		if (ply > 4 && rnd() < pBlunder) {
+			const legal = [];
+			for (const [from, dests] of pos.allDests())
+				for (const to of dests) {
+					const pawn = pos.board.get(from)?.role === 'pawn';
+					const last = squareRank(to) === 0 || squareRank(to) === 7;
+					legal.push(makeUci({ from, to, promotion: pawn && last ? 'queen' : undefined }));
+				}
+			uci = legal[Math.floor(rnd() * legal.length)];
+		}
 		const move = parseUci(uci);
 		sans.push(makeSan(pos, move));
 		pos.play(move);
