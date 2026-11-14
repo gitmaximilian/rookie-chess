@@ -327,14 +327,15 @@ export const BASICS: BasicLesson[] = [
 			{
 				kind: 'find',
 				text: N(
-					'You are in check. Block it with your knight!',
-					'Du stehst im Schach. Zieh mit dem Springer dazwischen!'
+					'You are in check. Block it with your knight – on a square where the knight is protected!',
+					'Du stehst im Schach. Zieh mit dem Springer dazwischen – auf ein Feld, auf dem er gedeckt ist!'
 				),
 				fen: '4k3/8/8/8/8/2N5/5PPP/r3K3 w - - 0 1',
-				accept: ['c3b1', 'c3d1'],
+				// ♘b1 blockt auch, aber dort schlägt der Turm den Springer einfach
+				accept: ['c3d1'],
 				done: N(
-					'Blocked – the king is safe again.',
-					'Dazwischengezogen – der König ist wieder sicher.'
+					'Blocked – and the king protects the knight. On b1 the rook would simply take it.',
+					'Dazwischengezogen – und der König deckt den Springer. Auf b1 würde der Turm ihn einfach schlagen.'
 				)
 			},
 			{

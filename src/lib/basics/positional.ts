@@ -163,8 +163,8 @@ export const POSITIONAL: BasicLesson[] = [
 			{
 				kind: 'find',
 				text: N(
-					'White has just taken on d5. How do you recapture?',
-					'Weiß hat gerade auf d5 geschlagen. Wie schlägst du zurück?'
+					'White has just taken on d5. Recapture so that you keep a pawn in the centre!',
+					'Weiß hat gerade auf d5 geschlagen. Schlag so zurück, dass du einen Bauern im Zentrum behältst!'
 				),
 				fen: 'rnbqkb1r/ppp2ppp/4pn2/3P4/3P4/2N5/PP2PPPP/R1BQKBNR b KQkq - 0 4',
 				accept: ['e6d5'],

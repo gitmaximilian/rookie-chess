@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BASICS, TACTICS, soloDests, soloFen } from './lessons';
+import { BASICS, POSITIONAL, TACTICS, soloDests, soloFen } from './lessons';
 import { Game } from '#lib/chess/game.js';
 
 describe('Grundlagen-Lektionen', () => {
@@ -39,6 +39,30 @@ describe('Grundlagen-Lektionen', () => {
 				}
 			}
 		});
+
+	// Eine Lösung darf die gezogene Figur nicht einfach einstellen (Fund aus dem Review 14.11.2026:
+	// „Dazwischenziehen“ akzeptierte ♘b1, wo der Turm den Springer schlägt)
+	it('keine akzeptierte Lösung stellt die gezogene Figur ungedeckt ein', () => {
+		const loose: string[] = [];
+		for (const l of [...BASICS, ...TACTICS, ...POSITIONAL])
+			for (const s of l.steps) {
+				if (s.kind !== 'find' || !Array.isArray(s.accept)) continue;
+				for (const u of s.accept) {
+					const t = new Game(s.fen);
+					const dest = u.slice(2, 4);
+					// Schlagzüge sind Tausch, kein Einstellen
+					if (t.pieceAt(dest)) continue;
+					t.play(u);
+					if (t.end()) continue;
+					for (const c of t.legalUcis().filter((x) => x.slice(2, 4) === dest)) {
+						const t2 = new Game(t.fen);
+						t2.play(c);
+						if (!t2.legalUcis().some((x) => x.slice(2, 4) === dest)) loose.push(`${l.id} ${u}`);
+					}
+				}
+			}
+		expect(loose).toEqual([]);
+	});
 
 	it('Taktik: jede Lektion hat ein echtes Puzzle-Thema', () => {
 		for (const l of TACTICS) expect(l.theme).toBeTruthy();

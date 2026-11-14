@@ -241,8 +241,10 @@
 					<span class="it-text">
 						<b>{loc(l.title)}</b>
 						<span
-							>{#if l.id === nextId}<em class="up">{t('basics.upNext')}</em> ·
-							{/if}{t('basics.steps', { n: l.steps.length })}</span
+							>{#if l.id === nextId}<em class="up">{t('basics.upNext')}</em>&nbsp;·&nbsp;{/if}{t(
+								'basics.steps',
+								{ n: l.steps.length }
+							)}</span
 						>
 					</span>
 					<ArrowRight size={18} />

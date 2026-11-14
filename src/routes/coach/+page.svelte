@@ -364,8 +364,12 @@
 			<div>
 				<b class="who-name">{d.name || t('coachTab.you')}</b>
 				<span class="muted num-line">
-					{t('coachTab.gamesCount', { n: d.games })}{#if d.strength}
-						· {t('coachTab.strength', { n: d.strength })}{/if}
+					{t('coachTab.gamesCount', { n: d.games })}{#if d.strength}&nbsp;· {t(
+							'coachTab.strength',
+							{
+								n: d.strength
+							}
+						)}{/if}
 				</span>
 			</div>
 		</div>

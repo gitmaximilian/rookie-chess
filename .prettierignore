@@ -7,3 +7,6 @@ bun.lockb
 
 # Miscellaneous
 /static/
+
+# erzeugte Testdaten (scripts/screenshots/gen-fixture.mjs)
+scripts/screenshots/fixture.json

@@ -26,7 +26,10 @@ const S = (fen: string, ...shapes: TheoryStep['shapes']): TheoryStep => ({
 	shapes
 });
 
-/** Alle Startstellungen sind mit der Lichess-Tablebase geprüft (scripts/check-endgames). */
+/**
+ * Alle Startstellungen sind geprüft: Ergebnis laut Lichess-Tablebase bzw. Stockfish (Tiefe 18) passt zum Ziel
+ * (zuletzt im Produkt-Review vom 14.11.2026, docs/product-review-2026-11-14.md).
+ */
 export const LESSONS: Lesson[] = [
 	{
 		id: 'kqk',

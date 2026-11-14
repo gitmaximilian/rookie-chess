@@ -9,7 +9,7 @@ test('Stellungsspiel: Lektion mit Schwarz am Zug lösen (zum Zentrum zurückschl
 	await page.getByRole('button', { name: /Next/ }).locator('visible=true').first().click();
 	await expect(
 		page
-			.getByText(/How do you recapture\?/)
+			.getByText(/keep a pawn in the centre!/)
 			.locator('visible=true')
 			.first()
 	).toBeVisible();

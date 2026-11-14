@@ -410,7 +410,8 @@ html[data-first-run] .sidebar {
 	grid-column: 1 / -1;
 }
 
-@media (min-width: 700px) {
+/* 4 Spalten erst, wenn neben der Seitenleiste (ab 768 px) genug Platz ist – sonst ~110 px je Kachel */
+@media (min-width: 700px) and (max-width: 767px), (min-width: 1000px) {
 	.bento {
 		grid-template-columns: repeat(4, minmax(0, 1fr));
 	}
