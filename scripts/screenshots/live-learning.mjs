@@ -21,7 +21,7 @@ const res = {};
 await p.goto(base + '/', { waitUntil: 'networkidle' });
 await p.waitForTimeout(1500);
 res.version = await p.evaluate(() => document.body.innerText.match(/0\.4\.\d/)?.[0] ?? null);
-res.planSafety = await p.getByText(/Blunder check: 6 moves/).count();
+res.planSafety = await p.getByText(/Blunder check: \d+ moves/).count();
 res.homeOverflow = await overflow();
 await p.screenshot({ path: `${out}/home.png` });
 await p.goto(base + '/puzzles/safety', { waitUntil: 'networkidle' });
