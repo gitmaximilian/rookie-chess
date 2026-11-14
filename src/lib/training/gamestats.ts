@@ -4,6 +4,7 @@ import { accuracy, type PlyEval } from '#lib/analysis/classify.js';
 import { reviewMoves } from '#lib/analysis/run.js';
 import type { Explanation } from '#lib/analysis/explain.js';
 import { ratingSeriesFrom, type RatingSeries } from '#lib/import/ratings.js';
+import { blundersPer30, conversion } from './blunders.js';
 
 export type Outcome = 'w' | 'd' | 'l';
 
@@ -69,8 +70,10 @@ export interface GameStats {
 	accuracyPrevious: number | null;
 	phaseAccuracy: Record<Phase, number | null>;
 	perGame: { blunders: number; mistakes: number; inaccuracies: number };
-	/** Patzer je 30 eigene Züge – unabhängig von der Partielänge */
+	/** Patzer je 30 eigene Züge in offener Stellung – unabhängig von der Partielänge */
 	blundersPer30: number | null;
+	/** Gewinnstellungen (≥ 85 %), die du auch gewonnen hast */
+	conversion: { won: number; of: number; pct: number } | null;
 	/** Fehler des Gegners (Fehler/Patzer) und wie oft du sie sofort bestraft hast */
 	chances: { taken: number; total: number };
 	motifs: { motif: Motif; n: number }[];
@@ -202,14 +205,12 @@ export function computeStats(
 		middlegame: new Set(),
 		endgame: new Set()
 	};
-	let ownMoves = 0;
 	const chances = { taken: 0, total: 0 };
 	for (const [gi, g] of analysed.entries()) {
 		const all = reviewMoves(g, g.analysis!.evals as PlyEval[]);
 		const reviews = all.filter((r) => r.mover === g.myColor);
 		if (!reviews.length) continue;
 		gameAcc.push(accuracy(reviews.map((r) => r.loss)));
-		ownMoves += reviews.length;
 		// Phase nach Material der Stellung vor dem Zug
 		let phases: Phase[] | null = null;
 		try {
@@ -268,7 +269,9 @@ export function computeStats(
 			middlegame: phaseValue('middlegame'),
 			endgame: phaseValue('endgame')
 		},
-		blundersPer30: ownMoves >= 30 ? Math.round((counts.blunders / ownMoves) * 300) / 10 : null,
+		// dieselbe Patzer-Zahl wie Fortschrittskarte und Penta (lib/training/blunders.ts)
+		blundersPer30: blundersPer30(analysed),
+		conversion: conversion(analysed),
 		chances,
 		perGame: {
 			blunders: Math.round((counts.blunders / nA) * 10) / 10,

@@ -8,7 +8,6 @@
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import Play from '@lucide/svelte/icons/play';
 	import Square from '@lucide/svelte/icons/square';
-	import ChartLine from '@lucide/svelte/icons/chart-line';
 	import ChessKnight from '@lucide/svelte/icons/chess-knight';
 	import PageHeader from '#lib/ui/PageHeader.svelte';
 	import BentoGrid from '#lib/ui/bento/BentoGrid.svelte';
@@ -187,27 +186,8 @@
 		// das Puzzle-Thema nur zusätzlich, wenn es nicht schon der Schwerpunkt ist
 		if (weakTheme && focus?.source === 'games' && weakTheme.theme !== focus.theme)
 			advice.push(themeAdvice(weakTheme.theme, weakTheme.rate));
-		const phases = (Object.entries(stats.phaseAccuracy) as [string, number | null][]).filter(
-			(e): e is [string, number] => e[1] !== null
-		);
-		if (phases.length >= 2) {
-			const [weak] = [...phases].sort((a, b) => a[1] - b[1]);
-			const [strong] = [...phases].sort((a, b) => b[1] - a[1]);
-			if (strong[1] - weak[1] >= 5)
-				advice.push({
-					icon: ChartLine,
-					title: t('coachTab.adv.phaseTitle', { phase: t(`stats.phase.${weak[0]}`), acc: weak[1] }),
-					text: t(`coachTab.adv.phase.${weak[0]}`),
-					href:
-						weak[0] === 'opening'
-							? resolve('/learn/openings')
-							: weak[0] === 'endgame'
-								? resolve('/learn')
-								: resolve('/puzzles'),
-					cta: t('coachTab.adv.train'),
-					c: 'var(--c-learn)'
-				});
-		}
+		// kein Phasen-Rat mehr („Mittelspiel: nur 79 %“): das Skill-Penta misst die Phasen genauer und
+		// widersprach ihm sonst (Produkt-Review 14.11.2026)
 		if (!games.length)
 			advice.push({
 				icon: ChessKnight,
@@ -423,12 +403,17 @@
 				sub={t('coachTab.last10')}
 				spark={d.accuracy.map((a) => a.accuracy)}
 			/>
+			<!-- Verwerten: die greifbarste Zahl hinter „Sicherheit“ (Lichess bis 1400: ≈ 69 %) -->
 			<StatTile
 				tone="neutral"
-				label={t('coachTab.blunders')}
-				value={d.stats.analysed ? d.stats.perGame.blunders.toFixed(1) : '–'}
-				muted={!d.stats.analysed}
-				sub={t('coachTab.perGame')}
+				label={t('coachTab.converted')}
+				value={d.stats.conversion ? d.stats.conversion.pct : '–'}
+				unit={d.stats.conversion ? '%' : ''}
+				muted={!d.stats.conversion}
+				sub={d.stats.conversion
+					? t('coachTab.convertedSub', { n: d.stats.conversion.won, m: d.stats.conversion.of })
+					: t('coachTab.convertedNone')}
+				testid="tile-converted"
 			/>
 			<StatTile
 				tone="puzzle"

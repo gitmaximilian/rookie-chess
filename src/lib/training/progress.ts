@@ -10,8 +10,7 @@
  * Reine Funktionen – testbar ohne Datenbank.
  */
 import type { GameRow } from '#lib/db/db.js';
-import type { PlyEval } from '#lib/analysis/classify.js';
-import { reviewMoves } from '#lib/analysis/run.js';
+import { gameSafety } from './blunders.js';
 
 export interface GameBlunders {
 	date: number;
@@ -25,20 +24,16 @@ export const MIN_OWN_MOVES = 10;
 /** Partien je Zeitraum für einen Vergleich */
 export const MIN_WINDOW = 10;
 
-/** Patzer je 30 eigene Züge für jede fertig analysierte Partie, älteste zuerst */
+/**
+ * Patzer je 30 eigene Züge in offener Stellung für jede fertig analysierte Partie, älteste zuerst –
+ * dieselbe Definition wie die Penta-Ecke Sicherheit (lib/training/blunders.ts).
+ */
 export function blunderSeries(games: GameRow[]): GameBlunders[] {
 	const out: GameBlunders[] = [];
 	for (const g of [...games].sort((a, b) => a.date - b.date)) {
-		if (!g.analysis?.done) continue;
-		let reviews;
-		try {
-			reviews = reviewMoves(g, g.analysis.evals as PlyEval[]).filter((r) => r.mover === g.myColor);
-		} catch {
-			continue;
-		}
-		if (reviews.length < MIN_OWN_MOVES) continue;
-		const blunders = reviews.filter((r) => r.judgement === 'blunder').length;
-		out.push({ date: g.date, per30: (blunders / reviews.length) * 30, ownMoves: reviews.length });
+		const s = gameSafety(g);
+		if (!s || s.live < MIN_OWN_MOVES) continue;
+		out.push({ date: g.date, per30: (s.blunders / s.live) * 30, ownMoves: s.live });
 	}
 	return out;
 }

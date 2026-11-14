@@ -94,7 +94,6 @@
 <section class="progress" data-testid={testid} aria-busy={!ready}>
 	<div class="p-head">
 		<h2>{t('progress.title')}</h2>
-		<p class="muted">{t('progress.text')}</p>
 	</div>
 	<BentoGrid label={t('progress.title')}>
 		<StatTile
@@ -160,10 +159,5 @@
 
 	.p-head h2 {
 		font-size: 1.25rem;
-	}
-
-	.p-head p {
-		font-size: 0.9rem;
-		max-width: 60ch;
 	}
 </style>

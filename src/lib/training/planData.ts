@@ -24,7 +24,11 @@ interface StoredPlan extends DailyPlan {
 
 /** Blunder-Check gehört in den Plan: unter 1400 oder solange noch oft gepatzt wird */
 export const SAFETY_UNTIL = 1400;
-export const SAFETY_BLUNDERS_PER_30 = 1.5;
+/**
+ * „noch oft“: so viele Patzer je 30 Züge in offener Stellung wie Lichess-Spieler um 1400 (≈ 2,9) oder mehr.
+ * Seit v0.7 dieselbe Definition wie Penta und Fortschrittskarte (vorher 1,5 nach der alten, weicheren Zählung).
+ */
+export const SAFETY_BLUNDERS_PER_30 = 3;
 /** erster Kontrolltest, sobald man das Format kennt (so viele Blunder-Checks) */
 export const CHECKUP_AFTER = 6;
 
