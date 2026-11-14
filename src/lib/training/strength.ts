@@ -19,7 +19,9 @@ export interface Strength {
  * Grobe Schätzung der Spielstärke aus allem, was Rookie weiß.
  * - Puzzle-Wertungen liegen erfahrungsgemäß deutlich über der Partie-Stärke (−200)
  * - Lichess-Wertungen liegen über Chess.com/FIDE-ähnlichen Werten (−150)
- * - ein besiegter Bot zeigt eine Untergrenze
+ * - ein besiegter Bot ist nur ein schwaches Indiz: Die Bot-Stärken sind Schätzungen; gemessen
+ *   (scripts/research/bot-ladder.mjs, bot-human.mjs) weichen die Abstände untereinander deutlich von
+ *   den Angaben ab, und Bots patzen anders als Menschen. Deshalb kleines Gewicht und keine Untergrenze.
  */
 export function estimateStrength(input: StrengthInput): Strength | null {
 	const parts: { v: number; w: number }[] = [];
@@ -32,11 +34,10 @@ export function estimateStrength(input: StrengthInput): Strength | null {
 		parts.push({ v, w: 1.5 });
 	}
 	const best = input.botsBeaten?.length ? Math.max(...input.botsBeaten) : null;
-	if (best !== null) parts.push({ v: best + 50, w: 0.6 });
+	if (best !== null) parts.push({ v: best, w: 0.3 });
 	if (!parts.length) return null;
 	const total = parts.reduce((s, p) => s + p.w, 0);
-	let value = parts.reduce((s, p) => s + p.v * p.w, 0) / total;
-	if (best !== null) value = Math.max(value, best);
+	const value = parts.reduce((s, p) => s + p.v * p.w, 0) / total;
 	return {
 		value: Math.max(100, Math.round(value / 25) * 25),
 		confidence: Math.min(1, total / 2.5)

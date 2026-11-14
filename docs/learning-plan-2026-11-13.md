@@ -113,7 +113,7 @@ Version 0.4.0, README (Features, neue Screenshots: Blunder-Check, Coach mit Fort
 - **Woodpecker-Zyklen** (fester Satz, immer schneller): Beleglage schwach (Einzelfall), und verkürzte Abstände widersprechen der verteilten Wiederholung. Rookie wiederholt stattdessen die _verfehlten_ Aufgaben mit wachsenden Abständen.
 - ~~Selbstanalyse vor der Engine~~ – umgesetzt in Etappe 5 (v0.5.0).
 - **Lektionen zu Abruf-Übungen umbauen**: lohnt bei Taktik-Lektionen, aber die Taktik wird ohnehin über gemischte Puzzles und den Blunder-Check geübt. Nächste Runde.
-- **Bot-Elo kalibrieren** (Turniere der Bots gegen Referenzgegner): nötig für eine belastbare „Spielstärke“, aber unter 1320 gibt es in Stockfish keine Referenz (`UCI_Elo`); bräuchte menschliche Daten. Bis dahin zählen Siege nur ohne Hilfe, und die Fortschrittsmessung stützt sich auf Patzer statt auf Elo.
+- **Bot-Elo kalibrieren**: gemessen in v0.5.1 (Recherche, Nachtrag) – die Angaben stimmen nicht, ein richtiger Wert braucht menschliche Partien. Bis dahin zählt ein Bot-Sieg nur schwach für die Spielstärke-Schätzung.
 - **Sterne abschaffen**: Sie stören wenig, wenn sie nicht als Fortschritt verkauft werden. Die neue Karte stellt klar, was Fleiß und was Können misst. Sterne für Lektionen erst bei Aufgaben-Erfolg zu vergeben, wäre konsequent – niedrige Priorität.
 - **Visualisierung/Blindschach-Übungen**: für Einsteiger keine Belege; bindet Zeit, die der Blunder-Check besser nutzt.
 - **Push-Erinnerungen**: brauchen einen Server-Absender; Gewohnheit entsteht auch über den Tagesplan (Lally et al. 2010: ein verpasster Tag schadet nicht).

@@ -118,7 +118,10 @@ describe('Spielstärke', () => {
 			puzzle: { rating: 1100, rd: 80, vol: 0.06 },
 			botsBeaten: [1150]
 		})!;
-		expect(withBot.value).toBeGreaterThanOrEqual(1150);
+		// ein besiegter Bot hebt die Schätzung etwas, setzt aber keine Untergrenze (Bot-Stärken sind Schätzungen)
+		expect(withBot.value).toBeGreaterThan(900);
+		expect(withBot.value).toBeLessThan(1150);
+		expect(estimateStrength({ botsBeaten: [1650] })!.confidence).toBeLessThan(0.2);
 		const online = estimateStrength({ online: { rating: 1400, source: 'lichess' } })!;
 		expect(online.value).toBe(1250);
 	});
