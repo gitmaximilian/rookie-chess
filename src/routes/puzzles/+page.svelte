@@ -1033,10 +1033,41 @@
 	}
 	/* Handy: Brett so groß, dass es neben der Aktionsleiste ganz sichtbar bleibt */
 	@media (max-width: 767px) {
+		/* kompakte Kopfzeile: jede Zeile hier fehlt dem Brett */
+		.top {
+			margin: 0 0 0.5rem;
+			align-items: center;
+		}
+		.top .eyebrow {
+			display: none;
+		}
+		h1 {
+			font-size: 1.7rem;
+		}
+		.rating {
+			padding: 0.2rem 0.7rem;
+			min-width: 0;
+			border-radius: 14px;
+		}
+		.r-val {
+			font-size: 1.15rem;
+		}
+		.mini {
+			border-radius: 14px;
+			font-size: 1rem;
+		}
+		.modes {
+			padding-bottom: 0.4rem;
+			margin-bottom: 0.25rem;
+		}
 		.board-col {
+			/* über dem Auslauf-Verlauf (body::after, z 39), aber unter der Aktionsleiste (z 45):
+			   sonst verschwindet die unterste Brettreihe im Verlauf */
+			position: relative;
+			z-index: 40;
 			max-width: min(
 				100%,
-				calc(100svh - var(--dock-h) - var(--tabbar-space) - var(--safe-top) - 190px)
+				calc(100svh - var(--dock-h) - var(--tabbar-space) - var(--safe-top) - 118px)
 			);
 		}
 		/* Aufgabe und Rückmeldung stehen über dem Brett (feste Höhe) */
@@ -1044,7 +1075,7 @@
 			max-width: min(
 				100%,
 				calc(
-					100svh - var(--dock-h) - var(--tabbar-space) - var(--safe-top) - 190px -
+					100svh - var(--dock-h) - var(--tabbar-space) - var(--safe-top) - 118px -
 						var(--comment-h) - 0.5rem
 				)
 			);

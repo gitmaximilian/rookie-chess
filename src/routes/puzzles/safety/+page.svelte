@@ -638,16 +638,20 @@
 
 	@media (max-width: 767px) {
 		.board-col {
+			/* über dem Auslauf-Verlauf (body::after, z 39), aber unter der Aktionsleiste (z 45):
+			   sonst verschwindet die unterste Brettreihe im Verlauf */
+			position: relative;
+			z-index: 40;
 			max-width: min(
 				100%,
-				calc(100svh - var(--dock-h) - var(--tabbar-space) - var(--safe-top) - 190px)
+				calc(100svh - var(--dock-h) - var(--tabbar-space) - var(--safe-top) - 118px)
 			);
 		}
 		.board-col.with-bar {
 			max-width: min(
 				100%,
 				calc(
-					100svh - var(--dock-h) - var(--tabbar-space) - var(--safe-top) - 190px -
+					100svh - var(--dock-h) - var(--tabbar-space) - var(--safe-top) - 118px -
 						var(--comment-h) - 0.5rem
 				)
 			);

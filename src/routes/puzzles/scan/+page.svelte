@@ -372,10 +372,13 @@
 
 	@media (max-width: 767px) {
 		.board-col.with-bar {
+			/* über dem Auslauf-Verlauf (body::after, z 39), unter der Aktionsleiste (z 45) */
+			position: relative;
+			z-index: 40;
 			max-width: min(
 				100%,
 				calc(
-					100svh - var(--dock-h) - var(--tabbar-space) - var(--safe-top) - 175px -
+					100svh - var(--dock-h) - var(--tabbar-space) - var(--safe-top) - 132px -
 						var(--comment-h) - 0.5rem
 				)
 			);
