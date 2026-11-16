@@ -84,6 +84,8 @@
 	let myColor = $state<Color>('white');
 	let orientation = $state<Color>('white');
 	let thinking = $state(false);
+	let playBoard: { cancelPremove: () => void } | undefined = $state();
+	let premoveQueued = $state(false);
 	let hintShapes = $state<Shape[]>([]);
 	let hintLoading = $state(false);
 	let hints = $state(0);
@@ -358,6 +360,8 @@
 	}
 
 	async function start() {
+		playBoard?.cancelPremove();
+		premoveQueued = false;
 		bot = botById(botId);
 		myColor = colorChoice === 'random' ? (Math.random() < 0.5 ? 'white' : 'black') : colorChoice;
 		orientation = myColor;
@@ -562,6 +566,7 @@
 
 	function undo() {
 		if (ended || game.ply === 0) return;
+		playBoard?.cancelPremove();
 		botAbort?.abort();
 		coachAbort?.abort();
 		coachBusy = false;
@@ -635,6 +640,7 @@
 	}
 
 	function newSetup() {
+		playBoard?.cancelPremove();
 		botAbort?.abort();
 		coachAbort?.abort();
 		threatAbort?.abort();
@@ -676,6 +682,7 @@
 
 	function onKey(e: KeyboardEvent) {
 		if (phase !== 'playing' || (e.target as HTMLElement)?.tagName === 'INPUT') return;
+		if (e.key === 'Escape') playBoard?.cancelPremove();
 		if (e.key === 'h') hint();
 		if (e.key === 'z' && (e.metaKey || e.ctrlKey)) {
 			e.preventDefault();
@@ -867,6 +874,7 @@
 			</div>
 
 			<Board
+				bind:this={playBoard}
 				fen={boardFen}
 				{orientation}
 				turnColor={turn}
@@ -874,6 +882,8 @@
 				check={browsing ? false : check}
 				dests={browsing ? new Map() : dests}
 				movableColor={myColor}
+				premoves={!browsing && !ended}
+				onPremoveChange={(queued) => (premoveQueued = queued)}
 				shapes={browsing ? [] : hintShapes}
 				isPromotion={(f, t) => game.isPromotion(f as never, t as never)}
 				{onMove}
@@ -893,7 +903,14 @@
 							>{/if}
 						{#if browsing}<span class="status viewing"
 								>{t('play.viewing', { n: shownPly, m: moves.length })}</span
-							>{:else if myTurn}<span class="status yours">{t('play.yourTurn')}</span>{/if}
+							>{:else if premoveQueued && !ended}
+							<button
+								class="status premove"
+								onclick={() => playBoard?.cancelPremove()}
+								aria-label={t('play.cancelPremove')}
+								title={t('play.cancelPremove')}>{t('play.premove')} <X size={12} /></button
+							>
+						{:else if myTurn}<span class="status yours">{t('play.yourTurn')}</span>{/if}
 					</span>
 				</div>
 				{#if clocks}
@@ -1746,6 +1763,19 @@
 		font-size: 0.8rem;
 		color: var(--text-3);
 		animation: breathe 1.4s ease-in-out infinite;
+	}
+
+	.status.premove {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+		min-height: 24px;
+		padding: 0 0.35rem;
+		border: 0;
+		border-radius: 6px;
+		background: var(--c-learn-soft);
+		color: var(--text);
+		cursor: pointer;
 	}
 
 	.status.yours {

@@ -31,6 +31,8 @@
 		/** Erlaubte Züge; leer/undefined = keine Eingabe */
 		dests?: Map<string, string[]>;
 		movableColor?: Color | 'both';
+		premoves?: boolean;
+		onPremoveChange?: (queued: boolean) => void;
 		viewOnly?: boolean;
 		shapes?: Shape[];
 		coordinates?: boolean;
@@ -62,6 +64,8 @@
 		check = false,
 		dests,
 		movableColor,
+		premoves = false,
+		onPremoveChange,
 		viewOnly = false,
 		shapes = [],
 		coordinates = true,
@@ -121,6 +125,13 @@
 
 	function config() {
 		const canMove = !viewOnly && !!dests && dests.size > 0 && !promo;
+		const canPremove =
+			premoves &&
+			!viewOnly &&
+			!promo &&
+			!!movableColor &&
+			movableColor !== 'both' &&
+			turnColor !== movableColor;
 		return {
 			fen,
 			orientation,
@@ -133,10 +144,11 @@
 			highlight: { lastMove: boardPrefs.highlightLast, check: true },
 			movable: {
 				free: false,
-				color: canMove ? (movableColor ?? turnColor) : undefined,
+				color: canMove || canPremove ? (movableColor ?? turnColor) : undefined,
 				dests: (canMove ? dests : new Map()) as Map<Key, Key[]>,
 				showDests: boardPrefs.showDests
 			},
+			premovable: { enabled: canPremove, showDests: boardPrefs.showDests },
 			drawable: { autoShapes: toDrawShapes(shapes) }
 		};
 	}
@@ -144,7 +156,10 @@
 	onMount(() => {
 		cg = Chessground(el, {
 			...config(),
-			premovable: { enabled: false },
+			premovable: {
+				...config().premovable,
+				events: { set: notifyPremove, unset: notifyPremove }
+			},
 			draggable: { enabled: true, showGhost: true, distance: 3 },
 			blockTouchScroll: true,
 			addDimensionsCssVarsTo: el,
@@ -176,6 +191,7 @@
 			check,
 			dests,
 			movableColor,
+			premoves,
 			viewOnly,
 			shapes,
 			coordinates,
@@ -184,10 +200,26 @@
 			boardPrefs.showDests,
 			boardPrefs.highlightLast
 		];
-		if (cg) cg.set(config());
+		if (!cg) return;
+		if (!premoves || viewOnly) cancelPremove();
+		const next = config();
+		cg.set(next);
+		// Chessground verwirft die Vormerkung, falls sie nach dem Gegnerzug nicht legal ist.
+		if (premoves && next.movable.dests.size && cg.state.premovable.current) cg.playPremove();
 	});
 
-	onDestroy(() => cg?.destroy());
+	function notifyPremove() {
+		onPremoveChange?.(!!cg?.state.premovable.current);
+	}
+
+	export function cancelPremove() {
+		if (cg?.state.premovable.current) cg.cancelPremove();
+	}
+
+	onDestroy(() => {
+		cg?.destroy();
+		cg = null;
+	});
 
 	function choose(role: 'q' | 'r' | 'b' | 'n') {
 		if (!promo) return;

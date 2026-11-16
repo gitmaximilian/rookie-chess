@@ -177,6 +177,8 @@ export const de: Shape<typeof en> = {
 		min10: '10 Min',
 		start: 'Partie starten',
 		thinking: 'denkt nach …',
+		premove: 'Vorgemerkt',
+		cancelPremove: 'Vorgemerkten Zug löschen',
 		yourTurn: 'Du bist am Zug',
 		hint: 'Hinweis',
 		undo: 'Zurück',
