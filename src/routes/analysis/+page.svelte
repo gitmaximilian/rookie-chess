@@ -27,6 +27,7 @@
 	import { db, addTombstone, type GameRow } from '#lib/db/db.js';
 	import { review } from '#lib/training/srs.js';
 	import { Game, sanForUci } from '#lib/chess/game.js';
+	import { sound } from '#lib/ui/sound.js';
 	import { figurine } from '#lib/chess/notation.js';
 	import {
 		analyseGame,
@@ -37,7 +38,7 @@
 	import { accuracy, whiteWin, type PlyEval } from '#lib/analysis/classify.js';
 	import { t, intlLocale } from '#lib/i18n/i18n.svelte.js';
 	import { outcomeOf } from '#lib/training/gamestats.js';
-	import { toWhite } from '#lib/engine/uci.js';
+	import { toWhite, type Score } from '#lib/engine/uci.js';
 	import { engine } from '#lib/engine/engine.js';
 	import { positionFromFen, turnFromFen } from '#lib/chess/game.js';
 	import ReviewPanel, { type LiveLine } from '#lib/ui/ReviewPanel.svelte';
@@ -80,6 +81,10 @@
 	let row = $state.raw<GameRow | null>(null);
 	let game = $state.raw<Game | null>(null);
 	let ply = $state(0);
+	// Die Stellung der Originalpartie bleibt der Rücksprungpunkt dieser Variante.
+	let variation = $state.raw<Game | null>(null);
+	let variationPly = $state(0);
+	let boardVersion = $state(0);
 	let evals = $state<PlyEval[]>([]);
 	let progress = $state(0);
 	let analysing = $state(false);
@@ -188,16 +193,25 @@
 				.map((r) => [r.ply, { glyph: KIND_GLYPH[r.kind] || '★', color: kindColor(r.kind) }])
 		)
 	);
-	const fen = $derived(game ? game.fenAt(ply) : '');
-	const lastMove = $derived.by(() => {
-		if (!game || ply === 0) return undefined;
-		const m = game.moves[ply - 1];
-		return [m.from, m.to] as [string, string];
+	const shownPly = $derived(variation ? variationPly : ply);
+	const shownLine = $derived(variation ?? game);
+	const position = $derived.by(() => {
+		if (!shownLine) return null;
+		if (shownPly === shownLine.ply) return shownLine;
+		return Game.fromUciMoves(
+			shownLine.moves.slice(0, shownPly).map((m) => m.uci),
+			shownLine.startFen
+		);
 	});
-	const currentReview = $derived(reviews.find((r) => r.ply === ply) ?? null);
-	const evalHere = $derived(evals[ply] ?? null);
+	const fen = $derived(position?.fen ?? '');
+	const dests = $derived.by(() => {
+		void boardVersion;
+		return position?.dests();
+	});
+	const currentReview = $derived(variation ? null : (reviews.find((r) => r.ply === ply) ?? null));
 	const opening = $derived.by(() => {
 		void openingsReady;
+		if (variation) return openingFor(position?.moves.map((m) => m.uci) ?? []);
 		if (!game) return null;
 		return openingFor(game.moves.slice(0, Math.max(ply, Math.min(game.ply, 12))).map((m) => m.uci));
 	});
@@ -236,14 +250,14 @@
 			return;
 		}
 		// sofort zeigen, was die Partie-Analyse schon weiß; die Engine verfeinert gleich
-		const stored = evals[ply];
+		const stored = variation ? undefined : evals[ply];
 		live = {
 			fen: f,
 			lines: stored?.pv?.length ? toLines(f, [{ ...stored, pv: stored.pv }]) : [],
 			depth: 0,
 			done: false
 		};
-		if (positionFromFen(f).isEnd()) {
+		if (position?.end()) {
 			live = { fen: f, lines: [], depth: 0, done: true };
 			return;
 		}
@@ -276,6 +290,9 @@
 	});
 
 	const liveLines = $derived(live && live.fen === fen ? live.lines : []);
+	const evalHere = $derived<Score | null>(
+		variation ? (liveLines[0]?.score ?? null) : (evals[ply] ?? null)
+	);
 
 	/** Gewinnchance-Abstand (0..1), bis zu dem ein Zug als „genauso gut“ gilt */
 	const EQUAL_WIN = 0.03;
@@ -306,7 +323,7 @@
 			if (best) s.push({ orig: best.slice(0, 2), dest: best.slice(2, 4), brush: 'good' });
 			return s;
 		}
-		if (!showBest || ply >= total - 1) return s;
+		if (!showBest || (!variation && ply >= total - 1)) return s;
 		// sonst: der beste Zug von hier – und weitere nur, wenn sie praktisch gleich gut sind
 		// (es gibt oft mehrere gute Züge; ein Pfeil heißt nicht „nur dieser“)
 		const top = liveLines[0];
@@ -340,6 +357,7 @@
 
 	const comment = $derived.by(() => {
 		if (!game || !row) return null;
+		if (variation) return { headline: t('analysis.variation'), text: t('analysis.variationText') };
 		if (ply === 0) return { headline: t('review.start'), text: t('review.startText') };
 		if (!currentReview) return null;
 		return commentFor({
@@ -453,6 +471,7 @@
 
 	function startRetry(only?: number[]) {
 		if (!myMistakes.length) return;
+		variation = null;
 		retry = {
 			list: only?.length ? only : myMistakes.map((_, i) => i),
 			pos: 0,
@@ -627,6 +646,7 @@
 
 	async function load() {
 		abort?.abort();
+		variation = null;
 		mistakesCreated = null;
 		loading = true;
 		if (!gameId) {
@@ -681,11 +701,42 @@
 	}
 
 	function go(p: number) {
+		variation = null;
 		ply = Math.max(0, Math.min(total - 1, p));
 	}
 
+	function browse(p: number) {
+		if (variation) variationPly = Math.max(0, Math.min(variation.ply, p));
+		else go(p);
+	}
+
+	function playVariation(uci: string) {
+		if (!shownLine || retry) return;
+		const next = Game.fromUciMoves(
+			shownLine.moves.slice(0, shownPly).map((m) => m.uci),
+			shownLine.startFen
+		);
+		const move = next.play(uci);
+		if (!move) {
+			boardVersion++;
+			return;
+		}
+		if (shownLine.moves[shownPly]?.uci === move.uci) browse(shownPly + 1);
+		else {
+			variation = next;
+			variationPly = next.ply;
+		}
+		sound.move(!!move.captured, next.isCheck);
+	}
+
 	function onKey(e: KeyboardEvent) {
-		if (!game || (e.target as HTMLElement)?.tagName === 'TEXTAREA') return;
+		if (
+			!game ||
+			(e.target instanceof HTMLElement &&
+				e.target.closest('textarea, input, [contenteditable], dialog')) ||
+			(e.key === ' ' && e.target instanceof HTMLButtonElement)
+		)
+			return;
 		// im Fehler-Trainer: ← → zwischen den Fehlern, h = Tipp, s = Lösung, Enter = weiter, Esc = beenden
 		if (retry) {
 			if (retry.status === 'done') {
@@ -702,10 +753,11 @@
 			e.preventDefault();
 			return;
 		}
-		if (e.key === 'ArrowLeft') go(ply - 1);
-		else if (e.key === 'ArrowRight') go(ply + 1);
-		else if (e.key === 'Home' || e.key === 'ArrowUp') go(0);
-		else if (e.key === 'End' || e.key === 'ArrowDown') go(total - 1);
+		if (e.key === 'ArrowLeft') browse(shownPly - 1);
+		else if (e.key === 'ArrowRight') browse(shownPly + 1);
+		else if (e.key === 'Home' || e.key === 'ArrowUp') browse(0);
+		else if (e.key === 'End' || e.key === 'ArrowDown') browse(shownLine?.ply ?? 0);
+		else if (e.key === 'Escape' && variation) variation = null;
 		else if (e.key === 'n') goNextMistake();
 		else if (e.key === ' ') showBest = !showBest;
 		else if (e.key === 'f') orientation = orientation === 'white' ? 'black' : 'white';
@@ -994,11 +1046,18 @@
 			><ArrowLeft size={18} /> {t('analysis.games')}</a
 		>
 		{#if opening}<span class="opening" title={opening.eco}>{opening.name}</span>{/if}
-		<a
-			class="btn secondary small to-board"
-			href={resolve(`/analysis/board?game=${row.id}&ply=${ply}`)}
-			><LayoutGrid size={16} /> {t('board2.fromHere')}</a
-		>
+		{#if variation}
+			<button class="btn secondary small to-board" onclick={() => (variation = null)}>
+				<RotateCcw size={16} />
+				{t('analysis.returnToGame')}
+			</button>
+		{:else}
+			<a
+				class="btn secondary small to-board"
+				href={resolve(`/analysis/board?game=${row.id}&ply=${ply}`)}
+				><LayoutGrid size={16} /> {t('board2.fromHere')}</a
+			>
+		{/if}
 	</div>
 
 	{#if bar}
@@ -1041,8 +1100,13 @@
 						<Board
 							{fen}
 							{orientation}
-							{lastMove}
-							viewOnly
+							lastMove={position?.lastMove}
+							turnColor={position?.turn}
+							check={position?.isCheck}
+							{dests}
+							movableColor="both"
+							isPromotion={(from, to) => position?.isPromotion(from as never, to as never) ?? false}
+							onMove={playVariation}
 							{shapes}
 							{badge}
 							tint={badge?.color ?? null}
@@ -1054,23 +1118,23 @@
 			{#if !retry}
 				<Dock order={2}>
 					<div class="nav">
-						<button onclick={() => go(0)} aria-label={t('analysis.nav.first')}
+						<button onclick={() => browse(0)} aria-label={t('analysis.nav.first')}
 							><ChevronsLeft size={22} /></button
 						>
-						<button onclick={() => go(ply - 1)} aria-label={t('analysis.nav.prev')}
+						<button onclick={() => browse(shownPly - 1)} aria-label={t('analysis.nav.prev')}
 							><ChevronLeft size={22} /></button
 						>
-						<button onclick={() => go(ply + 1)} aria-label={t('analysis.nav.next')}
+						<button onclick={() => browse(shownPly + 1)} aria-label={t('analysis.nav.next')}
 							><ChevronRight size={22} /></button
 						>
-						<button onclick={() => go(total - 1)} aria-label={t('analysis.nav.last')}
+						<button onclick={() => browse(shownLine?.ply ?? 0)} aria-label={t('analysis.nav.last')}
 							><ChevronsRight size={22} /></button
 						>
 						<button
 							onclick={() => (orientation = orientation === 'white' ? 'black' : 'white')}
 							aria-label={t('analysis.nav.flip')}><RefreshCw size={19} /></button
 						>
-						{#if myMistakes.length && !retry}
+						{#if myMistakes.length && !variation}
 							<button
 								class="to-mistake"
 								onclick={goNextMistake}
@@ -1221,13 +1285,13 @@
 				</div>
 			{/if}
 
-			{#if evals.length > 1}
+			{#if !variation && evals.length > 1}
 				<div class="card graph-card">
 					<EvalGraph {evals} {total} current={ply} {reviews} myColor={row.myColor} onSelect={go} />
 				</div>
 			{/if}
 
-			{#if report && row}
+			{#if !variation && report && row}
 				<GameReport
 					{report}
 					myColor={row.myColor}
@@ -1242,7 +1306,7 @@
 				/>
 			{/if}
 
-			{#if reviews.length && !analysing}
+			{#if !variation && reviews.length && !analysing}
 				<div class="card summary">
 					<div class="sum-head">
 						<span></span>
@@ -1287,7 +1351,13 @@
 			{/if}
 
 			<div class="card moves-card">
-				<MoveList moves={game.moves} current={ply} {tags} onSelect={go} />
+				<MoveList
+					moves={shownLine?.moves ?? []}
+					current={shownPly}
+					blackStarts={turnFromFen(game.startFen) === 'black'}
+					tags={variation ? {} : tags}
+					onSelect={browse}
+				/>
 			</div>
 
 			<div class="foot-links">

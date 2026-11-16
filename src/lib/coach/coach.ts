@@ -31,6 +31,7 @@ async function evalFen(fen: string, signal?: AbortSignal): Promise<PlyEval> {
 	if (end) return { cp: 0 };
 	// zwei Linien: so erkennt die Bewertung, wenn es mehrere gleich gute Züge gibt (classify.ts)
 	const res = await engine.analyse({ fen, depth: 11, multipv: 2, signal });
+	if (signal?.aborted) return { cp: 0 };
 	const top = res.lines[0];
 	const alt = res.lines[1];
 	const score = top ? toWhite({ cp: top.cp, mate: top.mate }, turnFromFen(fen)) : { cp: 0 };
@@ -287,10 +288,4 @@ export async function coachHint(
 			: '',
 		uci
 	};
-}
-
-/** Antwort des Gegners auf einen Fehler (erster Zug der besten Variante) */
-export async function punishment(fenAfter: string, signal?: AbortSignal): Promise<string | null> {
-	const e = await evalFen(fenAfter, signal);
-	return e.best ?? null;
 }

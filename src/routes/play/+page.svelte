@@ -20,7 +20,7 @@
 	import BotAvatar from '#lib/ui/BotAvatar.svelte';
 	import MoveList from '#lib/ui/MoveList.svelte';
 	import { BOTS, botById, chooseBotMove, thinkDelay, type Bot } from '#lib/bots/bots.js';
-	import { Game, INITIAL_FEN, sanForUci, type GameEnd } from '#lib/chess/game.js';
+	import { Game, INITIAL_FEN, type GameEnd } from '#lib/chess/game.js';
 	import {
 		endReason,
 		verdictFor,
@@ -37,7 +37,6 @@
 		findThreat,
 		principleTip,
 		coachHint,
-		punishment,
 		type CoachNote,
 		type Threat
 	} from '#lib/coach/coach.js';
@@ -103,23 +102,18 @@
 	/** der Gegner hat gerade gepatzt – nur in der geführten Stufe als Hinweis (siehe detectChance) */
 	let coachChance = $state(false);
 	let coachBusy = $state(false);
-	let coachPending = $state(false);
 	let coachAbort: AbortController | null = null;
 	let coachTip = $state('');
 	let coachThreat = $state<Threat | null>(null);
 	let threatShown = $state(false);
 	let coachHelp = $state<{ idea: string; piece: string; uci: string; level: number } | null>(null);
 	let helpBusy = $state(false);
-	let retryNote = $state<{ better: string; shown: boolean } | null>(null);
 	// Hilfe ausschleichen (lib/coach/fading.ts): „check“ = Coach fragt nur, zeigt auf Wunsch
 	let coachPref = $state<CoachPref>('auto');
 	let coachedGames = $state(0);
 	const selfCheck = $derived(coachLevel(coachPref, coachedGames) === 'check');
 	/** Drohungen nach dem Gegnerzug aufgedeckt (nur bei „selbst prüfen“) */
 	let revealed = $state(false);
-	/** Erklärung und Pfeile zum eigenen Patzer aufgedeckt (nur bei „selbst prüfen“) */
-	let whyShown = $state(false);
-	let pendingShapes: typeof hintShapes = [];
 	let threatAbort: AbortController | null = null;
 
 	// ── Kommentar über dem Brett (Handy): immer die eine wichtigste Coach-Nachricht ──
@@ -141,36 +135,31 @@
 	}
 	const coachBar = $derived.by((): CoachBar => {
 		const coach = t('coach.title');
-		// Fehler mit Angebot zum Zurücknehmen geht vor allem anderen
-		// selbst prüfen: bei einem Patzer erst „Halt“, Erklärung erst auf Wunsch
-		if (coachNote && coachPending && selfCheck && !whyShown)
-			return {
-				kicker: `${coach} · ${t('review.yourMove')}`,
-				title: t('coach.unsafeTitle'),
-				text: t('coach.unsafeText'),
-				color: 'var(--k-mistake)',
-				state: 'judged',
-				act: 'why'
-			};
 		const hideWarn = selfCheck && !revealed;
-		const judged = (opp: boolean): CoachBar => ({
+		const judged = (): CoachBar => ({
 			kicker: `${coach} · ${t('review.yourMove')}`,
 			title: coachNote!.title,
-			// danach antwortet der Bot: eine Warnung zu seinem Zug kommt zuerst (sonst wird sie abgeschnitten),
-			// dann die Erklärung zum eigenen Zug, dann was der Gegner gezogen hat
 			text: [
-				opp && coachOpp?.warn && !hideWarn ? coachOpp.warn : '',
 				coachNote!.text,
-				opp && coachOpp ? `${t('coach.opponent')} ${figurine(coachOpp.san)}: ${coachOpp.text}` : '',
-				coachPending ? '' : coachTip
+				coachOpp?.warn && !hideWarn ? coachOpp.warn : '',
+				coachOpp ? `${t('coach.opponent')} ${figurine(coachOpp.san)}: ${coachOpp.text}` : '',
+				coachTip
 			]
 				.filter(Boolean)
 				.join(' '),
 			color: JUDGE_COLOR[coachNote!.judgement] ?? 'var(--c-learn)',
 			state: 'judged',
-			act: ''
+			act: coachThreat && myTurn && !hideWarn && !threatShown ? 'threat' : ''
 		});
-		if (coachNote && coachPending) return judged(false);
+		if (coachHelp && myTurn)
+			return {
+				kicker: `${coach} · ${t('coach.hint.label')}`,
+				title: coachHelp.idea,
+				text: coachHelp.level >= 2 ? coachHelp.piece : '',
+				color: 'var(--c-learn)',
+				act: ''
+			};
+		if (coachNote?.serious || coachNote?.judgement === 'inaccuracy') return judged();
 		// Chance zuerst: Einsteiger lassen fast die Hälfte der gegnerischen Patzer ungestraft (Lichess-Daten)
 		if (coachChance && myTurn && !selfCheck)
 			return {
@@ -193,25 +182,7 @@
 				color: 'var(--k-mistake)',
 				act: threatShown ? '' : 'threat'
 			};
-		if (retryNote && myTurn)
-			return {
-				kicker: coach,
-				title: t('coach.retry'),
-				text: retryNote.shown
-					? t('coach.betterWas', { san: figurine(sanForUci(fen, retryNote.better)) })
-					: '',
-				color: 'var(--k-inaccuracy)',
-				act: retryNote.shown ? '' : 'better'
-			};
-		if (coachHelp && myTurn)
-			return {
-				kicker: `${coach} · ${t('coach.hint.label')}`,
-				title: coachHelp.idea,
-				text: coachHelp.level >= 2 ? coachHelp.piece : '',
-				color: 'var(--c-learn)',
-				act: ''
-			};
-		if (coachNote && !(hideWarn && myTurn && coachOpp)) return judged(true);
+		if (coachNote && !(hideWarn && myTurn && coachOpp)) return judged();
 		// selbst prüfen: statt der Warnung die Frage – die Antwort gibt es auf Wunsch
 		if (coachOpp && hideWarn && myTurn)
 			return {
@@ -241,7 +212,6 @@
 	});
 
 	function clearCoach() {
-		whyShown = false;
 		coachChance = false;
 		coachTip = '';
 		coachThreat = null;
@@ -276,25 +246,11 @@
 		if (coachThreat) showThreat();
 	}
 
-	/** selbst prüfen: Erklärung und Pfeile zum eigenen Patzer zeigen */
-	function showWhy() {
-		whyShown = true;
-		hintShapes = pendingShapes;
-	}
-
 	function showThreat() {
 		if (!coachThreat) return;
 		threatShown = true;
 		hintShapes = [
 			{ orig: coachThreat.uci.slice(0, 2), dest: coachThreat.uci.slice(2, 4), brush: 'bad' }
-		];
-	}
-
-	function showBetter() {
-		if (!retryNote) return;
-		retryNote = { ...retryNote, shown: true };
-		hintShapes = [
-			{ orig: retryNote.better.slice(0, 2), dest: retryNote.better.slice(2, 4), brush: 'good' }
 		];
 	}
 
@@ -343,9 +299,7 @@
 		viewPly = viewPly + 1 >= moves.length ? null : viewPly + 1;
 	}
 
-	const myTurn = $derived(
-		phase === 'playing' && !ended && turn === myColor && !thinking && !coachBusy && !coachPending
-	);
+	const myTurn = $derived(phase === 'playing' && !ended && turn === myColor && !thinking);
 	const dests = $derived.by(() => {
 		void v;
 		return myTurn ? game.dests() : new Map<string, string[]>();
@@ -377,6 +331,8 @@
 	onDestroy(() => {
 		stopClock();
 		botAbort?.abort();
+		coachAbort?.abort();
+		threatAbort?.abort();
 	});
 
 	function resume(s: SavedGame) {
@@ -410,6 +366,8 @@
 		game = new Game(INITIAL_FEN);
 		hints = 0;
 		undos = 0;
+		coachBusy = false;
+		clearCoach();
 		ended = null;
 		savedGameId = null;
 		hintShapes = [];
@@ -421,7 +379,6 @@
 		await setSetting('coachPref', coachPref);
 		coachNote = null;
 		coachOpp = null;
-		coachPending = false;
 		engine.newGame();
 		persist();
 		startClock();
@@ -485,70 +442,28 @@
 		addIncrement(myColor);
 		hintShapes = [];
 		v++;
-		if (coachOn && !game.end()) return void coachAfterMyMove(fenBefore, played.uci);
-		afterMove();
-	}
-
-	/** Coach bewertet den eigenen Zug; bei Fehlern wartet der Bot auf die Entscheidung */
-	async function coachAfterMyMove(fenBefore: string, uci: string) {
-		coachBusy = true;
-		coachOpp = null;
-		coachAbort = new AbortController();
-		const fenNow = game.fen;
-		clearCoach();
-		retryNote = null;
-		const history = game.moves.slice(0, -1).map((m) => m.uci);
-		const note = await assessMove(fenBefore, uci, coachAbort.signal);
-		if (coachAbort.signal.aborted || game.fen !== fenNow) {
-			coachBusy = false;
-			return;
-		}
-		coachNote = note;
-		if (note?.serious) {
-			// zeigen, wie der Gegner den Fehler bestraft
-			const reply = await punishment(fenNow, coachAbort.signal);
-			coachBusy = false;
-			if (coachAbort.signal.aborted || game.fen !== fenNow) return;
-			coachPending = true;
-			sound.bad();
-			pendingShapes = [
-				{ orig: uci.slice(0, 2), dest: uci.slice(2, 4), brush: 'bad' },
-				...(reply
-					? [{ orig: reply.slice(0, 2), dest: reply.slice(2, 4), brush: 'bad' as const }]
-					: [])
-			];
-			// selbst prüfen: erst „Halt“, Pfeile erst auf Wunsch
-			whyShown = !selfCheck;
-			hintShapes = selfCheck ? [] : pendingShapes;
-			if (reply && coachNote)
-				coachNote = {
-					...coachNote,
-					text: `${coachNote.text} ${t('coach.punish', { san: figurine(sanForUci(fenNow, reply)) })}`
-				};
-			return;
-		}
+		coachAbort?.abort();
+		threatAbort?.abort();
 		coachBusy = false;
-		coachTip = note && note.judgement !== 'inaccuracy' ? principleTip(fenBefore, uci, history) : '';
-		afterMove();
-	}
-
-	function coachTakeback() {
-		if (!coachPending) return;
-		const better = coachNote?.better;
-		game.undo(1);
-		retryNote = better ? { better, shown: false } : null;
-		undos++;
-		coachPending = false;
 		coachNote = null;
-		hintShapes = [];
-		v++;
-		persist();
+		coachOpp = null;
+		clearCoach();
+		// Den Bot zuerst starten; die Rückmeldung läuft unabhängig von der Zugfreigabe.
+		afterMove();
+		if (coachOn && !ended) void coachAfterMyMove(fenBefore, played.uci);
 	}
 
-	function coachContinue() {
-		coachPending = false;
-		hintShapes = [];
-		afterMove();
+	/** Nur der jeweils letzte eigene Zug darf noch einen Kommentar veröffentlichen. */
+	async function coachAfterMyMove(fenBefore: string, uci: string) {
+		const controller = new AbortController();
+		coachAbort = controller;
+		coachBusy = true;
+		const history = game.moves.slice(0, -1).map((m) => m.uci);
+		const note = await assessMove(fenBefore, uci, controller.signal).catch(() => null);
+		if (controller.signal.aborted) return;
+		coachBusy = false;
+		coachNote = note;
+		coachTip = note && note.judgement !== 'inaccuracy' ? principleTip(fenBefore, uci, history) : '';
 	}
 
 	function afterMove() {
@@ -587,6 +502,7 @@
 			if (played) {
 				sound.move(!!played.captured, game.isCheck);
 				addIncrement(myColor === 'white' ? 'black' : 'white');
+				v++;
 				if (coachOn && !game.end()) {
 					revealed = false;
 					const danger = threats(game.fen)[0];
@@ -601,7 +517,6 @@
 					void detectChance(botFen, played.uci, game.fen);
 				}
 			}
-			v++;
 			if (game.end()) finish();
 			else persist();
 		} finally {
@@ -613,16 +528,18 @@
 	async function detectChance(fenBefore: string, uci: string, fenNow: string) {
 		coachChance = false;
 		if (selfCheck) return;
-		const bad = await isBlunder(fenBefore, uci).catch(() => false);
-		if (game.fen !== fenNow) return;
+		const at = v;
+		const bad = await isBlunder(fenBefore, uci, threatAbort?.signal).catch(() => false);
+		if (at !== v || ended || game.fen !== fenNow) return;
 		coachChance = bad;
 	}
 
 	async function detectThreat(fenNow: string) {
 		threatAbort?.abort();
-		threatAbort = new AbortController();
-		const th = await findThreat(fenNow, threatAbort.signal).catch(() => null);
-		if (threatAbort.signal.aborted || game.fen !== fenNow) return;
+		const controller = new AbortController();
+		threatAbort = controller;
+		const th = await findThreat(fenNow, controller.signal).catch(() => null);
+		if (controller.signal.aborted || ended || game.fen !== fenNow) return;
 		// hängende Figur wird schon gemeldet – Materialdrohung nur, wenn es etwas anderes ist
 		coachThreat = th && (th.kind === 'mate' || !coachOpp?.warn) ? th : null;
 	}
@@ -648,11 +565,9 @@
 		botAbort?.abort();
 		coachAbort?.abort();
 		coachBusy = false;
-		coachPending = false;
 		coachNote = null;
 		coachOpp = null;
 		clearCoach();
-		retryNote = null;
 		threatAbort?.abort();
 		thinking = false;
 		// bis ich wieder am Zug bin
@@ -677,6 +592,8 @@
 
 	async function finish() {
 		stopClock();
+		coachAbort?.abort();
+		threatAbort?.abort();
 		const e = game.end();
 		if (!e) return;
 		ended = e;
@@ -719,6 +636,8 @@
 
 	function newSetup() {
 		botAbort?.abort();
+		coachAbort?.abort();
+		threatAbort?.abort();
 		stopClock();
 		thinking = false;
 		setSetting('currentGame', null);
@@ -915,12 +834,8 @@
 			{#snippet action()}
 				{#if coachBar.act === 'threat'}
 					<button onclick={showThreat}>{t('coach.showThreat')}</button>
-				{:else if coachBar.act === 'better'}
-					<button onclick={showBetter}>{t('coach.showBetter')}</button>
 				{:else if coachBar.act === 'reveal'}
 					<button onclick={reveal}>{t('coach.reveal')}</button>
-				{:else if coachBar.act === 'why'}
-					<button onclick={showWhy}>{t('coach.why')}</button>
 				{/if}
 			{/snippet}
 		</CommentBar>
@@ -1055,49 +970,20 @@
 								<p class="cb-text">{coachThreat.san}</p>
 							{/if}
 						{/if}
-						{#if retryNote && myTurn}
-							<p class="cb-text">{t('coach.retry')}</p>
-							{#if retryNote.shown}
-								<p class="cb-title j-good">
-									{t('coach.betterWas', { san: figurine(sanForUci(fen, retryNote.better)) })}
-								</p>
-							{:else}
-								<button class="cb-link" onclick={showBetter}>{t('coach.showBetter')}</button>
-							{/if}
-						{/if}
-						{#if coachNote && coachPending && selfCheck && !whyShown}
-							<p class="cb-title j-blunder">{t('coach.unsafeTitle')}</p>
-							<p class="cb-text">{t('coach.unsafeText')}</p>
-							<div class="cb-actions">
-								<button class="btn" onclick={coachTakeback}
-									><Undo2 size={17} /> {t('coach.takebackSelf')}</button
-								>
-								<button class="btn secondary" onclick={showWhy}>{t('coach.why')}</button>
-							</div>
-						{:else if coachNote}
+						{#if coachNote}
 							<p class="cb-title j-{coachNote.judgement}">{coachNote.title}</p>
 							<p class="cb-text">{coachNote.text}</p>
-							{#if coachPending}
-								<div class="cb-actions">
-									<button class="btn" onclick={coachTakeback}
-										><Undo2 size={17} /> {t('coach.takeback')}</button
-									>
-									<button class="btn secondary" onclick={coachContinue}
-										>{t('coach.keepPlaying')}</button
-									>
-								</div>
-							{/if}
-						{:else if !coachOpp && !retryNote}
+						{:else if !coachOpp}
 							<p class="cb-text">{t('coach.welcome')}</p>
 						{/if}
-						{#if coachTip && !coachPending}<p class="cb-tip">{coachTip}</p>{/if}
+						{#if coachTip}<p class="cb-tip">{coachTip}</p>{/if}
 						{#if coachHelp && myTurn}
 							<div class="cb-help">
 								<p><Lightbulb size={15} /> {coachHelp.idea}</p>
 								{#if coachHelp.level >= 2}<p>{coachHelp.piece}</p>{/if}
 							</div>
 						{/if}
-						{#if myTurn && !coachPending}
+						{#if myTurn}
 							<button
 								class="btn secondary small cb-ask"
 								onclick={() => void askCoach()}
@@ -1144,9 +1030,9 @@
 					onSelect={(p) => (viewPly = p >= moves.length ? null : p)}
 				/>
 			</div>
-			<!-- mit Coach: Platz für die Coach-Knöpfe vorab reservieren (der Text steht oben über dem Brett) -->
+			<!-- Steuerelemente bleiben auch sichtbar, während der Bot antwortet. -->
 			<Dock order={1} reserve={coachOn ? 64 : 0}>
-				<div class="controls" class:pending={coachPending && !ended}>
+				<div class="controls">
 					<button
 						class="ctl"
 						onclick={hint}
@@ -1484,13 +1370,6 @@
 
 	.cb-ask {
 		align-self: flex-start;
-	}
-
-	.cb-actions {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.5rem;
-		margin-top: 0.2rem;
 	}
 
 	/* ── Einrichtung ── */
@@ -2246,11 +2125,6 @@
 		.coach-box .cb-link {
 			display: none;
 		}
-		/* nach einem Fehler: „Zurücknehmen / Weiterspielen“ ersetzen die Knopfzeile –
-		   die Leiste bleibt eine Zeile hoch */
-		.controls.pending {
-			display: none;
-		}
 		/* übrig bleiben nur Knöpfe: als ruhige Zeile ohne eigene Karte */
 		.coach-box,
 		.coach-box.warn {
@@ -2262,9 +2136,6 @@
 			padding: 0;
 			background: none;
 			border: none;
-		}
-		.coach-box .cb-actions {
-			margin: 0;
 		}
 	}
 </style>
