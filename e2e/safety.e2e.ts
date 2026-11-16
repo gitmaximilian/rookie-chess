@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { fen, playUci } from './helpers/board';
 
 /** eine Blunder-Check-Aufgabe beantworten – egal ob der Zug sicher ist oder nicht */
 async function answer(page: Page, which: 'answer-safe' | 'answer-unsafe') {
@@ -84,4 +85,52 @@ test('Handy: kurzer Titel lässt Platz für die ganze Erklärung', async ({ page
 		)
 		.toEqual({ lines: 2, fits: true });
 	await expect(card.getByRole('button', { name: 'More' })).toHaveCount(0);
+});
+
+test('Blunder-Check: auf gedrehtem Brett die weiße Widerlegung spielen', async ({
+	page,
+	hasTouch
+}) => {
+	await page.route('**/safety/items.json', (route) =>
+		route.fulfill({
+			json: [
+				[
+					'gC3KL',
+					'1Q5k/6qp/5p2/4pP2/1p6/7P/2r2PP1/6K1 b - - 1 34',
+					'g7f8',
+					0,
+					'b8f8',
+					400,
+					'hangingPiece',
+					''
+				]
+			]
+		})
+	);
+	await page.goto('/puzzles/safety');
+	const board = page.locator('.cg-host');
+	await expect(board).toHaveAttribute('data-orientation', 'black');
+	const before = await fen(page);
+	await playUci(page, 'g7f8', hasTouch ? 'touch' : 'mouse');
+	await expect(board).toHaveAttribute('data-fen', before);
+	await page.getByTestId('answer-unsafe').locator('visible=true').first().click();
+	await expect(board).toHaveAttribute('data-fen', /1Q3q1k.* w /);
+	const refute = await fen(page);
+	await playUci(page, 'b8b7', hasTouch ? 'touch' : 'mouse');
+	await expect(
+		page
+			.getByText(/Not that one/)
+			.locator('visible=true')
+			.first()
+	).toBeVisible();
+	await expect(board).toHaveAttribute('data-fen', refute);
+	await playUci(page, 'b8f8', hasTouch ? 'touch' : 'mouse');
+	await expect(board).toHaveAttribute('data-fen', /5Q1k.* b /);
+	await expect(
+		page
+			.getByText(/you found the refutation/)
+			.locator('visible=true')
+			.first()
+	).toBeVisible();
+	await expect(page.getByTestId('safety-next').locator('visible=true').first()).toBeVisible();
 });
