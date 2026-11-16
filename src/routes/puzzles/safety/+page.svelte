@@ -17,7 +17,7 @@
 	import Board from '#lib/ui/board/Board.svelte';
 	import CommentBar from '#lib/ui/CommentBar.svelte';
 	import Dock from '#lib/ui/Dock.svelte';
-	import { Game, sanForUci } from '#lib/chess/game.js';
+	import { Game, sanForUci, turnFromFen } from '#lib/chess/game.js';
 	import { figurine } from '#lib/chess/notation.js';
 	import { db, getSetting, setSetting, bumpActivity, today } from '#lib/db/db.js';
 	import { review, dueCards, formatInterval } from '#lib/training/srs.js';
@@ -82,6 +82,10 @@
 	const lastMove = $derived.by(() => {
 		void v;
 		return game?.lastMove;
+	});
+	const inCheck = $derived.by(() => {
+		void v;
+		return game?.isCheck;
 	});
 	/** Spieler = Seite, die den Zug plant */
 	const me = $derived<'white' | 'black'>(item?.fen.split(' ')[1] === 'b' ? 'black' : 'white');
@@ -422,12 +426,11 @@
 				<Board
 					{fen}
 					orientation={me}
-					turnColor={game?.turn}
+					turnColor={turnFromFen(fen)}
 					{lastMove}
-					check={game?.isCheck}
+					check={inCheck}
 					{dests}
 					movableColor={status === 'refute' ? opp : undefined}
-					viewOnly={status !== 'refute'}
 					{shapes}
 					{flash}
 					isPromotion={(f, to) => game?.isPromotion(f as never, to as never) ?? false}
