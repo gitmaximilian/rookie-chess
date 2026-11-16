@@ -4,7 +4,9 @@ import { expect, test } from '@playwright/test';
 // Tests suchen deshalb den sichtbaren Text, egal an welcher Stelle.
 import { fen, playUci } from './helpers/board';
 
-test('Coach: lobt gute Züge und bietet bei einem Patzer das Zurücknehmen an', async ({ page }) => {
+test('Coach: kommentiert einen Patzer, lässt den Bot antworten und erlaubt Zurücknehmen', async ({
+	page
+}) => {
 	test.setTimeout(90_000);
 	await page.goto('/play');
 	// Coach ist für neue Nutzer schon an
@@ -35,8 +37,16 @@ test('Coach: lobt gute Züge und bietet bei einem Patzer das Zurücknehmen an', 
 	});
 	const before = await fen(page);
 	await playUci(page, 'f1a6');
-	await expect(page.getByRole('button', { name: 'Take back' })).toBeVisible({ timeout: 30_000 });
-	await page.getByRole('button', { name: 'Take back' }).click();
+	const undo = page.getByRole('button', { name: 'Undo', exact: true });
+	await expect(undo).toBeEnabled();
+	await expect(
+		page.locator('.cb-title:visible, [data-testid="coach-bar"][data-state="judged"]').first()
+	).toBeVisible({ timeout: 30_000 });
+	await expect(
+		page.getByText('Your move', { exact: true }).locator('visible=true').first()
+	).toBeVisible({ timeout: 30_000 });
+	await expect.poll(() => fen(page)).not.toBe(before);
+	await undo.click();
 	await expect.poll(() => fen(page)).toBe(before);
 	await expect(
 		page.getByText('Your move', { exact: true }).locator('visible=true').first()

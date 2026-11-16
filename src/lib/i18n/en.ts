@@ -223,10 +223,6 @@ export const en = {
 		threatMaterial: (p: P) =>
 			`Watch out: ${p.piece} is under attack – your opponent threatens to win material. Defend it or move it.`,
 		showThreat: 'Show threat',
-		punish: (p: P) => `Your opponent could now answer ${p.san}.`,
-		retry: 'Taken back – find a better move. Ask the coach if you need help.',
-		showBetter: 'Show better move',
-		betterWas: (p: P) => `Better was ${p.san}.`,
 		title: 'Coach',
 		chanceKicker: 'Chance',
 		chanceTitle: 'Your opponent just blundered!',
@@ -239,16 +235,11 @@ export const en = {
 		levelWarnText:
 			'The coach warns you about attacked pieces and threats and shows mistakes right away.',
 		levelCheckText:
-			'The coach only asks “what does your opponent threaten?” – you do the blunder check yourself and can ask for the answer.',
+			'Before you move, the coach asks you to look for threats. You can ask to see the threat.',
 		checkPrompt: 'Your blunder check: what is your opponent up to?',
 		checkPromptText:
 			'Before you move: can your opponent give check, capture something or threaten something?',
 		reveal: 'What is the threat?',
-		unsafeTitle: 'Stop – that move is not safe.',
-		unsafeText:
-			'What can your opponent capture or threaten now? Take it back and look yourself – or let me show you why.',
-		why: 'Show me why',
-		takebackSelf: 'Take back, find it myself',
 		toggle: 'Play with coach',
 		toggleText: 'Feedback on every move, warnings and explanations.',
 		welcome: 'I’ll comment on every move. If something goes wrong, you can take it back.',
@@ -258,8 +249,6 @@ export const en = {
 		bestText: 'That’s the strongest move here.',
 		goodText: 'A solid move.',
 		worseText: 'This move makes your position worse.',
-		takeback: 'Take back',
-		keepPlaying: 'Keep playing',
 		mateTitle: 'Checkmate!',
 		mateText: 'You found the mate – well done!',
 		threat: (p: P) => `Watch out: ${p.piece} on ${p.sq} is under attack!`,
@@ -377,6 +366,9 @@ export const en = {
 		zugzwang: { name: 'Zugzwang', about: 'Every move makes the opponent’s position worse.' }
 	},
 	analysis: {
+		variation: 'Free variation',
+		variationText: 'Try moves for either side. Your game is saved as played.',
+		returnToGame: 'Back to original game',
 		eyebrow: 'Analysis',
 		title: 'My games',
 		subtitle: 'Every game analysed by Stockfish and explained simply.',
@@ -513,7 +505,7 @@ export const en = {
 		thinking: 'Engine is thinking …',
 		depth: (p: P) => `depth ${p.d}`,
 		start: 'Starting position',
-		startText: 'Tap › to go through the game move by move. Every move gets a comment.',
+		startText: 'Use › to replay the game, or try your own moves directly on the board.',
 		over: 'Game over',
 		summary: 'Game review',
 		opponentMove: (p: P) => `${p.name}’s move`,

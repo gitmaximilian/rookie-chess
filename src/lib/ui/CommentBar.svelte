@@ -1,7 +1,7 @@
 <script lang="ts">
 	/**
 	 * Kommentar über dem Brett (nur Handy): erst lesen, was passiert ist, dann auf dem Brett sehen, wo.
-	 * Feste Höhe (--comment-h in app.css) – das Brett springt nie, egal wie lang der Text ist.
+	 * Die Vorschau zeigt ganze Zeilen; ausreichend Platz ist für den normalen Textmaßstab reserviert.
 	 * Längere Erklärungen öffnen sich über „Mehr“ als Blatt von unten.
 	 * Am iPad/Desktop unsichtbar: dort stehen Kommentare in der Seitenspalte.
 	 */
@@ -48,17 +48,25 @@
 		return () => mq.removeEventListener('change', on);
 	});
 
-	// nach jedem neuen Text prüfen, ob etwas abgeschnitten ist
 	$effect(() => {
+		const el = body;
+		void kicker;
 		void title;
 		void text;
-		requestAnimationFrame(() => {
-			// Titel und Text sind auf Zeilen begrenzt: abgeschnitten, wenn ihr Inhalt höher ist als sichtbar
-			if (body)
-				clipped =
-					body.scrollHeight > body.clientHeight + 1 ||
-					[...body.querySelectorAll('p')].some((el) => el.scrollHeight > el.clientHeight + 1);
-		});
+		if (!el) return;
+		const measure = () => {
+			clipped = [...el.children].some(
+				(child) =>
+					child.scrollHeight > child.clientHeight + 1 || child.scrollWidth > child.clientWidth + 1
+			);
+		};
+		const observer = new ResizeObserver(measure);
+		observer.observe(el);
+		const frame = requestAnimationFrame(measure);
+		return () => {
+			cancelAnimationFrame(frame);
+			observer.disconnect();
+		};
 	});
 </script>
 
@@ -123,13 +131,12 @@
 			position: relative;
 			display: flex;
 			gap: 0.65rem;
-			height: var(--comment-h);
+			min-height: var(--comment-h);
 			margin-bottom: 0.5rem;
-			padding: 0.6rem 0.75rem;
+			padding: 0.5rem 0.75rem;
 			border-radius: 20px;
 			background: color-mix(in srgb, var(--cb) 9%, var(--surface));
 			border: 1px solid color-mix(in srgb, var(--cb) 28%, transparent);
-			overflow: hidden;
 		}
 	}
 
@@ -154,10 +161,12 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.1rem;
-		overflow: hidden;
+		align-self: flex-start;
+		overflow-wrap: anywhere;
 	}
 
 	.kick {
+		line-height: 1.35;
 		color: color-mix(in srgb, var(--cb) 70%, var(--text));
 		white-space: nowrap;
 		overflow: hidden;
@@ -168,6 +177,11 @@
 		font-weight: 650;
 		font-size: 0.95rem;
 		line-height: 1.3;
+	}
+
+	.body .title,
+	.body .text {
+		flex-shrink: 0;
 		display: -webkit-box;
 		-webkit-box-orient: vertical;
 		-webkit-line-clamp: 2;
@@ -179,27 +193,31 @@
 		font-size: 0.86rem;
 		line-height: 1.35;
 		color: var(--text-2);
-		display: -webkit-box;
-		-webkit-box-orient: vertical;
-		-webkit-line-clamp: 2;
-		line-clamp: 2;
-		overflow: hidden;
+	}
+
+	.body .text {
+		-webkit-line-clamp: 1;
+		line-clamp: 1;
 	}
 
 	.acts {
 		flex: none;
-		align-self: flex-end;
+		align-self: center;
 		display: flex;
 		flex-direction: column;
 		align-items: flex-end;
 		gap: 0.3rem;
 	}
 
+	.acts:empty {
+		display: none;
+	}
+
 	/* Aktionen (eigene Knöpfe der Seite) im gleichen Stil wie „Mehr“ */
 	.acts :global(button:not(.more)),
 	.more {
 		position: relative;
-		min-height: 28px;
+		min-height: 34px;
 		padding: 0 0.65rem;
 		border: none;
 		border-radius: 999px;
@@ -212,14 +230,6 @@
 		font-weight: 500;
 		white-space: nowrap;
 		cursor: pointer;
-	}
-
-	/* 44 px Tippfläche */
-	.acts :global(button:not(.more))::after,
-	.more::after {
-		content: '';
-		position: absolute;
-		inset: -8px -4px;
 	}
 
 	.sheet {
@@ -244,6 +254,7 @@
 		gap: 0.5rem;
 		padding: 1rem 1.15rem calc(1.25rem + var(--safe-bottom));
 		border-top: 3px solid var(--cb);
+		overflow-wrap: anywhere;
 	}
 
 	.sheet-head {

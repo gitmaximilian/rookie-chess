@@ -34,3 +34,26 @@ test('Brett-Scan: Modus wechseln – Gegner-Sicht ist der Blunder-Check', async 
 			.first()
 	).toBeVisible();
 });
+
+test('Handy: Board-Scan zeigt nur ganze Zeilen und öffnet den vollständigen Text', async ({
+	page
+}) => {
+	await page.setViewportSize({ width: 320, height: 720 });
+	await page.goto('/puzzles/scan?mode=opponent');
+	const card = page.getByTestId('scan-bar');
+	await expect(card).toContainText('What can your opponent do?');
+	const more = card.getByRole('button', { name: 'More' });
+	await expect(more).toBeVisible();
+	const wholeLines = await card.locator('p').evaluateAll((paragraphs) =>
+		paragraphs.every((el) => {
+			const height = el.getBoundingClientRect().height;
+			const line = Number.parseFloat(getComputedStyle(el).lineHeight);
+			return height >= line - 1 && Math.abs(height - Math.round(height / line) * line) < 1;
+		})
+	);
+	expect(wholeLines).toBe(true);
+	await more.click();
+	const sheet = page.getByRole('dialog');
+	await expect(sheet).toContainText('What can your opponent do?');
+	await expect(sheet).toContainText('This is the blunder check');
+});

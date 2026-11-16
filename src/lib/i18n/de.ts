@@ -233,10 +233,6 @@ export const de: Shape<typeof en> = {
 		threatMaterial: (p: P) =>
 			`Achtung: ${p.piece} ist bedroht – dein Gegner droht Material zu gewinnen. Decke oder ziehe weg.`,
 		showThreat: 'Drohung zeigen',
-		punish: (p: P) => `Dein Gegner könnte jetzt ${p.san} antworten.`,
-		retry: 'Zurückgenommen – finde einen besseren Zug. Frag den Coach, wenn du Hilfe brauchst.',
-		showBetter: 'Besseren Zug zeigen',
-		betterWas: (p: P) => `Besser war ${p.san}.`,
 		title: 'Coach',
 		chanceKicker: 'Chance',
 		chanceTitle: 'Dein Gegner hat gerade gepatzt!',
@@ -249,16 +245,11 @@ export const de: Shape<typeof en> = {
 		levelWarnText:
 			'Der Coach warnt vor angegriffenen Figuren und Drohungen und zeigt Fehler sofort.',
 		levelCheckText:
-			'Der Coach fragt nur „Was droht?“ – den Blunder-Check machst du selbst, die Antwort gibt es auf Wunsch.',
+			'Vor deinem Zug fragt der Coach, was der Gegner droht. Auf Wunsch zeigt er dir die Drohung.',
 		checkPrompt: 'Dein Blunder-Check: Was hat der Gegner vor?',
 		checkPromptText:
 			'Vor deinem Zug: Kann der Gegner Schach geben, etwas schlagen oder etwas bedrohen?',
 		reveal: 'Was droht?',
-		unsafeTitle: 'Halt – dieser Zug ist nicht sicher.',
-		unsafeText:
-			'Was kann der Gegner jetzt schlagen oder drohen? Nimm zurück und such selbst – oder lass dir zeigen, warum.',
-		why: 'Zeig warum',
-		takebackSelf: 'Zurück, selbst finden',
 		toggle: 'Mit Coach spielen',
 		toggleText: 'Rückmeldung zu jedem Zug, Warnungen und Erklärungen.',
 		welcome: 'Ich kommentiere jeden deiner Züge. Geht etwas schief, kannst du ihn zurücknehmen.',
@@ -268,8 +259,6 @@ export const de: Shape<typeof en> = {
 		bestText: 'Das ist hier der stärkste Zug.',
 		goodText: 'Ein solider Zug.',
 		worseText: 'Dieser Zug verschlechtert deine Stellung.',
-		takeback: 'Zurücknehmen',
-		keepPlaying: 'Weiterspielen',
 		mateTitle: 'Schachmatt!',
 		mateText: 'Du hast das Matt gefunden – stark!',
 		threat: (p: P) => `Achtung: ${p.piece} auf ${p.sq} wird angegriffen!`,
@@ -410,6 +399,10 @@ export const de: Shape<typeof en> = {
 		zugzwang: { name: 'Zugzwang', about: 'Jeder Zug verschlechtert die Stellung des Gegners.' }
 	},
 	analysis: {
+		variation: 'Freie Variante',
+		variationText:
+			'Probiere Züge für beide Seiten aus. Die Partie bleibt wie gespielt gespeichert.',
+		returnToGame: 'Zurück zur Partie',
 		eyebrow: 'Analyse',
 		title: 'Meine Partien',
 		subtitle: 'Jede Partie von Stockfish analysiert und einfach erklärt.',
@@ -547,8 +540,7 @@ export const de: Shape<typeof en> = {
 		thinking: 'Engine rechnet …',
 		depth: (p) => `Tiefe ${p.d}`,
 		start: 'Ausgangsstellung',
-		startText:
-			'Tippe auf ›, um Zug für Zug durch die Partie zu gehen. Jeder Zug bekommt einen Kommentar.',
+		startText: 'Gehe mit › durch die Partie oder probiere eigene Züge direkt auf dem Brett aus.',
 		over: 'Partie beendet',
 		summary: 'Partie-Besprechung',
 		opponentMove: (p) => `Zug von ${p.name}`,

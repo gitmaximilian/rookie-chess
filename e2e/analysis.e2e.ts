@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { fen, playUci } from './helpers/board';
 
 // Am Handy steht der Kommentar über dem Brett (CommentBar), am Desktop in der Seitenspalte:
 // Tests suchen deshalb den sichtbaren Text, egal an welcher Stelle.
@@ -135,4 +136,31 @@ test('Erst du: eigene Fehler markieren, auflösen, dann nachspielen', async ({ p
 			.locator('visible=true')
 			.first()
 	).toBeVisible();
+});
+
+test('Partieanalyse: eigene Variante spielen und zur unveränderten Partie zurück', async ({
+	page
+}) => {
+	await page.goto('/analysis');
+	await page.locator('textarea').fill('1. e4 e5 2. Nf3 Nc6 *');
+	await page.getByRole('button', { name: 'Analyse', exact: true }).click();
+	const next = page.getByRole('button', { name: 'Forward', exact: true });
+	await next.click();
+	const original = await fen(page);
+
+	await playUci(page, 'c7c5');
+	const back = page.getByRole('button', { name: 'Back to original game' });
+	await expect(back).toBeVisible();
+	await expect(page.locator('.moves-card')).toContainText('c5');
+	await playUci(page, 'g1f3');
+	await expect.poll(() => fen(page)).toMatch(/ b /);
+
+	await back.click();
+	await expect.poll(() => fen(page)).toBe(original);
+	await expect(page.locator('.moves-card')).toContainText('e5');
+	await expect(page.locator('.moves-card')).not.toContainText('c5');
+
+	await playUci(page, 'e7e5');
+	await expect(back).toHaveCount(0);
+	await expect.poll(() => fen(page)).toMatch(/ w /);
 });
