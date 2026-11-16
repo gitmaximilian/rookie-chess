@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 
-/** Klickt einen UCI-Zug auf dem Brett (Tippen-Tippen) */
-export async function playUci(page: Page, uci: string) {
+/** Spielt einen UCI-Zug durch Anwählen von Start- und Zielfeld. */
+export async function playUci(page: Page, uci: string, input: 'mouse' | 'touch' = 'mouse') {
 	const host = page.locator('.cg-host').first();
 	// Einblend-Animation nach einem Seitenwechsel abwarten, sonst verrutschen die Klick-Koordinaten
 	await page.waitForFunction(() =>
@@ -28,8 +28,13 @@ export async function playUci(page: Page, uci: string) {
 	};
 	const a = at(uci.slice(0, 2));
 	const b = at(uci.slice(2, 4));
-	await page.mouse.click(a.x, a.y);
-	await page.mouse.click(b.x, b.y);
+	if (input === 'touch') {
+		await page.touchscreen.tap(a.x, a.y);
+		await page.touchscreen.tap(b.x, b.y);
+	} else {
+		await page.mouse.click(a.x, a.y);
+		await page.mouse.click(b.x, b.y);
+	}
 }
 
 export async function fen(page: Page): Promise<string> {

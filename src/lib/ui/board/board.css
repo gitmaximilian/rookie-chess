@@ -4,6 +4,7 @@
 	--sq-dark: #b98a5f;
 	--sq-last: rgb(242 140 82 / 0.42);
 	--sq-selected: rgb(226 88 62 / 0.45);
+	--sq-premove: rgb(82 95 232 / 0.53);
 	--sq-dot: rgb(40 28 18 / 0.22);
 	--sq-coord-light: #b98a5f;
 	--sq-coord-dark: #f0e6d4;
@@ -75,7 +76,12 @@ cg-board square.selected {
 	background-color: var(--sq-selected);
 }
 
-cg-board square.move-dest {
+cg-board square.current-premove {
+	background-color: var(--sq-premove);
+}
+
+cg-board square.move-dest,
+cg-board square.premove-dest {
 	background: radial-gradient(var(--sq-dot) 21%, transparent 23%);
 }
 
@@ -83,7 +89,8 @@ cg-board square.move-dest:hover {
 	background: rgb(226 88 62 / 0.28);
 }
 
-cg-board square.oc.move-dest {
+cg-board square.oc.move-dest,
+cg-board square.oc.premove-dest {
 	background: radial-gradient(transparent 0%, transparent 78%, var(--sq-dot) 80%);
 }
 

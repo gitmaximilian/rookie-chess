@@ -168,6 +168,8 @@ export const en = {
 		min10: '10 min',
 		start: 'Start game',
 		thinking: 'thinking …',
+		premove: 'Premove',
+		cancelPremove: 'Cancel premove',
 		yourTurn: 'Your move',
 		hint: 'Hint',
 		undo: 'Undo',
