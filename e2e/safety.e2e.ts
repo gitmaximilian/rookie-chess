@@ -65,3 +65,23 @@ test('Tagesplan: Blunder-Check steht vorn und führt zur Übung', async ({ page 
 	await task.click();
 	await expect(page).toHaveURL(/puzzles\/safety/);
 });
+
+test('Handy: kurzer Titel lässt Platz für die ganze Erklärung', async ({ page }) => {
+	await page.setViewportSize({ width: 393, height: 852 });
+	await page.goto('/puzzles/safety');
+	const card = page.getByTestId('safety-bar');
+	const text = card.locator('p.text');
+	await expect(text).toContainText('Imagine it played:');
+	await expect
+		.poll(() =>
+			text.evaluate((el) => {
+				const lineHeight = Number.parseFloat(getComputedStyle(el).lineHeight);
+				return {
+					lines: Math.round(el.getBoundingClientRect().height / lineHeight),
+					fits: el.scrollHeight <= el.clientHeight + 1
+				};
+			})
+		)
+		.toEqual({ lines: 2, fits: true });
+	await expect(card.getByRole('button', { name: 'More' })).toHaveCount(0);
+});
