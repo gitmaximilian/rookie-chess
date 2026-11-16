@@ -1,7 +1,7 @@
 <script lang="ts">
 	/**
 	 * Kommentar über dem Brett (nur Handy): erst lesen, was passiert ist, dann auf dem Brett sehen, wo.
-	 * Die Vorschau zeigt ganze Zeilen; ausreichend Platz ist für den normalen Textmaßstab reserviert.
+	 * Die Vorschau füllt den verfügbaren Platz mit ganzen Zeilen.
 	 * Längere Erklärungen öffnen sich über „Mehr“ als Blatt von unten.
 	 * Am iPad/Desktop unsichtbar: dort stehen Kommentare in der Seitenspalte.
 	 */
@@ -49,23 +49,58 @@
 	});
 
 	$effect(() => {
-		const el = body;
+		const preview = body;
 		void kicker;
 		void title;
 		void text;
-		if (!el) return;
-		const measure = () => {
-			clipped = [...el.children].some(
+		if (!preview?.parentElement) return;
+		const el = preview;
+		const card = preview.parentElement;
+		const label = el.querySelector<HTMLElement>('.kick');
+		const heading = el.querySelector<HTMLElement>('.title');
+		const details = el.querySelector<HTMLElement>('.text');
+
+		function fitLines(node: HTMLElement | null, space: number) {
+			if (!node) return;
+			const line = Number.parseFloat(getComputedStyle(node).lineHeight);
+			node.style.setProperty('--preview-lines', String(Math.max(1, Math.floor(space / line))));
+		}
+
+		function fitPreview() {
+			const gaps = Math.max(0, el.children.length - 1);
+			const gap = Number.parseFloat(getComputedStyle(el).rowGap);
+			const available =
+				el.getBoundingClientRect().height -
+				(label?.getBoundingClientRect().height ?? 0) -
+				gaps * gap;
+			const detailLine = details ? Number.parseFloat(getComputedStyle(details).lineHeight) : 0;
+			fitLines(heading, available - detailLine);
+			fitLines(details, available - (heading?.getBoundingClientRect().height ?? 0));
+			return [...el.children].some(
 				(child) =>
 					child.scrollHeight > child.clientHeight + 1 || child.scrollWidth > child.clientWidth + 1
 			);
+		}
+
+		const measure = () => {
+			// Prüfe zuerst, ob alles ohne „Mehr“ passt. Der Knopf selbst nimmt Platz weg.
+			const more = card.querySelector<HTMLElement>('.more');
+			const actions = more?.parentElement;
+			const hide = actions?.children.length === 1 ? actions : more;
+			if (hide) hide.style.display = 'none';
+			const needsMore = fitPreview();
+			hide?.style.removeProperty('display');
+			if (hide && needsMore) fitPreview();
+			clipped = needsMore;
 		};
 		const observer = new ResizeObserver(measure);
 		observer.observe(el);
+		document.fonts.addEventListener('loadingdone', measure);
 		const frame = requestAnimationFrame(measure);
 		return () => {
 			cancelAnimationFrame(frame);
 			observer.disconnect();
+			document.fonts.removeEventListener('loadingdone', measure);
 		};
 	});
 </script>
@@ -131,7 +166,7 @@
 			position: relative;
 			display: flex;
 			gap: 0.65rem;
-			min-height: var(--comment-h);
+			height: max(var(--comment-h), 6rem);
 			margin-bottom: 0.5rem;
 			padding: 0.5rem 0.75rem;
 			border-radius: 20px;
@@ -161,11 +196,13 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.1rem;
-		align-self: flex-start;
+		min-height: 0;
+		overflow: hidden;
 		overflow-wrap: anywhere;
 	}
 
 	.kick {
+		flex-shrink: 0;
 		line-height: 1.35;
 		color: color-mix(in srgb, var(--cb) 70%, var(--text));
 		white-space: nowrap;
@@ -184,8 +221,8 @@
 		flex-shrink: 0;
 		display: -webkit-box;
 		-webkit-box-orient: vertical;
-		-webkit-line-clamp: 2;
-		line-clamp: 2;
+		-webkit-line-clamp: var(--preview-lines, 2);
+		line-clamp: var(--preview-lines, 2);
 		overflow: hidden;
 	}
 
@@ -196,8 +233,8 @@
 	}
 
 	.body .text {
-		-webkit-line-clamp: 1;
-		line-clamp: 1;
+		-webkit-line-clamp: var(--preview-lines, 1);
+		line-clamp: var(--preview-lines, 1);
 	}
 
 	.acts {
