@@ -1505,6 +1505,7 @@ export const de: Shape<typeof en> = {
 	},
 	dailyProgress: { count: 'Heute: {done} von {goal}', done: 'Heute erledigt' },
 	selfReview: {
+		open: 'Eigene Fehler finden',
 		kicker: 'Erst du',
 		title: 'Wo waren deine Fehler?',
 		text: (p: P) =>

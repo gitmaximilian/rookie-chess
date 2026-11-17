@@ -1396,6 +1396,9 @@
 					</button>
 				{/if}
 				{#if myMistakes.length}
+					<button class="btn secondary" onclick={() => (selfReview = 'active')}
+						>{t('selfReview.open')}</button
+					>
 					<button class="card retry-cta" onclick={() => startRetry()}>
 						<span class="rc-ico"><Target size={20} /></span>
 						<span

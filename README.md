@@ -42,8 +42,8 @@ Rookie's goal: take beginners to **1600** – with methods that learning researc
 - **Board scan** – see checks, captures and hanging pieces in seconds, for you and your opponent (CCA), on real positions; daily in the plan below 1200
 - **Positional play** – five lessons with Stockfish-checked tasks: active pieces and outposts, open files, passed pawns, king safety, pawn structure
 - **Blunder check** – “You want to play ♘c4. Is it safe?” Real moments from Lichess games (the move a human actually blundered with, or a Stockfish-verified safe move); say “not safe” and you have to show the refutation on the board. Below 1000, over half of all blunders are pieces or mates lost within two moves – this trains exactly that
-- **Daily plan with a time budget** (30 min by default) – blunder check, your own mistakes due for review, mixed tactics, a game every other day, then theory only if it fits and matches your level; shows how many minutes are left
-- **You first** – after a game from your plan you first mark up to three moves you think were mistakes (no engine ratings shown), then Stockfish reveals what you found, missed or got right, and you replay the mistakes; “mistakes spotted” becomes a progress metric
+- **Daily plan with a time budget** (30 min by default) – blunder check, your own mistakes due for review, mixed tactics, a rated Rapid game when there is a suitable time block, then theory only if it fits and matches your level; shows how many minutes are left
+- **You first** – in the game review you can first mark up to three moves you think were mistakes (no engine ratings shown), then Stockfish reveals what you found, missed or got right, and you replay the mistakes; “mistakes spotted” becomes a progress metric
 - **Chance!** – in your first guided games the coach points out when your opponent just blundered (beginners leave about half of them unpunished)
 - **Your mistakes come back** – every blunder from your games (bot games are analysed automatically in the background) returns as a task after 1, 3, 8 and 22 days until it sticks
 - **Puzzles at the right difficulty** – aimed at ~80 % success instead of 50 %, adjusted to your recent results; a hint counts half; the plan's focus is mixed with other themes
@@ -54,7 +54,7 @@ Rookie's goal: take beginners to **1600** – with methods that learning researc
 - **Play** against 8 bots with personality (≈ 400–1650) – Stockfish 19 (WebAssembly) in the browser, hints, takebacks, optional clock, and one premove while the bot is thinking. Premoves play automatically if legal after the reply. Tap the premove label, right-click the board, or press Esc to clear it
 - **Game review** – every move classified and explained in plain language, the engine's best moves, evaluation graph, PGN import/export; try your own lines directly on the review board and return to the original game; **replay your mistakes** and find the better move
 - **What stands out** – only statements backed by enough games and beyond chance (e.g. an opening at least 8 games and clearly below your average), most important first, each with a matching exercise
-- **One strength, one scale** – your games, puzzles, online rating and bots combined on the Lichess scale (the scale all of Rookie is calibrated on), with milestones 800 → 1000 → 1200 → 1400 → 1600; coach and lessons always show the same level
+- **Road to 1600** – the latest imported rated Lichess Rapid result anchors the plan when available. Local practice estimates guide the exercises while you build a real-game history
 - **One blunder number** – “blunders per 30 moves” means the same everywhere (moves in still-open positions), plus **converted**: how many clearly won positions you actually won (Lichess players up to 1400: ≈ 69 %)
 - **Tactics** – fork, pin, skewer, discovered attack, back-rank mate: explained, then practised with puzzles; **Puzzle Storm**; **play a friend** on one device
 - **Chess basics** – 15 interactive lessons from zero

@@ -1442,6 +1442,7 @@ export const en = {
 	},
 	dailyProgress: { count: 'Today: {done} of {goal}', done: 'Done for today' },
 	selfReview: {
+		open: 'Find my mistakes',
 		kicker: 'You first',
 		title: 'Where were your mistakes?',
 		text: (p: P) =>
