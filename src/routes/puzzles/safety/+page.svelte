@@ -430,6 +430,7 @@
 				<p>{t('safety.testFirst')}</p>
 			{/if}
 			<a class="btn" href={resolve('/coach')}>{t('safety.toCoach')} <ArrowRight size={17} /></a>
+			<a class="hit44" href={resolve('/puzzles/decision')}>{t('decision.title')}</a>
 		</section>
 	{:else}
 		<div class="arena">

@@ -1,5 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { page } from '$app/state';
+	import { liveQuery } from 'dexie';
+	import { isTargetGame } from '#lib/import/ratings.js';
 	import { resolve } from '$app/paths';
 	import CloudDownload from '@lucide/svelte/icons/cloud-download';
 	import Sparkles from '@lucide/svelte/icons/sparkles';
@@ -90,6 +93,10 @@
 	let user = $state('');
 	let count = $state(20);
 	let auto = $state(true);
+	const rapid = $derived(
+		typeof window !== 'undefined' && page.url.searchParams.get('rapid') === '1'
+	);
+	let rapidReview = $state<number | undefined>();
 
 	let phase = $state<'idle' | 'loading' | 'analysing' | 'done' | 'error'>('idle');
 	let progress = $state({ i: 0, n: 0, ply: 0 });
@@ -97,15 +104,32 @@
 	let errorKey = $state('');
 	let abort: AbortController | null = null;
 
-	onMount(async () => {
+	onMount(() => {
+		auto = !rapid;
+		const subscription = rapid
+			? liveQuery(async () => {
+					const reviewed = await getSetting<number[]>('reviewedGames', []);
+					const newest = await db.games.orderBy('date').reverse().filter(isTargetGame).first();
+					return newest?.id && !reviewed.includes(newest.id) ? newest.id : undefined;
+				}).subscribe((id) => (rapidReview = id))
+			: null;
+		void init();
+		return () => {
+			subscription?.unsubscribe();
+			abort?.abort();
+		};
+	});
+
+	async function init() {
 		ready = true;
 		await refreshLinked();
 		const saved = await getSetting<{ source: Source; user: string } | null>('importUser', null);
-		if (saved) {
+		if (rapid && linked.lichess) user = linked.lichess;
+		else if (saved && (!rapid || saved.source === 'lichess')) {
 			source = saved.source;
 			user = saved.user;
 		}
-	});
+	}
 
 	async function run(e: Event) {
 		e.preventDefault();
@@ -170,6 +194,21 @@
 />
 
 <div class="wrap">
+	{#if rapid}
+		<section class="card form">
+			<p>{t('decision.rapidImportNote')}</p>
+			{#if rapidReview && (phase === 'idle' || phase === 'error')}
+				<a
+					class="btn"
+					data-testid="rapid-review"
+					href={resolve(`/analysis?game=${rapidReview}&practice=1`)}
+				>
+					<Sparkles size={18} />
+					{t('decision.rapidReview')}
+				</a>
+			{/if}
+		</section>
+	{/if}
 	<section class="card form accounts">
 		<h2><Link2 size={18} /> {t('import.accounts')}</h2>
 		<p class="hint">{t('import.accountsText')}</p>
@@ -291,7 +330,16 @@
 			{:else if phase === 'done'}
 				<p class="s-title">{summary.g ? t('import.done', summary) : t('import.none')}</p>
 				<div class="row-btns">
-					{#if summary.m}
+					{#if rapid && rapidReview}
+						<a
+							class="btn"
+							data-testid="rapid-review"
+							href={resolve(`/analysis?game=${rapidReview}&practice=1`)}
+						>
+							<Sparkles size={18} />
+							{t('decision.rapidReview')}
+						</a>
+					{:else if summary.m}
 						<a class="btn" href={resolve('/puzzles?mode=mistakes')}
 							><Sparkles size={18} /> {t('import.practise')}</a
 						>

@@ -1250,6 +1250,37 @@ export const de: Shape<typeof en> = {
 		noOnline: 'Ich spiele nicht online – loslegen',
 		done: 'Los geht’s!'
 	},
+	decision: {
+		title: 'Zug und Antwort',
+		test: 'Check mit neuen Stellungen',
+		choose: 'Wähle einen guten Zug für deine Seite. Achte auf Schachs, Schlagzüge und Drohungen.',
+		testChoose: 'Wähle den Zug, den du in einer Partie spielen würdest.',
+		reply: 'Wechsle gedanklich die Seite und spiele eine starke gegnerische Antwort.',
+		progress: 'Stellung {n} von {total}',
+		loading: 'Einen Moment …',
+		error: 'Die Stellung konnte gerade nicht ausgewertet oder gespeichert werden.',
+		retry: 'Weiter versuchen',
+		continue: 'Auswertung fortsetzen',
+		ownGood: 'Dein Zug ist gut spielbar.',
+		ownBetter: 'Ein stärkerer eigener Zug ist {move}.',
+		replyGood: 'Du hast eine starke Antwort gefunden.',
+		replyBetter: 'Der Gegner hat eine stärkere Antwort: {move}.',
+		next: 'Nächste Stellung',
+		again: 'Noch einmal üben',
+		result: '{n} von {total} Stellungen gelöst',
+		testDone:
+			'Das Ergebnis zählt nur die ersten Antworten pro Stellung. Es ist eine Momentaufnahme, kein Elo-Wert.',
+		firstTitle: 'Deine erste ganze Partie',
+		firstText:
+			'Spiele gegen Bauer Bruno ohne Uhr. Zieh selbst und nutze Hilfe nur, wenn du sie brauchst. Schau dir danach einen entscheidenden Zug an.',
+		firstPlay: 'Erste Partie spielen',
+		rapidReview: 'Einen Fehler aus der letzten Rapid-Partie üben',
+		rapidImportNote: 'Importiere deine Lichess-Partie und übe danach direkt einen wichtigen Zug.',
+		reviewDue: 'Nächste Wiederholung: {when}.',
+		backPlan: 'Zum Tagesplan',
+		autoEvidence:
+			'Automatik: Rookie schaltet auf selbst prüfen, sobald du bei aktuellen Zug-und-Antwort-Aufgaben regelmäßig gute Antworten findest.'
+	},
 	plan: {
 		rapidOffline: 'Offline kannst du unten gegen einen Bot üben.',
 		importRapid: 'Fertige Partie importieren',

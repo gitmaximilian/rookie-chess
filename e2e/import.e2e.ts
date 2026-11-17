@@ -86,3 +86,40 @@ test('Konto verknüpfen holt Partien automatisch', async ({ page }) => {
 	await page.getByRole('button', { name: 'Unlink' }).click();
 	await expect(page.getByLabel('Lichess Username')).toBeVisible();
 });
+
+test('Rapid-Import führt direkt zu einem eigenen Fehler und überspringt die Sammelanalyse', async ({
+	page
+}) => {
+	await page.route('https://lichess.org/api/games/user/**', (route) =>
+		route.fulfill({
+			headers: { 'access-control-allow-origin': '*', 'content-type': 'application/x-ndjson' },
+			body:
+				JSON.stringify({
+					id: 'first-rapid',
+					variant: 'standard',
+					rated: true,
+					speed: 'rapid',
+					createdAt: Date.now(),
+					players: {
+						white: { user: { name: 'alice' }, rating: 1200 },
+						black: { user: { name: 'rookietester' }, rating: 1100 }
+					},
+					pgn: PGN.replace('Rated Blitz', 'Rated Rapid')
+				}) + '\n'
+		})
+	);
+	await page.goto('/import?rapid=1');
+	await page.getByLabel('Username', { exact: true }).fill('rookietester');
+	await expect(page.getByRole('checkbox')).not.toBeChecked();
+	await page.getByRole('button', { name: /Import games/ }).click();
+	const next = page.getByTestId('rapid-review');
+	await expect(next).toHaveAttribute('href', /\/analysis\?game=\d+&practice=1$/);
+	await next.click();
+	await expect(page).toHaveURL(/\/analysis\?game=\d+&practice=1$/);
+	await expect(
+		page
+			.getByText(/Mistake 1 of 1/i)
+			.locator('visible=true')
+			.first()
+	).toBeVisible();
+});

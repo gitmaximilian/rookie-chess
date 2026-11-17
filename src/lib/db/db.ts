@@ -49,7 +49,7 @@ export interface PuzzleAttemptRow {
 	ratingAfter: number;
 	themes: string[];
 	/** safety = Blunder-Check, checkup = Kontrolltest (zählt nicht für Puzzle-Wertung und Themen) */
-	source: 'lichess' | 'mistake' | 'safety' | 'checkup' | 'scan';
+	source: 'lichess' | 'mistake' | 'safety' | 'checkup' | 'scan' | 'decision' | 'transfer';
 	/** mit Hinweis gelöst (ältere Einträge: fehlt) */
 	hinted?: boolean;
 }

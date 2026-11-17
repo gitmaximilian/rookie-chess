@@ -2,7 +2,7 @@
 
 A chess trainer for beginners as a Progressive Web App for iPhone, iPad and Mac – completely free, offline-capable, no App Store, no account, no tracking. English and German.
 
-**Live:** https://rookie.maximilianauer.at · **Version:** 0.7.7
+**Live:** https://rookie.maximilianauer.at · **Version:** 0.7.8
 
 | Home                                                                                                                           | Coach                                                                                                                                             | Play                                                                                                   | Game review                                                                                                                                | Blunder check                                                                                            |
 | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
@@ -17,6 +17,12 @@ A chess trainer for beginners as a Progressive Web App for iPhone, iPad and Mac 
 | <img src="docs/screenshots/desktop-analysis-light.png" width="420" alt="Game review on desktop in light mode: a mistake on the board, the engine's top moves and accuracy per move type"> | <img src="docs/screenshots/desktop-analysis-dark.png" width="420" alt="Game review on desktop in dark mode"> |
 
 Screenshots use generated sample data (`scripts/screenshots/`), not real games.
+
+## What's new in 0.7.8
+
+- In Move and Reply, choose your own move, then play a strong reply for your opponent. A separate six-position check records first answers and shows the score after the last position.
+- A Rapid import links directly to one important mistake, with the next review date and a way back to the daily plan.
+- The basics lead to a first game against the easiest bot. The automatic coach uses recent unaided Move and Reply results to decide when to ask rather than warn.
 
 ## What's new in 0.7.7
 
@@ -50,7 +56,7 @@ Rookie's goal: take beginners to **1600** – with methods that learning researc
 - **Chance!** – in your first guided games the coach points out when your opponent just blundered (beginners leave about half of them unpunished)
 - **Your mistakes come back** – every blunder from your games (bot games are analysed automatically in the background) returns as a task after 1, 3, 8 and 22 days until it sticks
 - **Puzzles at the right difficulty** – aimed at ~80 % success instead of 50 %, adjusted to your recent results; a hint counts half; the plan's focus is mixed with other themes
-- **Coach that steps back** – warns about threats in your first games, then asks “what is your opponent up to?” (you can still ask for help). The coach comments as the game continues, and you can take back a move during play. Wins with takebacks or hints don't count towards your strength
+- **Coach that steps back** – warns about threats until recent unaided exercises show consistent results, then asks “what is your opponent up to?” (you can still ask for help). The coach comments as the game continues, and you can take back a move during play. Wins with takebacks or hints don't count towards your strength
 - **Is your training working?** – blunders per 30 moves (last 10 games vs the 10 before, with an honest “still within chance”), a safety check-up every two weeks (fixed tasks, two alternating forms) and hit rates in training
 - **Game rating** – for each game: accuracy and the level it is typical of, how good the game was for players of your strength (percentile), accuracy per phase, the turning point, chances taken or missed and one lesson to practise. No fake “performance Elo” – measured on 1,440 Lichess games, a single game's accuracy barely predicts rating (R² = 0.14)
 - **Fair move ratings** – if two moves were practically equal, yours isn't a mistake; small slips in decided positions don't count; good moves get “just as strong: …” instead of “even stronger was …”
