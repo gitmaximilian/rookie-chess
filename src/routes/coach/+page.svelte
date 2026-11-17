@@ -16,6 +16,8 @@
 	import AvatarButton from '#lib/ui/AvatarButton.svelte';
 	import SkillPenta from '#lib/ui/SkillPenta.svelte';
 	import LevelFocus from '#lib/ui/LevelFocus.svelte';
+	import CoachHistory from '#lib/ui/CoachHistory.svelte';
+	import { coachHistory, type CoachHistoryPoint } from '#lib/training/coachHistory.js';
 	import ProgressCheck from '#lib/ui/ProgressCheck.svelte';
 	import type { AccPoint } from '#lib/ui/AccuracyTrend.svelte';
 	import {
@@ -76,6 +78,7 @@
 		accuracy: AccPoint[];
 		coverage: { done: number; total: number };
 		ratingSpark: number[];
+		history: CoachHistoryPoint[];
 	}
 
 	let d = $state<Data | null>(null);
@@ -201,6 +204,7 @@
 		const skills = skillMirror(skillRaw);
 		d = {
 			name: linked.lichess || linked.chesscom || '',
+			history: coachHistory(games),
 			games: games.length,
 			stats,
 			last,
@@ -367,6 +371,7 @@
 		</div>
 
 		<!-- Lernkennzahlen zuerst: Wirkt das Training? -->
+		<CoachHistory history={d.history} />
 		<ProgressCheck />
 
 		<h2 class="how-title">{t('coachTab.how')}</h2>

@@ -1193,6 +1193,33 @@ export const en = {
 		noOnline: 'I don’t play online – start',
 		done: 'Let’s go!'
 	},
+	coachHistory: {
+		title: 'Your progress',
+		period: 'Time range',
+		index: 'Training index',
+		rating: 'Lichess Rapid',
+		outOf100: '/ 100',
+		elo: 'Elo',
+		noPeriod: 'There are no Rapid games in this range.',
+		noGames: 'Import rated Lichess Rapid games to see your progress.',
+		notEnough: 'The index needs at least three analysed games and 30 eligible moves of your own.',
+		selectGame: 'Select a game on the timeline',
+		sample:
+			'Index from {analysed} games and {moves} eligible moves. {rate} blunders per 30 moves, {accuracy}% mean accuracy.',
+		coverage: 'Analysed games',
+		outcomes: 'Win / draw / loss',
+		converted: 'Winning positions converted',
+		how: 'How is this calculated?',
+		basis:
+			'Each index point uses up to ten fully analysed rated Lichess Rapid games against humans up to that date. The time range selects a portion of the same history.',
+		formula:
+			'Index = 0.60 × safety + 0.40 × mean Stockfish accuracy. The weights are a Rookie design choice for describing move quality.',
+		safety:
+			'Safety = max(0, 100 − 10 × blunders per 30 eligible moves). Rookie counts your moves from positions where your modelled winning chance was at least 20%. With 2 blunders per 30 moves and 80% accuracy, the index is 80.',
+		eloSource:
+			'The Elo line shows your imported Lichess Rapid rating after each game. The left scale shows the index and the right scale shows Elo. Change uses your last value before the range when available. The index is not an Elo estimate.',
+		periods: { 7: '7 days', 30: '30 days', 365: '1 year', all: 'All time' }
+	},
 	decision: {
 		title: 'Move and reply',
 		test: 'Check with new positions',
