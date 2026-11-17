@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Locator } from '@playwright/test';
 import { fen, playUci } from './helpers/board';
 
 test('Analysebrett: beide Farben ziehen, Stockfish rechnet live, Variante spielen, PGN laden', async ({
@@ -107,6 +107,7 @@ for (const example of [
 		await playUci(page, example.uci, input);
 		const dialog = page.getByRole('dialog', { name: 'Choose promotion' });
 		await expect(dialog).toBeVisible();
+		await dialog.evaluate((el) => Promise.allSettled(el.getAnimations().map((a) => a.finished)));
 		const art = await dialog.locator('piece').evaluateAll((elements) =>
 			elements.map((piece) => ({
 				width: piece.getBoundingClientRect().width,
@@ -121,11 +122,21 @@ for (const example of [
 			if (example.pieces === 'cburnett') expect(piece.background).toContain('data:image/svg+xml');
 			else expect(piece.background).toContain('/pieces/' + example.pieces + '/' + example.side);
 		}
-		await dialog.getByRole('button', { name: 'Cancel' }).click();
+		async function pressVisible(button: Locator) {
+			await expect(button).toBeInViewport({ ratio: 1 });
+			const box = (await button.boundingBox())!;
+			const click = hasTouch
+				? page.touchscreen.tap.bind(page.touchscreen)
+				: page.mouse.click.bind(page.mouse);
+			await click(box.x + box.width / 2, box.y + box.height / 2);
+		}
+		await pressVisible(dialog.getByRole('button', { name: 'Cancel' }));
 		await expect(dialog).toHaveCount(0);
 		expect(await fen(page)).toBe(example.fen);
 		await playUci(page, example.uci, input);
-		await dialog.getByRole('button', { name: 'Knight' }).click();
+		await expect(dialog).toBeVisible();
+		await dialog.evaluate((el) => Promise.allSettled(el.getAnimations().map((a) => a.finished)));
+		await pressVisible(dialog.getByRole('button', { name: 'Knight' }));
 		await expect.poll(() => fen(page)).toMatch(example.board);
 	});
 }
