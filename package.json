@@ -1,6 +1,6 @@
 {
 	"name": "rookie-chess",
-	"version": "0.7.5",
+	"version": "0.7.6",
 	"type": "module",
 	"imports": {
 		"#lib": "./src/lib/index.js",

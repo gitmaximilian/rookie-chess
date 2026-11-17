@@ -1194,6 +1194,12 @@ export const en = {
 		done: 'Let’s go!'
 	},
 	plan: {
+		rapidOffline: 'You can practise against a bot below while offline.',
+		importRapid: 'Import a finished game',
+		openLichess: 'Open Lichess',
+		rapidDetails:
+			'Play a rated Standard Rapid game on Lichess, ideally 10+0. Allow up to 20 minutes. Import the finished game to check this off and practise a key mistake.',
+		rapidSlot: 'Plan a Rapid game when you have 20 minutes',
 		kicker: 'Next step',
 		title: 'Your training today',
 		review: (p: P) => `Review ${p.n} missed ${s(p.n, 'puzzle', 'puzzles')}`,
@@ -1203,8 +1209,8 @@ export const en = {
 		basics: (p: P) => `Lesson: ${p.name}`,
 		course: (p: P) => `Opening: ${p.name}`,
 		endgame: (p: P) => `Endgame: ${p.name}`,
-		game: 'Last game: find your mistakes, then replay them',
-		play: 'Play a game with the coach',
+		game: 'Practise one mistake from your game',
+		play: 'Play a rated Rapid game',
 		safety: (p: P) => `Blunder check: ${p.n} moves – safe or not?`,
 		mistakes: (p: P) => `Your own mistakes: ${p.n} to repeat`,
 		scan: (p: P) => `Board scan: ${p.n} positions – what can your opponent do?`,
@@ -1327,7 +1333,7 @@ export const en = {
 			`${p.pct} % of what you lose here are blunders. Without blunders, Lichess players from 400 to 1800 play this phase almost equally well – so your lever is the blunder check, not more theory.`,
 		elite: 'World elite',
 		eliteShort: 'Elite',
-		lever: (p: P) => `Biggest lever: ${p.name} – ≈ +${p.gain} Elo`,
+		lever: (p: P) => `Suggested focus: ${p.name}`,
 		leverText: 'This is where training takes you furthest right now.',
 		name: {
 			safety: 'Safety',
@@ -1436,6 +1442,7 @@ export const en = {
 	},
 	dailyProgress: { count: 'Today: {done} of {goal}', done: 'Done for today' },
 	selfReview: {
+		open: 'Find my mistakes',
 		kicker: 'You first',
 		title: 'Where were your mistakes?',
 		text: (p: P) =>
@@ -1479,6 +1486,8 @@ export const en = {
 		note: 'Rating: accuracy of this game compared with 1,440 real Lichess games (400–2200, same engine depth). A single game varies a lot – even players around 1000 exceed 87 % in one game in four. A “performance Elo” from one game would mostly be chance; what counts is how the game was for your level, and the trend over many games.'
 	},
 	progress: {
+		rapidScope:
+			'The game trend now uses rated Lichess Rapid only. Other games are still in your history.',
 		title: 'Is your training working?',
 		text: 'Stars, streak and puzzle rating show effort. Whether you play better shows here – with honest minimum sample sizes.',
 		blunders: 'Blunders per 30 moves',
@@ -1647,6 +1656,11 @@ export const en = {
 		practiseText: (p: P) => `Now train it: puzzles with the theme “${p.theme}” at your level.`
 	},
 	retry: {
+		saveFailed: 'The review could not be saved. Try again.',
+		noneToPractise: 'No major mistake to practise in this game.',
+		oneDone: 'Saved for spaced review',
+		oneText: 'Play a better move and add the position to your reviews.',
+		one: 'Practise the key mistake',
 		solvedHint: 'Found – with a hint.',
 		hintShown: 'The piece to move is marked green.',
 		after: (p: P) => `Your opponent had just played ${p.move}.`,
@@ -1699,6 +1713,9 @@ export const en = {
 		fromHere: 'Analysis board'
 	},
 	summary: {
+		rapidImported: 'Latest imported rating. Stability unverified.',
+		rapidNoData: 'Import a rated Rapid game',
+		rapidGoal: 'Lichess Rapid · goal 1600',
 		title: 'Overview',
 		link: 'Link account',
 		loading: 'Loading games …',

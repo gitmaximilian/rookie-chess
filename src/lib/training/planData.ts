@@ -1,24 +1,36 @@
-import { db, getSetting, setSetting, today, type PuzzleAttemptRow } from '#lib/db/db.js';
+import {
+	db,
+	getSetting,
+	setSetting,
+	today,
+	type GameRow,
+	type PuzzleAttemptRow
+} from '#lib/db/db.js';
 import { countDue } from './srs.js';
 import { themeStats, weakest } from './stats.js';
 import { getCourseProgress } from '#lib/openings/progress.js';
 import { getProfile } from '#lib/onboarding/profile.js';
 import { getPuzzleRating } from './rating.js';
+import { isTargetGame, targetRating } from '#lib/import/ratings.js';
 import { BOTS } from '#lib/bots/bots.js';
 import { estimateStrength, type Strength } from './strength.js';
 import { gameLevel } from './skills.js';
 import {
 	buildPlan,
+	needsBasics,
 	DEFAULT_MINUTES,
 	type DailyPlan,
 	type PlanContext,
 	type PlanInitial
 } from './plan.js';
-import { computeStats, outcomeOf, type GameStats } from './gamestats.js';
+import { computeStats, type GameStats } from './gamestats.js';
 import { pickFocus, type Focus } from './focus.js';
 import { checkupDue, type CheckupResult } from './safety.js';
 
 interface StoredPlan extends DailyPlan {
+	revision: 1;
+	reviewAfterRapid: number | null;
+	rulesPending: boolean;
 	initial: PlanInitial;
 }
 
@@ -46,12 +58,17 @@ export async function loadPlanContext(): Promise<PlanContext> {
 	start.setHours(0, 0, 0, 0);
 	const attempts = await db.puzzleAttempts.toArray();
 	const games = await db.games.toArray();
-	const stats = computeStats(games);
+	const rapid = games.filter(isTargetGame);
+	const stats = computeStats(rapid.length ? rapid : games);
 	const focus = focusFrom(stats, attempts);
-	const lastGame = games.reduce((m, g) => Math.max(m, g.date), 0);
+	const lastRapid = rapid.reduce<(typeof games)[number] | null>(
+		(latest, g) => (!latest || g.date > latest.date ? g : latest),
+		null
+	);
+	const lastGame = lastRapid?.date ?? 0;
 	const profile = await getProfile();
 	const lastMistake = await db.mistakes.orderBy('date').last();
-	const strength = await currentStrength();
+	const strength = await currentStrength(games);
 	const safetyAttempts = attempts.filter((a) => a.source === 'safety');
 	const checkups = await getSetting<CheckupResult[]>('checkups', []);
 	return {
@@ -73,12 +90,10 @@ export async function loadPlanContext(): Promise<PlanContext> {
 		rulesKnown: profile?.rules ?? null,
 		focus: profile?.focus ?? null,
 		dailyGoal: await getSetting('dailyGoal', 5),
-		gameToReview: lastMistake?.gameId ?? null,
+		gameToReview: lastRapid?.id ?? lastMistake?.gameId ?? null,
 		reviewedGames: await getSetting<number[]>('reviewedGames', []),
 		daysSinceGame: lastGame ? Math.floor((Date.now() - lastGame) / 86_400_000) : null,
-		gamesToday: games.filter(
-			(g) => g.source === 'bot' && g.date >= start.getTime() && outcomeOf(g) !== null
-		).length,
+		gamesToday: rapid.filter((g) => g.date >= start.getTime()).length,
 		strength: strength?.value ?? null,
 		minutes: await getSetting('minutesPerDay', DEFAULT_MINUTES)
 	};
@@ -94,15 +109,29 @@ function focusFrom(stats: GameStats, attempts: PuzzleAttemptRow[]): Focus | null
 
 /** Schwerpunkt für Seiten außerhalb des Tagesplans (Coach) */
 export async function currentFocus(): Promise<Focus | null> {
-	return focusFrom(computeStats(await db.games.toArray()), await db.puzzleAttempts.toArray());
+	const games = await db.games.toArray();
+	const rapid = games.filter(isTargetGame);
+	return focusFrom(computeStats(rapid.length ? rapid : games), await db.puzzleAttempts.toArray());
 }
 
 /** Plan für heute – einmal erzeugt, danach bis Mitternacht gleich */
 export async function todayPlan(ctx: PlanContext): Promise<StoredPlan> {
 	const stored = await getSetting<StoredPlan | null>('dailyPlan', null);
-	if (stored?.day === ctx.day) return stored;
+	const rulesPending = needsBasics(ctx);
+	const reviewAfterRapid = ctx.gamesToday ? ctx.gameToReview : null;
+	if (
+		stored?.day === ctx.day &&
+		stored.revision === 1 &&
+		stored.rulesPending === rulesPending &&
+		stored.reviewAfterRapid === reviewAfterRapid
+	) {
+		return stored;
+	}
 	const plan: StoredPlan = {
 		...buildPlan(ctx),
+		revision: 1,
+		reviewAfterRapid,
+		rulesPending,
 		initial: {
 			dueReview: ctx.dueReview,
 			dueRepertoire: ctx.dueRepertoire,
@@ -114,18 +143,19 @@ export async function todayPlan(ctx: PlanContext): Promise<StoredPlan> {
 }
 
 /** die eine Spielstärke der App (Lichess-Skala): Start, Coach, Lernen, Profil und Tagesplan nutzen sie */
-export async function currentStrength(): Promise<Strength | null> {
+export async function currentStrength(savedGames?: GameRow[]): Promise<Strength | null> {
+	const games = savedGames ?? (await db.games.toArray());
+	const rapid = targetRating(games);
+	if (rapid !== null) {
+		return { value: rapid, confidence: 0, parts: [{ source: 'online', value: rapid }] };
+	}
 	const beatenIds = await getSetting<string[]>('botsBeaten', []);
-	const games = await db.games.orderBy('date').reverse().toArray();
-	const online = games.find(
-		(g) => g.myRating && (g.source === 'lichess' || g.source === 'chesscom')
-	);
 	return estimateStrength({
-		games: gameLevel(games),
-		puzzle: (await db.puzzleAttempts.count()) >= 5 ? await getPuzzleRating() : null,
-		botsBeaten: BOTS.filter((b) => beatenIds.includes(b.id)).map((b) => b.elo),
-		online: online
-			? { rating: online.myRating!, source: online.source as 'lichess' | 'chesscom' }
-			: null
+		games: gameLevel(games.filter((g) => g.source === 'pgn' || g.source === 'friend')),
+		puzzle:
+			(await db.puzzleAttempts.filter((a) => a.source === 'lichess').count()) >= 5
+				? await getPuzzleRating()
+				: null,
+		botsBeaten: BOTS.filter((b) => beatenIds.includes(b.id)).map((b) => b.elo)
 	});
 }

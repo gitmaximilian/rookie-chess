@@ -3,9 +3,9 @@ import { expect, test } from '@playwright/test';
 test('Startseite zeigt Begrüßung, Zusammenfassung und Bereiche', async ({ page }) => {
 	await page.goto('/');
 	await expect(page.locator('h1')).toContainText(/Good|Hello/);
-	// neue Nutzer: Tagesziel und Serie, aber keine leeren Kacheln mit „–“
+	// Das Rapid-Ziel führt direkt zum Import, bevor eine Wertung vorliegt.
 	await expect(page.getByTestId('tile-goal')).toBeVisible();
-	await expect(page.getByTestId('tile-strength')).toHaveCount(0);
+	await expect(page.getByTestId('tile-strength')).toContainText('Import a rated Rapid game');
 	await expect(page.getByTestId('tile-stars')).toHaveCount(0);
 	await expect(page.getByRole('link', { name: /Play/ }).first()).toBeVisible();
 });
@@ -109,7 +109,7 @@ test('Startseite zeigt nur verknüpfte Konten', async ({ page }) => {
 	);
 	await page.reload();
 	const sum = page.locator('[data-testid="home-bento"]');
-	await expect(sum.getByText('Lichess')).toBeVisible();
+	await expect(sum.getByText('Lichess', { exact: true })).toBeVisible();
 	await expect(sum.getByText('Chess.com')).toHaveCount(0);
 	await expect(page.getByText('Puzzle of the day')).toHaveCount(0);
 	if (process.env.SHOT) await page.screenshot({ path: process.env.SHOT });

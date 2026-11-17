@@ -286,7 +286,12 @@
 								><Puzzle size={17} /> {t('tactics.practise')}</a
 							>
 						{/if}
-						{#if nextLesson()}
+						{#if set === 'basics' && BASICS.every((item) => done.includes(item.id))}
+							<a class="btn" href={resolve('/play?plan=1')}>
+								{t('plan.play')}
+								<ArrowRight size={17} />
+							</a>
+						{:else if nextLesson()}
 							<button class="btn" onclick={openNext}
 								>{t('basics.nextLesson')} <ArrowRight size={17} /></button
 							>

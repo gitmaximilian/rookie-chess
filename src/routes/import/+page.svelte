@@ -34,6 +34,7 @@
 		['chesscom', 'Chess.com']
 	];
 	let linked = $state<LinkedAccounts>({});
+	let ready = $state(false);
 	let linkInput = $state<Record<Source, string>>({ lichess: '', chesscom: '' });
 
 	async function refreshLinked() {
@@ -97,6 +98,7 @@
 	let abort: AbortController | null = null;
 
 	onMount(async () => {
+		ready = true;
 		await refreshLinked();
 		const saved = await getSetting<{ source: Source; user: string } | null>('importUser', null);
 		if (saved) {
@@ -195,7 +197,9 @@
 							autocapitalize="off"
 							spellcheck="false"
 						/>
-						<button class="btn small" type="submit">{t('import.link')}</button>
+						<button class="btn small" type="submit" disabled={!ready || !linkInput[src].trim()}>
+							{t('import.link')}
+						</button>
 					</form>
 				{/if}
 			</div>
@@ -256,7 +260,11 @@
 			<span>{t('import.autoAnalyse')}</span>
 		</label>
 
-		<button class="btn big" type="submit" disabled={phase === 'loading' || phase === 'analysing'}>
+		<button
+			class="btn big"
+			type="submit"
+			disabled={!ready || phase === 'loading' || phase === 'analysing'}
+		>
 			<CloudDownload size={19} />
 			{t('import.load')}
 		</button>

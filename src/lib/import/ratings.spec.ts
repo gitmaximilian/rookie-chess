@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import type { GameRow } from '#lib/db/db.js';
-import { ratingsFrom, ratingAfter, isRated, ratingSeriesFrom, summarise, byMonth } from './ratings';
+import {
+	ratingsFrom,
+	ratingAfter,
+	isRated,
+	ratingSeriesFrom,
+	summarise,
+	byMonth,
+	targetRating
+} from './ratings';
 
 const g = (p: Partial<GameRow>): GameRow => ({
 	date: 0,
@@ -97,4 +105,23 @@ describe('Wertung korrekt aus den Daten', () => {
 			['2026-01', 20, 2]
 		]);
 	});
+});
+
+it('das Ziel nutzt nur gewertetes Lichess Rapid ohne bekannte Bots', () => {
+	const rapid = g({
+		myRating: 1320,
+		speed: 'rapid',
+		date: 1,
+		pgn: '[Event "Rated Rapid game"]\n[WhiteRatingDiff "+4"]'
+	});
+	expect(
+		targetRating([
+			rapid,
+			{ ...rapid, date: 2, myRating: 830, source: 'chesscom', rated: false },
+			{ ...rapid, date: 3, myRating: 1600, rated: true, opponentIsBot: true },
+			{ ...rapid, date: 4, myRating: 1800, rated: true, speed: 'blitz' },
+			{ ...rapid, date: 5, myRating: 600, rated: true, result: '*' },
+			{ ...rapid, date: 6, myRating: 1400, pgn: '' }
+		])
+	).toBe(1324);
 });

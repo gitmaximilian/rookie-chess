@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { liveQuery } from 'dexie';
 	import { resolve } from '$app/paths';
 	import Check from '@lucide/svelte/icons/check';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
@@ -21,6 +22,7 @@
 	import {
 		minutesOf,
 		progressOf,
+		rapidDue,
 		type PlanContext,
 		type PlanInitial,
 		type PlanTask
@@ -35,12 +37,25 @@
 	let tasks = $state<PlanTask[]>([]);
 	let initial: PlanInitial = { dueReview: 0, dueRepertoire: 0, dueMistakes: 0 };
 
-	onMount(async () => {
-		const c = await loadPlanContext();
-		const plan = await todayPlan(c);
-		initial = plan.initial;
-		tasks = plan.tasks;
-		ctx = c;
+	onMount(() => {
+		let revision = 0;
+		const sub = liveQuery(loadPlanContext).subscribe({
+			async next(c) {
+				const run = ++revision;
+				const plan = await todayPlan(c);
+				if (run !== revision) return;
+				initial = plan.initial;
+				tasks = plan.tasks;
+				ctx = c;
+			},
+			error(error) {
+				console.error(error);
+			}
+		});
+		return () => {
+			revision++;
+			sub.unsubscribe();
+		};
 	});
 
 	const rows = $derived(
@@ -127,9 +142,9 @@
 			case 'endgame':
 				return resolve(`/learn/endgame?id=${task.lesson}`);
 			case 'game':
-				return resolve(`/analysis?game=${task.gameId}&retry=1`);
+				return resolve(`/analysis?game=${task.gameId}&practice=1`);
 			case 'play':
-				return resolve('/play');
+				return resolve('/play?plan=1');
 			case 'safety':
 				return resolve('/puzzles/safety');
 			case 'mistakes':
@@ -187,6 +202,12 @@
 				>{doneCount ? t('plan.continue') : t('plan.start')} <ArrowRight size={18} /></a
 			>
 		{/if}
+		{#if rapidDue(ctx) && !tasks.some((task) => task.kind === 'play')}
+			<a class="rapid-slot" href={resolve('/play?plan=1')} data-testid="rapid-slot">
+				<ChessKnight size={16} />
+				{t('plan.rapidSlot')}
+			</a>
+		{/if}
 	{/if}
 </section>
 
@@ -198,6 +219,14 @@
 		gap: 0.85rem;
 		padding: 1.2rem;
 		border-radius: var(--radius-tile);
+	}
+
+	.rapid-slot {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		font-size: 0.85rem;
+		color: var(--text-2);
 	}
 
 	.p-head {

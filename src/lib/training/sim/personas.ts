@@ -9,7 +9,7 @@
  * - Zeitbedarf je Aufgabe: Puzzle 1,2 min, Wiederholung 0,8 min, Lektion 6 min, Eröffnungsvariante 5 min,
  *   Endspiel 8 min, Partie nachspielen 1,5 min je Fehler, Blunder-Check-Übung 0,8 min je Stellung.
  */
-import { buildPlan, progressOf, type PlanContext, type PlanTask } from '../plan.js';
+import { buildPlan, minutesOf, progressOf, type PlanContext, type PlanTask } from '../plan.js';
 import { BEGINNER_RATING, updateForPuzzle, type Rating } from '../glicko2.js';
 import { puzzleTarget } from '../difficulty.js';
 
@@ -35,9 +35,9 @@ export const PERSONAS: Persona[] = [
 		name: 'A · 600, kennt die Regeln, stellt oft Figuren ein',
 		puzzleSkill: 750,
 		strength: 600,
-		rules: 'some',
+		rules: 'yes',
 		focus: 'play',
-		minutesPerDay: 25,
+		minutesPerDay: 30,
 		blundersPerGame: 4,
 		motifs: { hanging: 0.55, 'mate-allowed': 0.15, fork: 0.15, 'missed-win': 0.15 },
 		onlineGamesPerDay: 0
@@ -256,11 +256,11 @@ export function simulateWeek(p: Persona, hooks: SimHooks = {}, days = 7): WeekLo
 				}
 				case 'play': {
 					const k = playGame();
-					add(task, 15, 'playing', `${k} Patzer`);
+					add(task, minutesOf(task), 'playing', `${k} Patzer`);
 					break;
 				}
 				case 'game': {
-					const n = Math.max(1, Math.min(4, Math.round(s.blundersPerGame)));
+					const n = 1;
 					reviewed.push(task.gameId);
 					const own = s.mistakeQueue.filter((m) => m.reps === 0).slice(-n);
 					own.forEach((m) => {
@@ -268,12 +268,12 @@ export function simulateWeek(p: Persona, hooks: SimHooks = {}, days = 7): WeekLo
 						m.due = d + 3;
 					});
 					s.mistakesPractised += own.length;
-					add(task, n * 1.5, 'retrieval', `${own.length} eigene Fehler nachgespielt`);
+					add(task, minutesOf(task), 'retrieval', `${own.length} eigene Fehler nachgespielt`);
 					break;
 				}
 				case 'basics':
 					s.basicsDone = [...s.basicsDone, task.lesson];
-					add(task, 6, 'reading', 'Lektion (meist Lesen, 1–2 Aufgaben)');
+					add(task, minutesOf(task), 'reading', 'Lektion (meist Lesen, 1–2 Aufgaben)');
 					break;
 				case 'endgame':
 					s.endgameStars = { ...s.endgameStars, [task.lesson]: 2 };

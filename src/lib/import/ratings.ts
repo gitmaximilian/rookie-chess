@@ -60,6 +60,29 @@ export function isRated(g: GameRow): boolean {
 	return true;
 }
 
+export function isTargetGame(game: GameRow): boolean {
+	const opponent = game.myColor === 'white' ? 'BlackTitle' : 'WhiteTitle';
+	return (
+		game.source === 'lichess' &&
+		game.speed === 'rapid' &&
+		game.result !== '*' &&
+		!game.opponentIsBot &&
+		header(game.pgn, opponent) !== 'BOT' &&
+		isRated(game) &&
+		(game.rated === true ||
+			/^rated\b/i.test(header(game.pgn, 'Event') ?? '') ||
+			ratingDiff(game) !== null)
+	);
+}
+
+export function targetRating(games: GameRow[]): number | null {
+	const latest = games.reduce<GameRow | null>(
+		(latest, game) => (isTargetGame(game) && (!latest || game.date > latest.date) ? game : latest),
+		null
+	);
+	return latest ? ratingAfter(latest) : null;
+}
+
 export interface RatingPoint {
 	date: number;
 	rating: number;

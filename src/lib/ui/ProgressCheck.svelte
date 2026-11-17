@@ -9,6 +9,7 @@
 	import BentoGrid from '#lib/ui/bento/BentoGrid.svelte';
 	import StatTile from '#lib/ui/bento/StatTile.svelte';
 	import { db, getSetting } from '#lib/db/db.js';
+	import { isTargetGame } from '#lib/import/ratings.js';
 	import { blunderSeries, blunderTrend, successRate, type Trend } from '#lib/training/progress.js';
 	import {
 		checkupDue,
@@ -35,7 +36,7 @@
 			db.puzzleAttempts.orderBy('date').reverse().limit(400).toArray(),
 			getSetting<CheckupResult[]>('checkups', [])
 		]);
-		const series = blunderSeries(games);
+		const series = blunderSeries(games.filter(isTargetGame));
 		trend = blunderTrend(series);
 		spark = series.slice(-20).map((x) => x.per30);
 		checkups = ch;
@@ -94,6 +95,7 @@
 <section class="progress" data-testid={testid} aria-busy={!ready}>
 	<div class="p-head">
 		<h2>{t('progress.title')}</h2>
+		<p class="muted">{t('progress.rapidScope')}</p>
 	</div>
 	<BentoGrid label={t('progress.title')}>
 		<StatTile

@@ -30,7 +30,7 @@ export function startBot(p: Pick<LearnerProfile, 'rules' | 'level'>): string {
 export function firstRoute(
 	p: LearnerProfile
 ): '/learn/basics' | '/puzzles' | '/play' | '/learn/openings' | '/' {
-	if (p.rules === 'no') return '/learn/basics';
+	if (p.rules !== 'yes') return '/learn/basics';
 	return {
 		rules: '/learn/basics',
 		tactics: '/puzzles',

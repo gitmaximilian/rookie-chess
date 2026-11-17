@@ -6,7 +6,7 @@
  *    eingestellte Figuren und übersehene Ein-/Zweizüger).
  * 2. Eigene Fehler kommen mit Abständen wieder (1 → 3 → 8 → 22 Tage), bis sie sitzen.
  * 3. Gemischte Taktik mit ca. 80 % Erfolg; der Schwerpunkt bekommt zwei von drei Puzzles.
- * 4. Spielen mit Zeit (alle zwei Tage, ≈ 30 % der Zeit), danach die Partie besprechen.
+ * 4. Regelmäßig gewertetes Rapid gegen Menschen, danach einen eigenen Fehler üben.
  * 5. Theorie (Lektion, Eröffnung, Endspiel) nur, wenn im Zeitbudget Platz ist.
  *
  * Aufgaben werden nach Wichtigkeit ausgewählt, bis das Zeitbudget voll ist, und dann in einer
@@ -78,7 +78,7 @@ export interface PlanContext {
 	reviewedGames: number[];
 	/** Tage seit der letzten eigenen Partie (null = noch nie gespielt) */
 	daysSinceGame: number | null;
-	/** heute beendete Partien gegen Bots */
+	/** heute importierte gewertete Lichess-Rapid-Partien, nach Partiedatum */
 	gamesToday: number;
 	/** geschätzte Spielstärke (null = unbekannt) – bestimmt, welche Lektionen schon passen */
 	strength: number | null;
@@ -115,10 +115,9 @@ export function minutesOf(task: PlanTask): number {
 		case 'repertoire':
 			return Math.max(1, Math.ceil(task.target * 0.5));
 		case 'play':
-			return 15;
+			return 20;
 		case 'game':
-			// erst selbst suchen, dann nachspielen
-			return 7;
+			return 4;
 		case 'checkup':
 			return 6;
 		case 'scan':
@@ -126,7 +125,7 @@ export function minutesOf(task: PlanTask): number {
 		case 'positional':
 			return 6;
 		case 'basics':
-			return 6;
+			return 5;
 		case 'course':
 			return 5;
 		case 'endgame':
@@ -186,32 +185,42 @@ function nextLesson(c: PlanContext): PlanTask | null {
 
 /** Reihenfolge im Plan: Aufwärmen → Wiederholen → Taktik → Partie → Nacharbeit → Theorie */
 const ORDER: PlanTask['kind'][] = [
+	'basics',
 	'checkup',
 	'scan',
 	'safety',
+	'play',
+	'game',
 	'mistakes',
 	'review',
 	'puzzles',
-	'game',
-	'play',
 	'repertoire',
-	'basics',
 	'positional',
 	'course',
 	'endgame'
 ];
 
+export function needsBasics(c: PlanContext): boolean {
+	return (
+		(c.rulesKnown === 'no' || c.rulesKnown === 'some') &&
+		BASICS.some((lesson) => !c.basicsDone.includes(lesson.id))
+	);
+}
+
+export function rapidDue(c: PlanContext): boolean {
+	return !needsBasics(c) && (c.daysSinceGame === null || c.daysSinceGame >= PLAY_AFTER_DAYS);
+}
+
 export function buildPlan(c: PlanContext): DailyPlan {
 	const n = Math.max(3, Math.min(c.dailyGoal, 10));
 	const cand: { task: PlanTask; prio: number }[] = [];
 	const add = (task: PlanTask, prio: number) => cand.push({ task, prio });
-	const beginner = c.rulesKnown === 'no';
+	const beginner = needsBasics(c);
 
 	if (beginner) {
-		// erst die Regeln: Lektion und einfache Puzzles (Matt in 1 kommt in „Für dich“ von selbst)
+		// Erst die nächste offene Regellektion.
 		const lesson = nextLesson(c);
 		if (lesson) add(lesson, 0);
-		add({ id: 'puzzles', kind: 'puzzles', target: n }, 1);
 	} else {
 		if (c.checkupDue) add({ id: 'checkup', kind: 'checkup' }, 0.5);
 		// unter 1200: das Brett sehen (Brett-Scan) gehört täglich dazu, der Blunder-Check wird kürzer
@@ -220,12 +229,14 @@ export function buildPlan(c: PlanContext): DailyPlan {
 		if (scan) add({ id: 'scan', kind: 'scan', target: SCAN_PER_DAY }, 1.2);
 		if (c.dueMistakes > 0)
 			add({ id: 'mistakes', kind: 'mistakes', target: Math.min(c.dueMistakes, 5) }, 2);
-		// Partie alle zwei Tage (≈ 4 pro Woche, ≈ 30 % der Zeit); Schwerpunkt „Partien“ macht sie
-		// nur wichtiger – mehr spielen kann man jederzeit, der Plan hält Platz für Übung frei
-		const play = c.daysSinceGame === null || c.daysSinceGame >= PLAY_AFTER_DAYS;
-		if (play) add({ id: 'play', kind: 'play' }, c.focus === 'play' ? 1.1 : 2.6);
+		// Bei fälligem Spieltag 20 Minuten freihalten. Bei knapper Zeit erscheint der Spieltermin separat.
+		if (rapidDue(c) || c.gamesToday > 0)
+			add({ id: 'play', kind: 'play' }, c.focus === 'play' ? 0.8 : 1.4);
 		if (c.gameToReview !== null && !c.reviewedGames.includes(c.gameToReview))
-			add({ id: `game:${c.gameToReview}`, kind: 'game', gameId: c.gameToReview }, 3);
+			add(
+				{ id: `game:${c.gameToReview}`, kind: 'game', gameId: c.gameToReview },
+				c.gamesToday > 0 ? 0.2 : 1.5
+			);
 		add(
 			c.weakTheme
 				? { id: `puzzles:${c.weakTheme}`, kind: 'puzzles', target: n, theme: c.weakTheme }
@@ -242,23 +253,25 @@ export function buildPlan(c: PlanContext): DailyPlan {
 		if (lesson) add(lesson, c.focus === 'openings' || c.focus === 'rules' ? 3.5 : 8);
 	}
 
-	// nach Wichtigkeit auswählen, bis das Zeitbudget voll ist (die wichtigste Aufgabe immer)
+	// nach Wichtigkeit auswählen, bis das Zeitbudget voll ist
 	const picked: PlanTask[] = [];
 	let used = 0;
 	for (const { task } of [...cand].sort((a, b) => a.prio - b.prio)) {
 		if (picked.length >= MAX_TASKS) break;
 		let t = task;
 		// Taktik schrumpft bei knappem Budget lieber, als ganz zu entfallen (mindestens 3 Puzzles)
-		if (t.kind === 'puzzles' && picked.length && used + minutesOf(t) > c.minutes) {
+		if (t.kind === 'puzzles' && used + minutesOf(t) > c.minutes) {
 			const fit = Math.floor((c.minutes - used) / 1.2);
 			if (fit >= 3) t = { ...t, target: Math.min(t.target, fit) };
 		}
 		const m = minutesOf(t);
-		if (picked.length && used + m > c.minutes) continue;
+		if (used + m > c.minutes) continue;
 		picked.push(t);
 		used += m;
 	}
-	picked.sort((a, b) => ORDER.indexOf(a.kind) - ORDER.indexOf(b.kind));
+	const orderOf = (task: PlanTask) =>
+		c.gamesToday > 0 && task.kind === 'game' ? -1 : ORDER.indexOf(task.kind);
+	picked.sort((a, b) => orderOf(a) - orderOf(b));
 	return { day: c.day, tasks: picked };
 }
 

@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { nextMilestone } from '#lib/training/strength.js';
 	/**
 	 * Kennzahl-Kacheln der Startseite. Rendert direkt ins umgebende BentoGrid
 	 * (keine eigene Hülle), damit sich die Kacheln neben den Tagesplan legen.
@@ -8,10 +7,9 @@
 	import { resolve } from '$app/paths';
 	import StatTile from '#lib/ui/bento/StatTile.svelte';
 	import { db, getSetting, today } from '#lib/db/db.js';
-	import { onlineRatings, type OnlineRating } from '#lib/import/ratings.js';
+	import { onlineRatings, targetRating, type OnlineRating } from '#lib/import/ratings.js';
 	import { getLinked, syncState } from '#lib/import/sync.svelte.js';
 	import { getPuzzleRating, isProvisional } from '#lib/training/rating.js';
-	import { currentStrength } from '#lib/training/planData.js';
 	import { loadStars, totalStars } from '#lib/training/stars.js';
 	import { outcomeOf } from '#lib/training/gamestats.js';
 	import { computeStreak } from '#lib/training/streak.js';
@@ -22,7 +20,7 @@
 		linked: { lichess: boolean; chesscom: boolean };
 		puzzle: { rating: number; provisional: boolean };
 		puzzleHist: number[];
-		strength: number | null;
+		rapid: number | null;
 		form: ('w' | 'd' | 'l')[];
 		games: number;
 		attempts: number;
@@ -40,12 +38,11 @@
 		rs.filter((r) => r.source === src).sort((a, b) => b.games - a.games)[0] ?? null;
 
 	async function load() {
-		const [ratings, linked, puzzle, strength, games, stars, hist, activity] = await Promise.all([
+		const [ratings, linked, puzzle, games, stars, hist, activity] = await Promise.all([
 			onlineRatings(),
 			getLinked(),
 			getPuzzleRating(),
-			currentStrength(),
-			db.games.orderBy('date').reverse().limit(10).toArray(),
+			db.games.orderBy('date').reverse().toArray(),
 			loadStars(),
 			db.ratings.orderBy('date').reverse().limit(30).toArray(),
 			db.activity.toArray()
@@ -61,12 +58,13 @@
 			linked: { lichess: !!linked.lichess, chesscom: !!linked.chesscom },
 			puzzle: { rating: Math.round(puzzle.rating), provisional: isProvisional(puzzle) },
 			puzzleHist: hist.reverse().map((r) => r.rating),
-			strength: strength?.value ?? null,
+			rapid: targetRating(games),
 			form: games
+				.slice(0, 10)
 				.map(outcomeOf)
 				.filter((o) => o !== null)
 				.reverse(),
-			games: await db.games.count(),
+			games: games.length,
 			attempts: await db.puzzleAttempts.count(),
 			todayPuzzles: (await db.activity.get(today()))?.puzzles ?? 0,
 			goal: await getSetting('dailyGoal', 5),
@@ -151,18 +149,14 @@
 			testid="tile-puzzle"
 		/>{/if}
 
-	{#if d.strength}<StatTile
-			tone="coach"
-			label={t('summary.strength')}
-			value={`≈${d.strength}`}
-			sub={t('summary.strengthGoal', { goal: nextMilestone(d.strength).goal })}
-			href={resolve('/coach')}
-			testid="tile-strength"
-		>
-			<span class="bar" aria-hidden="true"
-				><i style:width="{nextMilestone(d.strength).progress * 100}%"></i></span
-			>
-		</StatTile>{/if}
+	<StatTile
+		tone="coach"
+		label={t('summary.rapidGoal')}
+		value={d.rapid ?? '–'}
+		sub={t(d.rapid === null ? 'summary.rapidNoData' : 'summary.rapidImported')}
+		href={resolve(d.rapid === null ? '/import' : '/coach')}
+		testid="tile-strength"
+	/>
 
 	{#if d.form.length && score !== null}<StatTile
 			tone="games"
@@ -213,23 +207,6 @@
 		border-radius: var(--radius-tile);
 	}
 
-	.bar {
-		display: block;
-		height: 8px;
-		margin: 0.6rem 0 0.35rem;
-		border-radius: 999px;
-		background: color-mix(in srgb, var(--tone-ink) 18%, transparent);
-		overflow: hidden;
-	}
-
-	.bar i {
-		display: block;
-		height: 100%;
-		border-radius: inherit;
-		background: var(--tone-ink);
-		transition: width 600ms var(--ease-out);
-	}
-
 	.form {
 		display: flex;
 		gap: 4px;
@@ -250,5 +227,22 @@
 
 	.dot.l {
 		background: var(--bad);
+	}
+
+	.bar {
+		display: block;
+		height: 8px;
+		margin: 0.6rem 0 0.35rem;
+		border-radius: 999px;
+		background: color-mix(in srgb, var(--tone-ink) 18%, transparent);
+		overflow: hidden;
+	}
+
+	.bar i {
+		display: block;
+		height: 100%;
+		border-radius: inherit;
+		background: var(--tone-ink);
+		transition: width 600ms var(--ease-out);
 	}
 </style>
