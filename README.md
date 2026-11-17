@@ -29,8 +29,6 @@ Screenshots use generated sample data (`scripts/screenshots/`), not real games.
 - The road to 1600 shows your latest imported rated Lichess Rapid rating. Game trends use that same pool. Puzzle scores and bot results stay separate.
 - Practise one important mistake from a game and save its result for spaced review.
 
-[Study protocol](docs/rapid-training-pilot.md)
-
 ## What's new in 0.7.5
 
 - Blunder Check, including the check-up, explains each answer immediately. The score trend compares check-ups with the same feedback format.
@@ -71,6 +69,8 @@ Rookie's goal: take beginners to **1600** – with methods that learning researc
 - Light/dark mode, English/German, board themes and piece sets, sounds, backup export/import (restoring merges – nothing is lost), works offline, no tracking – all measurements stay on your device
 
 ## Development
+
+Document each change in its GitHub pull request. Describe what changed, why, and how it was verified. Record user-visible changes in the release notes.
 
 ```bash
 npm install          # also copies Stockfish to static/engine
