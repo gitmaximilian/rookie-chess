@@ -2,7 +2,7 @@
 
 A chess trainer for beginners as a Progressive Web App for iPhone, iPad and Mac – completely free, offline-capable, no App Store, no account, no tracking. English and German.
 
-**Live:** https://rookie.maximilianauer.at · **Version:** 0.7.8
+**Live:** https://rookie.maximilianauer.at · **Version:** 0.7.9
 
 | Home                                                                                                                           | Coach                                                                                                                                             | Play                                                                                                   | Game review                                                                                                                                | Blunder check                                                                                            |
 | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
@@ -17,6 +17,11 @@ A chess trainer for beginners as a Progressive Web App for iPhone, iPad and Mac 
 | <img src="docs/screenshots/desktop-analysis-light.png" width="420" alt="Game review on desktop in light mode: a mistake on the board, the engine's top moves and accuracy per move type"> | <img src="docs/screenshots/desktop-analysis-dark.png" width="420" alt="Game review on desktop in dark mode"> |
 
 Screenshots use generated sample data (`scripts/screenshots/`), not real games.
+
+## What's new in 0.7.9
+
+- The Coach shows a training index and your actual Lichess Rapid rating on a shared timeline for 7 days, 30 days, 1 year or all time.
+- View blunders, accuracy, game results and analysis coverage. Open the calculation details to see the data and formula behind each line. [How the index is calculated](docs/coach-verlauf.md).
 
 ## What's new in 0.7.8
 

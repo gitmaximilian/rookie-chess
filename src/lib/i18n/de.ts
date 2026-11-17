@@ -1250,6 +1250,34 @@ export const de: Shape<typeof en> = {
 		noOnline: 'Ich spiele nicht online – loslegen',
 		done: 'Los geht’s!'
 	},
+	coachHistory: {
+		title: 'Deine Entwicklung',
+		period: 'Zeitraum',
+		index: 'Trainingsindex',
+		rating: 'Lichess-Rapid',
+		outOf100: '/ 100',
+		elo: 'Elo',
+		noPeriod: 'Für diesen Zeitraum sind keine Rapid-Partien vorhanden.',
+		noGames: 'Importiere gewertete Lichess-Rapid-Partien für deinen Verlauf.',
+		notEnough:
+			'Für den Index braucht Rookie mindestens drei analysierte Partien und 30 auswertbare eigene Züge.',
+		selectGame: 'Partie auf der Zeitachse wählen',
+		sample:
+			'Index aus {analysed} Partien und {moves} auswertbaren Zügen. {rate} Patzer je 30 Züge, Ø {accuracy} % Genauigkeit.',
+		coverage: 'Analysierte Partien',
+		outcomes: 'Sieg / Remis / Niederlage',
+		converted: 'Gewinnstellungen verwertet',
+		how: 'Wie wird das berechnet?',
+		basis:
+			'Jeder Indexpunkt verwendet bis zu zehn vollständig analysierte gewertete Lichess-Rapid-Partien gegen Menschen bis zu diesem Datum. Die Zeitraumwahl zeigt einen Ausschnitt dieser Entwicklung.',
+		formula:
+			'Index = 0,60 × Sicherheit + 0,40 × mittlere Stockfish-Genauigkeit. Die Gewichtung ist eine Rookie-Einstellung zur Darstellung deiner Zugqualität.',
+		safety:
+			'Sicherheit = max(0, 100 − 10 × Patzer je 30 auswertbare Züge). Rookie zählt nur eigene Züge aus Stellungen mit zuvor mindestens 20 % modellierter Gewinnchance. Beispiel: Bei 2 Patzern je 30 Züge und 80 % Genauigkeit ist der Index 80.',
+		eloSource:
+			'Die Elo-Linie zeigt deine importierte Lichess-Rapid-Wertung nach der Partie. Die linke Skala zeigt den Index, die rechte die Elo. Die Veränderung nutzt den letzten Wert vor dem Zeitraum, falls vorhanden. Der Index schätzt keine Elo.',
+		periods: { 7: '7 Tage', 30: '30 Tage', 365: '1 Jahr', all: 'Gesamt' }
+	},
 	decision: {
 		title: 'Zug und Antwort',
 		test: 'Check mit neuen Stellungen',
