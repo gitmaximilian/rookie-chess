@@ -182,7 +182,7 @@ test('Partieanalyse: eigene Variante spielen und zur unveränderten Partie zurü
 
 test('Erst du: eine Partie ohne grobe Fehler lässt sich auflösen', async ({ page }) => {
 	await page.goto('/analysis');
-	await page.locator('textarea').fill('1. e4 *');
+	await page.locator('textarea').fill('1. e4 e5 *');
 	await page.getByRole('button', { name: 'Analyse', exact: true }).click();
 	await expect(page).toHaveURL(/analysis\?game=\d+/);
 	const id = new URL(page.url()).searchParams.get('game');
