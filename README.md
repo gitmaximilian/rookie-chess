@@ -29,8 +29,6 @@ Screenshots use generated sample data (`scripts/screenshots/`), not real games.
 - The road to 1600 shows your latest imported rated Lichess Rapid rating. Game trends use that same pool. Puzzle scores and bot results stay separate.
 - Practise one important mistake from a game and save its result for spaced review.
 
-[Study protocol](docs/rapid-training-pilot.md)
-
 ## What's new in 0.7.5
 
 - Blunder Check, including the check-up, explains each answer immediately. The score trend compares check-ups with the same feedback format.
