@@ -78,4 +78,15 @@ describe('Blunder-Check', () => {
 		});
 		expect(checkupTrend([r(6), r(7), r(7)])?.meaningful).toBe(false);
 	});
+
+	it('beginnt für sofortige Rückmeldungen eine neue Vergleichsreihe', () => {
+		const r = (score: number) => ({ date: 0, form: 'A' as const, score, total: 12 });
+		const a = { ...r(8), feedback: 'immediate' as const };
+		expect(checkupTrend([r(3), r(4), a])).toBeNull();
+		expect(checkupTrend([r(3), r(4), a, { ...a, score: 9 }])).toMatchObject({
+			first: 67,
+			last: 75,
+			meaningful: false
+		});
+	});
 });

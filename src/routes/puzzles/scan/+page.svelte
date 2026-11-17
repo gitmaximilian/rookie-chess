@@ -1,4 +1,5 @@
 <script lang="ts">
+	import DailyTaskProgress from '#lib/ui/DailyTaskProgress.svelte';
 	/**
 	 * Brett-Scan (lib/training/scan.ts): Schachs, Schlagzüge, hängende Figuren – für sich und den Gegner.
 	 * Züge werden auf dem Brett gezogen (das Brett springt danach zurück), Figuren angetippt.
@@ -14,10 +15,11 @@
 	import CommentBar from '#lib/ui/CommentBar.svelte';
 	import Dock from '#lib/ui/Dock.svelte';
 	import SegmentedSwitch from '#lib/ui/bento/SegmentedSwitch.svelte';
-	import { Game, INITIAL_FEN } from '#lib/chess/game.js';
+	import { Game, INITIAL_FEN, positionFromFen } from '#lib/chess/game.js';
 	import { db, bumpActivity } from '#lib/db/db.js';
 	import { loadSafety } from '#lib/training/safety.js';
 	import {
+		scanMoveKey,
 		SCAN_MODES,
 		flipped,
 		scoreScan,
@@ -40,6 +42,7 @@
 	let targets = $state<string[]>([]);
 	let found = $state<string[]>([]);
 	let wrong = $state(0);
+	let boardVersion = $state(0);
 	let score = $state<ScanScore | null>(null);
 	let started = 0;
 	let seconds = $state(0);
@@ -50,9 +53,10 @@
 	const me = $derived<'white' | 'black'>(fen.split(' ')[1] === 'b' ? 'black' : 'white');
 	const moveMode = $derived(mode !== 'hanging');
 	const game = $derived(new Game(workFen));
-	const dests = $derived(
-		status === 'scan' && moveMode ? game.dests() : new Map<string, string[]>()
-	);
+	const dests = $derived.by(() => {
+		void boardVersion;
+		return status === 'scan' && moveMode ? game.dests() : new Map<string, string[]>();
+	});
 
 	onMount(async () => {
 		const m = page.url.searchParams.get('mode');
@@ -119,7 +123,8 @@
 
 	function onMove(uci: string) {
 		if (status !== 'scan' || !moveMode) return;
-		hit(uci.slice(0, 4));
+		hit(scanMoveKey(positionFromFen(workFen), uci));
+		boardVersion++;
 	}
 
 	function onSquare(sq: string) {
@@ -199,6 +204,8 @@
 			options={SCAN_MODES.map((m) => ({ value: m, label: t(`scan.mode.${m}`) }))}
 		/>
 	</div>
+
+	<DailyTaskProgress kind="scan" />
 
 	{#if status !== 'error'}
 		<CommentBar

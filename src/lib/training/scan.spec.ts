@@ -16,6 +16,22 @@ describe('Brett-Scan', () => {
 		expect(capturesOf(ep)).toEqual(['e5d6']);
 	});
 
+	it('zählt auf dem Foto nur die echten gegnerischen Schlagzüge', () => {
+		const photographed = 'r1br2k1/1p2bppp/2B5/6B1/P3p3/5N2/1PP2PPP/R3K2R';
+		expect(capturesOf(photographed + ' w KQ - 0 1')).toEqual(['c6b7', 'c6e4', 'g5e7']);
+		expect(targetsOf(photographed + ' b KQ - 0 1', 'opponent')).not.toContain('e1h1');
+		expect(targetsOf(photographed + ' b KQ - 0 1', 'opponent')).not.toContain('e1g1');
+	});
+
+	it('zeigt eine Schachrochade am Königszielfeld und erfasst schlagende Umwandlungen', () => {
+		const castle = '5k2/8/8/8/8/2p5/3P4/4K2R w K - 0 1';
+		expect(capturesOf(castle)).toEqual(['d2c3']);
+		expect(checksOf(castle)).toContain('e1g1');
+		expect(checksOf(castle)).not.toContain('e1h1');
+		const promotion = '1r2k3/P7/8/8/8/8/8/4K3 w - - 0 1';
+		expect(capturesOf(promotion)).toEqual(['a7b8']);
+	});
+
 	it('hängende Figuren beider Seiten (ungedeckt oder von billigerer Figur angegriffen)', () => {
 		// Sc3 wird vom Läufer b4 angegriffen und von nichts gedeckt
 		expect(hangingOf('4k3/8/8/8/1b6/2N5/8/4K3 w - - 0 1')).toEqual(['c3']);

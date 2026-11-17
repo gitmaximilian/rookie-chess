@@ -44,6 +44,7 @@
 	import ReviewPanel, { type LiveLine } from '#lib/ui/ReviewPanel.svelte';
 	import GameReport from '#lib/ui/GameReport.svelte';
 	import { gameReport } from '#lib/analysis/report.js';
+	import DailyTaskProgress from '#lib/ui/DailyTaskProgress.svelte';
 	import SelfReview from '#lib/ui/SelfReview.svelte';
 	import type { SelfReviewResult, SelfReviewScore } from '#lib/analysis/selfreview.js';
 	import { resetDockReserve } from '#lib/ui/dock.js';
@@ -594,9 +595,7 @@
 
 	// ── „Erst du“: eigene Fehler vor der Auflösung selbst suchen (lib/analysis/selfreview.ts) ──
 	let selfReview = $state<'off' | 'active' | 'done'>('off');
-	const selfMistakes = $derived(
-		!analysing && progress >= 1 && reviews.length ? myMistakes.map((r) => r.ply) : null
-	);
+	const selfMistakes = $derived(!analysing && progress >= 1 ? myMistakes.map((r) => r.ply) : null);
 
 	async function finishSelfReview(marked: number[], score: SelfReviewScore) {
 		if (!row?.id) return;
@@ -614,9 +613,16 @@
 		void marked;
 	}
 
-	function leaveSelfReview() {
+	function leaveSelfReview(target: number) {
 		selfReview = 'done';
+		go(target);
 		resetDockReserve();
+		void toBoard();
+	}
+
+	function practiceSelfReview() {
+		leaveSelfReview(0);
+		startRetry();
 	}
 
 	// aus dem Tagesplan: ?retry=1 startet sofort, sobald die Analyse fertig ist
@@ -624,13 +630,15 @@
 		if (
 			typeof window !== 'undefined' &&
 			page.url.searchParams.get('retry') === '1' &&
-			selfReview !== 'active' &&
+			selfReview === 'off' &&
 			!retry &&
 			!analysing &&
 			progress >= 1 &&
 			myMistakes.length
-		)
+		) {
+			selfReview = 'done';
 			startRetry();
+		}
 	});
 
 	const gameId = $derived(
@@ -646,6 +654,7 @@
 
 	async function load() {
 		abort?.abort();
+		retry = null;
 		variation = null;
 		mistakesCreated = null;
 		loading = true;
@@ -1032,6 +1041,7 @@
 			><ArrowLeft size={18} /> {t('analysis.games')}</a
 		>
 	</div>
+	<DailyTaskProgress kind="game" gameId={row.id} />
 	<SelfReview
 		{game}
 		myColor={row.myColor}
@@ -1039,6 +1049,7 @@
 		{progress}
 		onFinish={(m, sc) => void finishSelfReview(m, sc)}
 		onSkip={leaveSelfReview}
+		onPractice={practiceSelfReview}
 	/>
 {:else if game && row}
 	<div class="top-line">
@@ -1059,6 +1070,8 @@
 			>
 		{/if}
 	</div>
+
+	{#if retry}<DailyTaskProgress kind="game" gameId={row.id} />{/if}
 
 	{#if bar}
 		<CommentBar

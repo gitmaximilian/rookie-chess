@@ -10,8 +10,8 @@
  * Alle Antworten folgen aus den Regeln (chessops) – keine Engine nötig, beliebig viele echte Stellungen.
  */
 import { attacks } from 'chessops/attacks';
-import { makeSquare, parseSquare } from 'chessops/util';
-import type { Role } from 'chessops/types';
+import { kingCastlesTo, makeSquare, parseSquare, parseUci } from 'chessops/util';
+import { castlingSide } from 'chessops/chess';
 import { positionFromFen } from '#lib/chess/game.js';
 import { VALUE } from '#lib/chess/notation.js';
 
@@ -27,27 +27,37 @@ function movesOf(
 	const pos = positionFromFen(fen);
 	const out = new Set<string>();
 	for (const [from, dests] of pos.allDests())
-		for (const to of dests) if (keep(pos, from, to)) out.add(makeSquare(from) + makeSquare(to));
+		for (const to of dests)
+			if (keep(pos, from, to)) out.add(scanMoveKey(pos, makeSquare(from) + makeSquare(to)));
 	return [...out].sort();
+}
+
+/** Chessops nutzt für Rochaden intern das Turmfeld; auf dem Brett zählt das Königszielfeld. */
+export function scanMoveKey(pos: ReturnType<typeof positionFromFen>, uci: string): string {
+	const move = parseUci(uci);
+	const side = move && castlingSide(pos, move);
+	return side ? uci.slice(0, 2) + makeSquare(kingCastlesTo(pos.turn, side)) : uci.slice(0, 4);
 }
 
 /** alle Züge der Seite am Zug, die Schach geben */
 export function checksOf(fen: string): string[] {
 	return movesOf(fen, (pos, from, to) => {
-		const p = pos.clone();
-		const piece = p.board.get(from);
-		const promo = piece?.role === 'pawn' && (to >> 3 === 7 || to >> 3 === 0);
-		p.play({ from, to, ...(promo ? { promotion: 'queen' as Role } : {}) });
-		return p.isCheck();
+		const promo = pos.board.get(from)?.role === 'pawn' && (to >> 3 === 7 || to >> 3 === 0);
+		const roles = ['queen', 'rook', 'bishop', 'knight'] as const;
+		return (promo ? roles : [undefined]).some((promotion) => {
+			const p = pos.clone();
+			p.play({ from, to, promotion });
+			return p.isCheck();
+		});
 	});
 }
 
 /** alle Schlagzüge der Seite am Zug (auch en passant) */
 export function capturesOf(fen: string): string[] {
 	return movesOf(fen, (pos, from, to) => {
-		if (pos.board.get(to)) return true;
-		const piece = pos.board.get(from);
-		return piece?.role === 'pawn' && (from & 7) !== (to & 7);
+		const target = pos.board.get(to);
+		if (target) return target.color !== pos.turn;
+		return pos.board.get(from)?.role === 'pawn' && to === pos.epSquare && (from & 7) !== (to & 7);
 	});
 }
 

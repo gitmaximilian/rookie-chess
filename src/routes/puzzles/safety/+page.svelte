@@ -1,7 +1,8 @@
 <script lang="ts">
+	import DailyTaskProgress from '#lib/ui/DailyTaskProgress.svelte';
 	/**
 	 * Blunder-Check: „Du willst diesen Zug spielen – ist er sicher?“ (lib/training/safety.ts)
-	 * Mit ?test=1 der Kontrolltest: feste Aufgaben, Rückmeldung erst am Ende.
+	 * Mit ?test=1 der Kontrolltest: feste Aufgaben mit Einzelrückmeldung.
 	 */
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
@@ -52,6 +53,8 @@
 	let game = $state.raw<Game | null>(null);
 	let v = $state(0);
 	let answer = $state<SafetyAnswer | null>(null);
+	let settling = $state(false);
+	let saving = $state(false);
 	let refuted = $state<boolean | null>(null);
 	let tries = $state(0);
 	let correct = $state(false);
@@ -165,6 +168,7 @@
 
 	async function next() {
 		status = 'loading';
+		settling = false;
 		answer = null;
 		refuted = null;
 		tries = 0;
@@ -202,7 +206,8 @@
 	}
 
 	async function choose(a: SafetyAnswer) {
-		if (status !== 'ask' || !item) return;
+		if (status !== 'ask' || !item || settling) return;
+		settling = true;
 		answer = a;
 		if (!item.safe && a === 'unsafe') {
 			// Richtig gespürt – jetzt zeigen, was der Gegner tun kann
@@ -238,7 +243,6 @@
 		tries++;
 		v++;
 		blink('bad');
-		if (tries >= 2) showReply();
 	}
 
 	function showReply() {
@@ -252,47 +256,50 @@
 	}
 
 	async function finish() {
-		if (!item || !answer) return;
+		if (!item || !answer || status === 'done') return;
 		const g = gradeSafety(item, answer, refuted);
 		correct = g.correct;
 		status = 'done';
-		if (!testMode) {
-			blink(correct ? 'good' : 'bad');
-			if (correct) sound.good();
-			else sound.bad();
-		}
+		blink(correct ? 'good' : 'bad');
+		if (correct) sound.good();
+		else sound.bad();
+		if (testMode) testScore += g.score;
 		sessionTotal++;
 		if (correct) sessionRight++;
-		await db.puzzleAttempts.add({
-			puzzleId: item.id,
-			date: Date.now(),
-			solved: correct,
-			ratingAfter: Math.round(rating?.rating ?? 0),
-			themes: [item.theme],
-			source: testMode ? 'checkup' : 'safety'
-		});
-		// zählt für Serie und Aktivität, aber nicht als Puzzle (Tagesziel „Puzzles“ bleibt eindeutig)
-		await bumpActivity('reviews');
-		doneToday++;
-		if (testMode) {
-			testScore += g.score;
-			return;
-		}
-		// eigene Wertung für den Blunder-Check (Glicko, gegen die Puzzle-Wertung der Stellung)
-		if (rating) {
-			rating = updateForPuzzle(rating, item.rating, g.score);
-			await setSetting('safetyRating', rating);
-		}
-		// verfehlt → kommt in Tagen wieder; schon bekannte Karte → weiter planen
-		const id = `safety:${item.id}`;
-		const existing = await db.reviewCards.get(id);
-		if (!correct || existing) {
-			const row = await review(id, 'safety', correct ? 'good' : 'again', item);
-			nextReview = formatInterval(row.due);
+		saving = true;
+		try {
+			await db.puzzleAttempts.add({
+				puzzleId: item.id,
+				date: Date.now(),
+				solved: correct,
+				ratingAfter: Math.round(rating?.rating ?? 0),
+				themes: [item.theme],
+				source: testMode ? 'checkup' : 'safety'
+			});
+			// zählt für Serie und Aktivität, aber nicht als Puzzle (Tagesziel „Puzzles“ bleibt eindeutig)
+			await bumpActivity('reviews');
+			doneToday++;
+			if (testMode) return;
+			// eigene Wertung für den Blunder-Check (Glicko, gegen die Puzzle-Wertung der Stellung)
+			if (rating) {
+				rating = updateForPuzzle(rating, item.rating, g.score);
+				await setSetting('safetyRating', rating);
+			}
+			// verfehlt → kommt in Tagen wieder; schon bekannte Karte → weiter planen
+			const id = `safety:${item.id}`;
+			const existing = await db.reviewCards.get(id);
+			if (!correct || existing) {
+				const row = await review(id, 'safety', correct ? 'good' : 'again', item);
+				nextReview = formatInterval(row.due);
+			}
+		} finally {
+			saving = false;
 		}
 	}
 
 	async function nextOrSummary() {
+		if (status !== 'done' || saving) return;
+		status = 'loading';
 		if (testMode) {
 			testPos++;
 			if (testPos >= testItems.length) return void (await saveTest());
@@ -304,12 +311,15 @@
 		const res: CheckupResult = {
 			date: Date.now(),
 			form: testForm,
+			feedback: 'immediate',
 			score: testScore,
 			total: testItems.length
 		};
 		history = [...history, res];
-		await setSetting('checkups', history);
-		await setSetting('checkupDay', today());
+		await db.transaction('rw', db.settings, async () => {
+			await setSetting('checkups', history);
+			await setSetting('checkupDay', today());
+		});
 		item = null;
 		status = 'summary';
 	}
@@ -320,13 +330,12 @@
 
 	const resultTitle = $derived.by(() => {
 		if (!item || status !== 'done') return '';
-		if (testMode) return t('safety.saved');
 		if (item.safe) return correct ? t('safety.rightSafe') : t('safety.wrongSafe');
 		if (answer === 'safe') return t('safety.wrongUnsafe');
 		return refuted ? t('safety.rightUnsafe') : t('safety.halfUnsafe');
 	});
 	const resultText = $derived.by(() => {
-		if (!item || status !== 'done' || testMode) return '';
+		if (!item || status !== 'done') return '';
 		if (item.safe) return t('safety.whySafe', { san: moveSan });
 		return t('safety.whyUnsafe', {
 			san: moveSan,
@@ -343,7 +352,7 @@
 		if (status === 'refute')
 			return {
 				kicker,
-				title: t('safety.refuteTitle'),
+				title: t(tries ? 'safety.refuteMiss' : 'safety.refuteTitle'),
 				text: tries ? t('safety.refuteAgain') : t('safety.refuteText'),
 				color: tries ? 'var(--k-inaccuracy)' : 'var(--k-mistake)'
 			};
@@ -354,7 +363,7 @@
 				text: [resultText, nextReview ? t('puzzles.reviewIn', { when: nextReview }) : '']
 					.filter(Boolean)
 					.join(' '),
-				color: testMode ? 'var(--c-puzzle)' : correct ? 'var(--k-best)' : 'var(--k-mistake)'
+				color: correct ? 'var(--k-best)' : 'var(--k-mistake)'
 			};
 		return { kicker, title: prompt, text: t('safety.routine'), color: 'var(--c-puzzle)' };
 	});
@@ -384,6 +393,8 @@
 		<h1>{testMode ? t('safety.testTitle') : t('safety.title')}</h1>
 	</header>
 
+	<DailyTaskProgress kind={testMode ? 'checkup' : 'safety'} />
+
 	{#if bar && status !== 'summary'}
 		<CommentBar
 			kicker={bar.kicker}
@@ -393,7 +404,7 @@
 			testid="safety-bar"
 			{status}
 		>
-			{#snippet icon()}{#if status === 'done' && correct && !testMode}<Check
+			{#snippet icon()}{#if status === 'done' && correct}<Check
 						size={16}
 						strokeWidth={3}
 					/>{:else if status === 'done'}<Info size={16} />{:else}<ShieldCheck
@@ -452,9 +463,9 @@
 						<p>{t('puzzles.loadErrorText', { msg: errorMsg })}</p>
 					</div>
 				{:else if item}
-					<div class="ask-pill" class:good={status === 'done' && correct && !testMode}>
+					<div class="ask-pill" class:good={status === 'done' && correct}>
 						{#if status === 'done'}{resultTitle}{:else if status === 'refute'}{t(
-								'safety.refuteTitle'
+								tries ? 'safety.refuteMiss' : 'safety.refuteTitle'
 							)}{:else}{prompt}{/if}
 					</div>
 					<p class="side-text">
@@ -477,14 +488,14 @@
 								<button
 									class="btn grow safe"
 									data-testid="answer-safe"
-									disabled={status !== 'ask'}
+									disabled={status !== 'ask' || settling}
 									onclick={() => void choose('safe')}
 									><ShieldCheck size={18} /> {t('safety.safe')}</button
 								>
 								<button
 									class="btn grow unsafe"
 									data-testid="answer-unsafe"
-									disabled={status !== 'ask'}
+									disabled={status !== 'ask' || settling}
 									onclick={() => void choose('unsafe')}
 									><ShieldAlert size={18} /> {t('safety.unsafe')}</button
 								>
@@ -500,6 +511,7 @@
 								<button
 									class="btn grow"
 									data-testid="safety-next"
+									disabled={saving}
 									onclick={() => void nextOrSummary()}
 									>{t('common.next')} <ArrowRight size={18} /></button
 								>

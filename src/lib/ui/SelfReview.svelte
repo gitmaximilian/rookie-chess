@@ -16,7 +16,7 @@
 	import Board from '#lib/ui/board/Board.svelte';
 	import CommentBar from '#lib/ui/CommentBar.svelte';
 	import Dock from '#lib/ui/Dock.svelte';
-	import type { Game } from '#lib/chess/game.js';
+	import { turnFromFen, type Game } from '#lib/chess/game.js';
 	import { figurine } from '#lib/chess/notation.js';
 	import { MAX_MARKS, scoreSelfReview, type SelfReviewScore } from '#lib/analysis/selfreview.js';
 	import { t } from '#lib/i18n/i18n.svelte.js';
@@ -28,14 +28,16 @@
 		mistakes,
 		progress,
 		onFinish,
-		onSkip
+		onSkip,
+		onPractice
 	}: {
 		game: Game;
 		myColor: 'white' | 'black';
 		mistakes: number[] | null;
 		progress: number;
 		onFinish: (marked: number[], score: SelfReviewScore) => void;
-		onSkip: () => void;
+		onSkip: (ply: number) => void;
+		onPractice: () => void;
 	} = $props();
 
 	let ply = $state(0);
@@ -48,12 +50,14 @@
 		const m = ply > 0 ? game.moves[ply - 1] : null;
 		return m ? [m.from, m.to] : undefined;
 	});
-	/** eigener Zug, der gerade gezeigt wird? (weiß zieht in ungeraden Halbzügen) */
-	const mine = $derived(ply > 0 && (ply % 2 === 1) === (myColor === 'white'));
+	const mine = $derived(ply > 0 && turnFromFen(game.fenAt(ply - 1)) === myColor);
 	const isMarked = $derived(marked.includes(ply));
 
-	const label = (p: number) =>
-		`${Math.ceil(p / 2)}${p % 2 === 1 ? '.' : '…'} ${figurine(game.moves[p - 1].san)}`;
+	function label(p: number) {
+		const before = game.fenAt(p - 1);
+		const number = before.split(' ')[5];
+		return `${number}${turnFromFen(before) === 'white' ? '.' : '…'} ${figurine(game.moves[p - 1].san)}`;
+	}
 
 	function go(p: number) {
 		ply = Math.max(0, Math.min(total, p));
@@ -90,7 +94,7 @@
 				color: score.found.length === score.total ? 'var(--k-best)' : 'var(--c-learn)'
 			};
 		return {
-			kicker: `${t('selfReview.kicker')} · ${ply ? label(ply) : t('review.start')}`,
+			kicker: t('selfReview.kicker'),
 			title: t('selfReview.title'),
 			text: t('selfReview.text', { n: MAX_MARKS }),
 			color: 'var(--c-learn)'
@@ -122,18 +126,27 @@
 	<div class="board-col with-bar">
 		<Board {fen} orientation={myColor} {lastMove} viewOnly {shapes} label={t('selfReview.board')} />
 		<Dock order={2}>
+			<div class="move-status">
+				<span>{ply ? label(ply) : t('review.start')} · {ply}/{total}</span>
+				{#if !score}<span>{t('selfReview.markCount', { done: marked.length, max: MAX_MARKS })}</span
+					>{/if}
+			</div>
 			<div class="nav">
-				<button onclick={() => go(0)} aria-label={t('analysis.nav.first')}
+				<button onclick={() => go(0)} disabled={ply === 0} aria-label={t('analysis.nav.first')}
 					><ChevronsLeft size={22} /></button
 				>
-				<button onclick={() => go(ply - 1)} aria-label={t('analysis.nav.prev')}
+				<button onclick={() => go(ply - 1)} disabled={ply === 0} aria-label={t('analysis.nav.prev')}
 					><ChevronLeft size={22} /></button
 				>
-				<button onclick={() => go(ply + 1)} aria-label={t('analysis.nav.next')}
-					><ChevronRight size={22} /></button
+				<button
+					onclick={() => go(ply + 1)}
+					disabled={ply === total}
+					aria-label={t('analysis.nav.next')}><ChevronRight size={22} /></button
 				>
-				<button onclick={() => go(total)} aria-label={t('analysis.nav.last')}
-					><ChevronsRight size={22} /></button
+				<button
+					onclick={() => go(total)}
+					disabled={ply === total}
+					aria-label={t('analysis.nav.last')}><ChevronsRight size={22} /></button
 				>
 			</div>
 		</Dock>
@@ -142,7 +155,15 @@
 	<aside class="panel card" data-testid="self-review">
 		<h2 class="sr-title">{score ? bar.title : t('selfReview.title')}</h2>
 		{#if score?.total}<p class="muted">{t('selfReview.resultText')}</p>{/if}
-		{#if !score}
+		{#if score}
+			<p class="result-counts" data-testid="self-review-counts">
+				{t('selfReview.counts', {
+					found: score.found.length,
+					missed: score.missed.length,
+					extra: score.extra.length
+				})}
+			</p>
+		{:else}
 			<p class="muted">{t('selfReview.text', { n: MAX_MARKS })}</p>
 		{/if}
 
@@ -165,7 +186,7 @@
 					</button>
 				</li>
 			{:else}
-				<li class="muted empty">{t('selfReview.none')}</li>
+				<li class="muted empty">{t(score ? 'selfReview.emptyResult' : 'selfReview.none')}</li>
 			{/each}
 		</ul>
 
@@ -188,15 +209,19 @@
 							: t('selfReview.waiting', { pct: Math.round(progress * 100) })}
 					</button>
 				{:else}
-					<button class="btn grow" data-testid="self-review-next" onclick={() => onSkip()}>
+					<button
+						class="btn grow"
+						data-testid="self-review-next"
+						onclick={score.total ? onPractice : () => onSkip(ply)}
+					>
 						{score.total ? t('selfReview.toRetry') : t('selfReview.toAnalysis')}
 						<ArrowRight size={17} />
 					</button>
 				{/if}
 			</div>
 		</Dock>
-		{#if !score}
-			<button class="link skip" onclick={onSkip}>{t('selfReview.skip')}</button>
+		{#if !score || score.total}
+			<button class="link skip" onclick={() => onSkip(ply)}>{t('selfReview.toAnalysis')}</button>
 		{/if}
 	</aside>
 </div>
@@ -241,6 +266,25 @@
 	.muted {
 		color: var(--text-2);
 		font-size: 0.92rem;
+	}
+
+	.move-status {
+		display: flex;
+		justify-content: space-between;
+		gap: 0.5rem;
+		padding: 0.25rem 0.5rem 0;
+		font-size: 0.8rem;
+		font-variant-numeric: tabular-nums;
+		color: var(--text-2);
+	}
+
+	.result-counts {
+		font-size: 0.85rem;
+		color: var(--text-2);
+	}
+
+	.nav button:disabled {
+		opacity: 0.45;
 	}
 
 	.nav {
@@ -342,11 +386,12 @@
 		.board-col.with-bar {
 			max-width: min(
 				100%,
-				calc(
-					100svh - var(--dock-h) - var(--tabbar-space) - var(--safe-top) - 80px - var(--comment-h) -
-						0.5rem
-				)
+				calc(100svh - var(--tabbar-space) - var(--safe-top) - 220px - var(--comment-h) - 0.5rem)
 			);
+		}
+		.actions .btn {
+			min-width: 0;
+			padding-inline: 0.5rem;
 		}
 		.sr-title,
 		.panel > .muted {

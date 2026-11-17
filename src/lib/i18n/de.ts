@@ -1497,6 +1497,7 @@ export const de: Shape<typeof en> = {
 		howEndgames: 'Je Lektion 1–3 Sterne, je nachdem, wie effizient du gewinnst',
 		all: 'Alle Sterne gesammelt – großartig!'
 	},
+	dailyProgress: { count: 'Heute: {done} von {goal}', done: 'Heute erledigt' },
 	selfReview: {
 		kicker: 'Erst du',
 		title: 'Wo waren deine Fehler?',
@@ -1514,7 +1515,10 @@ export const de: Shape<typeof en> = {
 		resultText: 'Rot: deine Fehler. Jetzt spielst du sie nach – findest du den besseren Zug?',
 		noMistakes: 'Keine groben Fehler in dieser Partie – stark!',
 		toRetry: 'Fehler nachspielen',
-		toAnalysis: 'Zur Analyse',
+		markCount: '{done}/{max} markiert',
+		counts: '{found} gefunden · {missed} übersehen · {extra} zusätzlich markiert',
+		emptyResult: 'Keine Züge in der Auflösung.',
+		toAnalysis: 'Zurück zur Originalpartie',
 		state: { found: 'gefunden', missed: 'übersehen', extra: 'war in Ordnung', marked: '' }
 	},
 	report: {
@@ -1642,7 +1646,8 @@ export const de: Shape<typeof en> = {
 		unsafe: 'Nicht sicher',
 		refuteTitle: 'Gutes Gespür! Jetzt zeig es: Wie bestraft der Gegner den Zug?',
 		refuteText: 'Spiel die beste Antwort des Gegners auf dem Brett.',
-		refuteAgain: 'Der nicht – such nach einem Schlagzug, einem Schach oder einer Gabel.',
+		refuteMiss: 'Der Zug ist es noch nicht.',
+		refuteAgain: 'Suche nach einem Schlagzug, einem Schach oder einer Gabel.',
 		showReply: 'Zeig es mir',
 		rightSafe: 'Richtig – der Zug ist sicher.',
 		wrongSafe: 'Der Zug war doch sicher.',
@@ -1653,7 +1658,6 @@ export const de: Shape<typeof en> = {
 			`Nach ${p.san} gewinnt der Gegner nichts: Jeder Schlagzug lässt sich beantworten, und es gibt kein Matt.`,
 		whyUnsafe: (p: P) =>
 			`Nach ${p.san} kommt ${p.reply} (${p.theme}). Prüf vor jedem Zug, was der Gegner danach kann.`,
-		saved: 'Antwort gespeichert – Auswertung am Ende.',
 		testScore: (p: P) => `${p.n} von ${p.m} Punkten`,
 		testTrend: (p: P) => `Erster Kontrolltest ${p.first} %, jetzt ${p.last} %.`,
 		trendUp: 'Das ist eine echte Verbesserung.',
@@ -1661,7 +1665,7 @@ export const de: Shape<typeof en> = {
 		trendNoise:
 			'Bei 12 Aufgaben kann ein Unterschied dieser Größe noch Zufall sein – zählen wird der Verlauf über mehrere Tests.',
 		testFirst:
-			'Dein erster Kontrolltest. Rookie schlägt den nächsten in zwei Wochen vor – dann siehst du, ob dein Training wirkt.',
+			'Das ist dein Ausgangswert für Kontrolltests mit sofortiger Rückmeldung. Rookie schlägt den nächsten in zwei Wochen vor.',
 		toCoach: 'Zu deinem Fortschritt',
 		board: 'Brett: Ist der geplante Zug sicher?',
 		empty: 'Du hast alle Aufgaben gesehen – stark!',
