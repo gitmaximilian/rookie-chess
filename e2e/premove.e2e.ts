@@ -26,13 +26,16 @@ async function startWithControlledBot(page: Page, coach = false, timed = false) 
 						else if (command === 'stop') {
 							bot.reply = null;
 							send('bestmove (none)');
-						} else if (command.startsWith('go ')) {
+						} else if (command.startsWith('go nodes ')) {
 							bot.searches++;
 							bot.reply = (uci) => {
 								bot.reply = null;
 								send('info depth 12 multipv 1 score cp 0 pv ' + uci);
 								send('bestmove ' + uci);
 							};
+						} else if (command.startsWith('go ')) {
+							// Coach evaluations share the worker and must never claim the manual bot reply.
+							send('bestmove (none)');
 						}
 					},
 					terminate() {
