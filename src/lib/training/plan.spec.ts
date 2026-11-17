@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buildPlan, isDone, minutesOf, progressOf, type PlanContext } from './plan';
+import { BASICS } from '#lib/basics/lessons.js';
 import { estimateStrength, nextMilestone } from './strength';
 
 const base: PlanContext = {
@@ -28,11 +29,16 @@ const base: PlanContext = {
 };
 
 describe('Tagesplan', () => {
-	it('Anfänger ohne Regelkenntnis: Puzzles allgemein + nächste Grundlagen-Lektion', () => {
+	it('Anfänger ohne Regelkenntnis: Regelübung zuerst, danach Spielpraxis', () => {
 		const p = buildPlan({ ...base, rulesKnown: 'no', weakTheme: 'fork' });
-		expect(p.tasks.map((t) => t.kind)).toEqual(['puzzles', 'basics']);
-		expect(p.tasks[0]).not.toHaveProperty('theme');
-		expect(p.tasks[1]).toMatchObject({ lesson: 'board' });
+		expect(p.tasks).toEqual([{ id: 'basics:board', kind: 'basics', lesson: 'board' }]);
+		const after = buildPlan({
+			...base,
+			rulesKnown: 'no',
+			basicsDone: BASICS.map((l) => l.id),
+			daysSinceGame: null
+		});
+		expect(after.tasks.some((task) => task.kind === 'play')).toBe(true);
 	});
 
 	it('Sicherheit zuerst: Blunder-Check, eigene Fehler, Taktik – in dieser Reihenfolge', () => {
@@ -44,13 +50,13 @@ describe('Tagesplan', () => {
 			weakTheme: 'pin',
 			gameToReview: 7
 		});
-		expect(p.tasks.map((t) => t.kind)).toEqual(['safety', 'mistakes', 'review', 'puzzles', 'game']);
-		expect(p.tasks[1]).toMatchObject({ target: 5 });
-		expect(p.tasks[3]).toMatchObject({ theme: 'pin' });
+		expect(p.tasks.map((t) => t.kind)).toEqual(['safety', 'game', 'mistakes', 'review', 'puzzles']);
+		expect(p.tasks[2]).toMatchObject({ target: 5 });
+		expect(p.tasks[4]).toMatchObject({ theme: 'pin' });
 	});
 
 	it('hält das Zeitbudget ein; Taktik schrumpft statt zu entfallen', () => {
-		const c = { ...base, safetyFirst: true, dueMistakes: 5, daysSinceGame: null, minutes: 30 };
+		const c = { ...base, safetyFirst: true, dueMistakes: 0, daysSinceGame: null, minutes: 30 };
 		const p = buildPlan(c);
 		const total = p.tasks.reduce((s, t) => s + minutesOf(t), 0);
 		expect(total).toBeLessThanOrEqual(30);

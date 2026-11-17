@@ -12,6 +12,8 @@ export interface ImportedGame {
 	black: string;
 	result: GameRow['result'];
 	whiteRating?: number;
+	whiteIsBot?: boolean;
+	blackIsBot?: boolean;
 	blackRating?: number;
 	speed?: string;
 	/** gewertete Partie? (undefined = unbekannt) */
@@ -45,8 +47,8 @@ export function parseLichessNdjson(text: string): ImportedGame[] {
 			speed?: string;
 			rated?: boolean;
 			players?: {
-				white?: { user?: { name?: string }; rating?: number };
-				black?: { user?: { name?: string }; rating?: number };
+				white?: { user?: { name?: string; title?: string }; rating?: number };
+				black?: { user?: { name?: string; title?: string }; rating?: number };
 			};
 		};
 		try {
@@ -64,6 +66,8 @@ export function parseLichessNdjson(text: string): ImportedGame[] {
 			black: g.players?.black?.user?.name ?? header(g.pgn, 'Black') ?? '?',
 			result: result(header(g.pgn, 'Result')),
 			whiteRating: g.players?.white?.rating,
+			whiteIsBot: g.players?.white?.user?.title === 'BOT',
+			blackIsBot: g.players?.black?.user?.title === 'BOT',
 			blackRating: g.players?.black?.rating,
 			speed: g.speed,
 			rated: g.rated
@@ -185,6 +189,7 @@ export function toGameRow(g: ImportedGame, user: string): GameRow | null {
 		myRating: myColor === 'white' ? g.whiteRating : g.blackRating,
 		oppRating: myColor === 'white' ? g.blackRating : g.whiteRating,
 		speed: g.speed,
+		...((myColor === 'white' ? g.blackIsBot : g.whiteIsBot) ? { opponentIsBot: true } : {}),
 		...(g.rated === undefined ? {} : { rated: g.rated })
 	};
 }

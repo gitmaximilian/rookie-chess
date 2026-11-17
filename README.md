@@ -2,7 +2,7 @@
 
 A chess trainer for beginners as a Progressive Web App for iPhone, iPad and Mac – completely free, offline-capable, no App Store, no account, no tracking. English and German.
 
-**Live:** https://rookie.maximilianauer.at · **Version:** 0.7.5
+**Live:** https://rookie.maximilianauer.at · **Version:** 0.7.6
 
 | Home                                                                                                                           | Coach                                                                                                                                             | Play                                                                                                   | Game review                                                                                                                                | Blunder check                                                                                            |
 | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
@@ -17,6 +17,14 @@ A chess trainer for beginners as a Progressive Web App for iPhone, iPad and Mac 
 | <img src="docs/screenshots/desktop-analysis-light.png" width="420" alt="Game review on desktop in light mode: a mistake on the board, the engine's top moves and accuracy per move type"> | <img src="docs/screenshots/desktop-analysis-dark.png" width="420" alt="Game review on desktop in dark mode"> |
 
 Screenshots use generated sample data (`scripts/screenshots/`), not real games.
+
+## What's new in 0.7.6
+
+- The daily plan starts with missing rules, then guides you to rated Rapid and a short review of your game. The 5-minute setting keeps the next Rapid session visible.
+- The road to 1600 shows your latest imported rated Lichess Rapid rating. Game trends use that same pool. Puzzle scores and bot results stay separate.
+- Practise one important mistake from a game and save its result for spaced review.
+
+[Study protocol](docs/rapid-training-pilot.md)
 
 ## What's new in 0.7.5
 

@@ -6,6 +6,7 @@
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import ListOrdered from '@lucide/svelte/icons/list-ordered';
 	import X from '@lucide/svelte/icons/x';
+	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import Lightbulb from '@lucide/svelte/icons/lightbulb';
 	import Undo2 from '@lucide/svelte/icons/undo-2';
@@ -699,6 +700,20 @@
 <svelte:head><title>{t('play.title')} – Rookie</title></svelte:head>
 <svelte:window onkeydown={onKey} />
 
+{#if typeof window !== 'undefined' && page.url.searchParams.get('plan') === '1'}
+	<section class="card rapid-plan" data-testid="rapid-plan">
+		<h2>{t('plan.play')}</h2>
+		<p>{t('plan.rapidDetails')}</p>
+		<div class="rapid-links">
+			<a class="btn" href="https://lichess.org/" target="_blank" rel="noopener noreferrer"
+				>{t('plan.openLichess')}</a
+			>
+			<a class="btn secondary" href={resolve('/import')}>{t('plan.importRapid')}</a>
+		</div>
+		<p>{t('plan.rapidOffline')}</p>
+	</section>
+{/if}
+
 {#if phase === 'setup'}
 	<PageHeader eyebrow={t('play.eyebrow')} title={t('play.title')} subtitle={t('play.subtitle')} />
 
@@ -1142,6 +1157,24 @@
 {/if}
 
 <style>
+	.rapid-plan {
+		max-width: 680px;
+		margin: 0 auto 1rem;
+		padding: 1rem;
+		display: grid;
+		gap: 0.55rem;
+	}
+
+	.rapid-plan p {
+		color: var(--text-2);
+	}
+
+	.rapid-links {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+	}
+
 	.analyse-now {
 		width: 100%;
 		justify-content: center;

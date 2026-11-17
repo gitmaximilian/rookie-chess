@@ -1,10 +1,10 @@
 import { expect, test } from '@playwright/test';
 
-test('Tagesplan: erste Grundlagen-Lektion erscheint als erledigt', async ({ page }) => {
+test('Tagesplan: ein frisches Profil sieht Training und Rapid', async ({ page }) => {
 	await page.goto('/');
 	const plan = page.locator('.plan');
 	await expect(plan.getByText('Your training today')).toBeVisible();
-	await expect(plan.getByText(/Solve 5 puzzles/)).toBeVisible();
+	await expect(plan.getByText('Play a rated Rapid game')).toBeVisible();
 	await expect(plan.getByRole('link', { name: /Start/ })).toBeVisible();
 });
 
@@ -30,6 +30,11 @@ test.describe('mit Einstieg', () => {
 
 		await page.goto('/');
 		const plan = page.locator('.plan');
+		await expect(plan.getByRole('link', { name: /^Start$/ })).toHaveAttribute(
+			'href',
+			'/learn/basics?id=board'
+		);
+		await expect(plan.getByText(/Solve .* puzzles/)).toHaveCount(0);
 		await plan.getByRole('link', { name: /Lesson: The board/ }).click();
 		await page.getByRole('button', { name: /Next/ }).click();
 		await page.getByRole('button', { name: /Next/ }).click();

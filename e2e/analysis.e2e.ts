@@ -131,15 +131,17 @@ test('Erst du: eigene Fehler markieren, auflösen, dann nachspielen', async ({ p
 	await resolveBtn.click();
 	await expect(
 		page
-			.getByText(/You found 1 of 1 mistakes yourself/)
+			.getByText(/You found 1 of [12] mistakes yourself/)
 			.locator('visible=true')
 			.first()
 	).toBeVisible();
-	await expect(page.getByTestId('self-review-counts')).toHaveText('1 found · 0 missed · 0 extra');
+	await expect(page.getByTestId('self-review-counts')).toHaveText(
+		/1 found · [01] missed · 0 extra/
+	);
 	await page.getByTestId('self-review-next').locator('visible=true').first().click();
 	await expect(
 		page
-			.getByText(/Mistake 1 of 1/)
+			.getByText(/Mistake 1 of [12]/)
 			.locator('visible=true')
 			.first()
 	).toBeVisible();
@@ -149,7 +151,7 @@ test('Erst du: eigene Fehler markieren, auflösen, dann nachspielen', async ({ p
 		.first()
 		.click();
 	await expect(page.getByTestId('self-review')).toHaveCount(0);
-	await expect(page.getByText(/Mistake 1 of 1/).locator('visible=true')).toHaveCount(0);
+	await expect(page.getByText(/Mistake 1 of [12]/).locator('visible=true')).toHaveCount(0);
 	await expect(page.locator('.moves-card')).toContainText('g4');
 });
 

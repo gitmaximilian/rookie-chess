@@ -443,6 +443,7 @@
 		/** Reihenfolge der zu übenden Fehler (Indizes in myMistakes) */
 		list: number[];
 		pos: number;
+		quick: boolean;
 		res: Record<number, RetryResult>;
 		status: 'try' | 'checking' | 'solved' | 'shown' | 'done';
 		tries: number;
@@ -450,6 +451,8 @@
 		fb: MoveFeedback | null;
 	} | null>(null);
 	let retryV = $state(0);
+	let savingRetry = $state(false);
+	let finishedQuick = $state(false);
 	const retryIdx = $derived(retry && retry.status !== 'done' ? retry.list[retry.pos] : -1);
 	const retryItem = $derived(retryIdx >= 0 ? myMistakes[retryIdx] : null);
 	const retryFen = $derived(retryItem && game ? game.fenAt(retryItem.ply - 1) : '');
@@ -470,12 +473,25 @@
 	);
 	const retryMissed = $derived(retry ? retry.list.filter((i) => retry!.res[i] !== 'solved') : []);
 
-	function startRetry(only?: number[]) {
+	const importantMistake = $derived.by(() => {
+		return myMistakes.reduce((best, mistake, index) => {
+			const solution = evals[mistake.ply - 1]?.best;
+			if (!solution || solution === game?.moves[mistake.ply - 1]?.uci) return best;
+			return best < 0 || mistake.loss > myMistakes[best].loss ? index : best;
+		}, -1);
+	});
+
+	function practiseImportantMistake() {
+		if (importantMistake >= 0) startRetry([importantMistake], true);
+	}
+
+	function startRetry(only?: number[], quick = false) {
 		if (!myMistakes.length) return;
 		variation = null;
 		retry = {
 			list: only?.length ? only : myMistakes.map((_, i) => i),
 			pos: 0,
+			quick,
 			res: {},
 			status: 'try',
 			tries: 0,
@@ -508,7 +524,7 @@
 	}
 
 	async function onRetryMove(uci: string) {
-		if (!retry || !retryItem || retry.status !== 'try' || !retryFen) return;
+		if (!retry || !retryItem || retry.status !== 'try' || !retryFen || savingRetry) return;
 		if (uci === retryOriginal) {
 			retry.tries++;
 			retry.fb = { kind: 'bad', title: t('retry.sameTitle'), text: t('retry.sameText') };
@@ -516,9 +532,10 @@
 			return;
 		}
 		if (uci === retryBest || uci + 'q' === retryBest) return solved();
+		const active = retry;
 		retry.status = 'checking';
 		const fb = await feedbackFor(retryFen, uci);
-		if (!retry) return;
+		if (retry !== active || retry.status !== 'checking') return;
 		if (fb?.kind === 'playable') return solved();
 		retry.tries++;
 		retry.fb = fb;
@@ -526,14 +543,18 @@
 		retryV++;
 	}
 
-	function solved() {
-		if (!retry) return;
+	async function solved() {
+		if (!retry || savingRetry) return;
 		// beim ersten Versuch ohne Tipp zählt es als gefunden
 		const clean = retry.tries === 0 && !retry.hint;
+		if (retry.quick) {
+			const active = retry;
+			if (!(await saveQuickResult(clean ? 'good' : 'hard')) || retry !== active) return;
+		}
 		retry.res[retry.list[retry.pos]] = clean ? 'solved' : 'hinted';
 		retry.status = 'solved';
 		retry.fb = null;
-		void scheduleMistake(clean ? 'good' : 'hard');
+		if (!retry.quick) void scheduleMistake(clean ? 'good' : 'hard');
 	}
 
 	/**
@@ -546,17 +567,67 @@
 		if (await db.reviewCards.get(id)) await review(id, 'mistake', recall);
 	}
 
+	async function saveQuickResult(recall: 'good' | 'hard' | 'again') {
+		if (!row?.id || !retryItem || !retry) return false;
+		const active = retry;
+		const gameRow = row;
+		const id = `mistake:${row.source}-${row.id}-${retryItem.ply}`;
+		const targetPly = retryItem.ply;
+		savingRetry = true;
+		try {
+			await db.transaction(
+				'rw',
+				[db.reviewCards, db.mistakes, db.puzzleAttempts, db.settings],
+				async () => {
+					// Auch ältere Analyse-Daten oder reine Stellungsfehler erhalten bei Bedarf eine Karte.
+					if (!(await db.reviewCards.get(id)))
+						await createMistakePuzzles(gameRow, evals, targetPly);
+					if (!(await db.reviewCards.get(id))) throw new Error('Missing mistake review card');
+					await review(id, 'mistake', recall);
+					await db.puzzleAttempts.add({
+						puzzleId: id.slice('mistake:'.length),
+						date: Date.now(),
+						solved: recall !== 'again',
+						hinted: recall === 'hard',
+						ratingAfter: 0,
+						themes: [],
+						source: 'mistake'
+					});
+					const reviewed = await getSetting<number[]>('reviewedGames', []);
+					if (gameRow.id && !reviewed.includes(gameRow.id))
+						await setSetting('reviewedGames', [...reviewed, gameRow.id]);
+				}
+			);
+			if (retry === active) finishedQuick = true;
+			return true;
+		} catch (error) {
+			console.error(error);
+			if (retry === active) {
+				retry.status = 'try';
+				retry.fb = { kind: 'bad', title: t('retry.saveFailed'), text: '' };
+				retryV++;
+			}
+			return false;
+		} finally {
+			savingRetry = false;
+		}
+	}
+
 	function retryHint() {
-		if (!retry || retry.status !== 'try') return;
+		if (!retry || retry.status !== 'try' || savingRetry) return;
 		retry.hint = true;
 	}
 
-	function retrySolution() {
-		if (!retry || (retry.status !== 'try' && retry.status !== 'checking')) return;
+	async function retrySolution() {
+		if (!retry || savingRetry || (retry.status !== 'try' && retry.status !== 'checking')) return;
+		if (retry.quick) {
+			const active = retry;
+			if (!(await saveQuickResult('again')) || retry !== active) return;
+		}
 		retry.res[retry.list[retry.pos]] = 'shown';
 		retry.status = 'shown';
 		retry.fb = null;
-		void scheduleMistake('again');
+		if (!retry.quick) void scheduleMistake('again');
 	}
 
 	async function nextRetry() {
@@ -567,6 +638,7 @@
 		const anyOpen = retry.list.findIndex((i) => !retry!.res[i]);
 		if (anyOpen >= 0) return goRetry(anyOpen);
 		retry.status = 'done';
+		if (retry.quick) return;
 		// Tagesplan: „Aus deiner letzten Partie lernen“ gilt damit als erledigt
 		const list = await getSetting<number[]>('reviewedGames', []);
 		if (row?.id && !list.includes(row.id)) await setSetting('reviewedGames', [...list, row.id]);
@@ -641,6 +713,24 @@
 		}
 	});
 
+	let pendingPractice = $state(false);
+	let noPractice = $state(false);
+
+	$effect(() => {
+		if (!pendingPractice || loading || analysing || progress < 1) return;
+		pendingPractice = false;
+		if (importantMistake >= 0) practiseImportantMistake();
+		else {
+			noPractice = true;
+			const id = row?.id;
+			if (id)
+				void db.transaction('rw', db.settings, async () => {
+					const reviewed = await getSetting<number[]>('reviewedGames', []);
+					if (!reviewed.includes(id)) await setSetting('reviewedGames', [...reviewed, id]);
+				});
+		}
+	});
+
 	const gameId = $derived(
 		typeof window !== 'undefined' ? Number(page.url.searchParams.get('game')) || null : null
 	);
@@ -654,6 +744,10 @@
 
 	async function load() {
 		abort?.abort();
+		analysing = false;
+		pendingPractice = false;
+		noPractice = false;
+		finishedQuick = false;
 		retry = null;
 		variation = null;
 		mistakesCreated = null;
@@ -674,6 +768,8 @@
 		row = r;
 		// aus dem Tagesplan und noch nicht selbst besprochen → erst „Erst du“
 		const reviewed = await getSetting<SelfReviewResult[]>('selfReviews', []);
+		const quickLink = page.url.searchParams.get('practice') === '1';
+		const played = quickLink && (await getSetting<number[]>('reviewedGames', [])).includes(r.id!);
 		selfReview =
 			page.url.searchParams.get('retry') === '1' && !reviewed.some((x) => x.gameId === r.id)
 				? 'active'
@@ -685,27 +781,35 @@
 		progress = evals.length / (game.ply + 1);
 		if (!r.analysis?.done) runAnalysis();
 		else ply = 0;
+		pendingPractice = quickLink && !played;
+		finishedQuick = played;
 	}
 
 	async function runAnalysis() {
 		if (!row) return;
+		const target = row;
+		const controller = new AbortController();
 		analysing = true;
-		abort = new AbortController();
-		const res = await analyseGame(
-			row,
-			(done, tot, ev) => {
-				progress = done / tot;
-				evals = [...ev];
-			},
-			abort.signal
-		);
-		evals = res;
-		analysing = false;
-		const fresh = await db.games.get(row.id!);
-		if (fresh?.analysis?.done) {
+		abort = controller;
+		try {
+			const res = await analyseGame(
+				target,
+				(done, tot, ev) => {
+					if (controller.signal.aborted) return;
+					progress = done / tot;
+					evals = [...ev];
+				},
+				controller.signal
+			);
+			if (controller.signal.aborted) return;
+			evals = res;
+			const fresh = await db.games.get(target.id!);
+			if (controller.signal.aborted || !fresh?.analysis?.done) return;
 			row = fresh;
-			// Eigene Fehler automatisch als Puzzles anlegen
-			mistakesCreated = await createMistakePuzzles(fresh, res);
+			const created = await createMistakePuzzles(fresh, res);
+			if (!controller.signal.aborted) mistakesCreated = created;
+		} finally {
+			if (!controller.signal.aborted) analysing = false;
 		}
 	}
 
@@ -855,7 +959,7 @@
 		if (!retry || !row || !game) return null;
 		if (retry.status === 'done')
 			return {
-				kicker: t('retry.doneTitle'),
+				kicker: t(retry.quick ? 'retry.oneDone' : 'retry.doneTitle'),
 				title: t('retry.doneText', { n: retryFound, m: retry.list.length }),
 				text: retryMissed.length
 					? t('retry.doneMissed', { n: retryMissed.length })
@@ -1274,15 +1378,33 @@
 						{/if}
 					</div>
 				</Dock>
-			{:else if myMistakes.length && progress >= 1 && !analysing}
-				<button class="card retry-cta" onclick={() => startRetry()}>
-					<span class="rc-ico"><Target size={20} /></span>
-					<span
-						><b>{t('retry.cta', { n: myMistakes.length })}</b>
-						{t('retry.ctaText')}</span
+			{:else if progress >= 1 && !analysing}
+				{#if noPractice || finishedQuick}
+					<p class="card retry-cta" data-testid="quick-result">
+						{t(importantMistake < 0 ? 'retry.noneToPractise' : 'retry.oneDone')}
+					</p>
+				{/if}
+				{#if importantMistake >= 0}
+					<button
+						class="card retry-cta"
+						data-testid="quick-practice"
+						onclick={practiseImportantMistake}
 					>
-					<ChevronRight size={18} />
-				</button>
+						<span class="rc-ico"><Target size={20} /></span>
+						<span><b>{t('retry.one')}</b>{t('retry.oneText')}</span>
+						<ChevronRight size={18} />
+					</button>
+				{/if}
+				{#if myMistakes.length}
+					<button class="card retry-cta" onclick={() => startRetry()}>
+						<span class="rc-ico"><Target size={20} /></span>
+						<span
+							><b>{t('retry.cta', { n: myMistakes.length })}</b>
+							{t('retry.ctaText')}</span
+						>
+						<ChevronRight size={18} />
+					</button>
+				{/if}
 			{/if}
 
 			{#if analysing || progress < 1}

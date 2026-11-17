@@ -116,56 +116,69 @@ export function reviewMoves(row: GameRow, evals: PlyEval[]): MoveReview[] {
  * Macht aus eigenen Fehlern und Patzern Übungs-Puzzles (sofort fällig).
  * Gibt die Anzahl neu angelegter Puzzles zurück.
  */
-export async function createMistakePuzzles(row: GameRow, evals: PlyEval[]): Promise<number> {
-	if (!row.id) return 0;
+export async function createMistakePuzzles(
+	row: GameRow,
+	evals: PlyEval[],
+	onlyPly?: number
+): Promise<number> {
+	const gameId = row.id;
+	if (!gameId) return 0;
 	const game = Game.fromUciMoves(row.moves, row.startFen);
 	const reviews = reviewMoves(row, evals);
 	let created = 0;
 	for (const r of reviews) {
-		if (r.mover !== row.myColor) continue;
+		if (r.mover !== row.myColor || (onlyPly !== undefined && r.ply !== onlyPly)) continue;
 		if (r.judgement !== 'blunder' && r.judgement !== 'mistake') continue;
 		// „Fehler“ ohne greifbares Motiv (Stellungsfehler) sind als Aufgabe kaum lernbar – nur Patzer
 		// und Fehler mit Motiv (Figur hängt, Gabel, Matt, Gewinn verpasst) werden zu Wiederholungen
-		if (r.judgement === 'mistake' && (!r.explanation || r.explanation.motif === 'positional'))
+		if (
+			onlyPly === undefined &&
+			r.judgement === 'mistake' &&
+			(!r.explanation || r.explanation.motif === 'positional')
+		)
 			continue;
 		const before = evals[r.ply - 1];
-		if (!before?.best) continue;
+		const best = before?.best;
+		if (!best) continue;
 		const id = `${row.source}-${row.id}-${r.ply}`;
-		if (await db.mistakes.get(id)) continue;
-		const fen = game.fenAt(r.ply - 1);
-		const puzzle: Puzzle = {
-			id,
-			fen,
-			moves: ['', before.best, ...(before.pv?.slice(1, 3) ?? [])],
-			rating: 0,
-			themes: [],
-			source: 'mistake',
-			note: t('puzzles.mistakeNote', {
-				what: r.explanation?.title ?? t('judgement.mistake'),
-				opp: row.opponent
-			})
-		};
-		// Nur der erste Lösungszug ist sicher; Folgezüge nur bei Matt/klaren Varianten behalten
-		if (!(before.mate !== undefined)) puzzle.moves = ['', before.best];
-		await db.mistakes.put({
-			id,
-			gameId: row.id,
-			fen,
-			solution: before.best,
-			played: game.moves[r.ply - 1].uci,
-			ply: r.ply,
-			date: Date.now(),
-			label: r.explanation?.title ?? t('judgement.mistake')
+		const added = await db.transaction('rw', db.mistakes, db.reviewCards, async () => {
+			if (await db.reviewCards.get(`mistake:${id}`)) return false;
+			const fen = game.fenAt(r.ply - 1);
+			const puzzle: Puzzle = {
+				id,
+				fen,
+				moves: ['', best, ...(before.pv?.slice(1, 3) ?? [])],
+				rating: 0,
+				themes: [],
+				source: 'mistake',
+				note: t('puzzles.mistakeNote', {
+					what: r.explanation?.title ?? t('judgement.mistake'),
+					opp: row.opponent
+				})
+			};
+			// Nur der erste Lösungszug ist sicher; Folgezüge nur bei Matt/klaren Varianten behalten
+			if (!(before.mate !== undefined)) puzzle.moves = ['', best];
+			await db.mistakes.put({
+				id,
+				gameId,
+				fen,
+				solution: best,
+				played: game.moves[r.ply - 1].uci,
+				ply: r.ply,
+				date: Date.now(),
+				label: r.explanation?.title ?? t('judgement.mistake')
+			});
+			const card = createEmptyCard(new Date());
+			await db.reviewCards.put({
+				id: `mistake:${id}`,
+				kind: 'mistake',
+				card,
+				due: Date.now(),
+				data: puzzle
+			});
+			return true;
 		});
-		const card = createEmptyCard(new Date());
-		await db.reviewCards.put({
-			id: `mistake:${id}`,
-			kind: 'mistake',
-			card,
-			due: Date.now(),
-			data: puzzle
-		});
-		created++;
+		if (added) created++;
 	}
 	return created;
 }

@@ -39,7 +39,6 @@
 	let chosen = $state<Skill | null>(null);
 	const selected = $derived<Skill>(chosen ?? advice[0]?.skill ?? 'safety');
 	const v = $derived(values.find((x) => x.skill === selected)!);
-	const adv = $derived(advice.find((a) => a.skill === selected) ?? null);
 	const top = $derived(advice[0] ?? null);
 	/** Anteil am Abstand zu Spielern 200 Elo über dir (aus Lichess-Daten) */
 	const bottom = SKILL_TABLE[0]?.r ?? 0;
@@ -54,7 +53,7 @@
 
 	const LEVELS = [800, 1200, 1600, 2000, 2800];
 	/** Eröffnung/Endspiel voller Patzer: dann führt der Rat zum Blunder-Check (lib/training/skills.ts) */
-	const viaSafety = $derived(adv?.viaSafety ?? false);
+	const viaSafety = $derived(advice.some((item) => item.skill === selected && item.viaSafety));
 	const blunderPct = $derived(
 		selected === 'opening' || selected === 'endgame'
 			? Math.round((blunderShare[selected] ?? 0) * 100)
@@ -94,9 +93,7 @@
 	{#if top && top.gain > 0}
 		<button class="lever" onclick={() => (chosen = top.skill)} data-testid="skill-lever">
 			<TrendingUp size={18} />
-			<span
-				><b>{t('skills.lever', { name: t(`skills.name.${top.skill}`), gain: top.gain })}</b></span
-			>
+			<span><b>{t('skills.lever', { name: t(`skills.name.${top.skill}`) })}</b></span>
 		</button>
 	{/if}
 
@@ -170,11 +167,6 @@
 				<a class="btn" href={resolve(HREF[ctaSkill] as '/')}
 					>{t(`skills.cta.${ctaSkill}`)} <ArrowRight size={16} /></a
 				>
-				{#if adv && adv.gain > 0}
-					<span class="gain" data-testid="skill-gain"
-						><TrendingUp size={16} /> {t('skills.gainShort', { gain: adv.gain })}</span
-					>
-				{/if}
 			</div>
 		</div>
 
@@ -400,20 +392,6 @@
 		flex-wrap: wrap;
 		align-items: center;
 		gap: 0.5rem 0.9rem;
-	}
-
-	.gain {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.3rem;
-		color: var(--good-text);
-		font-family: var(--font-num);
-		font-weight: 700;
-		white-space: nowrap;
-	}
-
-	.gain :global(svg) {
-		flex-shrink: 0;
 	}
 
 	/* Erklärungen nur auf Wunsch */

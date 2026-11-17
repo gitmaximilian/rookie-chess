@@ -361,7 +361,7 @@
 		<!-- Zeitbudget des Tagesplans: bestimmt, wie viele Aufgaben Rookie täglich vorschlägt -->
 		<p class="hint minutes-hint">{t('settings.minutesText')}</p>
 		<div class="seg" role="radiogroup" aria-label={t('settings.minutes')}>
-			{#each [15, 20, 30, 45] as n (n)}
+			{#each [5, 15, 20, 30, 45] as n (n)}
 				<button
 					role="radio"
 					aria-checked={minutes === n}

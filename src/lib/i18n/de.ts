@@ -1251,6 +1251,12 @@ export const de: Shape<typeof en> = {
 		done: 'Los geht’s!'
 	},
 	plan: {
+		rapidOffline: 'Offline kannst du unten gegen einen Bot üben.',
+		importRapid: 'Fertige Partie importieren',
+		openLichess: 'Lichess öffnen',
+		rapidDetails:
+			'Spiele auf Lichess eine gewertete Standard-Rapid-Partie, am besten 10+0. Plane dafür bis zu 20 Minuten ein. Nach dem Import kannst du einen wichtigen Fehler üben.',
+		rapidSlot: 'Rapid-Partie einplanen, sobald du 20 Minuten hast',
 		kicker: 'Nächster Schritt',
 		title: 'Dein Training heute',
 		review: (p: P) => `${p.n} verpasste ${p.n === 1 ? 'Puzzle' : 'Puzzles'} wiederholen`,
@@ -1260,8 +1266,8 @@ export const de: Shape<typeof en> = {
 		basics: (p: P) => `Lektion: ${p.name}`,
 		course: (p: P) => `Eröffnung: ${p.name}`,
 		endgame: (p: P) => `Endspiel: ${p.name}`,
-		game: 'Letzte Partie: erst selbst Fehler suchen, dann nachspielen',
-		play: 'Eine Partie mit Coach spielen',
+		game: 'Einen Fehler aus deiner Partie üben',
+		play: 'Gewertete Rapid-Partie spielen',
 		safety: (p: P) => `Blunder-Check: ${p.n} Züge – sicher oder nicht?`,
 		mistakes: (p: P) => `Deine eigenen Fehler: ${p.n} wiederholen`,
 		scan: (p: P) => `Brett-Scan: ${p.n} Stellungen – was kann der Gegner?`,
@@ -1389,7 +1395,7 @@ export const de: Shape<typeof en> = {
 			`${p.pct} % deines Verlusts hier sind Patzer. Ohne Patzer spielen Lichess-Spieler von 400 bis 1800 diese Phase fast gleich genau – dein Hebel ist deshalb der Blunder-Check, nicht mehr Theorie.`,
 		elite: 'Weltspitze',
 		eliteShort: 'Elite',
-		lever: (p: P) => `Größter Hebel: ${p.name} – ≈ +${p.gain} Elo`,
+		lever: (p: P) => `Empfohlener Schwerpunkt: ${p.name}`,
 		leverText: 'Hier bringt dich Training jetzt am weitesten.',
 		name: {
 			safety: 'Sicherheit',
@@ -1542,6 +1548,8 @@ export const de: Shape<typeof en> = {
 		note: 'Einordnung: Genauigkeit dieser Partie im Vergleich zu 1 440 echten Lichess-Partien (400–2200, gleiche Rechentiefe). Eine einzelne Partie schwankt stark – auch Spieler um 1000 erreichen in jeder vierten Partie über 87 %. Eine „gespielte Elo“ aus einer Partie wäre deshalb Zufall; aussagekräftig ist, wie die Partie für deine Stärke war, und der Verlauf über viele Partien.'
 	},
 	progress: {
+		rapidScope:
+			'Für den Partietrend zählen jetzt gewertete Lichess-Rapid-Partien. Deine übrigen Partien bleiben im Verlauf.',
 		title: 'Wirkt dein Training?',
 		text: 'Sterne, Serie und Puzzle-Wertung zeigen Fleiß. Ob du besser spielst, zeigt sich hier – mit ehrlichen Mindestmengen.',
 		blunders: 'Patzer je 30 Züge',
@@ -1713,6 +1721,11 @@ export const de: Shape<typeof en> = {
 		practiseText: (p: P) => `Jetzt trainieren: Puzzles zum Thema „${p.theme}“ auf deinem Niveau.`
 	},
 	retry: {
+		saveFailed: 'Die Wiederholung konnte nicht gespeichert werden. Versuch es noch einmal.',
+		noneToPractise: 'In dieser Partie gibt es keinen groben Fehler zum Nachspielen.',
+		oneDone: 'Für die Wiederholung gespeichert',
+		oneText: 'Spiel einen besseren Zug und nimm die Stellung in deine Wiederholungen auf.',
+		one: 'Wichtigsten Fehler üben',
 		solvedHint: 'Gefunden – mit Tipp.',
 		hintShown: 'Die richtige Figur ist grün markiert.',
 		after: (p: P) => `Dein Gegner hatte gerade ${p.move} gespielt.`,
@@ -1767,6 +1780,9 @@ export const de: Shape<typeof en> = {
 		fromHere: 'Analysebrett'
 	},
 	summary: {
+		rapidImported: 'Letzte importierte Wertung. Stabilität offen.',
+		rapidNoData: 'Gewertete Rapid-Partie importieren',
+		rapidGoal: 'Lichess Rapid · Ziel 1600',
 		title: 'Überblick',
 		link: 'Konto verknüpfen',
 		loading: 'Partien werden geladen …',

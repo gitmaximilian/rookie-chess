@@ -30,6 +30,8 @@ export interface GameRow {
 	speed?: string;
 	/** gewertete Online-Partie (fehlt bei älteren Importen) */
 	rated?: boolean;
+	/** Bekannte Lichess-Botkonten aus dem Import. */
+	opponentIsBot?: boolean;
 }
 
 export interface GameAnalysis {
