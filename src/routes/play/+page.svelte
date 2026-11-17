@@ -1,6 +1,5 @@
 <script lang="ts">
 	import CommentBar from '#lib/ui/CommentBar.svelte';
-	import Dock from '#lib/ui/Dock.svelte';
 	import { onDestroy, onMount, untrack } from 'svelte';
 	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
@@ -978,74 +977,72 @@
 				</div>
 			</div>
 			{#if coachOn && !ended}
-				<Dock>
-					<div class="coach-box" class:warn={coachNote?.serious} role="status">
-						<div class="cb-head">
-							<span class="co-ico small"><GraduationCap size={16} /></span>
-							<b>{t('coach.title')}</b>
-							{#if coachBusy}<span class="cb-busy">{t('coach.thinking')}</span>{/if}
-						</div>
-						{#if coachChance && myTurn && !selfCheck}
-							<p class="cb-chance"><b>{t('coach.chanceTitle')}</b> {t('coach.chanceText')}</p>
-						{/if}
-						{#if coachOpp && selfCheck && !revealed && myTurn}
-							<p class="cb-opp">
-								<span class="cb-label">{t('coach.opponent')} {figurine(coachOpp.san)}</span>
-								{t('coach.checkPrompt')}
-							</p>
-							<p class="cb-text">{t('coach.checkPromptText')}</p>
-							<button class="cb-link" onclick={reveal}>{t('coach.reveal')}</button>
-						{:else if coachOpp}
-							<p class="cb-opp">
-								<span class="cb-label">{t('coach.opponent')} {figurine(coachOpp.san)}</span>
-								{coachOpp.text}
-							</p>
-							{#if coachOpp.warn}<p class="cb-warn">{coachOpp.warn}</p>{/if}
-						{/if}
-						{#if coachThreat && myTurn && (!selfCheck || revealed)}
-							<p class="cb-warn">
-								{coachThreat.kind === 'mate'
-									? t('coach.threatMate', { n: coachThreat.mateIn ?? 1 })
-									: t('coach.threatMaterial', {
-											piece: t(`pieces.Poss.${coachThreat.role ?? 'pawn'}`)
-										})}
-							</p>
-							{#if !threatShown}
-								<button class="cb-link" onclick={showThreat}>{t('coach.showThreat')}</button>
-							{:else}
-								<p class="cb-text">{coachThreat.san}</p>
-							{/if}
-						{/if}
-						{#if coachNote}
-							<p class="cb-title j-{coachNote.judgement}">{coachNote.title}</p>
-							<p class="cb-text">{coachNote.text}</p>
-						{:else if !coachOpp}
-							<p class="cb-text">{t('coach.welcome')}</p>
-						{/if}
-						{#if coachTip}<p class="cb-tip">{coachTip}</p>{/if}
-						{#if coachHelp && myTurn}
-							<div class="cb-help">
-								<p><Lightbulb size={15} /> {coachHelp.idea}</p>
-								{#if coachHelp.level >= 2}<p>{coachHelp.piece}</p>{/if}
-							</div>
-						{/if}
-						{#if myTurn}
-							<button
-								class="btn secondary small cb-ask"
-								onclick={() => void askCoach()}
-								disabled={helpBusy}
-								><Lightbulb size={16} />
-								{!coachHelp
-									? t('coach.hint.ask')
-									: coachHelp.level === 1
-										? t('coach.hint.more')
-										: coachHelp.level === 2
-											? t('coach.hint.show')
-											: t('coach.hint.ask')}</button
-							>
-						{/if}
+				<div class="coach-box" class:warn={coachNote?.serious} role="status">
+					<div class="cb-head">
+						<span class="co-ico small"><GraduationCap size={16} /></span>
+						<b>{t('coach.title')}</b>
+						{#if coachBusy}<span class="cb-busy">{t('coach.thinking')}</span>{/if}
 					</div>
-				</Dock>
+					{#if coachChance && myTurn && !selfCheck}
+						<p class="cb-chance"><b>{t('coach.chanceTitle')}</b> {t('coach.chanceText')}</p>
+					{/if}
+					{#if coachOpp && selfCheck && !revealed && myTurn}
+						<p class="cb-opp">
+							<span class="cb-label">{t('coach.opponent')} {figurine(coachOpp.san)}</span>
+							{t('coach.checkPrompt')}
+						</p>
+						<p class="cb-text">{t('coach.checkPromptText')}</p>
+						<button class="cb-link" onclick={reveal}>{t('coach.reveal')}</button>
+					{:else if coachOpp}
+						<p class="cb-opp">
+							<span class="cb-label">{t('coach.opponent')} {figurine(coachOpp.san)}</span>
+							{coachOpp.text}
+						</p>
+						{#if coachOpp.warn}<p class="cb-warn">{coachOpp.warn}</p>{/if}
+					{/if}
+					{#if coachThreat && myTurn && (!selfCheck || revealed)}
+						<p class="cb-warn">
+							{coachThreat.kind === 'mate'
+								? t('coach.threatMate', { n: coachThreat.mateIn ?? 1 })
+								: t('coach.threatMaterial', {
+										piece: t(`pieces.Poss.${coachThreat.role ?? 'pawn'}`)
+									})}
+						</p>
+						{#if !threatShown}
+							<button class="cb-link" onclick={showThreat}>{t('coach.showThreat')}</button>
+						{:else}
+							<p class="cb-text">{coachThreat.san}</p>
+						{/if}
+					{/if}
+					{#if coachNote}
+						<p class="cb-title j-{coachNote.judgement}">{coachNote.title}</p>
+						<p class="cb-text">{coachNote.text}</p>
+					{:else if !coachOpp}
+						<p class="cb-text">{t('coach.welcome')}</p>
+					{/if}
+					{#if coachTip}<p class="cb-tip">{coachTip}</p>{/if}
+					{#if coachHelp && myTurn}
+						<div class="cb-help">
+							<p><Lightbulb size={15} /> {coachHelp.idea}</p>
+							{#if coachHelp.level >= 2}<p>{coachHelp.piece}</p>{/if}
+						</div>
+					{/if}
+					{#if myTurn}
+						<button
+							class="btn secondary small cb-ask"
+							onclick={() => void askCoach()}
+							disabled={helpBusy}
+							><Lightbulb size={16} />
+							{!coachHelp
+								? t('coach.hint.ask')
+								: coachHelp.level === 1
+									? t('coach.hint.more')
+									: coachHelp.level === 2
+										? t('coach.hint.show')
+										: t('coach.hint.ask')}</button
+						>
+					{/if}
+				</div>
 			{/if}
 		</div>
 
@@ -1076,43 +1073,40 @@
 					onSelect={(p) => (viewPly = p >= moves.length ? null : p)}
 				/>
 			</div>
-			<!-- Steuerelemente bleiben auch sichtbar, während der Bot antwortet. -->
-			<Dock order={1} reserve={coachOn ? 64 : 0}>
-				<div class="controls">
-					<button
-						class="ctl"
-						onclick={hint}
-						disabled={!myTurn || hintLoading}
-						title="{t('play.hint')} (H)"
-					>
-						<Lightbulb size={20} /><span>{t('play.hint')}</span>
+			<div class="controls">
+				<button
+					class="ctl"
+					onclick={hint}
+					disabled={!myTurn || hintLoading}
+					title="{t('play.hint')} (H)"
+				>
+					<Lightbulb size={20} /><span>{t('play.hint')}</span>
+				</button>
+				<button
+					class="ctl"
+					onclick={undo}
+					disabled={!!ended || game.ply === 0}
+					title="{t('play.undo')} (⌘Z)"
+				>
+					<Undo2 size={20} /><span>{t('play.undo')}</span>
+				</button>
+				<button
+					class="ctl"
+					onclick={() => (orientation = orientation === 'white' ? 'black' : 'white')}
+					title="{t('common.flip')} (F)"
+				>
+					<RefreshCw size={20} /><span>{t('common.flip')}</span>
+				</button>
+				{#if !ended}
+					<button class="ctl danger" onclick={resign} title={t('play.resign')}>
+						<Flag size={20} /><span>{t('play.resign')}</span>
 					</button>
-					<button
-						class="ctl"
-						onclick={undo}
-						disabled={!!ended || game.ply === 0}
-						title="{t('play.undo')} (⌘Z)"
-					>
-						<Undo2 size={20} /><span>{t('play.undo')}</span>
+				{:else}
+					<button class="ctl" onclick={() => (showResult = true)}>
+						<Trophy size={20} /><span>{t('play.result')}</span>
 					</button>
-					<button
-						class="ctl"
-						onclick={() => (orientation = orientation === 'white' ? 'black' : 'white')}
-						title="{t('common.flip')} (F)"
-					>
-						<RefreshCw size={20} /><span>{t('common.flip')}</span>
-					</button>
-					{#if !ended}
-						<button class="ctl danger" onclick={resign} title={t('play.resign')}>
-							<Flag size={20} /><span>{t('play.resign')}</span>
-						</button>
-					{:else}
-						<button class="ctl" onclick={() => (showResult = true)}>
-							<Trophy size={20} /><span>{t('play.result')}</span>
-						</button>
-					{/if}
-				</div>
-			</Dock>
+				{/if}
+			</div>
 			{#if ended && savedGameId}
 				<a class="btn analyse-now" href={resolve(`/analysis?game=${savedGameId}`)}
 					><ChartLine size={18} /> {t('play.analyse')}</a
@@ -1297,37 +1291,6 @@
 
 	.switch.on span {
 		transform: translateX(18px);
-	}
-
-	/* in der mobilen Leiste: nur noch die Coach-Knöpfe (Text steht oben über dem Brett);
-	   Platz dafür reserviert die Steuerleiste vorab, das Brett springt also nicht */
-	:global(.docked) .coach-box {
-		margin: 0;
-		padding: 0;
-	}
-
-	:global(.docked) .cb-head,
-	:global(.docked) .cb-ask {
-		display: none;
-	}
-
-	:global(.docked) .controls {
-		margin: 0;
-		gap: 0.4rem;
-	}
-
-	:global(.docked) .ctl {
-		flex-direction: row;
-		justify-content: center;
-		gap: 0.35rem;
-		padding: 0.6rem 0.2rem;
-		border-radius: 999px;
-		/* in der Kapsel: keine eigenen Kästchen */
-		background: transparent;
-	}
-
-	:global(.docked) .ctl:active {
-		background: var(--surface-2);
 	}
 
 	.coach-box {
@@ -2234,29 +2197,25 @@
 			flex-wrap: wrap;
 			white-space: normal;
 		}
-		/* Texte stehen oben im Kommentar – unten bleiben nur die Knöpfe */
-		.coach-box .cb-head,
-		.coach-box .cb-opp,
-		.coach-box .cb-warn,
-		.coach-box .cb-chance,
-		.coach-box .cb-text,
-		.coach-box .cb-title,
-		.coach-box .cb-tip,
-		.coach-box .cb-help,
-		.coach-box .cb-link {
+		.coach-box {
 			display: none;
 		}
-		/* übrig bleiben nur Knöpfe: als ruhige Zeile ohne eigene Karte */
-		.coach-box,
-		.coach-box.warn {
+
+		/* Die Aktionsleiste folgt dem Brett und verdeckt auf kurzen Displays keine Felder. */
+		.controls {
+			width: 100%;
+			padding: 0.35rem;
+			border-radius: 24px;
+			background: var(--surface);
+		}
+
+		.ctl {
 			flex-direction: row;
-			flex-wrap: wrap;
-			align-items: center;
-			gap: 0.45rem;
-			margin: 0;
-			padding: 0;
-			background: none;
-			border: none;
+			justify-content: center;
+			gap: 0.3rem;
+			padding: 0.6rem 0.15rem;
+			border-radius: 999px;
+			background: transparent;
 		}
 	}
 </style>

@@ -215,7 +215,8 @@ test('Auf einem kurzen Handy: Bot-Brett nutzt die Breite und bleibt in jedem Fra
 	const input = hasTouch ? 'touch' : 'mouse';
 	for (const [own, bot] of [
 		['e2e4', 'd7d5'],
-		['e4d5', 'd8d5']
+		['e4d5', 'd8d5'],
+		['f1b5', 'c7c6']
 	]) {
 		await board.scrollIntoViewIfNeeded();
 		const reply = nextReply();

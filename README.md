@@ -20,7 +20,7 @@ Screenshots use generated sample data (`scripts/screenshots/`), not real games.
 
 ## What's new in 0.7.7
 
-- Bot games use the available board width on phones in portrait. On short screens you can scroll to the controls below the board.
+- Bot games use the available board width on phones in portrait. The game controls sit below the player row so every square stays tappable on short screens.
 - Coach feedback and highlights update without reapplying an identical chess position.
 
 ## What's new in 0.7.6
