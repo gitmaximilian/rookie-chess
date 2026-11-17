@@ -93,6 +93,7 @@
 
 	let el: HTMLDivElement;
 	let cg: Api | null = null;
+	let appliedFen: string;
 	let promo = $state<{ from: string; to: string; color: Color } | null>(null);
 
 	const brushes = {
@@ -154,6 +155,7 @@
 	}
 
 	onMount(() => {
+		appliedFen = fen;
 		cg = Chessground(el, {
 			...config(),
 			premovable: {
@@ -202,8 +204,15 @@
 		];
 		if (!cg) return;
 		if (!premoves || viewOnly) cancelPremove();
-		const next = config();
-		cg.set(next);
+		const { fen: position, ...next } = config();
+		// Feedback und Markierungen allein sollen die Figuren nicht neu setzen.
+		// Bei einer abgelehnten Ziehgeste muss die gezeigte Stellung trotzdem zurückgesetzt werden.
+		if (appliedFen !== position || cg.getFen() !== position.split(' ', 1)[0]) {
+			cg.set({ ...next, fen: position });
+			appliedFen = position;
+		} else {
+			cg.set(next);
+		}
 		// Chessground verwirft die Vormerkung, falls sie nach dem Gegnerzug nicht legal ist.
 		if (premoves && next.movable.dests.size && cg.state.premovable.current) cg.playPremove();
 	});

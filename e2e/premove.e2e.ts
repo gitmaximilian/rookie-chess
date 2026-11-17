@@ -196,3 +196,64 @@ for (const coach of [false, true]) {
 		expect(await layout()).toEqual(before);
 	});
 }
+
+test('Auf einem kurzen Handy: Bot-Brett nutzt die Breite und bleibt in jedem Frame quadratisch', async ({
+	page,
+	hasTouch
+}) => {
+	await page.setViewportSize({ width: 390, height: 650 });
+	const nextReply = await startWithControlledBot(page, true);
+	const board = page.locator('.cg-host');
+	await page.waitForFunction(() =>
+		document
+			.getAnimations()
+			.every((a) => (a.effect as KeyframeEffect | null)?.target?.tagName !== 'MAIN')
+	);
+	const arenaWidth = (await page.locator('.arena').boundingBox())!.width;
+	expect((await board.boundingBox())!.width).toBeGreaterThanOrEqual(arenaWidth - 1);
+
+	const input = hasTouch ? 'touch' : 'mouse';
+	for (const [own, bot] of [
+		['e2e4', 'd7d5'],
+		['e4d5', 'd8d5']
+	]) {
+		await board.scrollIntoViewIfNeeded();
+		const reply = nextReply();
+		const frames = await board.evaluateHandle((host) => {
+			const samples = new Set<string>();
+			let frame = 0;
+			function sample() {
+				const { width, height, x, y } = host.getBoundingClientRect();
+				const ground = host.querySelector('cg-board')!.getBoundingClientRect();
+				samples.add(
+					JSON.stringify({
+						square: Math.abs(width - height) < 0.5 && Math.abs(ground.width - ground.height) < 0.5,
+						width: Math.round(width),
+						groundWidth: Math.round(ground.width),
+						x: Math.round(x),
+						y: Math.round(y),
+						scale: window.visualViewport?.scale ?? 1
+					})
+				);
+				frame = requestAnimationFrame(sample);
+			}
+			sample();
+			return {
+				finish: () => {
+					cancelAnimationFrame(frame);
+					return [...samples];
+				}
+			};
+		});
+		await playUci(page, own, input);
+		await reply.requested;
+		await reply.play(bot);
+		await expect(page.getByText('Your move', { exact: true })).toBeVisible();
+		await page.waitForFunction(() => !document.querySelector('cg-board piece.anim'));
+		const result = await frames.evaluate((frames) =>
+			frames.finish().map((frame) => JSON.parse(frame))
+		);
+		await frames.dispose();
+		expect(result).toEqual([expect.objectContaining({ square: true, scale: 1 })]);
+	}
+});

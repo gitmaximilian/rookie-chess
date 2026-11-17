@@ -700,7 +700,7 @@
 <svelte:head><title>{t('play.title')} – Rookie</title></svelte:head>
 <svelte:window onkeydown={onKey} />
 
-{#if typeof window !== 'undefined' && page.url.searchParams.get('plan') === '1'}
+{#snippet rapidPlan()}
 	<section class="card rapid-plan" data-testid="rapid-plan">
 		<h2>{t('plan.play')}</h2>
 		<p>{t('plan.rapidDetails')}</p>
@@ -712,9 +712,12 @@
 		</div>
 		<p>{t('plan.rapidOffline')}</p>
 	</section>
-{/if}
+{/snippet}
 
 {#if phase === 'setup'}
+	{#if typeof window !== 'undefined' && page.url.searchParams.get('plan') === '1'}
+		{@render rapidPlan()}
+	{/if}
 	<PageHeader eyebrow={t('play.eyebrow')} title={t('play.title')} subtitle={t('play.subtitle')} />
 
 	<div class="setup">
@@ -865,7 +868,7 @@
 		</CommentBar>
 	{/if}
 	<div class="arena">
-		<div class="board-col" class:with-bar={coachOn && !ended}>
+		<div class="board-col">
 			<div class="player top">
 				<BotAvatar {bot} size={40} {thinking} />
 				<div class="pinfo">
@@ -1154,6 +1157,10 @@
 			</div>
 		</div>
 	{/if}
+{/if}
+
+{#if phase === 'playing' && typeof window !== 'undefined' && page.url.searchParams.get('plan') === '1'}
+	{@render rapidPlan()}
 {/if}
 
 <style>
@@ -2189,12 +2196,18 @@
 			transform: translateY(10px);
 		}
 	}
-	/* Handy: Brett so groß, dass es neben der Aktionsleiste ganz sichtbar bleibt */
 	@media (max-width: 767px) {
+		/* Im Hochformat bestimmt der verfügbare Platz links und rechts die Brettgröße. */
 		.board-col {
-			max-width: min(100%, calc(100svh - 108px - var(--tabbar-space) - var(--safe-top) - 130px));
+			max-width: 100%;
+			overflow-anchor: none;
 		}
-		/* Die wechselnde Dock-Höhe darf die Brettbreite während einer Partie nicht verändern. */
+
+		@media (orientation: landscape) {
+			.board-col {
+				max-width: min(100%, max(260px, calc(100svh - 2rem)));
+			}
+		}
 		.player {
 			gap: 0.35rem;
 		}
@@ -2220,15 +2233,6 @@
 		.bottom .pcap {
 			flex-wrap: wrap;
 			white-space: normal;
-		}
-		/* mit Coach: Kommentar steht über dem Brett (feste Höhe) */
-		.board-col.with-bar {
-			max-width: min(
-				100%,
-				calc(
-					100svh - 108px - var(--tabbar-space) - var(--safe-top) - 130px - var(--comment-h) - 0.5rem
-				)
-			);
 		}
 		/* Texte stehen oben im Kommentar – unten bleiben nur die Knöpfe */
 		.coach-box .cb-head,
