@@ -2,7 +2,7 @@
 
 A chess trainer for beginners as a Progressive Web App for iPhone, iPad and Mac – completely free, offline-capable, no App Store, no account, no tracking. English and German.
 
-**Live:** https://rookie.maximilianauer.at · **Version:** 0.7.6
+**Live:** https://rookie.maximilianauer.at · **Version:** 0.7.7
 
 | Home                                                                                                                           | Coach                                                                                                                                             | Play                                                                                                   | Game review                                                                                                                                | Blunder check                                                                                            |
 | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
@@ -17,6 +17,11 @@ A chess trainer for beginners as a Progressive Web App for iPhone, iPad and Mac 
 | <img src="docs/screenshots/desktop-analysis-light.png" width="420" alt="Game review on desktop in light mode: a mistake on the board, the engine's top moves and accuracy per move type"> | <img src="docs/screenshots/desktop-analysis-dark.png" width="420" alt="Game review on desktop in dark mode"> |
 
 Screenshots use generated sample data (`scripts/screenshots/`), not real games.
+
+## What's new in 0.7.7
+
+- Bot games use the available board width on phones in portrait. The game controls sit below the player row so every square stays tappable on short screens.
+- Coach feedback and highlights update without reapplying an identical chess position.
 
 ## What's new in 0.7.6
 
