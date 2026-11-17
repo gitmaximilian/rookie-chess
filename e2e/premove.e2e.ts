@@ -5,7 +5,7 @@ type BotTestWindow = Window & {
 	premoveTestBot: { searches: number; reply: ((uci: string) => void) | null };
 };
 
-async function startWithControlledBot(page: Page) {
+async function startWithControlledBot(page: Page, coach = false, timed = false) {
 	// Der Test steuert nur die UCI-Antwort. Spielregeln und Eingabe bleiben unverändert.
 	await page.addInitScript(() => {
 		Math.random = () => 0.9;
@@ -44,7 +44,8 @@ async function startWithControlledBot(page: Page) {
 		});
 	});
 	await page.goto('/play');
-	await page.getByRole('switch', { name: 'Play with coach' }).click();
+	if (!coach) await page.getByRole('switch', { name: 'Play with coach' }).click();
+	if (timed) await page.getByRole('radio', { name: '10 min' }).click();
 	await page.getByRole('button', { name: 'Start game' }).click();
 	await expect(page.getByText('Your move', { exact: true })).toBeVisible();
 
@@ -125,3 +126,70 @@ test('Ein Premove lässt sich ersetzen und anschließend löschen', async ({ pag
 	await expect(page.getByText('Your move', { exact: true })).toBeVisible();
 	await expect(page.locator('.side-moves')).not.toContainText(/f3|c4/);
 });
+
+for (const coach of [false, true]) {
+	test(`Handy: Bot-Brett bleibt bei Schlägen, Premove und Undo stabil (Coach ${coach})`, async ({
+		page,
+		hasTouch
+	}) => {
+		await page.setViewportSize({ width: 320, height: 720 });
+		const nextReply = await startWithControlledBot(page, coach, true);
+		const board = page.locator('.cg-host');
+		const layout = () =>
+			board.evaluate((el) => {
+				const rect = el.getBoundingClientRect();
+				return {
+					x: Math.round(rect.x + window.scrollX),
+					y: Math.round(rect.y + window.scrollY),
+					width: Math.round(rect.width),
+					overflow: document.documentElement.scrollWidth - window.innerWidth,
+					scale: window.visualViewport?.scale
+				};
+			});
+		await page.waitForFunction(() =>
+			document
+				.getAnimations()
+				.every((a) => (a.effect as KeyframeEffect | null)?.target?.tagName !== 'MAIN')
+		);
+		const before = await layout();
+		expect(before.overflow).toBe(0);
+		const input = hasTouch ? 'touch' : 'mouse';
+		const first = nextReply();
+		await playUci(page, 'e2e4', input);
+		await first.requested;
+		await playUci(page, 'b1c3', input);
+		await expect(page.getByRole('button', { name: 'Cancel premove' })).toBeVisible();
+		expect(await layout()).toEqual(before);
+		await page.getByRole('button', { name: 'Cancel premove' }).click();
+		await first.play('d7d5');
+		await expect(page.getByText('Your move', { exact: true })).toBeVisible();
+		await page
+			.getByRole('button', { name: 'Flip', exact: true })
+			.locator('visible=true')
+			.first()
+			.click();
+		await expect(board).toHaveAttribute('data-orientation', 'black');
+
+		for (const [own, bot] of [
+			['e4d5', 'd8d5'],
+			['b1c3', 'd5d6'],
+			['d2d4', 'e7e5'],
+			['d4e5', 'd6e5']
+		]) {
+			const next = nextReply();
+			await playUci(page, own, input);
+			await next.requested;
+			expect(await layout()).toEqual(before);
+			await next.play(bot);
+			await expect(page.getByText('Your move', { exact: true })).toBeVisible();
+			expect(await layout()).toEqual(before);
+		}
+		await expect(page.locator('.player.bottom .pcap')).toContainText('×2');
+		await page
+			.getByRole('button', { name: 'Undo', exact: true })
+			.locator('visible=true')
+			.first()
+			.click();
+		expect(await layout()).toEqual(before);
+	});
+}

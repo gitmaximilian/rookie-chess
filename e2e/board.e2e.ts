@@ -73,3 +73,59 @@ test('Brettbeschriftung: jede Koordinate hebt sich von ihrem Feld ab (a1 dunkel,
 		[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (i % 2 ? colors.onDark : colors.onLight))
 	);
 });
+
+for (const example of [
+	{
+		side: 'w',
+		pieces: 'cburnett',
+		theme: 'dark',
+		fen: '8/P3k3/8/8/8/8/8/4K3 w - - 0 1',
+		uci: 'a7a8',
+		board: /^N7/
+	},
+	{
+		side: 'b',
+		pieces: 'merida',
+		theme: 'light',
+		fen: '4k3/8/8/8/8/8/p3K3/8 b - - 0 1',
+		uci: 'a2a1',
+		board: /\/n7 w /
+	}
+]) {
+	test(`Umwandlung auf 320 px: ${example.side}, ${example.pieces}, ${example.theme}`, async ({
+		page,
+		hasTouch
+	}) => {
+		await page.setViewportSize({ width: 320, height: 720 });
+		await page.addInitScript(({ pieces, theme }) => {
+			localStorage.setItem('rookie:board', JSON.stringify({ pieces }));
+			localStorage.setItem('rookie:theme', theme);
+		}, example);
+		await page.goto('/analysis/board?fen=' + encodeURIComponent(example.fen));
+		await expect.poll(() => fen(page)).toBe(example.fen);
+		const input = hasTouch ? 'touch' : 'mouse';
+		await playUci(page, example.uci, input);
+		const dialog = page.getByRole('dialog', { name: 'Choose promotion' });
+		await expect(dialog).toBeVisible();
+		const art = await dialog.locator('piece').evaluateAll((elements) =>
+			elements.map((piece) => ({
+				width: piece.getBoundingClientRect().width,
+				color: piece.classList.contains('white') ? 'w' : 'b',
+				background: getComputedStyle(piece).backgroundImage
+			}))
+		);
+		expect(art).toHaveLength(4);
+		for (const piece of art) {
+			expect(piece.width).toBeGreaterThanOrEqual(32);
+			expect(piece.color).toBe(example.side);
+			if (example.pieces === 'cburnett') expect(piece.background).toContain('data:image/svg+xml');
+			else expect(piece.background).toContain('/pieces/' + example.pieces + '/' + example.side);
+		}
+		await dialog.getByRole('button', { name: 'Cancel' }).click();
+		await expect(dialog).toHaveCount(0);
+		expect(await fen(page)).toBe(example.fen);
+		await playUci(page, example.uci, input);
+		await dialog.getByRole('button', { name: 'Knight' }).click();
+		await expect.poll(() => fen(page)).toMatch(example.board);
+	});
+}

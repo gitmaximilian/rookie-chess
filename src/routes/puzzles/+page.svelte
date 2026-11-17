@@ -1,4 +1,5 @@
 <script lang="ts">
+	import DailyTaskProgress from '#lib/ui/DailyTaskProgress.svelte';
 	import CommentBar from '#lib/ui/CommentBar.svelte';
 	import Dock from '#lib/ui/Dock.svelte';
 	import { onMount } from 'svelte';
@@ -151,7 +152,11 @@
 		});
 	}
 
+	let countedForPlan = false;
+
 	async function next() {
+		countedForPlan = false;
+		failureRecorded = false;
 		status = 'loading';
 		feedback = '';
 		shapes = [];
@@ -281,7 +286,12 @@
 	}
 
 	async function finish(solved: boolean) {
-		if (!run) return;
+		if (!run || (status !== 'solving' && status !== 'intro')) return;
+		const daily = mode === 'daily';
+		const count = !countedForPlan && (solved || usedSolution);
+		if (count) countedForPlan = true;
+		const alreadyRecorded = failureRecorded;
+		failureRecorded = false;
 		const clean = solved && run.mistakes === 0 && !usedSolution;
 		praiseIdx = Math.floor(Math.random() * 4);
 		status = clean ? 'solved' : 'failed';
@@ -292,12 +302,11 @@
 			await recordResult(true);
 		} else {
 			streak = 0;
-			if (!failureRecorded) await recordResult(false);
+			if (!alreadyRecorded) await recordResult(false);
 		}
-		failureRecorded = false;
-		if (solved || usedSolution) {
+		if (count) {
 			await bumpActivity('puzzles');
-			if (mode === 'daily') await setSetting('dailyDone', today());
+			if (daily) await setSetting('dailyDone', today());
 		}
 		await refreshCounts();
 		setTimeout(() => (feedback = ''), 900);
@@ -316,17 +325,18 @@
 
 	async function showSolution() {
 		if (!run || status !== 'solving') return;
+		const active = run;
 		usedSolution = true;
-		if (!failureRecorded) await recordFailure();
 		status = 'intro';
-		while (run && !run.done) {
+		if (!failureRecorded) await recordFailure();
+		while (run === active && !run.done) {
 			const mv = run.showNext();
 			if (mv) shapes = [{ orig: mv.slice(0, 2), dest: mv.slice(2, 4), brush: 'good' }];
 			sound.move(false, run.game.isCheck);
 			v++;
 			await new Promise((r) => setTimeout(r, 700));
 		}
-		finish(false);
+		if (run === active) void finish(false);
 	}
 
 	function retry() {
@@ -487,6 +497,10 @@
 			</button>
 		{/if}
 	</nav>
+
+	<DailyTaskProgress
+		kind={mode === 'review' ? 'review' : mode === 'mistakes' ? 'mistakes' : 'puzzles'}
+	/>
 
 	{#if puzzleBar}
 		<CommentBar

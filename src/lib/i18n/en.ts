@@ -1434,6 +1434,7 @@ export const en = {
 		howEndgames: 'Per lesson: 1–3 stars, depending on how efficiently you win',
 		all: 'All stars collected – brilliant!'
 	},
+	dailyProgress: { count: 'Today: {done} of {goal}', done: 'Done for today' },
 	selfReview: {
 		kicker: 'You first',
 		title: 'Where were your mistakes?',
@@ -1451,7 +1452,10 @@ export const en = {
 		resultText: 'Red: your mistakes. Now replay them – can you find the better move?',
 		noMistakes: 'No serious mistakes in this game – well played!',
 		toRetry: 'Replay mistakes',
-		toAnalysis: 'To the review',
+		markCount: '{done}/{max} marked',
+		counts: '{found} found · {missed} missed · {extra} extra',
+		emptyResult: 'No moves to list.',
+		toAnalysis: 'Back to original game',
 		state: { found: 'found', missed: 'missed', extra: 'was fine', marked: '' }
 	},
 	report: {
@@ -1577,7 +1581,8 @@ export const en = {
 		unsafe: 'Not safe',
 		refuteTitle: 'Right feeling! Now show it: how does your opponent punish the move?',
 		refuteText: 'Play your opponent’s best reply on the board.',
-		refuteAgain: 'Not that one – look for a capture, a check or a fork.',
+		refuteMiss: 'Not that one.',
+		refuteAgain: 'Look for a capture, a check or a fork.',
 		showReply: 'Show me',
 		rightSafe: 'Right – the move is safe.',
 		wrongSafe: 'The move was safe after all.',
@@ -1588,7 +1593,6 @@ export const en = {
 			`After ${p.san} your opponent wins nothing: every capture can be answered and there is no mate.`,
 		whyUnsafe: (p: P) =>
 			`After ${p.san} comes ${p.reply} (${p.theme}). Check before every move what your opponent can do next.`,
-		saved: 'Answer saved – results at the end.',
 		testScore: (p: P) => `${p.n} of ${p.m} points`,
 		testTrend: (p: P) => `First check-up ${p.first} %, now ${p.last} %.`,
 		trendUp: 'That is a real improvement.',
@@ -1596,7 +1600,7 @@ export const en = {
 		trendNoise:
 			'With 12 tasks a difference this size can still be chance – the trend over several check-ups counts.',
 		testFirst:
-			'Your first check-up. Rookie suggests the next one in two weeks – then you will see whether your training works.',
+			'This is the baseline for check-ups with instant feedback. Rookie suggests the next one in two weeks.',
 		toCoach: 'To your progress',
 		board: 'Board: is the planned move safe?',
 		empty: 'You have seen all tasks – great work!',

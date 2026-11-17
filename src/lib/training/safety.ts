@@ -114,6 +114,7 @@ export function isReply(item: SafetyItem, uci: string): boolean {
 export interface CheckupResult {
 	date: number;
 	form: 'A' | 'B';
+	feedback?: 'immediate';
 	/** Punkte (½ für „unsicher erkannt, aber Widerlegung nicht gefunden“) */
 	score: number;
 	total: number;
@@ -139,6 +140,8 @@ export function checkupDue(history: CheckupResult[], now = Date.now()): boolean 
 export function checkupTrend(
 	history: CheckupResult[]
 ): { first: number; last: number; diff: number; meaningful: boolean } | null {
+	const latest = history.at(-1);
+	history = history.filter((r) => r.feedback === latest?.feedback);
 	if (history.length < 2) return null;
 	const pct = (r: CheckupResult) => Math.round((r.score / r.total) * 100);
 	const first = pct(history[0]);

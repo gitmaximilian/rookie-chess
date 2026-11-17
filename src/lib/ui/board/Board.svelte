@@ -230,7 +230,8 @@
 
 	function cancelPromo() {
 		promo = null;
-		cg?.set(config());
+		cg?.cancelMove();
+		cg?.set({ ...config(), animation: { enabled: false } });
 	}
 
 	const promoRoles = [
@@ -274,7 +275,7 @@
 
 	{#if promo}
 		<div class="promo-backdrop" role="presentation" onclick={cancelPromo}></div>
-		<div class="promo" role="dialog" aria-label={t('board.promoteDialog')}>
+		<div class="promo" role="dialog" aria-modal="true" aria-label={t('board.promoteDialog')}>
 			<p>{t('board.promote')}</p>
 			<div class="promo-row">
 				{#each promoRoles as p (p.r)}
@@ -288,6 +289,7 @@
 					</button>
 				{/each}
 			</div>
+			<button class="promo-cancel" onclick={cancelPromo}>{t('common.cancel')}</button>
 		</div>
 	{/if}
 </div>
@@ -391,6 +393,7 @@
 		left: 50%;
 		top: 50%;
 		z-index: 21;
+		width: min(calc(100% - 0.75rem), 19rem);
 		transform: translate(-50%, -50%);
 		padding: 0.9rem 1rem 1rem;
 		border-radius: 20px;
@@ -408,14 +411,16 @@
 	}
 
 	.promo-row {
-		display: flex;
-		gap: 0.5rem;
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		gap: 0.4rem;
 	}
 
 	.promo-btn {
 		position: relative;
-		width: 64px;
-		height: 64px;
+		width: 100%;
+		aspect-ratio: 1;
+		min-height: 44px;
 		border: none;
 		border-radius: 14px;
 		background: var(--surface-2);
@@ -423,6 +428,17 @@
 		transition:
 			transform var(--dur-fast) var(--ease-out),
 			background-color var(--dur) var(--ease-out);
+	}
+
+	.promo-cancel {
+		display: block;
+		margin: 0.35rem auto 0;
+		min-height: 44px;
+		padding-inline: 0.75rem;
+		border: 0;
+		background: none;
+		color: var(--text-2);
+		cursor: pointer;
 	}
 
 	.promo-btn:hover {
@@ -435,7 +451,10 @@
 
 	.promo-btn piece {
 		position: absolute;
-		inset: 6px;
+		inset: 0;
+		width: 82%;
+		height: 82%;
+		margin: auto;
 		background-size: contain;
 		background-repeat: no-repeat;
 		background-position: center;

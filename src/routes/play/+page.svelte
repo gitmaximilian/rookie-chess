@@ -671,8 +671,10 @@
 		queen: '♛'
 	};
 	const order = ['queen', 'rook', 'bishop', 'knight', 'pawn'];
-	function sortRoles(r: string[]) {
-		return [...r].sort((a, b) => order.indexOf(a) - order.indexOf(b));
+	function capturedGroups(roles: string[]) {
+		return order
+			.map((role) => ({ role, n: roles.filter((r) => r === role).length }))
+			.filter(({ n }) => n > 0);
 	}
 
 	let beatenBots = $state<string[]>([]);
@@ -854,13 +856,18 @@
 				<div class="pinfo">
 					<span class="pname">{bot.name} <span class="pelo">{bot.elo}</span></span>
 					<span class="pcap">
-						{#each sortRoles(captured[myColor]) as r, i (i)}<span class="cap">{pieceGlyph[r]}</span
-							>{/each}
+						{#each capturedGroups(captured[myColor]) as { role, n } (role)}
+							<span class="cap"
+								>{pieceGlyph[role]}{#if n > 1}<small>×{n}</small>{/if}</span
+							>
+						{/each}
 						{#if (myColor === 'white' ? -material : material) > 0}<span class="adv"
 								>+{Math.abs(material)}</span
 							>{/if}
-						{#if thinking}<span class="status">{t('play.thinking')}</span>{/if}
 					</span>
+					<span class="status-line"
+						>{#if thinking}<span class="status">{t('play.thinking')}</span>{/if}</span
+					>
 				</div>
 				{#if clocks}
 					<span
@@ -895,12 +902,16 @@
 					<span class="pname">{t('common.you')} <span class="pelo">{colorName(myColor)}</span></span
 					>
 					<span class="pcap">
-						{#each sortRoles(captured[myColor === 'white' ? 'black' : 'white']) as r, i (i)}<span
-								class="cap">{pieceGlyph[r]}</span
-							>{/each}
+						{#each capturedGroups(captured[myColor === 'white' ? 'black' : 'white']) as { role, n } (role)}
+							<span class="cap"
+								>{pieceGlyph[role]}{#if n > 1}<small>×{n}</small>{/if}</span
+							>
+						{/each}
 						{#if (myColor === 'white' ? material : -material) > 0}<span class="adv"
 								>+{Math.abs(material)}</span
 							>{/if}
+					</span>
+					<span class="status-line">
 						{#if browsing}<span class="status viewing"
 								>{t('play.viewing', { n: shownPly, m: moves.length })}</span
 							>{:else if premoveQueued && !ended}
@@ -1669,6 +1680,7 @@
 	/* ── Partie ── */
 	.arena {
 		display: grid;
+		grid-template-columns: minmax(0, 1fr);
 		gap: 1rem;
 		max-width: 1100px;
 		margin: 0 auto;
@@ -1742,6 +1754,8 @@
 		align-items: center;
 		gap: 1px;
 		min-height: 18px;
+		overflow: hidden;
+		white-space: nowrap;
 		font-size: 0.95rem;
 		color: var(--text-2);
 		line-height: 1;
@@ -1749,6 +1763,23 @@
 
 	.cap {
 		opacity: 0.75;
+	}
+
+	.cap small {
+		font-size: 0.65rem;
+	}
+
+	.status-line {
+		display: flex;
+		align-items: center;
+		min-width: 0;
+		height: 24px;
+		white-space: nowrap;
+		overflow: hidden;
+	}
+
+	.status-line .status {
+		margin: 0;
 	}
 
 	.adv {
@@ -2128,18 +2159,41 @@
 	/* Handy: Brett so groß, dass es neben der Aktionsleiste ganz sichtbar bleibt */
 	@media (max-width: 767px) {
 		.board-col {
-			max-width: min(
-				100%,
-				calc(100svh - var(--dock-h) - var(--tabbar-space) - var(--safe-top) - 130px)
-			);
+			max-width: min(100%, calc(100svh - 108px - var(--tabbar-space) - var(--safe-top) - 130px));
+		}
+		/* Die wechselnde Dock-Höhe darf die Brettbreite während einer Partie nicht verändern. */
+		.player {
+			gap: 0.35rem;
+		}
+		.player.bottom {
+			display: grid;
+			grid-template-columns: 40px minmax(0, 1fr) auto;
+		}
+		.bottom .pinfo,
+		.bottom .me-avatar {
+			grid-row: 1 / span 2;
+		}
+		.bottom .clock {
+			grid-column: 3;
+			justify-self: end;
+		}
+		.pnav {
+			grid-column: 3;
+			gap: 0.2rem;
+		}
+		.pn-btn {
+			width: 38px;
+		}
+		.bottom .pcap {
+			flex-wrap: wrap;
+			white-space: normal;
 		}
 		/* mit Coach: Kommentar steht über dem Brett (feste Höhe) */
 		.board-col.with-bar {
 			max-width: min(
 				100%,
 				calc(
-					100svh - var(--dock-h) - var(--tabbar-space) - var(--safe-top) - 130px -
-						var(--comment-h) - 0.5rem
+					100svh - 108px - var(--tabbar-space) - var(--safe-top) - 130px - var(--comment-h) - 0.5rem
 				)
 			);
 		}

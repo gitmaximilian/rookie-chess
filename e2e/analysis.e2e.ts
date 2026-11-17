@@ -120,6 +120,12 @@ test('Erst du: eigene Fehler markieren, auflösen, dann nachspielen', async ({ p
 	await fwd.first().click(); // 2. g4
 	await page.getByTestId('mark-move').locator('visible=true').first().click();
 	await expect(panel).toContainText('2. g4');
+	const mark = page.getByTestId('mark-move').locator('visible=true').first();
+	await expect(mark).toHaveText('Unmark');
+	await mark.click();
+	await expect(panel).not.toContainText('2. g4');
+	await mark.click();
+	await expect(page.getByText('1/3 marked')).toBeVisible();
 	const resolveBtn = page.getByTestId('resolve').locator('visible=true').first();
 	await expect(resolveBtn).toBeEnabled({ timeout: 60_000 });
 	await resolveBtn.click();
@@ -129,6 +135,7 @@ test('Erst du: eigene Fehler markieren, auflösen, dann nachspielen', async ({ p
 			.locator('visible=true')
 			.first()
 	).toBeVisible();
+	await expect(page.getByTestId('self-review-counts')).toHaveText('1 found · 0 missed · 0 extra');
 	await page.getByTestId('self-review-next').locator('visible=true').first().click();
 	await expect(
 		page
@@ -136,6 +143,14 @@ test('Erst du: eigene Fehler markieren, auflösen, dann nachspielen', async ({ p
 			.locator('visible=true')
 			.first()
 	).toBeVisible();
+	await page
+		.getByRole('button', { name: 'Exit', exact: true })
+		.locator('visible=true')
+		.first()
+		.click();
+	await expect(page.getByTestId('self-review')).toHaveCount(0);
+	await expect(page.getByText(/Mistake 1 of 1/).locator('visible=true')).toHaveCount(0);
+	await expect(page.locator('.moves-card')).toContainText('g4');
 });
 
 test('Partieanalyse: eigene Variante spielen und zur unveränderten Partie zurück', async ({
@@ -163,4 +178,24 @@ test('Partieanalyse: eigene Variante spielen und zur unveränderten Partie zurü
 	await playUci(page, 'e7e5');
 	await expect(back).toHaveCount(0);
 	await expect.poll(() => fen(page)).toMatch(/ w /);
+});
+
+test('Erst du: eine Partie ohne grobe Fehler lässt sich auflösen', async ({ page }) => {
+	await page.goto('/analysis');
+	await page.locator('textarea').fill('1. e4 e5 *');
+	await page.getByRole('button', { name: 'Analyse', exact: true }).click();
+	await expect(page).toHaveURL(/analysis\?game=\d+/);
+	const id = new URL(page.url()).searchParams.get('game');
+	await page.goto(`/analysis?game=${id}&retry=1`);
+	const reveal = page.getByTestId('resolve').locator('visible=true').first();
+	await expect(reveal).toBeEnabled({ timeout: 30_000 });
+	await reveal.click();
+	await expect(
+		page
+			.getByText('No serious mistakes in this game – well played!')
+			.locator('visible=true')
+			.first()
+	).toBeVisible();
+	await page.getByTestId('self-review-next').locator('visible=true').first().click();
+	await expect(page.getByTestId('self-review')).toHaveCount(0);
 });

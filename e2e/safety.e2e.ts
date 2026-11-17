@@ -34,7 +34,7 @@ test('Blunder-Check: Frage, Antwort, Rückmeldung, nächste Aufgabe', async ({ p
 	).toBeVisible();
 });
 
-test('Kontrolltest: 12 Aufgaben ohne Zwischenauswertung, dann Ergebnis und Fortschritt im Coach', async ({
+test('Kontrolltest: 12 Aufgaben mit sofortiger Rückmeldung, dann Ergebnis und Fortschritt im Coach', async ({
 	page
 }) => {
 	test.setTimeout(90_000);
@@ -43,7 +43,12 @@ test('Kontrolltest: 12 Aufgaben ohne Zwischenauswertung, dann Ergebnis und Forts
 	for (let i = 0; i < 12; i++) {
 		const next = await answer(page, i % 2 ? 'answer-safe' : 'answer-unsafe');
 		await expect(
-			page.getByText('Answer saved – results at the end.').locator('visible=true').first()
+			page
+				.getByText(
+					/Right – the move is safe|The move was safe after all|Careful – that move loses|Exactly – you found the refutation|Not safe, well sensed/
+				)
+				.locator('visible=true')
+				.first()
 		).toBeVisible();
 		await next.click();
 	}
@@ -123,6 +128,8 @@ test('Blunder-Check: auf gedrehtem Brett die weiße Widerlegung spielen', async 
 			.locator('visible=true')
 			.first()
 	).toBeVisible();
+	await expect(board).toHaveAttribute('data-fen', refute);
+	await playUci(page, 'b8b7', hasTouch ? 'touch' : 'mouse');
 	await expect(board).toHaveAttribute('data-fen', refute);
 	await playUci(page, 'b8f8', hasTouch ? 'touch' : 'mouse');
 	await expect(board).toHaveAttribute('data-fen', /5Q1k.* b /);
