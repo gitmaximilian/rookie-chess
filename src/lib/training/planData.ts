@@ -58,9 +58,9 @@ export async function loadPlanContext(): Promise<PlanContext> {
 	start.setHours(0, 0, 0, 0);
 	const attempts = await db.puzzleAttempts.toArray();
 	const games = await db.games.toArray();
-	const stats = computeStats(games);
-	const focus = focusFrom(stats, attempts);
 	const rapid = games.filter(isTargetGame);
+	const stats = computeStats(rapid.length ? rapid : games);
+	const focus = focusFrom(stats, attempts);
 	const lastRapid = rapid.reduce<(typeof games)[number] | null>(
 		(latest, g) => (!latest || g.date > latest.date ? g : latest),
 		null
@@ -109,7 +109,9 @@ function focusFrom(stats: GameStats, attempts: PuzzleAttemptRow[]): Focus | null
 
 /** Schwerpunkt für Seiten außerhalb des Tagesplans (Coach) */
 export async function currentFocus(): Promise<Focus | null> {
-	return focusFrom(computeStats(await db.games.toArray()), await db.puzzleAttempts.toArray());
+	const games = await db.games.toArray();
+	const rapid = games.filter(isTargetGame);
+	return focusFrom(computeStats(rapid.length ? rapid : games), await db.puzzleAttempts.toArray());
 }
 
 /** Plan für heute – einmal erzeugt, danach bis Mitternacht gleich */

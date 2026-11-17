@@ -24,14 +24,12 @@
 		values,
 		advice,
 		overall,
-		games,
 		blunderShare = { opening: null, endgame: null }
 	}: {
 		values: SkillValue[];
 		advice: Advice[];
 		overall: { elo: number; score: number } | null;
 		/** analysierte Partien, die einfließen */
-		games: number;
 		/** Anteil der Patzer am Verlust in Eröffnung und Endspiel (collectSkills) */
 		blunderShare?: { opening: number | null; endgame: number | null };
 	} = $props();
