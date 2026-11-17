@@ -2204,17 +2204,16 @@
 		/* Die Aktionsleiste folgt dem Brett und verdeckt auf kurzen Displays keine Felder. */
 		.controls {
 			width: 100%;
+			grid-template-columns: repeat(4, minmax(0, 1fr));
 			padding: 0.35rem;
 			border-radius: 24px;
 			background: var(--surface);
 		}
 
 		.ctl {
-			flex-direction: row;
 			justify-content: center;
-			gap: 0.3rem;
-			padding: 0.6rem 0.15rem;
-			border-radius: 999px;
+			padding: 0.45rem 0.15rem;
+			border-radius: 16px;
 			background: transparent;
 		}
 	}
