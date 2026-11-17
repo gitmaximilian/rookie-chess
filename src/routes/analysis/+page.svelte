@@ -25,7 +25,7 @@
 	import EvalGraph from '#lib/ui/EvalGraph.svelte';
 	import MoveList from '#lib/ui/MoveList.svelte';
 	import { db, addTombstone, type GameRow } from '#lib/db/db.js';
-	import { review } from '#lib/training/srs.js';
+	import { formatInterval, review } from '#lib/training/srs.js';
 	import { Game, sanForUci } from '#lib/chess/game.js';
 	import { sound } from '#lib/ui/sound.js';
 	import { figurine } from '#lib/chess/notation.js';
@@ -453,6 +453,7 @@
 	let retryV = $state(0);
 	let savingRetry = $state(false);
 	let finishedQuick = $state(false);
+	let nextMistakeDue = $state<number | null>(null);
 	const retryIdx = $derived(retry && retry.status !== 'done' ? retry.list[retry.pos] : -1);
 	const retryItem = $derived(retryIdx >= 0 ? myMistakes[retryIdx] : null);
 	const retryFen = $derived(retryItem && game ? game.fenAt(retryItem.ply - 1) : '');
@@ -575,7 +576,7 @@
 		const targetPly = retryItem.ply;
 		savingRetry = true;
 		try {
-			await db.transaction(
+			const nextDue = await db.transaction(
 				'rw',
 				[db.reviewCards, db.mistakes, db.puzzleAttempts, db.settings],
 				async () => {
@@ -583,7 +584,7 @@
 					if (!(await db.reviewCards.get(id)))
 						await createMistakePuzzles(gameRow, evals, targetPly);
 					if (!(await db.reviewCards.get(id))) throw new Error('Missing mistake review card');
-					await review(id, 'mistake', recall);
+					const due = await review(id, 'mistake', recall);
 					await db.puzzleAttempts.add({
 						puzzleId: id.slice('mistake:'.length),
 						date: Date.now(),
@@ -596,9 +597,13 @@
 					const reviewed = await getSetting<number[]>('reviewedGames', []);
 					if (gameRow.id && !reviewed.includes(gameRow.id))
 						await setSetting('reviewedGames', [...reviewed, gameRow.id]);
+					return due.due;
 				}
 			);
-			if (retry === active) finishedQuick = true;
+			if (retry === active) {
+				finishedQuick = true;
+				nextMistakeDue = nextDue;
+			}
 			return true;
 		} catch (error) {
 			console.error(error);
@@ -748,6 +753,7 @@
 		pendingPractice = false;
 		noPractice = false;
 		finishedQuick = false;
+		nextMistakeDue = null;
 		retry = null;
 		variation = null;
 		mistakesCreated = null;
@@ -783,6 +789,14 @@
 		else ply = 0;
 		pendingPractice = quickLink && !played;
 		finishedQuick = played;
+		if (played) {
+			const key =
+				importantMistake >= 0
+					? `mistake:${r.source}-${r.id}-${myMistakes[importantMistake].ply}`
+					: null;
+			const card = key ? await db.reviewCards.get(key) : undefined;
+			if (row?.id === r.id) nextMistakeDue = card?.due ?? null;
+		}
 	}
 
 	async function runAnalysis() {
@@ -1307,7 +1321,12 @@
 						{/if}
 						{#if retry.status === 'done'}
 							<div class="rt-actions">
-								{#if retryMissed.length}
+								{#if retry.quick}
+									{#if nextMistakeDue}<p>
+											{t('decision.reviewDue', { when: formatInterval(nextMistakeDue) })}
+										</p>{/if}
+									<a class="btn" href={resolve('/')}>{t('decision.backPlan')}</a>
+								{:else if retryMissed.length}
 									<button class="btn" onclick={() => startRetry(retryMissed)}
 										><RotateCcw size={17} /> {t('retry.again', { n: retryMissed.length })}</button
 									>
@@ -1380,9 +1399,15 @@
 				</Dock>
 			{:else if progress >= 1 && !analysing}
 				{#if noPractice || finishedQuick}
-					<p class="card retry-cta" data-testid="quick-result">
-						{t(importantMistake < 0 ? 'retry.noneToPractise' : 'retry.oneDone')}
-					</p>
+					<div class="card retry-cta" data-testid="quick-result">
+						<span>
+							<b>{t(importantMistake < 0 ? 'retry.noneToPractise' : 'retry.oneDone')}</b>
+							{#if nextMistakeDue}
+								{t('decision.reviewDue', { when: formatInterval(nextMistakeDue) })}
+							{/if}
+						</span>
+						<a class="btn secondary" href={resolve('/')}>{t('decision.backPlan')}</a>
+					</div>
 				{/if}
 				{#if importantMistake >= 0}
 					<button

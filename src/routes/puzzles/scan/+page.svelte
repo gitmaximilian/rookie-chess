@@ -191,6 +191,7 @@
 
 <div class="wrap">
 	<a class="back hit44" href={resolve('/puzzles')}><ArrowLeft size={18} /> {t('nav.puzzles')}</a>
+	<a class="hit44" href={resolve('/puzzles/decision')}>{t('decision.title')}</a>
 	<header class="top">
 		<span class="eyebrow">{t('scan.eyebrow')}</span>
 		<h1>{t('scan.title')}</h1>

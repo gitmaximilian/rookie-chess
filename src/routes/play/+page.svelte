@@ -40,7 +40,7 @@
 		type CoachNote,
 		type Threat
 	} from '#lib/coach/coach.js';
-	import { coachLevel, type CoachPref } from '#lib/coach/fading.js';
+	import { coachLevel, type CoachPref, type CoachSample } from '#lib/coach/fading.js';
 	import SegmentedSwitch from '#lib/ui/bento/SegmentedSwitch.svelte';
 	import GraduationCap from '@lucide/svelte/icons/graduation-cap';
 	import Users from '@lucide/svelte/icons/users';
@@ -67,6 +67,7 @@
 		hints: number;
 		undos: number;
 		coach?: boolean;
+		guidedFirst?: boolean;
 	}
 
 	// ── Einrichtung ──
@@ -76,6 +77,7 @@
 	let tcChoice = $state<string | null>(null);
 	// Anfänger lernen am meisten mit Coach – deshalb an, bis man ihn selbst ausschaltet
 	let coachOn = $state(true);
+	let guidedFirst = $state(false);
 
 	// ── Partie ──
 	let game = $state.raw(new Game());
@@ -112,8 +114,11 @@
 	let helpBusy = $state(false);
 	// Hilfe ausschleichen (lib/coach/fading.ts): „check“ = Coach fragt nur, zeigt auf Wunsch
 	let coachPref = $state<CoachPref>('auto');
-	let coachedGames = $state(0);
-	const selfCheck = $derived(coachLevel(coachPref, coachedGames) === 'check');
+	let coachSamples = $state<CoachSample[]>([]);
+	const firstGame = $derived(
+		typeof window !== 'undefined' && page.url.searchParams.get('first') === '1'
+	);
+	const selfCheck = $derived(coachLevel(coachPref, coachSamples) === 'check');
 	/** Drohungen nach dem Gegnerzug aufgedeckt (nur bei „selbst prüfen“) */
 	let revealed = $state(false);
 	let threatAbort: AbortController | null = null;
@@ -319,10 +324,14 @@
 
 	onMount(async () => {
 		const saved = await getSetting<SavedGame | null>('currentGame', null);
-		botId = await getSetting('lastBotId', 'tina');
+		botId = firstGame ? 'bruno' : await getSetting('lastBotId', 'tina');
 		coachOn = await getSetting('coachOn', true);
 		coachPref = await getSetting<CoachPref>('coachPref', 'auto');
-		coachedGames = await getSetting('coachedGames', 0);
+		coachSamples = await db.puzzleAttempts
+			.where('date')
+			.aboveOrEqual(Date.now() - 30 * 86_400_000)
+			.filter((a) => a.source === 'decision' || a.source === 'transfer')
+			.toArray();
 		if (saved && saved.moves) {
 			resume(saved);
 		} else {
@@ -352,6 +361,7 @@
 		hints = s.hints;
 		undos = s.undos;
 		coachOn = !!s.coach;
+		guidedFirst = !!s.guidedFirst;
 		ended = null;
 		phase = 'playing';
 		v++;
@@ -363,6 +373,7 @@
 		playBoard?.cancelPremove();
 		premoveQueued = false;
 		bot = botById(botId);
+		guidedFirst = firstGame;
 		myColor = colorChoice === 'random' ? (Math.random() < 0.5 ? 'white' : 'black') : colorChoice;
 		orientation = myColor;
 		tc = TIME_CONTROLS.find((t) => t.id === tcChoice) ?? null;
@@ -400,7 +411,8 @@
 			clocks: clocks ? { ...clocks } : null,
 			hints,
 			undos,
-			coach: coachOn
+			coach: coachOn,
+			guidedFirst
 		};
 		return setSetting('currentGame', s);
 	}
@@ -626,10 +638,6 @@
 				source: 'bot'
 			})) as number;
 			await bumpActivity('games');
-			if (coachOn) {
-				coachedGames++;
-				await setSetting('coachedGames', coachedGames);
-			}
 			// zählt für die Spielstärke nur ohne Hilfe: kein Zurücknehmen, kein Hinweis
 			if (verdictFor(e, myColor) === 'win' && undos === 0 && hints === 0) {
 				const beaten = await getSetting<string[]>('botsBeaten', []);
@@ -707,13 +715,19 @@
 			<a class="btn" href="https://lichess.org/" target="_blank" rel="noopener noreferrer"
 				>{t('plan.openLichess')}</a
 			>
-			<a class="btn secondary" href={resolve('/import')}>{t('plan.importRapid')}</a>
+			<a class="btn secondary" href={resolve('/import?rapid=1')}>{t('plan.importRapid')}</a>
 		</div>
 		<p>{t('plan.rapidOffline')}</p>
 	</section>
 {/snippet}
 
 {#if phase === 'setup'}
+	{#if firstGame}
+		<section class="card rapid-plan" data-testid="first-game">
+			<h2>{t('decision.firstTitle')}</h2>
+			<p>{t('decision.firstText')}</p>
+		</section>
+	{/if}
 	{#if typeof window !== 'undefined' && page.url.searchParams.get('plan') === '1'}
 		{@render rapidPlan()}
 	{/if}
@@ -820,10 +834,13 @@
 						]}
 					/>
 					<span class="level-note"
-						>{coachLevel(coachPref, coachedGames) === 'check'
+						>{coachLevel(coachPref, coachSamples) === 'check'
 							? t('coach.levelCheckText')
 							: t('coach.levelWarnText')}</span
 					>
+					{#if coachPref === 'auto'}
+						<span class="level-note">{t('decision.autoEvidence')}</span>
+					{/if}
 				</div>
 			{/if}
 
@@ -1108,7 +1125,9 @@
 				{/if}
 			</div>
 			{#if ended && savedGameId}
-				<a class="btn analyse-now" href={resolve(`/analysis?game=${savedGameId}`)}
+				<a
+					class="btn analyse-now"
+					href={resolve(`/analysis?game=${savedGameId}${guidedFirst ? '&practice=1' : ''}`)}
 					><ChartLine size={18} /> {t('play.analyse')}</a
 				>
 			{/if}
@@ -1139,7 +1158,10 @@
 			<div class="sheet-actions">
 				<!-- Lernen zuerst: die Analyse zeigt, was man beim nächsten Mal besser macht -->
 				{#if savedGameId}
-					<a class="btn" href={resolve(`/analysis?game=${savedGameId}`)}>
+					<a
+						class="btn"
+						href={resolve(`/analysis?game=${savedGameId}${guidedFirst ? '&practice=1' : ''}`)}
+					>
 						<ChartLine size={18} />
 						{t('play.analyse')}
 					</a>

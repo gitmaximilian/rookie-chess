@@ -89,7 +89,7 @@ test('Fortgeschrittenes Profil: Schnellschach bleibt bei späteren Blitzpartien 
 	await expect(page.getByTestId('rapid-plan')).toBeVisible();
 	await expect(page.getByRole('link', { name: /Import a finished game/ })).toHaveAttribute(
 		'href',
-		'/import'
+		'/import?rapid=1'
 	);
 });
 
@@ -124,7 +124,11 @@ test('Ein eigener Fehler wird nach Import vorausgewählt und bleibt nach Auflös
 	).toBeVisible();
 	await page.reload();
 	await expect(page.getByTestId('quick-result')).toContainText('Saved for spaced review');
-	await page.goto('/');
+	await expect(page.getByTestId('quick-result')).toContainText('Next review:');
+	await page
+		.getByTestId('quick-result')
+		.getByRole('link', { name: 'Back to the daily plan' })
+		.click();
 	await expect(
 		plan.locator('.task.finished').filter({ hasText: 'Practise one mistake' })
 	).toBeVisible();

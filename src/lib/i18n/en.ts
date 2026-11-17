@@ -1193,6 +1193,36 @@ export const en = {
 		noOnline: 'I don’t play online – start',
 		done: 'Let’s go!'
 	},
+	decision: {
+		title: 'Move and reply',
+		test: 'Check with new positions',
+		choose: 'Choose a good move for your side. Look for checks, captures and threats.',
+		testChoose: 'Choose the move you would play in a game.',
+		reply: 'Think from the other side and play a strong reply for your opponent.',
+		progress: 'Position {n} of {total}',
+		loading: 'One moment…',
+		error: 'Rookie could not evaluate or save this position.',
+		retry: 'Try again',
+		continue: 'Resume evaluation',
+		ownGood: 'Your move is sound.',
+		ownBetter: 'A stronger move for your side is {move}.',
+		replyGood: 'You found a strong reply.',
+		replyBetter: 'The opponent has a stronger reply: {move}.',
+		next: 'Next position',
+		again: 'Practise again',
+		result: '{n} of {total} positions solved',
+		testDone: 'Only first answers count. This is a snapshot of your play, with no Elo score.',
+		firstTitle: 'Your first full game',
+		firstText:
+			'Play Pawn Pete without a clock. Choose your moves and ask for help if you need it. Afterwards, review one important move.',
+		firstPlay: 'Play your first game',
+		rapidReview: 'Practise a mistake from your latest Rapid game',
+		rapidImportNote: 'Import your Lichess game, then go straight to one key move.',
+		reviewDue: 'Next review: {when}.',
+		backPlan: 'Back to the daily plan',
+		autoEvidence:
+			'In Auto, Rookie switches to self-check once you regularly find strong replies in recent Move and Reply exercises.'
+	},
 	plan: {
 		rapidOffline: 'You can practise against a bot below while offline.',
 		importRapid: 'Import a finished game',

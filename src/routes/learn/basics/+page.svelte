@@ -287,8 +287,8 @@
 							>
 						{/if}
 						{#if set === 'basics' && BASICS.every((item) => done.includes(item.id))}
-							<a class="btn" href={resolve('/play?plan=1')}>
-								{t('plan.play')}
+							<a class="btn" href={resolve('/play?first=1')}>
+								{t('decision.firstPlay')}
 								<ArrowRight size={17} />
 							</a>
 						{:else if nextLesson()}

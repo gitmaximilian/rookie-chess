@@ -10,12 +10,15 @@
 	import HomeSummary from '#lib/ui/HomeSummary.svelte';
 	import BentoGrid from '#lib/ui/bento/BentoGrid.svelte';
 	import BotAvatar from '#lib/ui/BotAvatar.svelte';
+	import { BASICS } from '#lib/basics/lessons.js';
+	import { getProfile } from '#lib/onboarding/profile.js';
 	import { db, getSetting } from '#lib/db/db.js';
 	import { botById } from '#lib/bots/bots.js';
 	import { t } from '#lib/i18n/i18n.svelte.js';
 
 	let greeting = $state('hello');
 	let backupDue = $state(false);
+	let offerFirstGame = $state(false);
 	let resume = $state<{ botId: string; moves: string[] } | null>(null);
 
 	onMount(async () => {
@@ -24,6 +27,13 @@
 
 		const rows = await db.activity.toArray();
 		resume = await getSetting('currentGame', null);
+		const profile = await getProfile();
+		if (profile && (profile.rules === 'no' || profile.rules === 'some')) {
+			const completed = await getSetting<string[]>('basicsDone', []);
+			offerFirstGame =
+				BASICS.every((lesson) => completed.includes(lesson.id)) &&
+				!(await db.games.where('source').anyOf('bot', 'lichess', 'chesscom', 'friend').count());
+		}
 
 		const last = await getSetting<number | null>('lastBackupAt', null);
 		const hasData = rows.length > 2;
@@ -57,6 +67,15 @@
 						n: Math.floor(resume.moves.length / 2) + 1
 					})}</span
 				>
+			</span>
+			<span class="resume-go"><Play size={18} /></span>
+		</a>
+	{:else if offerFirstGame}
+		<a class="resume card pressable" href={resolve('/play?first=1')} data-testid="first-game-entry">
+			<BotAvatar bot={botById('bruno')} size={44} />
+			<span class="resume-text">
+				<b>{t('decision.firstPlay')}</b>
+				<span>{botById('bruno').name} · {t('play.noClock')}</span>
 			</span>
 			<span class="resume-go"><Play size={18} /></span>
 		</a>

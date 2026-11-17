@@ -467,6 +467,8 @@
 			{t('puzzles.mistakes')}
 			{#if mistakeCount}<span class="count">{mistakeCount}</span>{/if}
 		</button>
+		<a class="chip" href={resolve('/puzzles/decision')}>{t('decision.title')}</a>
+		<a class="chip" href={resolve('/puzzles/decision?test=1')}>{t('decision.test')}</a>
 		<a class="chip" href={resolve('/puzzles/safety')} data-testid="chip-safety"
 			><ShieldCheck size={15} /> {t('safety.eyebrow')}</a
 		>
