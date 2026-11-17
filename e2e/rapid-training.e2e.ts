@@ -187,6 +187,7 @@ test('Rapid-Einstieg und kurze Fehlerübung funktionieren mit vorhandenen Daten 
 	await expect(page.locator('.plan[aria-busy="false"]')).toBeVisible();
 	await seed(page, {}, [{ ...example, date: Date.now() }]);
 	await page.evaluate(async () => (await navigator.serviceWorker.ready).active?.state);
+	await page.reload();
 	await page.waitForFunction(() => !!navigator.serviceWorker.controller);
 	await context.setOffline(true);
 	await page.goto('/play?plan=1');
