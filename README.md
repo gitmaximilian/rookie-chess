@@ -70,6 +70,8 @@ Rookie's goal: take beginners to **1600** – with methods that learning researc
 
 ## Development
 
+Document each change in its GitHub pull request. Describe what changed, why, and how it was verified. Record user-visible changes in the release notes.
+
 ```bash
 npm install          # also copies Stockfish to static/engine
 npm run dev          # http://localhost:5173
