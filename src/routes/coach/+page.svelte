@@ -4,14 +4,12 @@
 	import Target from '@lucide/svelte/icons/target';
 	import Bomb from '@lucide/svelte/icons/bomb';
 	import Puzzle from '@lucide/svelte/icons/puzzle';
-	import Flame from '@lucide/svelte/icons/flame';
+	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import Play from '@lucide/svelte/icons/play';
 	import Square from '@lucide/svelte/icons/square';
 	import ChessKnight from '@lucide/svelte/icons/chess-knight';
 	import PageHeader from '#lib/ui/PageHeader.svelte';
-	import BentoGrid from '#lib/ui/bento/BentoGrid.svelte';
-	import StatTile from '#lib/ui/bento/StatTile.svelte';
 	import CoachTabs from '#lib/ui/CoachTabs.svelte';
 	import AvatarButton from '#lib/ui/AvatarButton.svelte';
 	import SkillPenta from '#lib/ui/SkillPenta.svelte';
@@ -26,6 +24,7 @@
 		overallLevel,
 		skillMirror,
 		type Advice as SkillAdvice,
+		type Skill,
 		type SkillValue
 	} from '#lib/training/skills.js';
 	import { quality } from '#lib/import/ratings.js';
@@ -56,7 +55,25 @@
 		c: string;
 		/** der eine Schwerpunkt – derselbe wie im Tagesplan auf der Startseite */
 		focus?: boolean;
+		/** welche Penta-Ecke dieser Rat trainiert (für den Abgleich mit dem Penta) */
+		skill?: Skill;
 	}
+
+	/** Fehlerart aus den Partien → Penta-Ecke, die sie trainiert */
+	const MOTIF_SKILL: Partial<Record<Motif, Skill>> = {
+		hanging: 'safety',
+		'mate-allowed': 'safety',
+		fork: 'safety',
+		'missed-win': 'tactics',
+		'mate-missed': 'tactics'
+	};
+	const SKILL_HREF: Record<Skill, string> = {
+		safety: '/puzzles/safety',
+		tactics: '/puzzles',
+		opening: '/learn/openings',
+		strategy: '/learn/basics?set=positional',
+		endgame: '/learn/endgame'
+	};
 
 	interface Data {
 		name: string;
@@ -151,6 +168,7 @@
 		const weakTheme = weakest(themeStats(attempts), 1)[0];
 		const focus = pickFocus({ motifs: stats.motifs, weakTheme: weakTheme?.theme ?? null });
 		const motifAdvice = (motif: Motif, n: number): Advice => ({
+			skill: MOTIF_SKILL[motif],
 			icon: Bomb,
 			title: t('coachTab.adv.motifTitle', { motif: t(`stats.motif.${motif}`), n }),
 			text: t(`coachTab.adv.motif.${motif}`),
@@ -165,6 +183,7 @@
 			c: 'var(--warn)'
 		});
 		const themeAdvice = (theme: string, rate: number): Advice => ({
+			skill: 'tactics',
 			icon: Puzzle,
 			title: t('coachTab.adv.themeTitle', { theme: themeName(theme), pct: Math.round(rate * 100) }),
 			text: t('coachTab.adv.themeText'),
@@ -250,28 +269,6 @@
 	});
 
 	const pendingN = $derived(d ? d.coverage.total - d.coverage.done : 0);
-
-	const counts = $derived.by(() => {
-		const c = { w: 0, d: 0, l: 0, streak: 0 };
-		if (!d) return c;
-		for (const x of d.last) c[x.o]++;
-		for (const x of d.last) {
-			if (x.o !== 'w') break;
-			c.streak++;
-		}
-		return c;
-	});
-	const winRate = $derived(
-		d && d.last.length ? Math.round(((counts.w + counts.d / 2) / d.last.length) * 100) : null
-	);
-	const accTrend = $derived(
-		d && d.stats.accuracyRecent !== null && d.stats.accuracyPrevious !== null
-			? d.stats.accuracyRecent - d.stats.accuracyPrevious
-			: null
-	);
-
-	const outcomeLabel = (o: Outcome) =>
-		t(o === 'w' ? 'stats.win' : o === 'd' ? 'stats.draw' : 'stats.loss');
 </script>
 
 <svelte:head><title>{t('coachTab.title')} – Rookie</title></svelte:head>
@@ -284,6 +281,47 @@
 	{#snippet action()}<AvatarButton />{/snippet}
 </PageHeader>
 <CoachTabs active="overview" />
+
+{#snippet focusCard(data: Data)}
+	{@const main = data.advice.find((a) => a.focus) ?? data.advice[0]}
+	{@const lever = data.skillAdvice[0] ?? null}
+	{@const agrees = !!lever && !!main && main.skill === lever.skill}
+	{@const leverItem = lever
+		? {
+				icon: Target,
+				title: t('coachTab.pentaLever', { name: t(`skills.name.${lever.skill}`) }),
+				text: t(lever.viaSafety ? 'coachTab.pentaViaSafety' : `skills.howShort.${lever.skill}`),
+				href: resolve((lever.viaSafety ? SKILL_HREF.safety : SKILL_HREF[lever.skill]) as '/'),
+				cta: t(`skills.cta.${lever.viaSafety ? 'safety' : lever.skill}`),
+				c: 'var(--c-coach)'
+			}
+		: null}
+	{@const second =
+		lever && !agrees && leverItem ? leverItem : (data.advice.find((a) => a !== main) ?? null)}
+	{#if main || leverItem}
+		<section class="card block advice" data-testid="coach-focus">
+			<h2>{t('coachTab.focus')}</h2>
+			<ul>
+				{#each [main ?? leverItem, second].filter((x) => !!x) as a, i (i)}
+					<li style:--c={a!.c} class:focus={i === 0}>
+						<span class="a-ico"><a.icon size={19} /></span>
+						<span class="a-text"
+							><b>{a!.title}</b><span>{a!.text}</span>{#if i === 0 && agrees}<span class="a-agree"
+									>{t('coachTab.pentaAgrees')}</span
+								>{/if}</span
+						>
+						<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- href ist bereits aufgelöst -->
+						<a class="btn small a-go" href={a!.href}>{a!.cta} <ArrowRight size={15} /></a>
+					</li>
+				{/each}
+			</ul>
+			<details class="stage">
+				<summary>{t('coachTab.stageMore')} <ChevronDown size={16} /></summary>
+				<LevelFocus elo={data.strength} embedded />
+			</details>
+		</section>
+	{/if}
+{/snippet}
 
 {#snippet coverage()}
 	{#if d && d.coverage.total && d.coverage.done >= d.coverage.total && !syncState.analysing}
@@ -370,90 +408,7 @@
 			</div>
 		</div>
 
-		<!-- Lernkennzahlen zuerst: Wirkt das Training? -->
-		<CoachHistory history={d.history} />
-		<ProgressCheck />
-
-		<h2 class="how-title">{t('coachTab.how')}</h2>
-		<BentoGrid label={t('coachTab.how')} testid="coach-kpis">
-			{#if d.rating}
-				<StatTile
-					tone="games"
-					size="m"
-					label={t('coachTab.rating')}
-					value={d.rating.value}
-					delta={d.rating.delta || null}
-					sub={d.rating.label}
-					spark={d.ratingSpark}
-					href={resolve('/coach/stats')}
-				/>
-			{/if}
-			<StatTile
-				tone="play"
-				label={t('coachTab.winRate')}
-				value={winRate === null ? '–' : winRate}
-				unit={winRate === null ? '' : '%'}
-				muted={winRate === null}
-				sub={d.last.length ? t('coachTab.lastN', { n: d.last.length }) : ''}
-			/>
-			<StatTile
-				tone="learn"
-				label={t('coachTab.accuracy')}
-				value={d.stats.accuracyRecent === null ? '–' : d.stats.accuracyRecent}
-				unit={d.stats.accuracyRecent === null ? '' : '%'}
-				muted={d.stats.accuracyRecent === null}
-				delta={accTrend || null}
-				sub={t('coachTab.last10')}
-				spark={d.accuracy.map((a) => a.accuracy)}
-			/>
-			<!-- Verwerten: die greifbarste Zahl hinter „Sicherheit“ (Lichess bis 1400: ≈ 69 %) -->
-			<StatTile
-				tone="neutral"
-				label={t('coachTab.converted')}
-				value={d.stats.conversion ? d.stats.conversion.pct : '–'}
-				unit={d.stats.conversion ? '%' : ''}
-				muted={!d.stats.conversion}
-				sub={d.stats.conversion
-					? t('coachTab.convertedSub', { n: d.stats.conversion.won, m: d.stats.conversion.of })
-					: t('coachTab.convertedNone')}
-				testid="tile-converted"
-			/>
-			<StatTile
-				tone="puzzle"
-				label={t('coachTab.puzzle')}
-				value={d.puzzle.rating}
-				sub={d.puzzle.provisional ? t('common.provisional') : undefined}
-				spark={d.puzzleHist.slice(-30).map((p) => p.rating)}
-				href={resolve('/puzzles')}
-			/>
-		</BentoGrid>
-
-		<!-- Woran arbeiten -->
-		{#if d.advice.length}
-			<section class="card block advice">
-				<h2>{t('coachTab.work')}</h2>
-				<ul>
-					{#each d.advice as a (a.title)}
-						<li style:--c={a.c} class:focus={a.focus}>
-							<span class="a-ico"><a.icon size={19} /></span>
-							<span class="a-text"
-								>{#if a.focus}<span class="mono-label a-kick">{t('coachTab.focus')}</span>{/if}<b
-									>{a.title}</b
-								><span>{a.text}</span></span
-							>
-							<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- a.href ist bereits aufgelöst -->
-							<a class="btn small a-go" href={a.href}>{a.cta} <ArrowRight size={15} /></a>
-						</li>
-					{/each}
-				</ul>
-			</section>
-		{/if}
-
-		<!-- Spielerprofil als Fünfeck -->
-		<!-- was auf deinem Niveau zählt (Lichess-Daten) -->
-		<!-- dieselbe Spielstärke wie überall – sonst zeigen Coach und Lernen verschiedene Stufen -->
-		<LevelFocus elo={d.strength} />
-
+		<!-- 1. Wo stehst du? Spielstärke (oben) und Penta -->
 		<section class="tone-coach block skills">
 			{@render coverage()}
 			<SkillPenta
@@ -461,34 +416,16 @@
 				advice={d.skillAdvice}
 				overall={d.skillOverall}
 				blunderShare={d.skillBlunderShare}
+				lever={false}
 			/>
 		</section>
 
-		<!-- Letzte 30 Partien -->
-		{#if d.last.length}
-			<section class="tone-games block form">
-				<h2>{t('coachTab.lastGames', { n: d.last.length })}</h2>
-				<p class="legend">
-					<span><i class="sq w"></i><b>{counts.w}</b> {t('coachTab.won')}</span>
-					<span><i class="sq d"></i><b>{counts.d}</b> {t('coachTab.drawn')}</span>
-					<span><i class="sq l"></i><b>{counts.l}</b> {t('coachTab.lost')}</span>
-					{#if counts.streak >= 2}<span class="streak"
-							><Flame size={15} /> <b>{counts.streak}</b> {t('coachTab.streak')}</span
-						>{/if}
-				</p>
-				<div class="grid">
-					<!-- älteste links, neueste rechts – wie ein Verlauf -->
-					{#each [...d.last].reverse() as x, i (x.id)}
-						<a
-							class="sq {x.o}"
-							class:newest={i === d.last.length - 1}
-							href={resolve(`/analysis?game=${x.id}`)}
-							aria-label={outcomeLabel(x.o)}
-						></a>
-					{/each}
-				</div>
-			</section>
-		{/if}
+		<!-- 2. Was jetzt? Ein Schwerpunkt (derselbe wie im Tagesplan), die Stufe zum Aufklappen -->
+		{@render focusCard(d)}
+
+		<!-- 3. Wirkt es? Entwicklung und Lernkennzahlen -->
+		<CoachHistory history={d.history} />
+		<ProgressCheck />
 
 		<!-- Wertungsverlauf, Genauigkeit je Partie, typische Fehler und Erkenntnisse: Tab „Statistik“ -->
 		<a class="all card pressable" href={resolve('/coach/stats')}>
@@ -529,10 +466,6 @@
 		display: flex;
 		align-items: center;
 		gap: 0.8rem;
-	}
-
-	.how-title {
-		margin-top: 0.4rem;
 	}
 
 	.who-ini {
@@ -642,11 +575,6 @@
 	}
 
 	/* Spielerprofil */
-	.sk-head {
-		display: flex;
-		flex-direction: column;
-		gap: 0.2rem;
-	}
 
 	/* Ratschläge */
 	.advice {
@@ -704,12 +632,6 @@
 		background: color-mix(in srgb, var(--c) 7%, var(--surface));
 	}
 
-	.a-text .a-kick {
-		margin-bottom: 0.15rem;
-		font-size: 0.68rem;
-		color: color-mix(in srgb, var(--c) 75%, var(--text));
-	}
-
 	.a-go {
 		grid-column: 2;
 		justify-self: start;
@@ -718,60 +640,6 @@
 	}
 
 	/* Form */
-	.legend {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.4rem 1rem;
-		font-size: 0.9rem;
-		color: var(--text-2);
-	}
-
-	.legend span {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.3rem;
-	}
-
-	.legend b {
-		color: var(--text);
-	}
-
-	.legend .sq {
-		width: 12px;
-		height: 12px;
-		border-radius: 3px;
-	}
-
-	.streak {
-		color: var(--accent);
-	}
-
-	.grid {
-		display: grid;
-		grid-template-columns: repeat(10, minmax(0, 1fr));
-		gap: 5px;
-	}
-
-	.sq {
-		display: block;
-		aspect-ratio: 1;
-		border-radius: 5px;
-		background: color-mix(in srgb, var(--text-3) 55%, var(--surface-2));
-	}
-
-	.sq.w {
-		background: var(--good);
-	}
-
-	.sq.l {
-		background: color-mix(in srgb, var(--bad) 80%, var(--surface));
-	}
-
-	.sq.newest {
-		box-shadow:
-			0 0 0 2px var(--surface),
-			0 0 0 4px var(--text);
-	}
 
 	.all {
 		display: flex;
@@ -790,5 +658,31 @@
 	.all > span span {
 		font-size: 0.85rem;
 		color: var(--text-2);
+	}
+
+	/* Stufe zum Aufklappen in der Schwerpunkt-Karte */
+	.stage summary {
+		list-style: none;
+		display: flex;
+		align-items: center;
+		gap: 0.3rem;
+		min-height: 44px;
+		margin-top: 0.4rem;
+		font-weight: 600;
+		color: var(--text-2);
+		cursor: pointer;
+	}
+
+	.stage summary::-webkit-details-marker {
+		display: none;
+	}
+
+	.stage[open] summary :global(svg) {
+		transform: rotate(180deg);
+	}
+
+	.a-agree {
+		color: var(--good-text);
+		font-weight: 600;
 	}
 </style>

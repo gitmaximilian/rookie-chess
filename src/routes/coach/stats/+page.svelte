@@ -6,6 +6,8 @@
 	import TrendingDown from '@lucide/svelte/icons/trending-down';
 	import Info from '@lucide/svelte/icons/info';
 	import PageHeader from '#lib/ui/PageHeader.svelte';
+	import BentoGrid from '#lib/ui/bento/BentoGrid.svelte';
+	import StatTile from '#lib/ui/bento/StatTile.svelte';
 	import CoachTabs from '#lib/ui/CoachTabs.svelte';
 	import AvatarButton from '#lib/ui/AvatarButton.svelte';
 	import RatingHistory from '#lib/ui/RatingHistory.svelte';
@@ -31,6 +33,9 @@
 	let puzzleHist = $state<{ date: number; rating: number }[]>([]);
 	/** Genauigkeit der letzten 20 analysierten Partien, älteste links */
 	let accuracy = $state<AccPoint[]>([]);
+	/** Siegquote der letzten (bis zu) 30 beendeten Partien */
+	let winRate = $state<number | null>(null);
+	let recentN = $state(0);
 	let rows: GameRow[] = [];
 
 	onMount(async () => {
@@ -43,6 +48,19 @@
 		rows = games;
 		stats = computeStats(games, (m) => openingFor(m)?.name ?? null);
 		list = findInsights(stats);
+		const recent = [...games]
+			.sort((a, b) => b.date - a.date)
+			.map((g) => outcomeOf(g))
+			.filter((o) => o !== null)
+			.slice(0, 30);
+		recentN = recent.length;
+		winRate = recent.length
+			? Math.round(
+					((recent.filter((o) => o === 'w').length + recent.filter((o) => o === 'd').length / 2) /
+						recent.length) *
+						100
+				)
+			: null;
 		accuracy = [...games]
 			.sort((a, b) => b.date - a.date)
 			.map((g) => {
@@ -150,6 +168,39 @@
 	</div>
 {:else}
 	<div class="wrap">
+		<!-- So spielst du gerade: drei Kennzahlen aus den eigenen Partien (vorher in der Coach-Übersicht) -->
+		<BentoGrid label={t('coachTab.how')} testid="coach-kpis">
+			<StatTile
+				tone="play"
+				label={t('coachTab.winRate')}
+				value={winRate === null ? '–' : winRate}
+				unit={winRate === null ? '' : '%'}
+				muted={winRate === null}
+				sub={recentN ? t('coachTab.lastN', { n: recentN }) : ''}
+			/>
+			<StatTile
+				tone="learn"
+				label={t('coachTab.accuracy')}
+				value={stats.accuracyRecent === null ? '–' : stats.accuracyRecent}
+				unit={stats.accuracyRecent === null ? '' : '%'}
+				muted={stats.accuracyRecent === null}
+				sub={t('coachTab.last10')}
+				spark={accuracy.map((a) => a.accuracy)}
+			/>
+			<StatTile
+				tone="neutral"
+				size="m"
+				label={t('coachTab.converted')}
+				value={stats.conversion ? stats.conversion.pct : '–'}
+				unit={stats.conversion ? '%' : ''}
+				muted={!stats.conversion}
+				sub={stats.conversion
+					? t('coachTab.convertedSub', { n: stats.conversion.won, m: stats.conversion.of })
+					: t('coachTab.convertedNone')}
+				testid="tile-converted"
+			/>
+		</BentoGrid>
+
 		<!-- Online-Wertung -->
 		<section class="card block">
 			<h2>{t('stats.rating')}</h2>

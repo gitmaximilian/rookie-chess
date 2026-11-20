@@ -24,7 +24,8 @@
 		values,
 		advice,
 		overall,
-		blunderShare = { opening: null, endgame: null }
+		blunderShare = { opening: null, endgame: null },
+		lever = true
 	}: {
 		values: SkillValue[];
 		advice: Advice[];
@@ -32,6 +33,8 @@
 		/** analysierte Partien, die einfließen */
 		/** Anteil der Patzer am Verlust in Eröffnung und Endspiel (collectSkills) */
 		blunderShare?: { opening: number | null; endgame: number | null };
+		/** Hinweis auf den größten Hebel zeigen (im Coach übernimmt das die Schwerpunkt-Karte) */
+		lever?: boolean;
 	} = $props();
 
 	let chosen = $state<Skill | null>(null);
@@ -88,7 +91,7 @@
 		{/if}
 	</header>
 
-	{#if top && top.gain > 0}
+	{#if lever && top && top.gain > 0}
 		<button class="lever" onclick={() => (chosen = top.skill)} data-testid="skill-lever">
 			<TrendingUp size={18} />
 			<span><b>{t('skills.lever', { name: t(`skills.name.${top.skill}`) })}</b></span>

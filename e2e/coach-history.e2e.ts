@@ -91,3 +91,29 @@ test('Coach zeigt beide Linien mit Zeiträumen, auswählbaren Punkten und Formel
 	await chart.getByText('How is this calculated?').click();
 	await expect(chart.getByText(/0.60 × safety/)).toBeVisible();
 });
+
+test('Coach-Übersicht: Penta, dann ein Schwerpunkt, dann Entwicklung – Kennzahlen in der Statistik', async ({
+	page
+}) => {
+	await page.goto('/coach');
+	const penta = page.getByTestId('skill-penta');
+	const focus = page.getByTestId('coach-focus');
+	const history = page.getByTestId('coach-history');
+	await expect(focus).toBeVisible();
+	// Reihenfolge: Wo stehst du? → Was jetzt? → Wirkt es?
+	const y = async (l: typeof penta) => (await l.boundingBox())!.y;
+	expect(await y(penta)).toBeLessThan(await y(focus));
+	expect(await y(focus)).toBeLessThan(await y(history));
+	// höchstens zwei Empfehlungen, die Stufe erst auf Wunsch
+	expect(await focus.locator(':scope > ul > li').count()).toBeLessThanOrEqual(2);
+	await expect(focus.getByTestId('level-focus')).toBeHidden();
+	await focus.getByText('What counts at your level').click();
+	await expect(focus.getByTestId('level-focus')).toBeVisible();
+	// kein doppelter Hebel im Penta
+	await expect(page.getByTestId('skill-lever')).toHaveCount(0);
+	// Siegquote, Genauigkeit, Verwertet stehen jetzt in der Statistik
+	await expect(page.getByTestId('coach-kpis')).toHaveCount(0);
+	await page.goto('/coach/stats');
+	await expect(page.getByTestId('coach-kpis')).toBeVisible();
+	await expect(page.getByTestId('tile-converted')).toBeVisible();
+});

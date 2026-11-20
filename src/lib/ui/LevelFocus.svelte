@@ -8,14 +8,15 @@
 	import { priorities, stageFor } from '#lib/training/levels.js';
 	import { t } from '#lib/i18n/i18n.svelte.js';
 
-	let { elo }: { elo: number | null } = $props();
+	/** embedded: ohne eigene Karte und Überschrift (z. B. aufgeklappt in der Schwerpunkt-Karte des Coachs) */
+	let { elo, embedded = false }: { elo: number | null; embedded?: boolean } = $props();
 
 	const stage = $derived(stageFor(elo));
 	const prio = $derived(priorities(elo));
 </script>
 
-<section class="level card" data-testid="level-focus">
-	<span class="mono-label kick">{t('levels.title')}</span>
+<section class="level" class:card={!embedded} class:embedded data-testid="level-focus">
+	{#if !embedded}<span class="mono-label kick">{t('levels.title')}</span>{/if}
 	<h2>{t(`levels.stage.${stage.id}`)}</h2>
 	<p class="muted">
 		{elo ? t('levels.intro', { elo }) : t('levels.introNone')}
@@ -48,6 +49,10 @@
 		flex-direction: column;
 		gap: 0.55rem;
 		padding: 1.1rem;
+	}
+
+	.level.embedded {
+		padding: 0.6rem 0 0;
 	}
 
 	.kick {

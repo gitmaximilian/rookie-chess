@@ -1283,6 +1283,10 @@ export const en = {
 		progress: (p: P) => `${p.n} of ${p.m} done`
 	},
 	coachTab: {
+		pentaLever: (p: P) => `Your penta says: ${p.name}`,
+		pentaViaSafety: 'Your losses there are mostly blunders – blunder check first.',
+		pentaAgrees: 'Your skill penta sees the same biggest lever.',
+		stageMore: 'What counts at your level',
 		focus: 'Your focus',
 		eyebrow: 'Your coach',
 		title: 'Coach',

@@ -33,7 +33,7 @@ test('Navigation zwischen allen Bereichen', async ({ page, isMobile }) => {
 
 test('Coach: Überblick und Statistik, alte Statistik-Adresse leitet weiter', async ({ page }) => {
 	await page.goto('/coach');
-	await expect(page.getByRole('heading', { name: 'How you are playing' })).toBeVisible();
+	await expect(page.getByRole('heading', { name: 'Your focus' })).toBeVisible();
 	// Spielerprofil als Fünfeck mit fünf antippbaren Ecken
 	await expect(page.getByRole('heading', { name: 'Your skill penta' })).toBeVisible();
 	await expect(page.locator('.radar .vertex')).toHaveCount(5);

@@ -1343,6 +1343,10 @@ export const de: Shape<typeof en> = {
 		progress: (p: P) => `${p.n} von ${p.m} erledigt`
 	},
 	coachTab: {
+		pentaLever: (p: P) => `Laut deinem Penta: ${p.name}`,
+		pentaViaSafety: 'Deine Verluste dort sind vor allem Patzer – zuerst der Blunder-Check.',
+		pentaAgrees: 'Dein Skill-Penta sieht denselben größten Hebel.',
+		stageMore: 'Was auf deinem Niveau zählt',
 		focus: 'Dein Schwerpunkt',
 		eyebrow: 'Dein Coach',
 		title: 'Coach',
