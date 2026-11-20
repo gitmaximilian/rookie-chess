@@ -38,6 +38,7 @@
 	import { THEMES, themeName, themeAbout } from '#lib/data/themes.js';
 	import { t } from '#lib/i18n/i18n.svelte.js';
 	import { db, bumpActivity, today, getSetting, setSetting } from '#lib/db/db.js';
+	import { dailyGoal } from '#lib/training/planData.js';
 	import { sound } from '#lib/ui/sound.js';
 	import { engine } from '#lib/engine/engine.js';
 	import { scoreToCp } from '#lib/engine/uci.js';
@@ -129,7 +130,7 @@
 		const act = await db.activity.get(today());
 		const before = solvedToday;
 		solvedToday = act?.puzzles ?? 0;
-		goal = await getSetting('dailyGoal', 5);
+		goal = await dailyGoal();
 		goalJustReached = before > 0 && before < goal && solvedToday >= goal;
 		dailyDone = (await getSetting<string>('dailyDone', '')) === today();
 	}

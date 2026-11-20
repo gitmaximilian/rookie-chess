@@ -16,6 +16,7 @@
 	import ClipboardCheck from '@lucide/svelte/icons/clipboard-check';
 	import ScanEye from '@lucide/svelte/icons/scan-eye';
 	import Compass from '@lucide/svelte/icons/compass';
+	import Swords from '@lucide/svelte/icons/swords';
 	import type { Component } from 'svelte';
 	import GoalRing from '#lib/ui/GoalRing.svelte';
 	import { loadPlanContext, todayPlan } from '#lib/training/planData.js';
@@ -82,7 +83,8 @@
 		mistakes: Sparkles,
 		checkup: ClipboardCheck,
 		scan: ScanEye,
-		positional: Compass
+		positional: Compass,
+		tactic: Swords
 	};
 	const minutesLeft = $derived(
 		rows.filter((r) => !r.finished).reduce((s, r) => s + minutesOf(r.task), 0)
@@ -123,6 +125,8 @@
 				return t('plan.scan', { n: task.target });
 			case 'positional':
 				return t('plan.positional', { name: loc(basicById(task.lesson)?.title) });
+			case 'tactic':
+				return t('plan.tactic', { name: loc(basicById(task.lesson)?.title) });
 		}
 	}
 
@@ -154,6 +158,7 @@
 			case 'scan':
 				return resolve('/puzzles/scan?mode=opponent');
 			case 'positional':
+			case 'tactic':
 				return resolve(`/learn/basics?id=${task.lesson}`);
 		}
 	}

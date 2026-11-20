@@ -3,11 +3,14 @@
 	import { resolve } from '$app/paths';
 	import BookOpen from '@lucide/svelte/icons/book-open';
 	import GraduationCap from '@lucide/svelte/icons/graduation-cap';
-	import { BASICS, TACTICS, POSITIONAL } from '#lib/basics/lessons.js';
+	import { BASICS, TACTICS, POSITIONAL, basicById } from '#lib/basics/lessons.js';
 	import ScanEye from '@lucide/svelte/icons/scan-eye';
 	import Compass from '@lucide/svelte/icons/compass';
 	import LevelFocus from '#lib/ui/LevelFocus.svelte';
-	import { currentStrength } from '#lib/training/planData.js';
+	import { currentStrength, loadPlanContext } from '#lib/training/planData.js';
+	import { nextLesson, type PlanTask } from '#lib/training/plan.js';
+	import { courseById } from '#lib/openings/courses.js';
+	import { lessonById } from '#lib/endgames/lessons.js';
 	import { loc } from '#lib/openings/courses.js';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
@@ -37,8 +40,15 @@
 	const allStars = $derived(totalStars(starAreas));
 
 	let strength = $state<number | null>(null);
+	/** derselbe nächste Lernschritt wie im Tagesplan (Stufe, Regeln, Schwerpunkt) */
+	let planned = $state<PlanTask | null>(null);
 	onMount(async () => {
 		strength = (await currentStrength())?.value ?? null;
+		try {
+			planned = nextLesson(await loadPlanContext());
+		} catch {
+			planned = null;
+		}
 		const rows = await db.endgames.toArray();
 		stars = Object.fromEntries(rows.map((r) => [r.id, r.stars]));
 		repCount = await db.repertoire.filter((r) => r.mine).count();
@@ -53,9 +63,47 @@
 		loaded = true;
 	});
 
-	/** Der eine nächste Schritt: Grundlagen → Taktik → fällige Eröffnungen → Endspiele */
+	/** Der eine nächste Schritt: wie im Tagesplan; sonst fällige Eröffnungszüge und offene Lektionen */
 	const next = $derived.by(() => {
 		if (!loaded) return null;
+		const p = planned;
+		if (p?.kind === 'basics' || p?.kind === 'tactic' || p?.kind === 'positional') {
+			const l = basicById(p.lesson);
+			if (l)
+				return {
+					area: t(
+						p.kind === 'basics'
+							? 'basics.title'
+							: p.kind === 'tactic'
+								? 'tactics.title'
+								: 'positional.title'
+					),
+					title: loc(l.title),
+					href: resolve(`/learn/basics?id=${l.id}`),
+					c: 'var(--c-puzzle)'
+				};
+		}
+		if (p?.kind === 'endgame') {
+			const l = lessonById(p.lesson);
+			if (l)
+				return {
+					area: t('learn.endgames'),
+					title: lessonTitle(l),
+					href: resolve(`/learn/endgame?id=${l.id}`),
+					c: 'var(--c-analysis)'
+				};
+		}
+		if (p?.kind === 'course') {
+			const c = courseById(p.course);
+			const line = c?.lines.find((x) => x.id === p.line);
+			if (c && line)
+				return {
+					area: t('learn.openings'),
+					title: `${loc(c.name)} · ${loc(line.name)}`,
+					href: resolve(`/learn/openings/course?id=${c.id}&line=${line.id}`),
+					c: 'var(--c-learn)'
+				};
+		}
 		const basic = BASICS.find((l) => !doneIds.includes(l.id));
 		if (basic)
 			return {

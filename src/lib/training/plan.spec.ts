@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { buildPlan, isDone, minutesOf, progressOf, type PlanContext } from './plan';
-import { BASICS } from '#lib/basics/lessons.js';
+import {
+	buildPlan,
+	isDone,
+	minutesOf,
+	nextLesson,
+	progressOf,
+	rapidDue,
+	type PlanContext
+} from './plan';
+import { BASICS, TACTICS } from '#lib/basics/lessons.js';
 import { estimateStrength, nextMilestone } from './strength';
 
 const base: PlanContext = {
@@ -78,8 +86,21 @@ describe('Tagesplan', () => {
 
 	it('Lektionen passend zur Spielstärke: unter 900 keine Stufe-2-Endspiele', () => {
 		const stars = { kqk: 3, kkrr: 3, square: 3 };
-		const low = buildPlan({ ...base, strength: 700, endgameStars: stars, minutes: 60 });
-		const mid = buildPlan({ ...base, strength: 1000, endgameStars: stars, minutes: 60 });
+		const tacticsDone = TACTICS.map((l) => l.id);
+		const low = buildPlan({
+			...base,
+			strength: 700,
+			endgameStars: stars,
+			minutes: 60,
+			tacticsDone
+		});
+		const mid = buildPlan({
+			...base,
+			strength: 1000,
+			endgameStars: stars,
+			minutes: 60,
+			tacticsDone
+		});
 		expect(low.tasks.find((t) => t.kind === 'endgame')).toBeUndefined();
 		expect(mid.tasks.find((t) => t.kind === 'endgame')).toMatchObject({ lesson: 'krk' });
 	});
@@ -186,13 +207,20 @@ describe('Spielstärke', () => {
 		const low = buildPlan({ ...base, strength: 800, safetyFirst: true });
 		expect(low.tasks.slice(0, 2).map((t) => t.kind)).toEqual(['scan', 'safety']);
 		expect(low.tasks.find((t) => t.kind === 'safety')).toMatchObject({ target: 4 });
-		const mid = buildPlan({ ...base, strength: 1300, safetyFirst: true, minutes: 60 });
+		const mid = buildPlan({
+			...base,
+			strength: 1300,
+			safetyFirst: true,
+			minutes: 60,
+			tacticsDone: TACTICS.map((l) => l.id)
+		});
 		expect(mid.tasks.map((t) => t.kind)).not.toContain('scan');
 		expect(mid.tasks.find((t) => t.kind === 'positional')).toMatchObject({ lesson: 'pos-pieces' });
 		const done = buildPlan({
 			...base,
 			strength: 1300,
 			minutes: 60,
+			tacticsDone: TACTICS.map((l) => l.id),
 			positionalDone: ['pos-pieces', 'pos-files', 'pos-passer', 'pos-king', 'pos-structure']
 		});
 		expect(done.tasks.map((t) => t.kind)).not.toContain('positional');
@@ -203,5 +231,58 @@ describe('Spielstärke', () => {
 				{ dueReview: 0, dueRepertoire: 0 }
 			)
 		).toEqual({ done: 2, target: 3 });
+	});
+});
+
+describe('Wochendosis im Tagesplan', () => {
+	const week = (games: number, target: number, daysLeft: number) => ({
+		games,
+		target,
+		daysLeft,
+		safety: 5,
+		scan: 3
+	});
+	it('Partie fällig nach Wochenziel: verteilt, gegen Ende aufholen, erfüllt → nicht mehr', () => {
+		const c = { ...base, rulesKnown: 'yes' as const };
+		// Ziel 4: alle 1 Tag; Ziel 3: alle 2 Tage
+		expect(rapidDue({ ...c, daysSinceGame: 1, week: week(1, 4, 5) })).toBe(true);
+		expect(rapidDue({ ...c, daysSinceGame: 1, week: week(1, 3, 5) })).toBe(false);
+		expect(rapidDue({ ...c, daysSinceGame: 0, week: week(1, 3, 2) })).toBe(true);
+		expect(rapidDue({ ...c, daysSinceGame: 5, week: week(3, 3, 2) })).toBe(false);
+	});
+
+	it('übernimmt die Dosis für Blunder-Check und Brett-Scan', () => {
+		const p = buildPlan({
+			...base,
+			strength: 900,
+			safetyFirst: true,
+			minutes: 60,
+			week: { games: 0, target: 4, daysLeft: 6, safety: 7, scan: 3 }
+		});
+		expect(p.tasks.find((t) => t.kind === 'safety')).toMatchObject({ target: 7 });
+	});
+
+	it('Taktik-Lektionen unter 1400 vor Stellungsspiel und Endspiel; „Weiter lernen“ zeigt dasselbe', () => {
+		const first = nextLesson({ ...base, rulesKnown: 'yes', strength: 1200 });
+		expect(first).toMatchObject({ kind: 'tactic', lesson: TACTICS[0].id });
+		const strong = nextLesson({ ...base, rulesKnown: 'yes', strength: 1450 });
+		expect(strong?.kind).toBe('positional');
+		// wer die Regeln kennt, bekommt keine Regel-Lektion – auch wenn sie offen ist
+		expect(nextLesson({ ...base, rulesKnown: 'yes', strength: 1450 })?.kind).not.toBe('basics');
+	});
+
+	it('Puzzles auch an Spieltagen (mindestens 3)', () => {
+		const p = buildPlan({
+			...base,
+			rulesKnown: 'yes',
+			strength: 1450,
+			safetyFirst: true,
+			daysSinceGame: 3,
+			gameToReview: 9,
+			minutes: 30,
+			week: { games: 1, target: 4, daysLeft: 4, safety: 6, scan: 0 }
+		});
+		expect(p.tasks.map((t) => t.kind)).toContain('play');
+		expect(p.tasks.find((t) => t.kind === 'puzzles')).toMatchObject({ target: 3 });
 	});
 });

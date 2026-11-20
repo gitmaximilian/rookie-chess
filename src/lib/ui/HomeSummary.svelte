@@ -6,7 +6,8 @@
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 	import StatTile from '#lib/ui/bento/StatTile.svelte';
-	import { db, getSetting, today } from '#lib/db/db.js';
+	import { db, today } from '#lib/db/db.js';
+	import { dailyGoal, loadCoachWeek, type CoachWeek } from '#lib/training/planData.js';
 	import { onlineRatings, targetRating, type OnlineRating } from '#lib/import/ratings.js';
 	import { getLinked, syncState } from '#lib/import/sync.svelte.js';
 	import { getPuzzleRating, isProvisional } from '#lib/training/rating.js';
@@ -29,6 +30,7 @@
 		stars: { earned: number; max: number };
 		streak: { days: number; todayDone: boolean };
 		last14: number[];
+		week: CoachWeek;
 	}
 
 	let d = $state<Data | null>(null);
@@ -67,10 +69,11 @@
 			games: games.length,
 			attempts: await db.puzzleAttempts.count(),
 			todayPuzzles: (await db.activity.get(today()))?.puzzles ?? 0,
-			goal: await getSetting('dailyGoal', 5),
+			goal: await dailyGoal(),
 			stars: totalStars(stars),
 			streak: computeStreak(activity),
-			last14
+			last14,
+			week: await loadCoachWeek()
 		};
 	}
 
@@ -102,25 +105,34 @@
 	const puzzleDelta = $derived(
 		d && d.puzzleHist.length > 1 ? d.puzzleHist.at(-1)! - d.puzzleHist[0] : null
 	);
-	const goalPct = $derived(d ? Math.min(100, Math.round((d.todayPuzzles / d.goal) * 100)) : 0);
+	const weekPct = $derived(
+		d
+			? Math.min(
+					100,
+					Math.round((d.week.progress.games.done / Math.max(1, d.week.progress.games.target)) * 100)
+				)
+			: 0
+	);
 	const starPct = $derived(d && d.stars.max ? (d.stars.earned / d.stars.max) * 100 : 0);
 </script>
 
 {#if !d}
 	{#each [0, 1, 2, 3] as i (i)}<div class="skeleton tile-sk" data-size="s"></div>{/each}
 {:else}
+	<!-- Diese Woche: die Partien der Wochendosis (Coach) – Lichess: unter 4 pro Woche kaum Fortschritt -->
 	<StatTile
 		tone="learn"
-		label={t('summary.goal')}
-		value={d.todayPuzzles}
-		unit={`/${d.goal}`}
-		sub={d.todayPuzzles >= d.goal
-			? t('summary.goalDone')
-			: t('summary.goalLeft', { n: d.goal - d.todayPuzzles })}
-		href={resolve('/puzzles')}
-		testid="tile-goal"
+		label={t('summary.week')}
+		value={d.week.progress.games.done}
+		unit={`/${d.week.progress.games.target}`}
+		sub={t('summary.weekSub', {
+			tc: d.week.recipe.timeControl,
+			pct: Math.round(d.week.progress.share * 100)
+		})}
+		href={resolve('/coach')}
+		testid="tile-week"
 	>
-		<span class="bar" aria-hidden="true"><i style:width="{goalPct}%"></i></span>
+		<span class="bar" aria-hidden="true"><i style:width="{weekPct}%"></i></span>
 	</StatTile>
 
 	<StatTile

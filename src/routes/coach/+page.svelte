@@ -15,8 +15,8 @@
 	import SkillPenta from '#lib/ui/SkillPenta.svelte';
 	import LevelFocus from '#lib/ui/LevelFocus.svelte';
 	import CoachHistory from '#lib/ui/CoachHistory.svelte';
+	import CoachWeek from '#lib/ui/CoachWeek.svelte';
 	import { coachHistory, type CoachHistoryPoint } from '#lib/training/coachHistory.js';
-	import ProgressCheck from '#lib/ui/ProgressCheck.svelte';
 	import type { AccPoint } from '#lib/ui/AccuracyTrend.svelte';
 	import {
 		adviceFor,
@@ -408,7 +408,10 @@
 			</div>
 		</div>
 
-		<!-- 1. Wo stehst du? Spielstärke (oben) und Penta -->
+		<!-- 1. Was diese Woche? Die Verordnung: Dosis, Urteil, Weg zu 1600 -->
+		<CoachWeek />
+
+		<!-- 2. Wo stehst du? Spielstärke (oben) und Penta -->
 		<section class="tone-coach block skills">
 			{@render coverage()}
 			<SkillPenta
@@ -420,12 +423,11 @@
 			/>
 		</section>
 
-		<!-- 2. Was jetzt? Ein Schwerpunkt (derselbe wie im Tagesplan), die Stufe zum Aufklappen -->
+		<!-- 3. Woran genau? Ein Schwerpunkt (derselbe wie im Tagesplan), die Stufe zum Aufklappen -->
 		{@render focusCard(d)}
 
-		<!-- 3. Wirkt es? Entwicklung und Lernkennzahlen -->
+		<!-- 4. Wirkt es? Entwicklung und Lernkennzahlen -->
 		<CoachHistory history={d.history} />
-		<ProgressCheck />
 
 		<!-- Wertungsverlauf, Genauigkeit je Partie, typische Fehler und Erkenntnisse: Tab „Statistik“ -->
 		<a class="all card pressable" href={resolve('/coach/stats')}>

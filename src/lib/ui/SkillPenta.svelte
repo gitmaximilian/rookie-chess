@@ -113,77 +113,80 @@
 		{/each}
 	</div>
 
-	<div class="detail card" role="tabpanel" data-testid="skill-detail">
-		<div class="d-head">
-			<h3>{t(`skills.name.${selected}`)}</h3>
-			{#if v.score !== null}
-				<span class="d-score"><b>{v.score}</b>/100</span>
-			{/if}
-		</div>
-
-		<p class="d-what">{t(`skills.what.${selected}`)}</p>
-
-		{#if v.score !== null && v.value !== null}
-			<p class="d-you">{unit(selected, v.value)}</p>
-			<p class="d-elo muted">
-				{(v.elo ?? 0) <= bottom
-					? t('skills.eloEqLow', { elo: bottom })
-					: (v.elo ?? 0) >= topR
-						? t('skills.eloEqHigh', { elo: topR })
-						: t('skills.eloEq', { elo: v.elo ?? 0 })}
-				{#if v.low !== null && v.high !== null && v.high > v.low}
-					{t('skills.range', { low: v.low, high: v.high })}
+	<!-- im Coach (lever=false) erst nach Antippen: den nächsten Schritt nennt dort die Schwerpunkt-Karte -->
+	{#if lever || chosen}
+		<div class="detail card" role="tabpanel" data-testid="skill-detail">
+			<div class="d-head">
+				<h3>{t(`skills.name.${selected}`)}</h3>
+				{#if v.score !== null}
+					<span class="d-score"><b>{v.score}</b>/100</span>
 				{/if}
-			</p>
-		{:else}
-			<p class="d-need">
-				{t('skills.needMoreShort', { n: gamesMissing })}
-			</p>
-		{/if}
-
-		<!-- So sieht der Wert auf anderen Niveaus aus -->
-		<div class="scale" aria-label={t('skills.scaleLabel')}>
-			{#each LEVELS as lv (lv)}
-				<span class="lv" class:mine={v.elo !== null && Math.abs(v.elo - lv) < 200}>
-					<small>{lv === 2800 ? t('skills.eliteShort') : lv}</small>
-					<b>{fmt(selected, valueAt(selected, lv))}</b>
-				</span>
-			{/each}
-		</div>
-
-		<!-- genau ein nächster Schritt; alles Erklärende steht unter „Mehr dazu“ -->
-		<div class="next" data-testid="skill-next">
-			<span class="mono-label">{t('skills.next')}</span>
-			<p>
-				{#if viaSafety}
-					<span data-testid="skill-via-safety"
-						>{t('skills.viaSafetyShort', { pct: blunderPct })}</span
-					>
-				{:else}
-					{t(`skills.howShort.${selected}`)}
-				{/if}
-			</p>
-			<div class="next-row">
-				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- HREF wird hier aufgelöst -->
-				<a class="btn" href={resolve(HREF[ctaSkill] as '/')}
-					>{t(`skills.cta.${ctaSkill}`)} <ArrowRight size={16} /></a
-				>
 			</div>
-		</div>
 
-		<details class="more">
-			<summary>{t('skills.calcTitle')} <ChevronDown size={16} /></summary>
-			<p>{t(`skills.calc.${selected}`)}</p>
-			<p>
-				{t('skills.calcSample', {
-					games: v.games,
-					what: t(`skills.sample.${selected}`, { n: v.n }),
-					min: MIN_SAMPLE[selected]
-				})}
-			</p>
-			<p class="note">{t('skills.note')}</p>
-		</details>
-	</div>
+			<p class="d-what">{t(`skills.what.${selected}`)}</p>
+
+			{#if v.score !== null && v.value !== null}
+				<p class="d-you">{unit(selected, v.value)}</p>
+				<p class="d-elo muted">
+					{(v.elo ?? 0) <= bottom
+						? t('skills.eloEqLow', { elo: bottom })
+						: (v.elo ?? 0) >= topR
+							? t('skills.eloEqHigh', { elo: topR })
+							: t('skills.eloEq', { elo: v.elo ?? 0 })}
+					{#if v.low !== null && v.high !== null && v.high > v.low}
+						{t('skills.range', { low: v.low, high: v.high })}
+					{/if}
+				</p>
+			{:else}
+				<p class="d-need">
+					{t('skills.needMoreShort', { n: gamesMissing })}
+				</p>
+			{/if}
+
+			<!-- So sieht der Wert auf anderen Niveaus aus -->
+			<div class="scale" aria-label={t('skills.scaleLabel')}>
+				{#each LEVELS as lv (lv)}
+					<span class="lv" class:mine={v.elo !== null && Math.abs(v.elo - lv) < 200}>
+						<small>{lv === 2800 ? t('skills.eliteShort') : lv}</small>
+						<b>{fmt(selected, valueAt(selected, lv))}</b>
+					</span>
+				{/each}
+			</div>
+
+			<!-- genau ein nächster Schritt; alles Erklärende steht unter „Mehr dazu“ -->
+			<div class="next" data-testid="skill-next">
+				<span class="mono-label">{t('skills.next')}</span>
+				<p>
+					{#if viaSafety}
+						<span data-testid="skill-via-safety"
+							>{t('skills.viaSafetyShort', { pct: blunderPct })}</span
+						>
+					{:else}
+						{t(`skills.howShort.${selected}`)}
+					{/if}
+				</p>
+				<div class="next-row">
+					<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- HREF wird hier aufgelöst -->
+					<a class="btn" href={resolve(HREF[ctaSkill] as '/')}
+						>{t(`skills.cta.${ctaSkill}`)} <ArrowRight size={16} /></a
+					>
+				</div>
+			</div>
+
+			<details class="more">
+				<summary>{t('skills.calcTitle')} <ChevronDown size={16} /></summary>
+				<p>{t(`skills.calc.${selected}`)}</p>
+				<p>
+					{t('skills.calcSample', {
+						games: v.games,
+						what: t(`skills.sample.${selected}`, { n: v.n }),
+						min: MIN_SAMPLE[selected]
+					})}
+				</p>
+				<p class="note">{t('skills.note')}</p>
+			</details>
+		</div>
+	{/if}
 </section>
 
 <style>

@@ -11,7 +11,19 @@ import { themeStats, weakest } from './stats.js';
 import { getCourseProgress } from '#lib/openings/progress.js';
 import { getProfile } from '#lib/onboarding/profile.js';
 import { getPuzzleRating } from './rating.js';
-import { isTargetGame, targetRating } from '#lib/import/ratings.js';
+import { isTargetGame, ratingAfter, targetRating } from '#lib/import/ratings.js';
+import { blundersPer30 } from './blunders.js';
+import {
+	adjust,
+	pathTo1600,
+	recipeFor,
+	weekProgress,
+	weekStart,
+	type Adjustment,
+	type Path,
+	type Recipe,
+	type WeekProgress
+} from './prescription.js';
 import { BOTS } from '#lib/bots/bots.js';
 import { estimateStrength, type Strength } from './strength.js';
 import { gameLevel } from './skills.js';
@@ -61,16 +73,24 @@ export async function loadPlanContext(): Promise<PlanContext> {
 	const rapid = games.filter(isTargetGame);
 	const stats = computeStats(rapid.length ? rapid : games);
 	const focus = focusFrom(stats, attempts);
-	const lastRapid = rapid.reduce<(typeof games)[number] | null>(
-		(latest, g) => (!latest || g.date > latest.date ? g : latest),
-		null
-	);
-	const lastGame = lastRapid?.date ?? 0;
+	// jüngste Lernpartie: gewertetes Rapid oder eine Partie in Rookie
+	const lastPracticeGame = games
+		.filter(isPracticeGame)
+		.reduce<(typeof games)[number] | null>(
+			(latest, g) => (!latest || g.date > latest.date ? g : latest),
+			null
+		);
 	const profile = await getProfile();
 	const lastMistake = await db.mistakes.orderBy('date').last();
 	const strength = await currentStrength(games);
 	const safetyAttempts = attempts.filter((a) => a.source === 'safety');
 	const checkups = await getSetting<CheckupResult[]>('checkups', []);
+	const minutes = await getSetting('minutesPerDay', DEFAULT_MINUTES);
+	const recipe = recipeFor(strength?.value ?? null, minutes);
+	const now = Date.now();
+	const ws = weekStart(now);
+	const practice = games.filter(isPracticeGame);
+	const lastPractice = lastPracticeGame?.date ?? 0;
 	return {
 		day,
 		dueReview: await countDue('puzzle'),
@@ -81,6 +101,7 @@ export async function loadPlanContext(): Promise<PlanContext> {
 		safetyToday: safetyAttempts.filter((a) => a.date >= start.getTime()).length,
 		scanToday: attempts.filter((a) => a.source === 'scan' && a.date >= start.getTime()).length,
 		positionalDone: await getSetting<string[]>('positionalDone', []),
+		tacticsDone: await getSetting<string[]>('tacticsDone', []),
 		safetyFirst: needsSafety(strength?.value ?? null, stats.blundersPer30),
 		checkupDue: safetyAttempts.length >= CHECKUP_AFTER && checkupDue(checkups),
 		checkupToday: (await getSetting<string>('checkupDay', '')) === day,
@@ -89,14 +110,45 @@ export async function loadPlanContext(): Promise<PlanContext> {
 		endgameStars: Object.fromEntries((await db.endgames.toArray()).map((e) => [e.id, e.stars])),
 		rulesKnown: profile?.rules ?? null,
 		focus: profile?.focus ?? null,
-		dailyGoal: await getSetting('dailyGoal', 5),
-		gameToReview: lastRapid?.id ?? lastMistake?.gameId ?? null,
+		dailyGoal: await dailyGoal(recipe),
+		gameToReview: lastPracticeGame?.id ?? lastMistake?.gameId ?? null,
 		reviewedGames: await getSetting<number[]>('reviewedGames', []),
-		daysSinceGame: lastGame ? Math.floor((Date.now() - lastGame) / 86_400_000) : null,
-		gamesToday: rapid.filter((g) => g.date >= start.getTime()).length,
+		// Lernpartien zählen: gewertetes Rapid und Partien in Rookie (ohne Konto spielt man gegen Bots)
+		daysSinceGame: lastPractice ? daysBetween(lastPractice, now) : null,
+		gamesToday: practice.filter((g) => g.date >= start.getTime()).length,
 		strength: strength?.value ?? null,
-		minutes: await getSetting('minutesPerDay', DEFAULT_MINUTES)
+		minutes,
+		week: {
+			games: practice.filter((g) => g.date >= ws).length,
+			target: recipe.games,
+			daysLeft: 7 - Math.floor((now - ws) / 86_400_000),
+			safety: recipe.safety,
+			scan: recipe.scan
+		}
 	};
+}
+
+/** ganze Kalendertage zwischen zwei Zeitpunkten (Ortszeit) */
+function daysBetween(a: number, b: number): number {
+	const d = (x: number) => {
+		const t = new Date(x);
+		t.setHours(0, 0, 0, 0);
+		return t.getTime();
+	};
+	return Math.round((d(b) - d(a)) / 86_400_000);
+}
+
+/** Puzzles pro Tag: eigene Einstellung, sonst die Dosis des Coachs */
+export async function dailyGoal(recipe?: Recipe): Promise<number> {
+	const own = await getSetting<number | null>('dailyGoal', null);
+	if (own !== null) return own;
+	const r =
+		recipe ??
+		recipeFor(
+			(await currentStrength())?.value ?? null,
+			await getSetting('minutesPerDay', DEFAULT_MINUTES)
+		);
+	return r.puzzles;
 }
 
 /** der eine Schwerpunkt aus eigenen Partien und Puzzles (siehe focus.ts) */
@@ -158,4 +210,92 @@ export async function currentStrength(savedGames?: GameRow[]): Promise<Strength 
 				: null,
 		botsBeaten: BOTS.filter((b) => beatenIds.includes(b.id)).map((b) => b.elo)
 	});
+}
+
+// ───────── Die Woche des Coachs (lib/training/prescription.ts) ─────────
+
+/** Lernpartie: gewertetes Lichess-Rapid oder eine beendete Partie in Rookie (Bot, Freund) ab zehn Zügen */
+export function isPracticeGame(g: GameRow): boolean {
+	return (
+		isTargetGame(g) ||
+		((g.source === 'bot' || g.source === 'friend') && g.result !== '*' && g.moves.length >= 20)
+	);
+}
+
+/** Patzer je 30 Züge aus den letzten zehn analysierten Lernpartien (wie der Trainingsindex) */
+export function recentBlunders(games: GameRow[]): number | null {
+	const analysed = games
+		.filter((g) => isPracticeGame(g) && g.analysis?.done)
+		.sort((a, b) => b.date - a.date)
+		.slice(0, 10);
+	return blundersPer30(analysed);
+}
+
+export interface CoachWeek {
+	recipe: Recipe;
+	progress: WeekProgress;
+	path: Path | null;
+	adjustment: Adjustment;
+	/** Tage bis Sonntagabend (inklusive heute) */
+	daysLeft: number;
+	/** Lichess-Konto verknüpft – sonst spielt man die Lernpartien gegen Bots */
+	online: boolean;
+	/** jüngste noch nicht besprochene Lernpartie der letzten 14 Tage */
+	toReview: number | null;
+}
+
+export async function loadCoachWeek(now = Date.now()): Promise<CoachWeek> {
+	const [games, attempts, activity, reviewed, minutes, strength] = await Promise.all([
+		db.games.toArray(),
+		db.puzzleAttempts
+			.where('date')
+			.aboveOrEqual(now - 14 * 86_400_000)
+			.toArray(),
+		db.activity.toArray(),
+		getSetting<number[]>('reviewedGames', []),
+		getSetting('minutesPerDay', DEFAULT_MINUTES),
+		currentStrength()
+	]);
+	const elo = strength?.value ?? null;
+	const start = weekStart(now);
+	const base = recipeFor(elo, minutes);
+	const practice = games.filter(isPracticeGame);
+	const path = pathTo1600(elo, recentBlunders(games));
+	const last14 = practice.filter((g) => g.date >= now - 14 * 86_400_000);
+	const ratings = games
+		.filter(isTargetGame)
+		.map((g) => ({ date: g.date, rating: ratingAfter(g) }))
+		.filter((r): r is { date: number; rating: number } => r.rating !== null)
+		.sort((a, b) => a.date - b.date);
+	// erst urteilen, wenn Rookie die Spielerin oder den Spieler schon zwei Wochen kennt
+	const known = practice.some((g) => g.date < now - 14 * 86_400_000);
+	const adjustment: Adjustment = known
+		? adjust({
+				recipe: base,
+				games14: last14.length,
+				reviewed14: last14.filter((g) => reviewed.includes(g.id!)).length,
+				ratings,
+				path,
+				now
+			})
+		: { kind: 'none' };
+	// Stillstand mit vielen Patzern: langsamer spielen (15+10); Partienzahl und Dosis bleiben
+	const recipe = adjustment.kind === 'slow-down' ? recipeFor(elo, minutes, true) : base;
+	const startDay = today(new Date(start));
+	const progress = weekProgress(recipe, {
+		games: practice.filter((g) => g.date >= start).map((g) => ({ id: g.id!, date: g.date })),
+		reviewed,
+		puzzles: activity.filter((a) => a.day >= startDay).reduce((s, a) => s + a.puzzles, 0),
+		safety: attempts.filter((a) => a.source === 'safety' && a.date >= start).length
+	});
+	return {
+		recipe,
+		progress,
+		path,
+		adjustment,
+		daysLeft: 7 - Math.floor((now - start) / 86_400_000),
+		online: games.some((g) => g.source === 'lichess'),
+		toReview:
+			[...last14].sort((a, b) => b.date - a.date).find((g) => !reviewed.includes(g.id!))?.id ?? null
+	};
 }

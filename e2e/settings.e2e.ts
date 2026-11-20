@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 test('Sicherung exportieren und wieder einspielen', async ({ page }) => {
 	await page.goto('/settings');
-	await page.getByRole('radio', { name: '10' }).click();
+	await page.getByRole('radio', { name: '10', exact: true }).click();
 	const [download] = await Promise.all([
 		page.waitForEvent('download'),
 		page.getByRole('button', { name: /Save backup/ }).click()
@@ -29,7 +29,10 @@ test('Sicherung exportieren und wieder einspielen', async ({ page }) => {
 	await expect(page.getByText('Backup restored')).toBeVisible();
 	await page.waitForLoadState('load');
 	await page.goto('/settings');
-	await expect(page.getByRole('radio', { name: '10' })).toHaveAttribute('aria-checked', 'true');
+	await expect(page.getByRole('radio', { name: '10', exact: true })).toHaveAttribute(
+		'aria-checked',
+		'true'
+	);
 });
 
 test('Dunkelmodus lässt sich erzwingen', async ({ page }) => {
@@ -43,13 +46,13 @@ test('Dunkelmodus lässt sich erzwingen', async ({ page }) => {
 test('Sprache: Englisch ist Standard, Deutsch umschaltbar und gespeichert', async ({ page }) => {
 	await page.goto('/');
 	await expect(page.locator('html')).toHaveAttribute('lang', 'en');
-	await expect(page.getByTestId('tile-goal')).toContainText('Daily goal');
+	await expect(page.getByTestId('tile-week')).toContainText('This week');
 	await page.goto('/settings');
 	await page.getByRole('radio', { name: 'Deutsch' }).click();
 	await expect(page.getByRole('heading', { name: 'Einstellungen' })).toBeVisible();
 	await expect(page.locator('html')).toHaveAttribute('lang', 'de');
 	await page.goto('/');
-	await expect(page.getByTestId('tile-goal')).toContainText('Tagesziel');
+	await expect(page.getByTestId('tile-week')).toContainText('Diese Woche');
 	await expect(page.locator('html')).toHaveAttribute('lang', 'de');
 	await page.goto('/settings');
 	await page.getByRole('radio', { name: 'English' }).click();

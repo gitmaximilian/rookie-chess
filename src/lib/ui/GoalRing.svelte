@@ -1,5 +1,10 @@
 <script lang="ts">
-	let { value, max, size = 56 }: { value: number; max: number; size?: number } = $props();
+	let {
+		value,
+		max,
+		size = 56,
+		label
+	}: { value: number; max: number; size?: number; label?: string } = $props();
 
 	const r = 22;
 	const circ = 2 * Math.PI * r;
@@ -18,7 +23,7 @@
 			stroke-dashoffset={circ * (1 - pct)}
 		/>
 	</svg>
-	<span class="num">{value}/{max}</span>
+	<span class="num">{label ?? `${value}/${max}`}</span>
 	<span class="sr-only">{value} / {max}</span>
 </div>
 

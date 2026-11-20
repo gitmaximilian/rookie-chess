@@ -54,7 +54,7 @@ test('Kontrolltest: 12 Aufgaben mit sofortiger Rückmeldung, dann Ergebnis und F
 	}
 	const summary = page.getByTestId('checkup-summary');
 	await expect(summary).toContainText(/of 12 points/);
-	await page.goto('/coach');
+	await page.goto('/coach/stats');
 	const progress = page.getByTestId('progress-check');
 	await expect(progress).toContainText('Is your training working?');
 	await expect(progress).toContainText('Check-up');

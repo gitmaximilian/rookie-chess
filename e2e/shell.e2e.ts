@@ -4,7 +4,7 @@ test('Startseite zeigt Begrüßung, Zusammenfassung und Bereiche', async ({ page
 	await page.goto('/');
 	await expect(page.locator('h1')).toContainText(/Good|Hello/);
 	// Das Rapid-Ziel führt direkt zum Import, bevor eine Wertung vorliegt.
-	await expect(page.getByTestId('tile-goal')).toBeVisible();
+	await expect(page.getByTestId('tile-week')).toBeVisible();
 	await expect(page.getByTestId('tile-strength')).toContainText('Import a rated Rapid game');
 	await expect(page.getByTestId('tile-stars')).toHaveCount(0);
 	await expect(page.getByRole('link', { name: /Play/ }).first()).toBeVisible();
@@ -62,7 +62,7 @@ test('App startet offline nach dem ersten Besuch', async ({ page, context, brows
 	await page.goto('/puzzles');
 	await expect(page.locator('h1')).toHaveText('Puzzles');
 	await page.goto('/');
-	await expect(page.getByTestId('tile-goal')).toBeVisible();
+	await expect(page.getByTestId('tile-week')).toBeVisible();
 	await context.setOffline(false);
 });
 

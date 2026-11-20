@@ -653,10 +653,12 @@ export const de: Shape<typeof en> = {
 		soundStyles: { wood: 'Holz', soft: 'Sanft', chime: 'Glocke' },
 		minutes: 'Zeit pro Tag',
 		minutesText:
-			'Zeit pro Tag für den Tagesplan – Rookie wählt die wichtigsten Aufgaben, bis sie voll ist.',
+			'Zeit pro Tag – daraus berechnet der Coach Partien pro Woche und deine tägliche Dosis.',
 		minutesN: (p: P) => `${p.n} min`,
 		goal: 'Tagesziel',
-		goalText: 'Wie viele Puzzles möchtest du pro Tag lösen?',
+		goalText:
+			'Wie viele Puzzles möchtest du pro Tag lösen? „Coach“ passt die Zahl an Niveau und Zeit an.',
+		goalCoach: 'Coach',
 		data: 'Deine Daten',
 		dataText:
 			'Ohne Konto bleibt alles nur auf diesem Gerät. Mit einer Sicherungsdatei nimmst du deinen Fortschritt selbst auf ein anderes Gerät mit (z. B. vom iPhone auf den Mac).',
@@ -1314,9 +1316,9 @@ export const de: Shape<typeof en> = {
 		rapidOffline: 'Offline kannst du unten gegen einen Bot üben.',
 		importRapid: 'Fertige Partie importieren',
 		openLichess: 'Lichess öffnen',
-		rapidDetails:
-			'Spiele auf Lichess eine gewertete Standard-Rapid-Partie, am besten 10+0. Plane dafür bis zu 20 Minuten ein. Nach dem Import kannst du einen wichtigen Fehler üben.',
-		rapidSlot: 'Rapid-Partie einplanen, sobald du 20 Minuten hast',
+		rapidDetails: (p: P) =>
+			`Spiele auf Lichess eine gewertete Rapid-Partie, ${p.tc} – der Zuschlag lässt Zeit für den Blunder-Check. Plane bis zu ${p.min} Minuten ein. Nach dem Import kannst du einen wichtigen Fehler üben.`,
+		rapidSlot: 'Rapid-Partie einplanen, sobald du 25 Minuten hast',
 		kicker: 'Nächster Schritt',
 		title: 'Dein Training heute',
 		review: (p: P) => `${p.n} verpasste ${p.n === 1 ? 'Puzzle' : 'Puzzles'} wiederholen`,
@@ -1332,6 +1334,7 @@ export const de: Shape<typeof en> = {
 		mistakes: (p: P) => `Deine eigenen Fehler: ${p.n} wiederholen`,
 		scan: (p: P) => `Brett-Scan: ${p.n} Stellungen – was kann der Gegner?`,
 		positional: (p: P) => `Stellungsspiel: ${p.name}`,
+		tactic: (p: P) => `Taktik: ${p.name}`,
 		checkup: 'Kontrolltest Sicherheit (12 Aufgaben, alle 2 Wochen)',
 		progressMin: (p: P) => `${p.n} von ${p.m} erledigt · noch ca. ${p.min} min`,
 		start: 'Los',
@@ -1341,6 +1344,46 @@ export const de: Shape<typeof en> = {
 		strengthHint:
 			'Aus deinen Partien, Puzzles, Online-Wertung und besiegten Bots – auf der Lichess-Skala.',
 		progress: (p: P) => `${p.n} von ${p.m} erledigt`
+	},
+	coachWeek: {
+		title: 'Deine Woche',
+		daysLeft: (p: P) => (Number(p.n) <= 1 ? 'letzter Tag' : `noch ${p.n} Tage`),
+		games: (p: P) => `Partien · ${p.tc}`,
+		gamesBots: (p: P) => `Partien · ${p.tc} oder gegen Bots`,
+		reviewed: 'Partien besprochen',
+		puzzles: 'Puzzles',
+		safety: 'Blunder-Check',
+		adj: {
+			'play-more': (p: P) =>
+				`Nur ${p.n} ${s(p.n, 'Partie', 'Partien')} in 14 Tagen – mit weniger als 4 pro Woche kommen Einsteiger kaum voran.`,
+			'review-first': 'Erst die letzten Partien besprechen – dort stecken deine Fehler.',
+			'slow-down':
+				'Seit 6 Wochen kein Fortschritt und noch viele Patzer: spiel 15+10 und prüf vor jedem Zug.',
+			'more-tactics': 'Seit 6 Wochen kein Fortschritt: Taktik ist jetzt dein Hebel.',
+			'on-track': (p: P) => `Es geht voran: +${p.n} in 6 Wochen.`
+		},
+		adjGo: {
+			'play-more': 'Spielen',
+			'review-first': 'Besprechen',
+			'slow-down': 'Blunder-Check',
+			'more-tactics': 'Puzzles'
+		},
+		path: 'Weg zu 1600',
+		milestone: (p: P) => `${p.n} → Etappe ${p.goal}`,
+		blunders: (p: P) => `Patzer je 30 Züge: du ${p.you} · auf ${p.goal} üblich ${p.ref}`,
+		blundersNone: 'Patzer je 30 Züge: noch keine analysierten Partien',
+		reached: '1600 erreicht. Jetzt zählen Stellungsspiel und Endspiel.',
+		why: 'Warum diese Dosis?',
+		dose: (p: P) =>
+			`Pro Tag ${p.puzzles} Puzzles und ${p.safety} Blunder-Checks${Number(p.scan) ? ` und ${p.scan} Brett-Scans` : ''}, pro Woche ${p.games} Partien (${p.tc}) und ${p.lessons} ${s(p.lessons, 'Lektion', 'Lektionen')}.`,
+		why1: 'Lichess-Daten, 883 neue Spieler um 900: Mit 4–8 Partien pro Woche stiegen sie in einem Jahr um +137 (Median), mit weniger als 2 kaum.',
+		why2: 'Bei gleich vielen Partien stiegen Spieler mit über 1000 Puzzles um +289, mit unter 100 um +71.',
+		why3: 'Rapid statt Blitz – Zeit für den Blunder-Check. Nach jeder Partie 5 Minuten: eigene Patzer zuerst.',
+		honest:
+			'Ehrlich: Nach einem Jahr standen 14 % dieser Spieler auf 1200 und 1 % auf 1600. 1600 ist für die meisten ein Weg über Jahre – dranbleiben ist der größte Hebel.',
+		minutes: 'Zeit pro Tag',
+		minutesN: (p: P) => `${p.n} min`,
+		note: 'Zusammenhänge, keine Garantie: Wer mehr übt, ist oft auch motivierter.'
 	},
 	coachTab: {
 		pentaLever: (p: P) => `Laut deinem Penta: ${p.name}`,
@@ -1867,6 +1910,8 @@ export const de: Shape<typeof en> = {
 		streakDays: (p: P) => (Number(p.n) === 1 ? 'Tag' : 'Tage'),
 		streakDone: 'heute erledigt',
 		streakOpen: 'heute trainieren, um sie zu halten',
+		week: 'Diese Woche',
+		weekSub: (p: P) => `Partien ${p.tc} · Dosis ${p.pct} %`,
 		goal: 'Tagesziel',
 		goalDone: 'erreicht – stark',
 		goalLeft: (p: P) => `noch ${p.n} ${Number(p.n) === 1 ? 'Puzzle' : 'Puzzles'}`,

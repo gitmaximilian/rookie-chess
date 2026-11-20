@@ -50,6 +50,10 @@
 	import { sound } from '#lib/ui/sound.js';
 	import { t } from '#lib/i18n/i18n.svelte.js';
 	import type { Color } from 'chessops/types';
+	import { loadCoachWeek } from '#lib/training/planData.js';
+
+	/** empfohlene Bedenkzeit für die Lernpartie (Coach-Verordnung) */
+	let rapidTc = $state<'10+5' | '15+10'>('10+5');
 
 	type TimeControl = { id: string; label: string; base: number; inc: number } | null;
 	const TIME_CONTROLS: NonNullable<TimeControl>[] = [
@@ -323,6 +327,9 @@
 	const verdict = $derived(ended ? verdictFor(ended, myColor) : null);
 
 	onMount(async () => {
+		void loadCoachWeek()
+			.then((w) => (rapidTc = w.recipe.timeControl))
+			.catch(() => {});
 		const saved = await getSetting<SavedGame | null>('currentGame', null);
 		botId = firstGame ? 'bruno' : await getSetting('lastBotId', 'tina');
 		coachOn = await getSetting('coachOn', true);
@@ -710,7 +717,7 @@
 {#snippet rapidPlan()}
 	<section class="card rapid-plan" data-testid="rapid-plan">
 		<h2>{t('plan.play')}</h2>
-		<p>{t('plan.rapidDetails')}</p>
+		<p>{t('plan.rapidDetails', { tc: rapidTc, min: rapidTc === '15+10' ? 40 : 25 })}</p>
 		<div class="rapid-links">
 			<a class="btn" href="https://lichess.org/" target="_blank" rel="noopener noreferrer"
 				>{t('plan.openLichess')}</a

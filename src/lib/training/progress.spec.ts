@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { blunderTrend, successRate, type GameBlunders } from './progress';
 
 const series = (xs: number[]): GameBlunders[] =>
-	xs.map((per30, i) => ({ date: i, per30, ownMoves: 30 }));
+	xs.map((per30, i) => ({ date: i, per30, ownMoves: 30, blunders: per30 }));
 
 describe('Fortschritt: Patzer je 30 Züge', () => {
 	it('zu wenige Partien: kein Vergleich, sagt wie viele fehlen', () => {

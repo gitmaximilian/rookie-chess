@@ -605,11 +605,12 @@ export const en = {
 		soundStyle: 'Sound style',
 		soundStyles: { wood: 'Wood', soft: 'Soft', chime: 'Chime' },
 		minutes: 'Time per day',
-		minutesText:
-			'Time per day for your daily plan – Rookie picks the most important tasks until it is full.',
+		minutesText: 'Time per day – the coach turns it into games per week and your daily dose.',
 		minutesN: (p: P) => `${p.n} min`,
 		goal: 'Daily goal',
-		goalText: 'How many puzzles do you want to solve per day?',
+		goalText:
+			'How many puzzles do you want to solve per day? “Coach” fits the number to your level and time.',
+		goalCoach: 'Coach',
 		data: 'Your data',
 		dataText:
 			'Without an account, everything stays on this device only. A backup file lets you move your progress to another device yourself (e.g. from iPhone to Mac).',
@@ -1255,9 +1256,9 @@ export const en = {
 		rapidOffline: 'You can practise against a bot below while offline.',
 		importRapid: 'Import a finished game',
 		openLichess: 'Open Lichess',
-		rapidDetails:
-			'Play a rated Standard Rapid game on Lichess, ideally 10+0. Allow up to 20 minutes. Import the finished game to check this off and practise a key mistake.',
-		rapidSlot: 'Plan a Rapid game when you have 20 minutes',
+		rapidDetails: (p: P) =>
+			`Play a rated Rapid game on Lichess, ${p.tc} – the increment leaves time for the blunder check. Allow up to ${p.min} minutes. Import the finished game to check this off and practise a key mistake.`,
+		rapidSlot: 'Plan a Rapid game when you have 25 minutes',
 		kicker: 'Next step',
 		title: 'Your training today',
 		review: (p: P) => `Review ${p.n} missed ${s(p.n, 'puzzle', 'puzzles')}`,
@@ -1273,6 +1274,7 @@ export const en = {
 		mistakes: (p: P) => `Your own mistakes: ${p.n} to repeat`,
 		scan: (p: P) => `Board scan: ${p.n} positions – what can your opponent do?`,
 		positional: (p: P) => `Positional play: ${p.name}`,
+		tactic: (p: P) => `Tactics: ${p.name}`,
 		checkup: 'Safety check-up (12 tasks, every 2 weeks)',
 		progressMin: (p: P) => `${p.n} of ${p.m} done · about ${p.min} min left`,
 		start: 'Start',
@@ -1281,6 +1283,46 @@ export const en = {
 		strength: (p: P) => `Estimated strength ≈ ${p.n}`,
 		strengthHint: 'From your games, puzzles, online rating and bots beaten – on the Lichess scale.',
 		progress: (p: P) => `${p.n} of ${p.m} done`
+	},
+	coachWeek: {
+		title: 'Your week',
+		daysLeft: (p: P) => (Number(p.n) <= 1 ? 'last day' : `${p.n} days left`),
+		games: (p: P) => `Games · ${p.tc}`,
+		gamesBots: (p: P) => `Games · ${p.tc} or vs bots`,
+		reviewed: 'Games reviewed',
+		puzzles: 'Puzzles',
+		safety: 'Blunder check',
+		adj: {
+			'play-more': (p: P) =>
+				`Only ${p.n} ${s(p.n, 'game', 'games')} in 14 days – with fewer than 4 a week beginners hardly improve.`,
+			'review-first': 'Review your last games first – that is where your mistakes are.',
+			'slow-down':
+				'No progress for 6 weeks and still many blunders: play 15+10 and check before every move.',
+			'more-tactics': 'No progress for 6 weeks: tactics are your lever now.',
+			'on-track': (p: P) => `You are improving: +${p.n} in 6 weeks.`
+		},
+		adjGo: {
+			'play-more': 'Play',
+			'review-first': 'Review',
+			'slow-down': 'Blunder check',
+			'more-tactics': 'Puzzles'
+		},
+		path: 'Road to 1600',
+		milestone: (p: P) => `${p.n} → milestone ${p.goal}`,
+		blunders: (p: P) => `Blunders per 30 moves: you ${p.you} · typical at ${p.goal} ${p.ref}`,
+		blundersNone: 'Blunders per 30 moves: no analysed games yet',
+		reached: '1600 reached. Now positional play and endgames count.',
+		why: 'Why this dose?',
+		dose: (p: P) =>
+			`Per day ${p.puzzles} puzzles and ${p.safety} blunder checks${Number(p.scan) ? ` and ${p.scan} board scans` : ''}, per week ${p.games} games (${p.tc}) and ${p.lessons} ${s(p.lessons, 'lesson', 'lessons')}.`,
+		why1: 'Lichess data, 883 new players around 900: with 4–8 games a week they gained +137 in a year (median), with fewer than 2 hardly anything.',
+		why2: 'With the same number of games, players with over 1000 puzzles gained +289, with under 100 +71.',
+		why3: 'Rapid, not blitz – time for the blunder check. After every game 5 minutes: your own blunders first.',
+		honest:
+			'Honestly: after a year 14 % of these players were at 1200 and 1 % at 1600. For most, 1600 is a journey of years – sticking with it is the biggest lever.',
+		minutes: 'Time per day',
+		minutesN: (p: P) => `${p.n} min`,
+		note: 'Correlations, not a guarantee: people who practise more are often more motivated too.'
 	},
 	coachTab: {
 		pentaLever: (p: P) => `Your penta says: ${p.name}`,
@@ -1797,6 +1839,8 @@ export const en = {
 		streakDays: (p: P) => s(p.n, 'day', 'days'),
 		streakDone: 'today done',
 		streakOpen: 'train today to keep it',
+		week: 'This week',
+		weekSub: (p: P) => `games ${p.tc} · dose ${p.pct} %`,
 		goal: 'Daily goal',
 		goalDone: 'reached – well done',
 		goalLeft: (p: P) => `${p.n} more ${s(p.n, 'puzzle', 'puzzles')}`,

@@ -11,6 +11,7 @@
 	import CoachTabs from '#lib/ui/CoachTabs.svelte';
 	import AvatarButton from '#lib/ui/AvatarButton.svelte';
 	import RatingHistory from '#lib/ui/RatingHistory.svelte';
+	import ProgressCheck from '#lib/ui/ProgressCheck.svelte';
 	import AccuracyTrend, { type AccPoint } from '#lib/ui/AccuracyTrend.svelte';
 	import { quality } from '#lib/import/ratings.js';
 	import Download from '@lucide/svelte/icons/download';
@@ -200,6 +201,9 @@
 				testid="tile-converted"
 			/>
 		</BentoGrid>
+
+		<!-- Lernkennzahlen: Patzer-Vergleich, Kontrolltest, Blunder-Check, Puzzles (vorher in der Übersicht) -->
+		<ProgressCheck />
 
 		<!-- Online-Wertung -->
 		<section class="card block">

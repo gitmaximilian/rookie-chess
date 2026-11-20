@@ -17,6 +17,8 @@ export interface GameBlunders {
 	/** Patzer je 30 eigene Züge in dieser Partie */
 	per30: number;
 	ownMoves: number;
+	/** Patzer in offener Stellung (für die gepoolte Rate) */
+	blunders: number;
 }
 
 /** Partien mit weniger eigenen Zügen sagen zu wenig */
@@ -33,13 +35,21 @@ export function blunderSeries(games: GameRow[]): GameBlunders[] {
 	for (const g of [...games].sort((a, b) => a.date - b.date)) {
 		const s = gameSafety(g);
 		if (!s || s.live < MIN_OWN_MOVES) continue;
-		out.push({ date: g.date, per30: (s.blunders / s.live) * 30, ownMoves: s.live });
+		out.push({
+			date: g.date,
+			per30: (s.blunders / s.live) * 30,
+			ownMoves: s.live,
+			blunders: s.blunders
+		});
 	}
 	return out;
 }
 
 export interface Trend {
-	/** Mittel der jüngsten Partien (null = noch keine) */
+	/**
+	 * Patzer je 30 Züge der jüngsten Partien, gepoolt (alle Patzer / alle Züge) – dieselbe Rechnung wie
+	 * Penta, Trainingsindex und Profil; der Vergleich unten nutzt die Werte je Partie (Welch).
+	 */
 	recent: number | null;
 	recentN: number;
 	/** Mittel der Partien davor (null = noch zu wenige für einen Vergleich) */
@@ -62,6 +72,12 @@ const variance = (xs: number[]) => {
 	return xs.reduce((a, b) => a + (b - m) ** 2, 0) / (xs.length - 1);
 };
 const r1 = (x: number) => Math.round(x * 10) / 10;
+const pooled = (xs: GameBlunders[]) =>
+	(30 * xs.reduce((a, x) => a + x.blunders, 0)) /
+	Math.max(
+		1,
+		xs.reduce((a, x) => a + x.ownMoves, 0)
+	);
 
 /**
  * Jüngste `window` Partien gegen die `window` davor.
@@ -71,7 +87,7 @@ export function blunderTrend(series: GameBlunders[], window = MIN_WINDOW): Trend
 	const recent = series.slice(-window);
 	const previous = series.slice(-2 * window, -window);
 	const base = {
-		recent: recent.length ? r1(mean(recent.map((x) => x.per30))) : null,
+		recent: recent.length ? r1(pooled(recent)) : null,
 		recentN: recent.length,
 		previousN: previous.length
 	};
@@ -90,7 +106,7 @@ export function blunderTrend(series: GameBlunders[], window = MIN_WINDOW): Trend
 	const margin = 1.96 * Math.sqrt(variance(a) / a.length + variance(b) / b.length);
 	return {
 		...base,
-		previous: r1(mean(b)),
+		previous: r1(pooled(previous)),
 		diff: r1(diff),
 		margin: r1(margin),
 		verdict: Math.abs(diff) <= margin ? 'same' : diff < 0 ? 'better' : 'worse',

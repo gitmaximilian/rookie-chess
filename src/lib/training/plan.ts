@@ -13,7 +13,7 @@
  * sinnvollen Reihenfolge gezeigt. Der Plan wird einmal pro Tag festgelegt (damit er sich nicht unter
  * den Fingern ändert), der Fortschritt wird jedes Mal frisch aus den Daten berechnet.
  */
-import { BASICS } from '#lib/basics/lessons.js';
+import { BASICS, TACTICS } from '#lib/basics/lessons.js';
 import { COURSES } from '#lib/openings/courses.js';
 import { LESSONS } from '#lib/endgames/lessons.js';
 import { POSITIONAL } from '#lib/basics/positional.js';
@@ -31,7 +31,8 @@ export type PlanTask =
 	| { id: string; kind: 'play' }
 	| { id: string; kind: 'checkup' }
 	| { id: string; kind: 'scan'; target: number }
-	| { id: string; kind: 'positional'; lesson: string };
+	| { id: string; kind: 'positional'; lesson: string }
+	| { id: string; kind: 'tactic'; lesson: string };
 
 export interface DailyPlan {
 	day: string;
@@ -68,6 +69,8 @@ export interface PlanContext {
 	basicsDone: string[];
 	/** erledigte Stellungsspiel-Lektionen */
 	positionalDone?: string[];
+	/** erledigte Taktik-Lektionen (Gabel, Fesselung, …) */
+	tacticsDone?: string[];
 	courseProgress: Record<string, Record<string, unknown>>;
 	endgameStars: Record<string, number>;
 	rulesKnown: 'no' | 'some' | 'yes' | null;
@@ -78,12 +81,25 @@ export interface PlanContext {
 	reviewedGames: number[];
 	/** Tage seit der letzten eigenen Partie (null = noch nie gespielt) */
 	daysSinceGame: number | null;
-	/** heute importierte gewertete Lichess-Rapid-Partien, nach Partiedatum */
+	/** heutige Lernpartien (gewertetes Lichess-Rapid oder Partie in Rookie) */
 	gamesToday: number;
 	/** geschätzte Spielstärke (null = unbekannt) – bestimmt, welche Lektionen schon passen */
 	strength: number | null;
 	/** Zeitbudget in Minuten */
 	minutes: number;
+	/**
+	 * Wochendosis des Coachs (prescription.ts). Fehlt sie, gilt die alte Regel „alle zwei Tage eine Partie“
+	 * und die festen Mengen unten.
+	 */
+	week?: {
+		/** Lernpartien dieser Woche und Ziel */
+		games: number;
+		target: number;
+		/** Tage bis Sonntagabend, heute eingeschlossen */
+		daysLeft: number;
+		safety: number;
+		scan: number;
+	};
 }
 
 /** ohne Schwerpunkt „Partien“: alle so viele Tage eine Partie */
@@ -100,6 +116,8 @@ export const SCAN_UNTIL = 1200;
 export const SCAN_PER_DAY = 3;
 /** ab dieser Stärke schlägt der Plan Stellungsspiel-Lektionen vor */
 export const POSITIONAL_FROM = 1150;
+/** so viele Minuten darf der Plan für die täglichen Puzzles über dem Budget liegen */
+export const PUZZLE_OVERFLOW = 5;
 
 /** geschätzte Minuten je Aufgabe (für das Zeitbudget und die Anzeige) */
 export function minutesOf(task: PlanTask): number {
@@ -124,6 +142,8 @@ export function minutesOf(task: PlanTask): number {
 			return task.target;
 		case 'positional':
 			return 6;
+		case 'tactic':
+			return 5;
 		case 'basics':
 			return 5;
 		case 'course':
@@ -140,11 +160,21 @@ export function levelFor(strength: number | null): 1 | 2 | 3 {
 	return 3;
 }
 
-/** Nächster sinnvoller Lernschritt (Grundlagen → Endspiel/Kurs), passend zur Stufe */
-function nextLesson(c: PlanContext): PlanTask | null {
+/** Taktik-Lektionen (Motive erkennen) bis zu dieser Stärke vor Stellungsspiel, Endspiel und Kursen */
+export const TACTICS_UNTIL = 1400;
+
+/**
+ * Nächster sinnvoller Lernschritt, passend zur Stufe: Regeln → Taktik-Motive (unter 1400) → Stellungsspiel
+ * (ab 1150) → Endspiel/Kurs. Tagesplan und „Weiter lernen“ nutzen dieselbe Reihenfolge.
+ */
+export function nextLesson(c: PlanContext): PlanTask | null {
 	const basicsOpen = BASICS.find((l) => !c.basicsDone.includes(l.id));
 	if (basicsOpen && (c.rulesKnown === 'no' || c.rulesKnown === 'some' || c.focus === 'rules'))
 		return { id: `basics:${basicsOpen.id}`, kind: 'basics', lesson: basicsOpen.id };
+
+	const tactic = TACTICS.find((l) => !(c.tacticsDone ?? []).includes(l.id));
+	if (tactic && c.focus !== 'openings' && (c.strength === null || c.strength < TACTICS_UNTIL))
+		return { id: `tactic:${tactic.id}`, kind: 'tactic', lesson: tactic.id };
 
 	const max = levelFor(c.strength);
 	// ab ~1150 zählt Stellungsspiel (Lichess-Daten: Strategie und Eröffnung gewinnen an Gewicht) –
@@ -195,6 +225,7 @@ const ORDER: PlanTask['kind'][] = [
 	'review',
 	'puzzles',
 	'repertoire',
+	'tactic',
 	'positional',
 	'course',
 	'endgame'
@@ -208,11 +239,18 @@ export function needsBasics(c: PlanContext): boolean {
 }
 
 export function rapidDue(c: PlanContext): boolean {
-	return !needsBasics(c) && (c.daysSinceGame === null || c.daysSinceGame >= PLAY_AFTER_DAYS);
+	if (needsBasics(c)) return false;
+	if (c.daysSinceGame === null) return true;
+	if (!c.week) return c.daysSinceGame >= PLAY_AFTER_DAYS;
+	// Wochenziel: gleichmäßig verteilen; gegen Wochenende aufholen, sobald die Tage knapp werden
+	const left = c.week.target - c.week.games;
+	if (left <= 0) return false;
+	const gap = Math.max(1, Math.floor(6 / c.week.target));
+	return c.daysSinceGame >= gap || left >= c.week.daysLeft;
 }
 
 export function buildPlan(c: PlanContext): DailyPlan {
-	const n = Math.max(3, Math.min(c.dailyGoal, 10));
+	const n = Math.max(3, Math.min(c.dailyGoal, 20));
 	const cand: { task: PlanTask; prio: number }[] = [];
 	const add = (task: PlanTask, prio: number) => cand.push({ task, prio });
 	const beginner = needsBasics(c);
@@ -225,8 +263,12 @@ export function buildPlan(c: PlanContext): DailyPlan {
 		if (c.checkupDue) add({ id: 'checkup', kind: 'checkup' }, 0.5);
 		// unter 1200: das Brett sehen (Brett-Scan) gehört täglich dazu, der Blunder-Check wird kürzer
 		const scan = c.strength === null || c.strength < SCAN_UNTIL;
-		if (c.safetyFirst) add({ id: 'safety', kind: 'safety', target: scan ? 4 : SAFETY_PER_DAY }, 1);
-		if (scan) add({ id: 'scan', kind: 'scan', target: SCAN_PER_DAY }, 1.2);
+		if (c.safetyFirst)
+			add(
+				{ id: 'safety', kind: 'safety', target: c.week?.safety ?? (scan ? 4 : SAFETY_PER_DAY) },
+				1
+			);
+		if (scan) add({ id: 'scan', kind: 'scan', target: c.week?.scan || SCAN_PER_DAY }, 1.2);
 		if (c.dueMistakes > 0)
 			add({ id: 'mistakes', kind: 'mistakes', target: Math.min(c.dueMistakes, 5) }, 2);
 		// Bei fälligem Spieltag 20 Minuten freihalten. Bei knapper Zeit erscheint der Spieltermin separat.
@@ -264,8 +306,12 @@ export function buildPlan(c: PlanContext): DailyPlan {
 			const fit = Math.floor((c.minutes - used) / 1.2);
 			if (fit >= 3) t = { ...t, target: Math.min(t.target, fit) };
 		}
+		// Puzzles jeden Tag – auch an Spieltagen, notfalls 3 Stück über dem Budget (Lichess: Puzzle-Menge hängt
+		// am stärksten mit dem Aufstieg zusammen, docs/research-2026-11-13.md, Nachtrag 20.11.)
+		if (t.kind === 'puzzles' && used + minutesOf(t) > c.minutes && c.week)
+			t = { ...t, target: Math.min(t.target, 3) };
 		const m = minutesOf(t);
-		if (used + m > c.minutes) continue;
+		if (used + m > c.minutes + (t.kind === 'puzzles' && c.week ? PUZZLE_OVERFLOW : 0)) continue;
 		picked.push(t);
 		used += m;
 	}
@@ -306,6 +352,8 @@ export function progressOf(
 			return { done: Math.min(task.target, c.scanToday ?? 0), target: task.target };
 		case 'positional':
 			return { done: Number((c.positionalDone ?? []).includes(task.lesson)), target: 1 };
+		case 'tactic':
+			return { done: Number((c.tacticsDone ?? []).includes(task.lesson)), target: 1 };
 		case 'basics':
 			return { done: Number(c.basicsDone.includes(task.lesson)), target: 1 };
 		case 'course':

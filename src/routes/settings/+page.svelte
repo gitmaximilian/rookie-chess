@@ -47,7 +47,8 @@
 	let themePref = $state<ThemePref>('system');
 	let soundOn = $state(true);
 	let soundStyle = $state<SoundStyle>('wood');
-	let goal = $state(5);
+	/** null = Dosis des Coachs */
+	let goal = $state<number | null>(null);
 	let persisted = $state<boolean | null>(null);
 	let lastBackup = $state<number | null>(null);
 	let message = $state<{ kind: 'ok' | 'err'; text: string } | null>(null);
@@ -64,7 +65,7 @@
 		themePref = getThemePref();
 		soundOn = sound.enabled;
 		soundStyle = sound.style;
-		goal = await getSetting('dailyGoal', 5);
+		goal = await getSetting<number | null>('dailyGoal', null);
 		minutes = await getSetting('minutesPerDay', DEFAULT_MINUTES);
 		lastBackup = await getSetting<number | null>('lastBackupAt', null);
 		try {
@@ -106,9 +107,10 @@
 		await setSetting('dailyPlan', null);
 	}
 
-	async function saveGoal(n: number) {
+	async function saveGoal(n: number | null) {
 		goal = n;
 		await setSetting('dailyGoal', n);
+		await setSetting('dailyPlan', null);
 	}
 
 	async function persist() {
@@ -349,19 +351,19 @@
 		<h2><Target size={18} /> {t('settings.goal')}</h2>
 		<p class="hint">{t('settings.goalText')}</p>
 		<div class="seg" role="radiogroup" aria-label={t('settings.goal')}>
-			{#each [3, 5, 10, 20] as n (n)}
+			{#each [null, 3, 5, 10, 20] as n (n)}
 				<button
 					role="radio"
 					aria-checked={goal === n}
 					class:on={goal === n}
-					onclick={() => saveGoal(n)}>{n}</button
+					onclick={() => saveGoal(n)}>{n ?? t('settings.goalCoach')}</button
 				>
 			{/each}
 		</div>
 		<!-- Zeitbudget des Tagesplans: bestimmt, wie viele Aufgaben Rookie täglich vorschlägt -->
 		<p class="hint minutes-hint">{t('settings.minutesText')}</p>
 		<div class="seg" role="radiogroup" aria-label={t('settings.minutes')}>
-			{#each [5, 15, 20, 30, 45] as n (n)}
+			{#each [10, 15, 30, 45, 60] as n (n)}
 				<button
 					role="radio"
 					aria-checked={minutes === n}
