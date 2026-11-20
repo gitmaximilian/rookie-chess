@@ -27,8 +27,8 @@
 		type Skill,
 		type SkillValue
 	} from '#lib/training/skills.js';
-	import { isPentaGame, quality } from '#lib/import/ratings.js';
-	import { db } from '#lib/db/db.js';
+	import { isPentaGame, PENTA_SPEEDS, quality, type PentaSpeed } from '#lib/import/ratings.js';
+	import { db, getSetting, setSetting } from '#lib/db/db.js';
 	import { loadOpenings, openingFor } from '#lib/data/openings.js';
 	import {
 		computeStats,
@@ -94,11 +94,22 @@
 		skillBlunderShare: { opening: number | null; endgame: number | null };
 		accuracy: AccPoint[];
 		coverage: { done: number; total: number };
+		/** Tempi mit Partien gegen Menschen (für die Penta-Umschaltung) */
+		speeds: { speed: PentaSpeed; n: number }[];
 		ratingSpark: number[];
 		history: CoachHistoryPoint[];
 	}
 
 	let d = $state<Data | null>(null);
+	/** Tempo, aus dem das Skill-Penta rechnet (Standard Rapid, an Rapid geeicht) */
+	let pentaSpeed = $state<PentaSpeed>('rapid');
+	const pentaOnly = (g: Parameters<typeof isPentaGame>[0]) => isPentaGame(g, pentaSpeed);
+	async function pickSpeed(s: PentaSpeed) {
+		// erst speichern, dann umschalten – die Anzeige zeigt nie eine Wahl, die ein Neuladen verlieren würde
+		await setSetting('pentaSpeed', s);
+		pentaSpeed = s;
+		await load();
+	}
 
 	const speedName = (k: string) => {
 		const s = t(`stats.speed.${k}`);
@@ -140,8 +151,14 @@
 			db.mistakes.count(),
 			db.ratings.orderBy('date').toArray()
 		]);
-		// Skill-Penta: nur Rapid gegen Menschen – davon die, die sich analysieren lassen
-		const pentaGames = games.filter(isPentaGame);
+		// Skill-Penta: ein Tempo gegen Menschen (Standard Rapid) – davon die, die sich analysieren lassen
+		pentaSpeed = await getSetting<PentaSpeed>('pentaSpeed', 'rapid');
+		const speeds = PENTA_SPEEDS.map((sp) => ({
+			speed: sp,
+			n: games.filter((g) => isPentaGame(g, sp)).length
+		})).filter((x) => x.n > 0 || x.speed === 'rapid');
+		if (!speeds.some((x) => x.speed === pentaSpeed)) pentaSpeed = 'rapid';
+		const pentaGames = games.filter((g) => isPentaGame(g, pentaSpeed));
 		const analysable = pentaGames.filter((g) => g.moves.length >= 6);
 		const stats = computeStats(games, (m) => openingFor(m)?.name ?? null);
 		const sorted = [...games].sort((a, b) => b.date - a.date);
@@ -255,6 +272,7 @@
 				done: analysable.filter((g) => g.analysis?.done).length,
 				total: analysable.length
 			},
+			speeds,
 			ratingSpark: main ? main.points.slice(-20).map((p) => p.rating) : []
 		};
 	}
@@ -327,12 +345,24 @@
 {#snippet coverage()}
 	{#if d && d.coverage.total && d.coverage.done >= d.coverage.total && !syncState.analysing}
 		<!-- alles analysiert: nur eine Zeile statt Fortschrittsbox -->
-		<p class="cov-done">{t('skills.coverage', { n: d.coverage.done, m: d.coverage.total })} ✓</p>
+		<p class="cov-done">
+			{t('skills.coverage', {
+				n: d.coverage.done,
+				m: d.coverage.total,
+				speed: t(`skills.speed.${pentaSpeed}`)
+			})} ✓
+		</p>
 	{:else if d && d.coverage.total}
 		{@const c = d.coverage}
 		<div class="cov" class:run={syncState.analysing}>
 			<div class="cov-head">
-				<b>{t('skills.coverage', { n: c.done, m: c.total })}</b>
+				<b
+					>{t('skills.coverage', {
+						n: c.done,
+						m: c.total,
+						speed: t(`skills.speed.${pentaSpeed}`)
+					})}</b
+				>
 				{#if c.total}<span class="cov-pct">{Math.round((c.done / c.total) * 100)}%</span>{/if}
 			</div>
 			<div
@@ -341,7 +371,11 @@
 				aria-valuemin={0}
 				aria-valuemax={c.total}
 				aria-valuenow={c.done}
-				aria-label={t('skills.coverage', { n: c.done, m: c.total })}
+				aria-label={t('skills.coverage', {
+					n: c.done,
+					m: c.total,
+					speed: t(`skills.speed.${pentaSpeed}`)
+				})}
 			>
 				<span style:width="{c.total ? (c.done / c.total) * 100 : 0}%"></span>
 			</div>
@@ -358,14 +392,14 @@
 				<div class="cov-btns">
 					<button
 						class="btn small"
-						onclick={() => void analyseBatch(10, isPentaGame)}
+						onclick={() => void analyseBatch(10, pentaOnly)}
 						disabled={syncState.analysing}
 						><Play size={14} /> {t('skills.analyseNext', { n: Math.min(10, pendingN) })}</button
 					>
 					{#if pendingN > 10}
 						<button
 							class="btn small secondary"
-							onclick={() => void analyseBatch(pendingN, isPentaGame)}
+							onclick={() => void analyseBatch(pendingN, pentaOnly)}
 							disabled={syncState.analysing}>{t('skills.analyseAll', { n: pendingN })}</button
 						>
 					{/if}
@@ -414,11 +448,32 @@
 
 		<!-- 2. Wo stehst du? Spielstärke (oben) und Penta -->
 		<section class="tone-coach block skills">
+			{#if d.speeds.length > 1}
+				<div
+					class="speeds"
+					role="radiogroup"
+					aria-label={t('skills.speeds')}
+					data-testid="penta-speed"
+				>
+					{#each d.speeds as x (x.speed)}
+						<button
+							role="radio"
+							aria-checked={pentaSpeed === x.speed}
+							class:on={pentaSpeed === x.speed}
+							onclick={() => void pickSpeed(x.speed)}
+							>{t(`skills.speed.${x.speed}`)} <span class="n">{x.n}</span></button
+						>
+					{/each}
+				</div>
+			{/if}
 			{@render coverage()}
 			{#if d.coverage.done < 3}
 				<p class="penta-need" data-testid="penta-need">
-					{t('skills.needData', { n: d.coverage.done })}
+					{t('skills.needData', { n: d.coverage.done, speed: t(`skills.speed.${pentaSpeed}`) })}
 				</p>
+			{/if}
+			{#if pentaSpeed === 'blitz' || pentaSpeed === 'bullet'}
+				<p class="penta-need" data-testid="penta-fast">{t('skills.fastNote')}</p>
 			{/if}
 			<SkillPenta
 				values={d.skills}
@@ -462,6 +517,35 @@
 
 	h2 {
 		font-size: 1.1rem;
+	}
+
+	.speeds {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+	}
+
+	.speeds button {
+		min-height: 36px;
+		padding: 0 0.8rem;
+		border-radius: 999px;
+		border: 1px solid var(--line-strong);
+		background: var(--surface);
+		color: var(--text);
+		font: inherit;
+		font-size: 0.85rem;
+		cursor: pointer;
+	}
+
+	.speeds button.on {
+		background: var(--accent);
+		border-color: var(--accent);
+		color: #fff;
+	}
+
+	.speeds .n {
+		opacity: 0.7;
+		font-variant-numeric: tabular-nums;
 	}
 
 	.penta-need {

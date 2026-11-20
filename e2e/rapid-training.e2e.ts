@@ -219,3 +219,37 @@ test('Rapid-Einstieg und kurze Fehlerübung funktionieren mit vorhandenen Daten 
 	await page.reload();
 	await expect(page.getByTestId('quick-result')).toBeVisible();
 });
+
+test('Skill-Penta: Tempo umschalten, Blitz mit Hinweis, Bot-Partien zählen nie', async ({
+	page
+}) => {
+	await page.goto('/');
+	await expect(page.locator('.plan[aria-busy="false"]')).toBeVisible();
+	const now = Date.now();
+	await seed(page, {}, [
+		...[1, 2, 3].map((i) => ({ ...example, id: 20 + i, date: now - i * 86_400_000 })),
+		...[1, 2].map((i) => ({
+			...example,
+			id: 30 + i,
+			date: now - i * 3_600_000,
+			speed: 'blitz'
+		})),
+		{ ...example, id: 40, date: now, speed: 'blitz', opponentIsBot: true }
+	]);
+	await page.goto('/coach');
+	const speeds = page.getByTestId('penta-speed');
+	await expect(speeds.getByRole('radio', { name: /Rapid 3/ })).toHaveAttribute(
+		'aria-checked',
+		'true'
+	);
+	await expect(page.getByTestId('penta-need')).toContainText('analysed Rapid games');
+	await expect(page.getByTestId('penta-fast')).toHaveCount(0);
+	await speeds.getByRole('radio', { name: /Blitz 2/ }).click();
+	await expect(page.getByTestId('penta-fast')).toBeVisible();
+	await expect(page.getByTestId('penta-need')).toContainText('3 analysed Blitz games');
+	// die Wahl bleibt nach dem Neuladen
+	await page.reload();
+	await expect(
+		page.getByTestId('penta-speed').getByRole('radio', { name: /Blitz 2/ })
+	).toHaveAttribute('aria-checked', 'true');
+});

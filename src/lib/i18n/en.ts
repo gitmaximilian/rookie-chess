@@ -1417,10 +1417,10 @@ export const en = {
 			strategy: 'Positional lessons, then games with “You first”.',
 			endgame: 'Basic endgames against the tablebase.'
 		},
-		overallFrom: (p: P) => `from Rapid games ≈ ${p.elo}`,
+		overallFrom: (p: P) => `from games ≈ ${p.elo}`,
 		calcTitle: 'How it is calculated',
 		calcSample: (p: P) =>
-			`From your last ${p.games} analysed Rapid games: ${p.what} (shown from ${p.min}).`,
+			`From your last ${p.games} analysed games: ${p.what} (shown from ${p.min}).`,
 		calc: {
 			safety:
 				'Blunder = a move that costs at least 30 percentage points of winning chance (Stockfish). Counted per 30 of your moves – only while the game is still open.',
@@ -1515,16 +1515,20 @@ export const en = {
 		gain: (p: P) =>
 			`Bring ${p.name} up to the level of ≈ ${p.target} (${p.value}) and you lose ≈ ${p.points} percentage points less winning chance per game – that is about +${p.gain} Elo.`,
 		note: 'Compared with 1,560 Lichess games (400–3200), checked on 139 other players: within ±230 Elo on average from about 12 games. A relationship, not a guarantee.',
+		speeds: 'Time control',
+		speed: { rapid: 'Rapid', classical: 'Classical', blitz: 'Blitz', bullet: 'Bullet' },
+		fastNote:
+			'Calibrated on Rapid games: in blitz and bullet everyone blunders more, so the value comes out lower.',
 		needData: (p: P) =>
-			`Your profile needs at least 3 analysed Rapid games against people (${p.n} so far). Link Lichess or Chess.com – blitz, bullet and bot games don't count.`,
-		coverage: (p: P) => `${p.n} of ${p.m} Rapid ${s(p.m, 'game', 'games')} analysed`,
-		onlyAnalysed: (p: P) => `Only analysed Rapid games against people count. ${p.n} still to go.`,
+			`Your profile needs at least 3 analysed ${p.speed} games against people (${p.n} so far). Link Lichess or Chess.com – bot games don't count.`,
+		coverage: (p: P) => `${p.n} of ${p.m} ${p.speed} ${s(p.m, 'game', 'games')} analysed`,
+		onlyAnalysed: (p: P) => `Only analysed games against people count. ${p.n} still to go.`,
 		analyseNext: (p: P) => `Analyse next ${p.n}`,
 		analyseAll: (p: P) => `Analyse all ${p.n}`,
 		running: (p: P) => `Analysing … ${p.n} of ${p.m} done.`,
 		keepOpen: 'Keep the app open – Stockfish runs on your device.',
 		stop: 'Stop',
-		allDone: 'All your Rapid games are analysed – the profile uses every one of them.',
+		allDone: 'All these games are analysed – the profile uses every one of them.',
 		trend: 'Accuracy per game',
 		trendText: (p: P) => `Your last ${p.n} analysed games – tap a bar to open the game.`,
 		trendAria: (p: P) => `Accuracy of your last ${p.n} games, average ${p.avg}%`

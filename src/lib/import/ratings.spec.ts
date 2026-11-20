@@ -142,4 +142,9 @@ describe('Skill-Penta: nur Rapid gegen Menschen', () => {
 		expect(isPentaGame(g({ speed: 'rapid', pgn: '[BlackTitle "BOT"]' }))).toBe(false);
 		expect(isPentaGame(g({ speed: 'rapid', result: '*' }))).toBe(false);
 	});
+	it('anderes Tempo auf Wunsch – Bot-Partien bleiben draußen', () => {
+		expect(isPentaGame(g({ speed: 'blitz' }), 'blitz')).toBe(true);
+		expect(isPentaGame(g({ speed: 'rapid' }), 'blitz')).toBe(false);
+		expect(isPentaGame(g({ speed: 'bullet', opponentIsBot: true }), 'bullet')).toBe(false);
+	});
 });

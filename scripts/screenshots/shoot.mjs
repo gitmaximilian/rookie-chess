@@ -156,6 +156,7 @@ for (const theme of themes) {
 				for (const name of args.click.split(';')) {
 					await page
 						.getByRole('button', { name: new RegExp(name) })
+						.or(page.getByRole('radio', { name: new RegExp(name) }))
 						.first()
 						.click();
 					await page.waitForTimeout(900);
