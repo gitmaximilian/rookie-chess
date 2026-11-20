@@ -41,10 +41,13 @@ test('PGN analysieren: Patzer wird erkannt und erklärt', async ({ page }) => {
 			.locator('visible=true')
 			.first()
 	).toBeVisible();
-	// Coach: zeigt, wie viele Partien ins Profil einfließen
+	// Coach: eine PGN-Partie zählt nicht fürs Skill-Penta (nur Rapid gegen Menschen)
 	await page.goto('/coach');
 	await expect(
-		page.getByText('1 of 1 game analysed').locator('visible=true').first()
+		page
+			.getByText(/needs at least 3 analysed Rapid games/)
+			.locator('visible=true')
+			.first()
 	).toBeVisible();
 });
 

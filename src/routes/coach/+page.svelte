@@ -27,7 +27,7 @@
 		type Skill,
 		type SkillValue
 	} from '#lib/training/skills.js';
-	import { quality } from '#lib/import/ratings.js';
+	import { isPentaGame, quality } from '#lib/import/ratings.js';
 	import { db } from '#lib/db/db.js';
 	import { loadOpenings, openingFor } from '#lib/data/openings.js';
 	import {
@@ -140,8 +140,9 @@
 			db.mistakes.count(),
 			db.ratings.orderBy('date').toArray()
 		]);
-		// nur Partien, die sich analysieren lassen (beendet, mehr als ein paar Züge)
-		const analysable = games.filter((g) => g.result !== '*' && g.moves.length >= 6);
+		// Skill-Penta: nur Rapid gegen Menschen – davon die, die sich analysieren lassen
+		const pentaGames = games.filter(isPentaGame);
+		const analysable = pentaGames.filter((g) => g.moves.length >= 6);
 		const stats = computeStats(games, (m) => openingFor(m)?.name ?? null);
 		const sorted = [...games].sort((a, b) => b.date - a.date);
 		const last = sorted
@@ -219,7 +220,7 @@
 				c: 'var(--c-play)'
 			});
 
-		const skillRaw = collectSkillsAdaptive(games);
+		const skillRaw = collectSkillsAdaptive(pentaGames);
 		const skills = skillMirror(skillRaw);
 		d = {
 			name: linked.lichess || linked.chesscom || '',
@@ -357,14 +358,14 @@
 				<div class="cov-btns">
 					<button
 						class="btn small"
-						onclick={() => void analyseBatch(10)}
+						onclick={() => void analyseBatch(10, isPentaGame)}
 						disabled={syncState.analysing}
 						><Play size={14} /> {t('skills.analyseNext', { n: Math.min(10, pendingN) })}</button
 					>
 					{#if pendingN > 10}
 						<button
 							class="btn small secondary"
-							onclick={() => void analyseBatch(pendingN)}
+							onclick={() => void analyseBatch(pendingN, isPentaGame)}
 							disabled={syncState.analysing}>{t('skills.analyseAll', { n: pendingN })}</button
 						>
 					{/if}
@@ -414,6 +415,11 @@
 		<!-- 2. Wo stehst du? Spielstärke (oben) und Penta -->
 		<section class="tone-coach block skills">
 			{@render coverage()}
+			{#if d.coverage.done < 3}
+				<p class="penta-need" data-testid="penta-need">
+					{t('skills.needData', { n: d.coverage.done })}
+				</p>
+			{/if}
 			<SkillPenta
 				values={d.skills}
 				advice={d.skillAdvice}
@@ -456,6 +462,11 @@
 
 	h2 {
 		font-size: 1.1rem;
+	}
+
+	.penta-need {
+		font-size: 0.88rem;
+		color: var(--text-2);
 	}
 
 	.muted {

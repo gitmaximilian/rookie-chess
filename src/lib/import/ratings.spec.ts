@@ -7,7 +7,8 @@ import {
 	ratingSeriesFrom,
 	summarise,
 	byMonth,
-	targetRating
+	targetRating,
+	isPentaGame
 } from './ratings';
 
 const g = (p: Partial<GameRow>): GameRow => ({
@@ -124,4 +125,21 @@ it('das Ziel nutzt nur gewertetes Lichess Rapid ohne bekannte Bots', () => {
 			{ ...rapid, date: 6, myRating: 1400, pgn: '' }
 		])
 	).toBe(1324);
+});
+
+describe('Skill-Penta: nur Rapid gegen Menschen', () => {
+	it('nimmt Rapid von Lichess und Chess.com, gewertet oder nicht', () => {
+		expect(isPentaGame(g({ speed: 'rapid' }))).toBe(true);
+		expect(isPentaGame(g({ speed: 'rapid', source: 'chesscom', rated: false }))).toBe(true);
+	});
+	it('lässt Blitz, Bullet, Classical, Bot-Partien und unfertige Partien weg', () => {
+		expect(isPentaGame(g({ speed: 'blitz' }))).toBe(false);
+		expect(isPentaGame(g({ speed: 'bullet' }))).toBe(false);
+		expect(isPentaGame(g({ speed: 'classical' }))).toBe(false);
+		expect(isPentaGame(g({ source: 'bot' }))).toBe(false);
+		expect(isPentaGame(g({ source: 'friend', speed: 'rapid' }))).toBe(false);
+		expect(isPentaGame(g({ speed: 'rapid', opponentIsBot: true }))).toBe(false);
+		expect(isPentaGame(g({ speed: 'rapid', pgn: '[BlackTitle "BOT"]' }))).toBe(false);
+		expect(isPentaGame(g({ speed: 'rapid', result: '*' }))).toBe(false);
+	});
 });

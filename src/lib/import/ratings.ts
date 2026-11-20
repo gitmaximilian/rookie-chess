@@ -75,6 +75,22 @@ export function isTargetGame(game: GameRow): boolean {
 	);
 }
 
+/**
+ * Partien für das Skill-Penta: nur Rapid gegen Menschen (Lichess oder Chess.com, gewertet oder nicht).
+ * Das Penta ist an Lichess-Rapid/Classical geeicht; in Blitz und Bullet patzt jeder häufiger, und Bot-Partien
+ * messen den Bot mit (Wunsch des Nutzers, 20.11.2026: „nur Rapid, keine Bot-Spiele“).
+ */
+export function isPentaGame(game: GameRow): boolean {
+	const opponent = game.myColor === 'white' ? 'BlackTitle' : 'WhiteTitle';
+	return (
+		(game.source === 'lichess' || game.source === 'chesscom') &&
+		game.speed === 'rapid' &&
+		game.result !== '*' &&
+		!game.opponentIsBot &&
+		header(game.pgn, opponent) !== 'BOT'
+	);
+}
+
 export function targetRating(games: GameRow[]): number | null {
 	const latest = games.reduce<GameRow | null>(
 		(latest, game) => (isTargetGame(game) && (!latest || game.date > latest.date) ? game : latest),

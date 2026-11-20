@@ -228,9 +228,12 @@ export async function pendingGames(): Promise<GameRow[]> {
  * Analysiert auf Wunsch des Nutzers die nächsten Partien (alle Quellen, neueste zuerst) –
  * ohne das Sitzungslimit der Hintergrund-Analyse. Fortschritt in `syncState.batchDone/batchTotal`.
  */
-export async function analyseBatch(limit: number): Promise<void> {
+export async function analyseBatch(
+	limit: number,
+	only: (g: GameRow) => boolean = () => true
+): Promise<void> {
 	if (syncState.analysing) return;
-	const pending = (await pendingGames()).slice(0, limit);
+	const pending = (await pendingGames()).filter(only).slice(0, limit);
 	if (!pending.length) return;
 	syncState.analysing = true;
 	syncState.batchDone = 0;

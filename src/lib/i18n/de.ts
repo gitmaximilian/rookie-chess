@@ -1482,10 +1482,10 @@ export const de: Shape<typeof en> = {
 			strategy: 'Stellungsspiel-Lektionen, dann Partien mit „Erst du“.',
 			endgame: 'Grundendspiele gegen die Tablebase.'
 		},
-		overallFrom: (p: P) => `aus Partien ≈ ${p.elo}`,
+		overallFrom: (p: P) => `aus Rapid-Partien ≈ ${p.elo}`,
 		calcTitle: 'So wird gerechnet',
 		calcSample: (p: P) =>
-			`Aus deinen letzten ${p.games} analysierten Partien: ${p.what} (gezeigt ab ${p.min}).`,
+			`Aus deinen letzten ${p.games} analysierten Rapid-Partien: ${p.what} (gezeigt ab ${p.min}).`,
 		calc: {
 			safety:
 				'Patzer = ein Zug, der mindestens 30 Prozentpunkte Gewinnchance kostet (Stockfish). Gezählt je 30 eigene Züge – nur solange die Partie noch offen ist.',
@@ -1581,15 +1581,16 @@ export const de: Shape<typeof en> = {
 			`Bringst du ${p.name} auf das Niveau von ≈ ${p.target} (${p.value}), verlierst du pro Partie ≈ ${p.points} Prozentpunkte weniger Gewinnchance – das sind etwa +${p.gain} Elo.`,
 		note: 'Vergleich mit 1 560 Lichess-Partien (400–3200), geprüft an 139 weiteren Spielern: ab etwa 12 Partien im Mittel ±230 Elo genau. Ein Zusammenhang, keine Garantie.',
 		needData: (p) =>
-			`Dein Profil braucht mindestens 3 analysierte Partien (bisher ${p.n}). Öffne eine Partie unter „Games“, um sie zu analysieren.`,
-		coverage: (p) => `${p.n} von ${p.m} ${s(p.m, 'Partie', 'Partien')} analysiert`,
-		onlyAnalysed: (p) => `Nur analysierte Partien fließen in dieses Profil ein. Noch ${p.n} offen.`,
+			`Dein Profil braucht mindestens 3 analysierte Rapid-Partien gegen Menschen (bisher ${p.n}). Verknüpfe Lichess oder Chess.com – Blitz, Bullet und Bot-Partien zählen nicht.`,
+		coverage: (p) => `${p.n} von ${p.m} Rapid-${s(p.m, 'Partie', 'Partien')} analysiert`,
+		onlyAnalysed: (p) =>
+			`Nur analysierte Rapid-Partien gegen Menschen fließen ein. Noch ${p.n} offen.`,
 		analyseNext: (p) => `Nächste ${p.n} analysieren`,
 		analyseAll: (p) => `Alle ${p.n} analysieren`,
 		running: (p) => `Analysiere … ${p.n} von ${p.m} fertig.`,
 		keepOpen: 'App geöffnet lassen – Stockfish rechnet auf deinem Gerät.',
 		stop: 'Stoppen',
-		allDone: 'Alle deine Partien sind analysiert – das Profil nutzt jede einzelne.',
+		allDone: 'Alle deine Rapid-Partien sind analysiert – das Profil nutzt jede einzelne.',
 		trend: 'Genauigkeit je Partie',
 		trendText: (p) =>
 			`Deine letzten ${p.n} analysierten Partien – tippe auf eine Säule, um die Partie zu öffnen.`,
