@@ -24,7 +24,7 @@
 		/>
 	</svg>
 	<span class="num">{label ?? `${value}/${max}`}</span>
-	<span class="sr-only">{value} / {max}</span>
+	<span class="sr-only">{label ?? `${value} / ${max}`}</span>
 </div>
 
 <style>
