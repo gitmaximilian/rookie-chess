@@ -12,6 +12,8 @@
 import { buildPlan, minutesOf, progressOf, type PlanContext, type PlanTask } from '../plan.js';
 import { BEGINNER_RATING, updateForPuzzle, type Rating } from '../glicko2.js';
 import { puzzleTarget } from '../difficulty.js';
+import { recipeFor } from '../prescription.js';
+import { MISTAKES_PER_GAME } from '#lib/analysis/run.js';
 
 export interface Persona {
 	name: string;
@@ -155,7 +157,8 @@ export function simulateWeek(p: Persona, hooks: SimHooks = {}, days = 7): WeekLo
 			sum += acc;
 		}
 		const keys = Object.keys(p.motifs);
-		for (let i = 0; i < k; i++) {
+		// wie createMistakePuzzles: höchstens MISTAKES_PER_GAME Karten je Partie
+		for (let i = 0; i < Math.min(k, MISTAKES_PER_GAME); i++) {
 			let x = r();
 			const m = keys.find((key) => (x -= p.motifs[key]) <= 0) ?? keys[0];
 			s.mistakeQueue.push({ motif: m, due: s.day, reps: 0 });
@@ -167,6 +170,7 @@ export function simulateWeek(p: Persona, hooks: SimHooks = {}, days = 7): WeekLo
 		return k;
 	};
 
+	const recipe = recipeFor(p.strength, p.minutesPerDay);
 	for (let d = 0; d < days; d++) {
 		s.day = d;
 		// Online-Partien des Vortags (verknüpftes Konto) kommen über Nacht herein
@@ -198,7 +202,15 @@ export function simulateWeek(p: Persona, hooks: SimHooks = {}, days = 7): WeekLo
 			checkupDue: d === 1,
 			checkupToday: false,
 			strength: p.strength,
-			minutes: p.minutesPerDay
+			minutes: p.minutesPerDay,
+			// Wochendosis des Coachs (prescription.ts); die simulierte Woche beginnt an Tag 0
+			week: {
+				games: s.gamesTotal,
+				target: recipe.games,
+				daysLeft: 7 - d,
+				safety: recipe.safety,
+				scan: recipe.scan
+			}
 		};
 		if (hooks.extendContext) ctx = hooks.extendContext(ctx, s);
 		const plan = buildPlan(ctx);

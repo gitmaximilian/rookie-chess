@@ -231,6 +231,32 @@ export function recentBlunders(games: GameRow[]): number | null {
 	return blundersPer30(analysed);
 }
 
+interface LessonLogEntry {
+	id: string;
+	date: number;
+}
+
+/** Lektion als erledigt mit Datum vermerken (für die Wochendosis; Einträge älter als 60 Tage fallen weg) */
+export async function logLesson(id: string, now = Date.now()): Promise<void> {
+	const log = await getSetting<LessonLogEntry[]>('lessonLog', []);
+	await setSetting('lessonLog', [
+		...log.filter((x) => now - x.date < 60 * 86_400_000),
+		{ id, date: now }
+	]);
+}
+
+/** verschiedene Lektionen seit `from`: Regeln/Taktik/Stellungsspiel (Log), Endspiele, Eröffnungslinien */
+async function lessonsSince(from: number): Promise<number> {
+	const ids = new Set<string>();
+	for (const x of await getSetting<LessonLogEntry[]>('lessonLog', []))
+		if (x.date >= from) ids.add(`basic:${x.id}`);
+	for (const e of await db.endgames.toArray()) if (e.date >= from) ids.add(`endgame:${e.id}`);
+	for (const [course, lines] of Object.entries(await getCourseProgress()))
+		for (const [line, r] of Object.entries(lines))
+			if (r.date >= from) ids.add(`course:${course}:${line}`);
+	return ids.size;
+}
+
 export interface CoachWeek {
 	recipe: Recipe;
 	progress: WeekProgress;
@@ -286,7 +312,8 @@ export async function loadCoachWeek(now = Date.now()): Promise<CoachWeek> {
 		games: practice.filter((g) => g.date >= start).map((g) => ({ id: g.id!, date: g.date })),
 		reviewed,
 		puzzles: activity.filter((a) => a.day >= startDay).reduce((s, a) => s + a.puzzles, 0),
-		safety: attempts.filter((a) => a.source === 'safety' && a.date >= start).length
+		safety: attempts.filter((a) => a.source === 'safety' && a.date >= start).length,
+		lessons: await lessonsSince(start)
 	});
 	return {
 		recipe,

@@ -146,4 +146,26 @@ describe('Abgleich zwischen Geräten', () => {
 		expect((settings.find((x) => x.key === 'checkups')?.value as unknown[]).length).toBe(2);
 		expect(settings.find((x) => x.key === 'coachedGames')?.value).toBe(4);
 	});
+
+	it('Lektions-Log beider Geräte wird vereinigt (Wochendosis zählt alle Lektionen)', () => {
+		const m = mergeSnapshots(
+			{ settings: [{ key: 'lessonLog', value: [{ id: 'fork', date: 1 }], t: 5 }] },
+			{
+				settings: [
+					{
+						key: 'lessonLog',
+						value: [
+							{ id: 'pin', date: 2 },
+							{ id: 'fork', date: 1 }
+						],
+						t: 3
+					}
+				]
+			}
+		);
+		const log = m.settings.find((x) => (x as { key: string }).key === 'lessonLog') as {
+			value: { id: string }[];
+		};
+		expect(log.value.map((x) => x.id)).toEqual(['fork', 'pin']);
+	});
 });

@@ -28,6 +28,7 @@
 	import { getSetting, setSetting, bumpActivity } from '#lib/db/db.js';
 	import { sound } from '#lib/ui/sound.js';
 	import { t } from '#lib/i18n/i18n.svelte.js';
+	import { logLesson } from '#lib/training/planData.js';
 
 	let done = $state<string[]>([]);
 	let set = $state<'basics' | 'tactics' | 'positional'>('basics');
@@ -189,6 +190,7 @@
 			await setSetting(doneKey, list);
 			done = list;
 		}
+		await logLesson(lesson.id);
 		finished = true;
 		sound.end('win');
 		await bumpActivity('reviews');

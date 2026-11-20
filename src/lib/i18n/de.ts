@@ -1353,6 +1353,7 @@ export const de: Shape<typeof en> = {
 		reviewed: 'Partien besprochen',
 		puzzles: 'Puzzles',
 		safety: 'Blunder-Check',
+		lessons: 'Lektionen',
 		adj: {
 			'play-more': (p: P) =>
 				`Nur ${p.n} ${s(p.n, 'Partie', 'Partien')} in 14 Tagen – mit weniger als 4 pro Woche kommen Einsteiger kaum voran.`,
@@ -1380,7 +1381,7 @@ export const de: Shape<typeof en> = {
 		why2: 'Bei gleich vielen Partien stiegen Spieler mit über 1000 Puzzles um +289, mit unter 100 um +71.',
 		why3: 'Rapid statt Blitz – Zeit für den Blunder-Check. Nach jeder Partie 5 Minuten: eigene Patzer zuerst.',
 		honest:
-			'Ehrlich: Nach einem Jahr standen 14 % dieser Spieler auf 1200 und 1 % auf 1600. 1600 ist für die meisten ein Weg über Jahre – dranbleiben ist der größte Hebel.',
+			'Ehrlich: In gut einem Jahr erreichten 18 % dieser Spieler 1200 und 1 % 1600. Wer 1200 schaffte, hatte meist 500–900 Rapid-Partien gespielt. 1600 ist für die meisten ein Weg über Jahre – dranbleiben ist der größte Hebel.',
 		minutes: 'Zeit pro Tag',
 		minutesN: (p: P) => `${p.n} min`,
 		note: 'Zusammenhänge, keine Garantie: Wer mehr übt, ist oft auch motivierter.'

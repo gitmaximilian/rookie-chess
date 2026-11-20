@@ -245,7 +245,7 @@ export function rapidDue(c: PlanContext): boolean {
 	// Wochenziel: gleichmäßig verteilen; gegen Wochenende aufholen, sobald die Tage knapp werden
 	const left = c.week.target - c.week.games;
 	if (left <= 0) return false;
-	const gap = Math.max(1, Math.floor(6 / c.week.target));
+	const gap = Math.max(1, Math.round(7 / c.week.target));
 	return c.daysSinceGame >= gap || left >= c.week.daysLeft;
 }
 

@@ -1292,6 +1292,7 @@ export const en = {
 		reviewed: 'Games reviewed',
 		puzzles: 'Puzzles',
 		safety: 'Blunder check',
+		lessons: 'Lessons',
 		adj: {
 			'play-more': (p: P) =>
 				`Only ${p.n} ${s(p.n, 'game', 'games')} in 14 days – with fewer than 4 a week beginners hardly improve.`,
@@ -1319,7 +1320,7 @@ export const en = {
 		why2: 'With the same number of games, players with over 1000 puzzles gained +289, with under 100 +71.',
 		why3: 'Rapid, not blitz – time for the blunder check. After every game 5 minutes: your own blunders first.',
 		honest:
-			'Honestly: after a year 14 % of these players were at 1200 and 1 % at 1600. For most, 1600 is a journey of years – sticking with it is the biggest lever.',
+			'Honestly: in just over a year 18 % of these players reached 1200 and 1 % reached 1600. Those who made 1200 had mostly played 500–900 Rapid games. For most, 1600 is a journey of years – sticking with it is the biggest lever.',
 		minutes: 'Time per day',
 		minutesN: (p: P) => `${p.n} min`,
 		note: 'Correlations, not a guarantee: people who practise more are often more motivated too.'

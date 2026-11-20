@@ -10,6 +10,7 @@
 	import ChartLine from '@lucide/svelte/icons/chart-line';
 	import Puzzle from '@lucide/svelte/icons/puzzle';
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
+	import GraduationCap from '@lucide/svelte/icons/graduation-cap';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
@@ -71,6 +72,12 @@
 				label: t('coachWeek.safety'),
 				...p.safety,
 				href: resolve('/puzzles/safety')
+			},
+			{
+				icon: GraduationCap,
+				label: t('coachWeek.lessons'),
+				...p.lessons,
+				href: resolve('/learn')
 			}
 		];
 	});

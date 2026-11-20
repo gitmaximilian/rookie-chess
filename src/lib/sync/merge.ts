@@ -87,6 +87,19 @@ export function mergeSnapshots(local: Snapshot, remote: Snapshot): Snapshot {
 		const other = settings.get(s.key);
 		if (!other || (s.t ?? 0) >= (other.t ?? 0)) settings.set(s.key, s);
 	}
+	// Lektions-Log (Wochendosis): Einträge beider Geräte vereinigen statt den älteren Stand zu verlieren
+	const logs = [...ls, ...rs]
+		.filter((x) => x.key === 'lessonLog' && Array.isArray(x.value))
+		.flatMap((x) => x.value as { id: string; date: number }[]);
+	if (logs.length) {
+		const seen = new Map(logs.map((e) => [`${e.id}@${e.date}`, e]));
+		const latest = settings.get('lessonLog') as (SettingRow & { t?: number }) | undefined;
+		settings.set('lessonLog', {
+			key: 'lessonLog',
+			value: [...seen.values()].sort((a, b) => a.date - b.date),
+			t: latest?.t
+		} as SettingRow);
+	}
 	settings.set(TOMBSTONE_KEY, {
 		key: TOMBSTONE_KEY,
 		value: tomb,

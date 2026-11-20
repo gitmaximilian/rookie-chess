@@ -113,9 +113,40 @@ export function reviewMoves(row: GameRow, evals: PlyEval[]): MoveReview[] {
 }
 
 /**
+ * Höchstens so viele neue Fehlerkarten je Partie (die teuersten zuerst). Wer viel spielt, erzeugt sonst
+ * mehr Karten, als sich üben lassen (Persona-Woche: 26 eigene Fehler pro Woche nie geübt,
+ * docs/coach-review-2026-11-20.md, Fund 10).
+ */
+export const MISTAKES_PER_GAME = 2;
+
+/**
  * Macht aus eigenen Fehlern und Patzern Übungs-Puzzles (sofort fällig).
  * Gibt die Anzahl neu angelegter Puzzles zurück.
  */
+/** eigene Patzer und Fehler mit Motiv, die zu Karten werden – teuerste zuerst, höchstens MISTAKES_PER_GAME */
+export function pickMistakes(
+	reviews: MoveReview[],
+	myColor: 'white' | 'black',
+	onlyPly?: number
+): MoveReview[] {
+	const out = reviews.filter((r) => {
+		if (r.mover !== myColor || (onlyPly !== undefined && r.ply !== onlyPly)) return false;
+		if (r.judgement !== 'blunder' && r.judgement !== 'mistake') return false;
+		// „Fehler“ ohne greifbares Motiv (Stellungsfehler) sind als Aufgabe kaum lernbar – nur Patzer
+		// und Fehler mit Motiv (Figur hängt, Gabel, Matt, Gewinn verpasst) werden zu Wiederholungen
+		return !(
+			onlyPly === undefined &&
+			r.judgement === 'mistake' &&
+			(!r.explanation || r.explanation.motif === 'positional')
+		);
+	});
+	if (onlyPly !== undefined) return out;
+	return out
+		.sort((a, b) => b.loss - a.loss)
+		.slice(0, MISTAKES_PER_GAME)
+		.sort((a, b) => a.ply - b.ply);
+}
+
 export async function createMistakePuzzles(
 	row: GameRow,
 	evals: PlyEval[],
@@ -126,17 +157,8 @@ export async function createMistakePuzzles(
 	const game = Game.fromUciMoves(row.moves, row.startFen);
 	const reviews = reviewMoves(row, evals);
 	let created = 0;
-	for (const r of reviews) {
-		if (r.mover !== row.myColor || (onlyPly !== undefined && r.ply !== onlyPly)) continue;
-		if (r.judgement !== 'blunder' && r.judgement !== 'mistake') continue;
-		// „Fehler“ ohne greifbares Motiv (Stellungsfehler) sind als Aufgabe kaum lernbar – nur Patzer
-		// und Fehler mit Motiv (Figur hängt, Gabel, Matt, Gewinn verpasst) werden zu Wiederholungen
-		if (
-			onlyPly === undefined &&
-			r.judgement === 'mistake' &&
-			(!r.explanation || r.explanation.motif === 'positional')
-		)
-			continue;
+	const picked = pickMistakes(reviews, row.myColor, onlyPly);
+	for (const r of picked) {
 		const before = evals[r.ply - 1];
 		const best = before?.best;
 		if (!best) continue;

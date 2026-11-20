@@ -244,9 +244,11 @@ describe('Wochendosis im Tagesplan', () => {
 	});
 	it('Partie fällig nach Wochenziel: verteilt, gegen Ende aufholen, erfüllt → nicht mehr', () => {
 		const c = { ...base, rulesKnown: 'yes' as const };
-		// Ziel 4: alle 1 Tag; Ziel 3: alle 2 Tage
-		expect(rapidDue({ ...c, daysSinceGame: 1, week: week(1, 4, 5) })).toBe(true);
+		// Ziel 4 oder 3: jeden zweiten Tag; Ziel 8: täglich
+		expect(rapidDue({ ...c, daysSinceGame: 1, week: week(1, 4, 5) })).toBe(false);
+		expect(rapidDue({ ...c, daysSinceGame: 2, week: week(1, 4, 5) })).toBe(true);
 		expect(rapidDue({ ...c, daysSinceGame: 1, week: week(1, 3, 5) })).toBe(false);
+		expect(rapidDue({ ...c, daysSinceGame: 1, week: week(2, 8, 5) })).toBe(true);
 		expect(rapidDue({ ...c, daysSinceGame: 0, week: week(1, 3, 2) })).toBe(true);
 		expect(rapidDue({ ...c, daysSinceGame: 5, week: week(3, 3, 2) })).toBe(false);
 	});

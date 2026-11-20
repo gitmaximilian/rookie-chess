@@ -73,7 +73,8 @@ describe('Diese Woche', () => {
 			games: Array.from({ length: r.games }, (_, i) => ({ id: i, date: 0 })),
 			reviewed: Array.from({ length: r.games }, (_, i) => i),
 			puzzles: r.puzzles * DAYS_PER_WEEK,
-			safety: r.safety * DAYS_PER_WEEK
+			safety: r.safety * DAYS_PER_WEEK,
+			lessons: r.lessons
 		});
 		expect(full.share).toBe(1);
 		// eine Partie gespielt, nicht besprochen → Besprechen-Ziel ist diese eine

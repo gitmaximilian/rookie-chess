@@ -138,6 +138,8 @@ export interface WeekInput {
 	puzzles: number;
 	/** Blunder-Checks dieser Woche */
 	safety: number;
+	/** erledigte Lektionen dieser Woche (Regeln, Taktik, Stellungsspiel, Endspiel, Eröffnungslinie) */
+	lessons?: number;
 }
 
 export interface WeekProgress {
@@ -145,6 +147,7 @@ export interface WeekProgress {
 	reviewed: { done: number; target: number };
 	puzzles: { done: number; target: number };
 	safety: { done: number; target: number };
+	lessons: { done: number; target: number };
 	/** Anteil der Wochendosis (0..1), gewichtet nach Minuten */
 	share: number;
 }
@@ -159,8 +162,8 @@ export function weekProgress(r: Recipe, w: WeekInput): WeekProgress {
 	const safety = { done: w.safety, target: r.safety * DAYS_PER_WEEK };
 	const part = (x: { done: number; target: number }, min: number) =>
 		Math.min(1, x.target ? x.done / x.target : 1) * min;
-	// Lektionen haben keinen Zeitstempel je Woche – die Wochendosis misst Spielen, Besprechen und Üben
-	const total = r.split.play + r.split.review + r.split.drill || 1;
+	const lessons = { done: w.lessons ?? 0, target: r.lessons };
+	const total = r.split.play + r.split.review + r.split.drill + r.split.theory || 1;
 	const drillPuzzle = r.puzzles * PUZZLE_MIN;
 	const drillSafety = r.safety * SAFETY_MIN;
 	const drillShare = drillPuzzle + drillSafety || 1;
@@ -168,9 +171,10 @@ export function weekProgress(r: Recipe, w: WeekInput): WeekProgress {
 		(part(games, r.split.play) +
 			part(reviewed, r.split.review) +
 			part(puzzles, (r.split.drill * drillPuzzle) / drillShare) +
-			part(safety, (r.split.drill * drillSafety) / drillShare)) /
+			part(safety, (r.split.drill * drillSafety) / drillShare) +
+			part(lessons, r.split.theory)) /
 		total;
-	return { games, reviewed, puzzles, safety, share: Math.round(share * 100) / 100 };
+	return { games, reviewed, puzzles, safety, lessons, share: Math.round(share * 100) / 100 };
 }
 
 // ───────── Weg zu 1600 ─────────
