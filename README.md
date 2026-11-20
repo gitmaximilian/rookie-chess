@@ -2,7 +2,7 @@
 
 A chess trainer for beginners as a Progressive Web App for iPhone, iPad and Mac – completely free, offline-capable, no App Store, no account, no tracking. English and German.
 
-**Live:** https://rookie.maximilianauer.at · **Version:** 0.8.0
+**Live:** https://rookie.maximilianauer.at · **Version:** 0.9.0
 
 | Home                                                                                                                           | Coach                                                                                                                                                                                     | Play                                                                                                   | Game review                                                                                                                                | Blunder check                                                                                            |
 | ------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
@@ -17,6 +17,12 @@ A chess trainer for beginners as a Progressive Web App for iPhone, iPad and Mac 
 | <img src="docs/screenshots/desktop-analysis-light.png" width="420" alt="Game review on desktop in light mode: a mistake on the board, the engine's top moves and accuracy per move type">    | <img src="docs/screenshots/desktop-analysis-dark.png" width="420" alt="Game review on desktop in dark mode"> |
 
 Screenshots use generated sample data (`scripts/screenshots/`), not real games.
+
+## What's new in 0.9.0
+
+- **Skill penta for each time control:** switch between Rapid (default), Classical, Blitz and Bullet; bot games never count. Blitz has its own Lichess calibration – checked on 59 players outside it: within ±300 Elo (guessing: ±480); its tactics corner was worse than guessing and stays hidden. **Bullet shows no penta:** move quality predicted bullet ratings worse than guessing (57 players) – the clock decides most ([research](docs/research-2026-11-13.md#nachtrag-skill-penta-für-blitz-und-bullet-spielniveau-statt-trainingsindex-20-november-2026)).
+- **Playing level instead of training index:** your progress chart shows the penta's overall level from your last 15 analysed Rapid games on the same Elo axis as your Lichess rating. The old 0–100 index moved only ~11 points from 900 to 1700 and could not be read on its own.
+- **Provisional ratings are left out:** the first jumpy games of a new Lichess account no longer count for the rating line or its change.
 
 ## What's new in 0.8.0
 

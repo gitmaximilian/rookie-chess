@@ -16,6 +16,7 @@
 	import LevelFocus from '#lib/ui/LevelFocus.svelte';
 	import CoachHistory from '#lib/ui/CoachHistory.svelte';
 	import CoachWeek from '#lib/ui/CoachWeek.svelte';
+	import { tableFor } from '#lib/training/skillTables.js';
 	import { coachHistory, type CoachHistoryPoint } from '#lib/training/coachHistory.js';
 	import type { AccPoint } from '#lib/ui/AccuracyTrend.svelte';
 	import {
@@ -238,7 +239,11 @@
 			});
 
 		const skillRaw = collectSkillsAdaptive(pentaGames);
-		const skills = skillMirror(skillRaw);
+		// jedes Tempo mit seiner eigenen Eichung (Blitz, Bullet eigene Lichess-Tabellen)
+		const table = tableFor(pentaSpeed);
+		const mirror = skillMirror(skillRaw, table);
+		// Ecken, die in diesem Tempo nicht aussagekräftig sind, zählen im Gesamtniveau, werden aber nicht gezeigt
+		const skills = mirror.map((v) => (v.hidden ? { ...v, score: null, elo: null } : v));
 		d = {
 			name: linked.lichess || linked.chesscom || '',
 			history: coachHistory(games),
@@ -253,8 +258,9 @@
 			advice: advice.slice(0, 3),
 			puzzleHist: ratingRows.map((r) => ({ date: r.date, rating: Math.round(r.rating) })),
 			skills,
-			skillAdvice: adviceFor(skills, skillRaw),
-			skillOverall: overallLevel(skills),
+			// Bullet: Zugqualität sagt die Wertung nicht voraus (Holdout schlechter als Raten) – kein Penta, kein Rat
+			skillAdvice: pentaSpeed === 'bullet' ? [] : adviceFor(mirror, skillRaw, table),
+			skillOverall: pentaSpeed === 'bullet' ? null : overallLevel(mirror, table),
 			skillBlunderShare: skillRaw.blunderShare,
 			// Genauigkeit der letzten 20 analysierten Partien, älteste links
 			accuracy: sorted
@@ -467,21 +473,26 @@
 				</div>
 			{/if}
 			{@render coverage()}
-			{#if d.coverage.done < 3}
+			{#if d.coverage.done < 3 && pentaSpeed !== 'bullet'}
 				<p class="penta-need" data-testid="penta-need">
 					{t('skills.needData', { n: d.coverage.done, speed: t(`skills.speed.${pentaSpeed}`) })}
 				</p>
 			{/if}
-			{#if pentaSpeed === 'blitz' || pentaSpeed === 'bullet'}
-				<p class="penta-need" data-testid="penta-fast">{t('skills.fastNote')}</p>
+			{#if pentaSpeed !== 'rapid'}
+				<p class="penta-need" data-testid="penta-fast">
+					{t(`skills.speedNote.${pentaSpeed}`)}
+				</p>
 			{/if}
-			<SkillPenta
-				values={d.skills}
-				advice={d.skillAdvice}
-				overall={d.skillOverall}
-				blunderShare={d.skillBlunderShare}
-				lever={false}
-			/>
+			{#if pentaSpeed !== 'bullet'}
+				<SkillPenta
+					values={d.skills}
+					advice={d.skillAdvice}
+					overall={d.skillOverall}
+					blunderShare={d.skillBlunderShare}
+					lever={false}
+					table={tableFor(pentaSpeed)}
+				/>
+			{/if}
 		</section>
 
 		<!-- 3. Woran genau? Ein Schwerpunkt (derselbe wie im Tagesplan), die Stufe zum Aufklappen -->

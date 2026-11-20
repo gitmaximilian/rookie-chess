@@ -15,16 +15,23 @@
 	const active = $derived(summary.points[selected ?? Math.max(0, summary.points.length - 1)]);
 	const W = 420;
 	const H = 178;
-	const L = 33;
+	const L = 8;
 	const R = W - 38;
 	const T = 14;
 	const B = H - 27;
 	const ticks = [0, 50, 100];
+	/** Wertungslinie ohne die Einstufung neuer Konten (coachHistory.ts settledFrom) */
+	const ratedPoints = $derived(summary.points.filter((p) => !p.provisional));
+	/** eine Elo-Achse für Wertung und Spielniveau */
 	const ratingBounds = $derived.by(() => {
-		if (!summary.points.length) return { min: 0, max: 100 };
-		let min = summary.points[0].rating;
+		const values = [
+			...ratedPoints.map((p) => p.rating),
+			...summary.points.flatMap((p) => (p.index ? [p.index.value] : []))
+		];
+		if (!values.length) return { min: 0, max: 100 };
+		let min = values[0];
 		let max = min;
-		for (const { rating } of summary.points) {
+		for (const rating of values) {
 			min = Math.min(min, rating);
 			max = Math.max(max, rating);
 		}
@@ -39,14 +46,14 @@
 		ypos((100 * (rating - ratingBounds.min)) / (ratingBounds.max - ratingBounds.min));
 
 	const ratingPath = $derived(
-		summary.points.map((p, i) => `${i ? 'L' : 'M'}${xpos(p.date)},${eloY(p.rating)}`).join(' ')
+		ratedPoints.map((p, i) => `${i ? 'L' : 'M'}${xpos(p.date)},${eloY(p.rating)}`).join(' ')
 	);
 	const scored = $derived(summary.points.filter((p) => p.index !== null));
 	const indexPath = $derived(
-		scored.map((p, i) => `${i ? 'L' : 'M'}${xpos(p.date)},${ypos(p.index!.value)}`).join(' ')
+		scored.map((p, i) => `${i ? 'L' : 'M'}${xpos(p.date)},${eloY(p.index!.value)}`).join(' ')
 	);
 	const lastScored = $derived(scored.at(-1));
-	const lastRating = $derived(summary.points.at(-1));
+	const lastRating = $derived(ratedPoints.at(-1));
 
 	function selectPeriod(value: CoachPeriod) {
 		period = value;
@@ -101,8 +108,7 @@
 		<div class="totals">
 			<div class="index">
 				<span>{t('coachHistory.index')}</span>
-				<strong
-					>{display(summary.latestIndex?.value)} <small>{t('coachHistory.outOf100')}</small></strong
+				<strong>{display(summary.latestIndex?.value)} <small>{t('coachHistory.elo')}</small></strong
 				>
 				{#if summary.indexDelta !== null}<small>{delta(summary.indexDelta)}</small>{/if}
 			</div>
@@ -116,7 +122,6 @@
 		<svg viewBox="0 0 {W} {H}" aria-hidden="true" onpointermove={pick} onpointerdown={pick}>
 			{#each ticks as tick (tick)}
 				<line class="grid" x1={L} x2={R} y1={ypos(tick)} y2={ypos(tick)} />
-				<text class="index" x={L - 5} y={ypos(tick) + 3} text-anchor="end">{tick}</text>
 				<text class="elo" x={R + 5} y={ypos(tick) + 3}>
 					{ratingBounds.min + ((ratingBounds.max - ratingBounds.min) * tick) / 100}
 				</text>
@@ -130,7 +135,7 @@
 			{#if lastScored?.index}<circle
 					class="index"
 					cx={xpos(lastScored.date)}
-					cy={ypos(lastScored.index.value)}
+					cy={eloY(lastScored.index.value)}
 					r="3.5"
 				/>{/if}
 			{#if lastRating}<circle
@@ -141,11 +146,16 @@
 				/>{/if}
 			{#if selected !== null && active}
 				<line class="cursor" x1={xpos(active.date)} x2={xpos(active.date)} y1={T} y2={B} />
-				<circle class="elo" cx={xpos(active.date)} cy={eloY(active.rating)} r="3.5" />
+				{#if !active.provisional}<circle
+						class="elo"
+						cx={xpos(active.date)}
+						cy={eloY(active.rating)}
+						r="3.5"
+					/>{/if}
 				{#if active.index}<circle
 						class="index"
 						cx={xpos(active.date)}
-						cy={ypos(active.index.value)}
+						cy={eloY(active.index.value)}
 						r="3.5"
 					/>{/if}
 			{/if}
@@ -166,7 +176,8 @@
 				<p class="muted">
 					{formatDate(active.date, true)} · {t('coachHistory.index')}
 					{display(active.index?.value)} · {t('coachHistory.elo')}
-					{display(active.rating)}
+					{display(active.rating)}{#if active.provisional}
+						({t('coachHistory.provisional')}){/if}
 				</p>
 				{#if active.index}
 					<p class="muted">

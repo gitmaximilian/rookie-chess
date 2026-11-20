@@ -234,7 +234,8 @@ test('Skill-Penta: Tempo umschalten, Blitz mit Hinweis, Bot-Partien zählen nie'
 			date: now - i * 3_600_000,
 			speed: 'blitz'
 		})),
-		{ ...example, id: 40, date: now, speed: 'blitz', opponentIsBot: true }
+		{ ...example, id: 40, date: now, speed: 'blitz', opponentIsBot: true },
+		{ ...example, id: 41, date: now - 7_200_000, speed: 'bullet' }
 	]);
 	await page.goto('/coach');
 	const speeds = page.getByTestId('penta-speed');
@@ -247,6 +248,12 @@ test('Skill-Penta: Tempo umschalten, Blitz mit Hinweis, Bot-Partien zählen nie'
 	await speeds.getByRole('radio', { name: /Blitz 2/ }).click();
 	await expect(page.getByTestId('penta-fast')).toBeVisible();
 	await expect(page.getByTestId('penta-need')).toContainText('3 analysed Blitz games');
+	// Bullet: kein Penta, sondern die ehrliche Erklärung (Holdout schlechter als Raten)
+	await speeds.getByRole('radio', { name: /Bullet 1/ }).click();
+	await expect(page.getByTestId('penta-fast')).toContainText('no penta for bullet');
+	await expect(page.getByTestId('skill-penta')).toHaveCount(0);
+	await speeds.getByRole('radio', { name: /Blitz 2/ }).click();
+	await expect(page.getByTestId('skill-penta')).toBeVisible();
 	// die Wahl bleibt nach dem Neuladen
 	await page.reload();
 	await expect(

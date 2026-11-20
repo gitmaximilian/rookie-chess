@@ -1254,31 +1254,31 @@ export const de: Shape<typeof en> = {
 		done: 'Los geht’s!'
 	},
 	coachHistory: {
+		provisional: 'Einstufung',
 		title: 'Deine Entwicklung',
 		period: 'Zeitraum',
-		index: 'Trainingsindex',
+		index: 'Spielniveau',
 		rating: 'Lichess-Rapid',
 		outOf100: '/ 100',
 		elo: 'Elo',
 		noPeriod: 'Für diesen Zeitraum sind keine Rapid-Partien vorhanden.',
 		noGames: 'Importiere gewertete Lichess-Rapid-Partien für deinen Verlauf.',
-		notEnough:
-			'Für den Index braucht Rookie mindestens drei analysierte Partien und 30 auswertbare eigene Züge.',
+		notEnough: 'Für das Spielniveau braucht Rookie mindestens zehn analysierte Rapid-Partien.',
 		selectGame: 'Partie auf der Zeitachse wählen',
 		sample:
-			'Index aus {analysed} Partien und {moves} auswertbaren Zügen. {rate} Patzer je 30 Züge, Ø {accuracy} % Genauigkeit.',
+			'Aus {analysed} Partien und {moves} auswertbaren Zügen. {rate} Patzer je 30 Züge, Ø {accuracy} % Genauigkeit.',
 		coverage: 'Analysierte Partien',
 		outcomes: 'Sieg / Remis / Niederlage',
 		converted: 'Gewinnstellungen verwertet',
 		how: 'Wie wird das berechnet?',
 		basis:
-			'Jeder Indexpunkt verwendet bis zu zehn vollständig analysierte gewertete Lichess-Rapid-Partien gegen Menschen bis zu diesem Datum. Die Zeitraumwahl zeigt einen Ausschnitt dieser Entwicklung.',
+			'Spielniveau = so stark spielen Lichess-Spieler mit dieser Wertung, gemessen an deinen letzten 15 vollständig analysierten gewerteten Rapid-Partien gegen Menschen (Gesamtniveau des Skill-Pentas). Es steht auf derselben Elo-Skala wie deine Wertung.',
 		formula:
-			'Index = 0,60 × Sicherheit + 0,40 × mittlere Stockfish-Genauigkeit. Die Gewichtung ist eine Rookie-Einstellung zur Darstellung deiner Zugqualität.',
+			'Geprüft an 154 Lichess-Spielern außerhalb der Eichung: ab etwa 12 Partien im Mittel ±230 Elo genau. Liegt dein Spielniveau deutlich über der Wertung, spielst du besser, als sie zeigt – sie zieht meist nach.',
 		safety:
-			'Sicherheit = max(0, 100 − 10 × Patzer je 30 auswertbare Züge). Rookie zählt nur eigene Züge aus Stellungen mit zuvor mindestens 20 % modellierter Gewinnchance. Beispiel: Bei 2 Patzern je 30 Züge und 80 % Genauigkeit ist der Index 80.',
+			'Rookie zählt nur eigene Züge aus noch offenen Stellungen. Ein Patzer kostet mindestens 30 Prozentpunkte Gewinnchance.',
 		eloSource:
-			'Die Elo-Linie zeigt deine importierte Lichess-Rapid-Wertung nach der Partie. Die linke Skala zeigt den Index, die rechte die Elo. Die Veränderung nutzt den letzten Wert vor dem Zeitraum, falls vorhanden. Der Index schätzt keine Elo.',
+			'Die Wertung ist deine importierte Lichess-Rapid-Zahl nach der Partie. Die anfängliche Einstufung neuer Konten (große Sprünge je Partie) zählt nicht für Verlauf und Veränderung. Bis 0.8.0 stand hier ein Trainingsindex von 0 bis 100.',
 		periods: { 7: '7 Tage', 30: '30 Tage', 365: '1 Jahr', all: 'Gesamt' }
 	},
 	decision: {
@@ -1580,10 +1580,17 @@ export const de: Shape<typeof en> = {
 		gain: (p: P) =>
 			`Bringst du ${p.name} auf das Niveau von ≈ ${p.target} (${p.value}), verlierst du pro Partie ≈ ${p.points} Prozentpunkte weniger Gewinnchance – das sind etwa +${p.gain} Elo.`,
 		note: 'Vergleich mit 1 560 Lichess-Partien (400–3200), geprüft an 139 weiteren Spielern: ab etwa 12 Partien im Mittel ±230 Elo genau. Ein Zusammenhang, keine Garantie.',
+		hiddenSpeed:
+			'In diesem Tempo nicht aussagekräftig: Geprüft an echten Spielern traf diese Ecke die Wertung schlechter als Raten. Sie zählt im Gesamtniveau mit.',
 		speeds: 'Tempo',
 		speed: { rapid: 'Rapid', classical: 'Klassisch', blitz: 'Blitz', bullet: 'Bullet' },
-		fastNote:
-			'Geeicht an Rapid-Partien: In Blitz und Bullet patzt jeder öfter, der Wert fällt deshalb niedriger aus.',
+		speedNote: {
+			classical: 'Verglichen mit Lichess-Spielern in Rapid und Klassisch (gemeinsame Eichung).',
+			blitz:
+				'Verglichen mit Lichess-Blitz-Spielern (eigene Eichung). Geprüft an 59 Spielern: im Mittel ±300 Elo genau – etwas ungenauer als Rapid (±230).',
+			bullet:
+				'Für Bullet zeigt Rookie kein Penta: Geprüft an 57 Lichess-Spielern sagte die Zugqualität die Bullet-Wertung schlechter voraus als bloßes Raten. Im Bullet entscheidet vor allem die Uhr – das misst Rookie nicht.'
+		},
 		needData: (p) =>
 			`Dein Profil braucht mindestens 3 analysierte ${p.speed}-Partien gegen Menschen (bisher ${p.n}). Verknüpfe Lichess oder Chess.com – Bot-Partien zählen nicht.`,
 		coverage: (p) => `${p.n} von ${p.m} ${p.speed}-${s(p.m, 'Partie', 'Partien')} analysiert`,

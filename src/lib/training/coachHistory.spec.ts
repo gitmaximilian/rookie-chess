@@ -1,7 +1,8 @@
 import { expect, test } from 'vitest';
 import { Game } from '#lib/chess/game.js';
 import type { GameRow } from '#lib/db/db.js';
-import { coachHistory, coachPeriod, trainingIndex } from './coachHistory';
+import { coachHistory, coachPeriod, LEVEL_MIN, LEVEL_WINDOW, playingLevel } from './coachHistory';
+import type { GameSkillStats } from './skills';
 
 const DAY = 86_400_000;
 const now = new Date('2026-11-17T12:00:00Z').getTime();
@@ -28,14 +29,29 @@ const row = (days: number, overrides: Partial<GameRow> = {}): GameRow => ({
 	...overrides
 });
 
-test('Index uses the published weights and waits for enough games and moves', () => {
-	const sample = { blunders: 2, moves: 30, accuracy: 80 };
-	expect(trainingIndex([sample, sample])).toBeNull();
-	expect(trainingIndex(Array.from({ length: 3 }, () => ({ ...sample, moves: 9 })))).toBeNull();
-	expect(trainingIndex([sample, sample, sample])).toMatchObject({ value: 80, blundersPer30: 2 });
-	expect(
-		trainingIndex(Array.from({ length: 3 }, () => ({ ...sample, blunders: 30 })))
-	).toMatchObject({ value: 32 });
+const stats = (blunders: number, opening: number, strategy: number): GameSkillStats => ({
+	live: 30,
+	blunders,
+	chances: 4,
+	taken: 2,
+	opening: [opening * 10, 10],
+	strategy: [strategy * 8, 8],
+	endgame: [0, 0],
+	blunderLoss: { opening: 0, endgame: 0 },
+	cnt: { safety: 26, tactics: 4, opening: 10, strategy: 8, endgame: 0 }
+});
+
+test('Spielniveau: Elo-Entsprechung des Pentas, erst ab zehn Partien', () => {
+	const g = (b: number) => ({ stats: stats(b, 0.02, 0.02), accuracy: 80 });
+	expect(playingLevel(Array.from({ length: LEVEL_MIN - 1 }, () => g(1)))).toBeNull();
+	const safe = playingLevel(Array.from({ length: 12 }, () => g(1)))!;
+	const loose = playingLevel(Array.from({ length: 12 }, () => g(5)))!;
+	expect(safe.analysed).toBe(12);
+	expect(safe.blundersPer30).toBe(1);
+	// weniger Patzer → höheres Spielniveau, auf derselben Elo-Skala wie die Wertung
+	expect(safe.value).toBeGreaterThan(loose.value);
+	expect(loose.value).toBeGreaterThanOrEqual(300);
+	expect(safe.value).toBeLessThanOrEqual(2800);
 });
 
 test('Both series use rated Rapid against humans; the index skips missing analyses', () => {
@@ -50,15 +66,39 @@ test('Both series use rated Rapid against humans; the index skips missing analys
 		row(0, { rated: false })
 	]);
 	expect(result.map((point) => point.rating)).toEqual([1208, 1208, 1208, 1228]);
-	expect(result.map((point) => point.index?.value ?? null)).toEqual([null, null, 100, null]);
+	// nur drei analysierte Rapid-Partien: noch kein Spielniveau
+	expect(result.map((point) => point.index?.value ?? null)).toEqual([null, null, null, null]);
 	const week = coachPeriod(result, 7, now);
 	expect(week).toMatchObject({ latestRating: 1228, ratingDelta: 20, analysed: 1, wins: 2 });
 	expect(week.latestIndex).toEqual(coachPeriod(result, 'all', now).latestIndex);
 	expect(week.indexDelta).toBeNull();
 });
 
-test('Index uses at most ten analysed games and empty periods do not invent values', () => {
-	const result = coachHistory(Array.from({ length: 13 }, (_, i) => row(50 + i)));
-	expect(result.at(-1)?.index?.analysed).toBe(10);
+test('Kurze Partien reichen nicht für die Mindestmengen; leere Zeiträume erfinden nichts', () => {
+	// 11 Züge je Partie: auch 18 Partien erreichen die Penta-Mindestmengen nicht → kein Spielniveau
+	const result = coachHistory(Array.from({ length: 18 }, (_, i) => row(50 + i)));
+	expect(result.every((p) => p.analysed)).toBe(true);
+	expect(result.at(-1)?.index).toBeNull();
+	expect(LEVEL_WINDOW).toBe(15);
 	expect(coachPeriod(result, 30, now).latestRating).toBeUndefined();
+});
+
+test('Einstufung neuer Konten zählt nicht für Verlauf und Veränderung', () => {
+	// Lichess beginnt bei 1500 und springt anfangs stark; danach steigt die Wertung stetig
+	const ratings = [1500, 1380, 1261, 1090, 960, 830, 790, 800, 815, 830, 850, 870];
+	const games = ratings.map((r, i) =>
+		row(ratings.length - i, { myRating: r, pgn: '[WhiteRatingDiff "0"]' })
+	);
+	const history = coachHistory(games);
+	expect(history.filter((p) => p.provisional)).toHaveLength(5);
+	const s = coachPeriod(history, 30, now);
+	expect(s.ratingDelta).toBe(870 - 830);
+	expect(s.latestRating).toBe(870);
+});
+
+test('ohne Einstufung (älteres Konto) zählt jeder Punkt', () => {
+	const games = [1200, 1210, 1195, 1220].map((r, i) =>
+		row(4 - i, { myRating: r, pgn: '[WhiteRatingDiff "0"]' })
+	);
+	expect(coachHistory(games).some((p) => p.provisional)).toBe(false);
 });

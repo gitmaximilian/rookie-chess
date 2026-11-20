@@ -39,7 +39,11 @@ function pooled(ps) {
 }
 
 const bandOf = (r) => (r >= 2600 ? 2600 : Math.floor(r / 200) * 200);
-const bands = [...new Set(players.map((p) => bandOf(p.rating)))].sort((a, b) => a - b);
+/** Bänder mit zu wenigen Spieler-Partien fallen weg (Bullet unter 600: kaum Partien) – Rapid: alle ≥ 200 */
+const MIN_BAND = 50;
+const bands = [...new Set(players.map((p) => bandOf(p.rating)))]
+	.filter((b) => players.filter((p) => bandOf(p.rating) === b).length >= MIN_BAND)
+	.sort((a, b) => a - b);
 const table = bands.map((b) => {
 	const ps = players.filter((p) => bandOf(p.rating) === b);
 	return {

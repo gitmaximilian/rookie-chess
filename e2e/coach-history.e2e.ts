@@ -75,11 +75,11 @@ test('Coach zeigt beide Linien mit Zeiträumen, auswählbaren Punkten und Formel
 		'true'
 	);
 	await expect(chart.locator('path.elo')).toHaveAttribute('d', /M.+L/);
-	await expect(chart.locator('path.index')).toHaveAttribute('d', /M.+L/);
+	// fünf Partien reichen noch nicht für das Spielniveau (ab zehn)
+	await expect(chart.getByText(/needs at least ten analysed Rapid games/)).toBeVisible();
 	await expect(chart.getByText('3/3')).toBeVisible();
 	await chart.getByRole('button', { name: '7 days' }).click();
 	await expect(chart.getByText('2/2')).toBeVisible();
-	await expect(chart.getByText('0 blunders per 30 moves', { exact: false })).toBeVisible();
 	await chart.getByRole('button', { name: '1 year' }).click();
 	await expect(chart.getByText('4/4')).toBeVisible();
 	await chart.getByRole('button', { name: 'All time' }).click();
@@ -89,7 +89,7 @@ test('Coach zeigt beide Linien mit Zeiträumen, auswählbaren Punkten und Formel
 	await expect(slider).toHaveValue('0');
 	await expect(chart.getByTestId('coach-history-point')).toContainText(/1[,. ]?208/);
 	await chart.getByText('How is this calculated?').click();
-	await expect(chart.getByText(/0.60 × safety/)).toBeVisible();
+	await expect(chart.getByText(/within ±230 Elo/)).toBeVisible();
 });
 
 test('Coach-Übersicht: Penta, dann ein Schwerpunkt, dann Entwicklung – Kennzahlen in der Statistik', async ({

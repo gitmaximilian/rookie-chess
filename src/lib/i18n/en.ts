@@ -1196,30 +1196,31 @@ export const en = {
 		done: 'Let’s go!'
 	},
 	coachHistory: {
+		provisional: 'provisional',
 		title: 'Your progress',
 		period: 'Time range',
-		index: 'Training index',
+		index: 'Playing level',
 		rating: 'Lichess Rapid',
 		outOf100: '/ 100',
 		elo: 'Elo',
 		noPeriod: 'There are no Rapid games in this range.',
 		noGames: 'Import rated Lichess Rapid games to see your progress.',
-		notEnough: 'The index needs at least three analysed games and 30 eligible moves of your own.',
+		notEnough: 'The playing level needs at least ten analysed Rapid games.',
 		selectGame: 'Select a game on the timeline',
 		sample:
-			'Index from {analysed} games and {moves} eligible moves. {rate} blunders per 30 moves, {accuracy}% mean accuracy.',
+			'From {analysed} games and {moves} eligible moves. {rate} blunders per 30 moves, {accuracy}% mean accuracy.',
 		coverage: 'Analysed games',
 		outcomes: 'Win / draw / loss',
 		converted: 'Winning positions converted',
 		how: 'How is this calculated?',
 		basis:
-			'Each index point uses up to ten fully analysed rated Lichess Rapid games against humans up to that date. The time range selects a portion of the same history.',
+			'Playing level = how strongly Lichess players at this rating play, measured on your last 15 fully analysed rated Rapid games against people (overall level of the skill penta). It is on the same Elo scale as your rating.',
 		formula:
-			'Index = 0.60 × safety + 0.40 × mean Stockfish accuracy. The weights are a Rookie design choice for describing move quality.',
+			'Checked on 154 Lichess players outside the calibration: within ±230 Elo on average from about 12 games. If your playing level is clearly above your rating, you play better than it shows – it usually catches up.',
 		safety:
-			'Safety = max(0, 100 − 10 × blunders per 30 eligible moves). Rookie counts your moves from positions where your modelled winning chance was at least 20%. With 2 blunders per 30 moves and 80% accuracy, the index is 80.',
+			'Rookie only counts your own moves from positions that are still open. A blunder costs at least 30 percentage points of winning chance.',
 		eloSource:
-			'The Elo line shows your imported Lichess Rapid rating after each game. The left scale shows the index and the right scale shows Elo. Change uses your last value before the range when available. The index is not an Elo estimate.',
+			'The rating is your imported Lichess Rapid number after each game. The provisional phase of new accounts (big jumps per game) does not count for the line or the change. Until 0.8.0 this showed a training index from 0 to 100.',
 		periods: { 7: '7 days', 30: '30 days', 365: '1 year', all: 'All time' }
 	},
 	decision: {
@@ -1515,10 +1516,17 @@ export const en = {
 		gain: (p: P) =>
 			`Bring ${p.name} up to the level of ≈ ${p.target} (${p.value}) and you lose ≈ ${p.points} percentage points less winning chance per game – that is about +${p.gain} Elo.`,
 		note: 'Compared with 1,560 Lichess games (400–3200), checked on 139 other players: within ±230 Elo on average from about 12 games. A relationship, not a guarantee.',
+		hiddenSpeed:
+			'Not meaningful in this time control: checked on real players, this corner predicted the rating worse than guessing. It still counts towards the overall level.',
 		speeds: 'Time control',
 		speed: { rapid: 'Rapid', classical: 'Classical', blitz: 'Blitz', bullet: 'Bullet' },
-		fastNote:
-			'Calibrated on Rapid games: in blitz and bullet everyone blunders more, so the value comes out lower.',
+		speedNote: {
+			classical: 'Compared with Lichess players in rapid and classical (shared calibration).',
+			blitz:
+				'Compared with Lichess blitz players (own calibration). Checked on 59 players: within ±300 Elo on average – a little less precise than rapid (±230).',
+			bullet:
+				'Rookie shows no penta for bullet: checked on 57 Lichess players, move quality predicted the bullet rating worse than plain guessing. In bullet the clock decides most – Rookie does not measure that.'
+		},
 		needData: (p: P) =>
 			`Your profile needs at least 3 analysed ${p.speed} games against people (${p.n} so far). Link Lichess or Chess.com – bot games don't count.`,
 		coverage: (p: P) => `${p.n} of ${p.m} ${p.speed} ${s(p.m, 'game', 'games')} analysed`,

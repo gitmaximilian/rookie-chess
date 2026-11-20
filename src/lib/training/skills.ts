@@ -38,7 +38,7 @@ export type LossPerMove = Record<Skill, number>;
  * offenen Stellungen (15–85 % Gewinnchance). lpm = verlorene Gewinnchance pro Zug je Kategorie
  * (Prozentpunkte; Taktik pro Chance, Sicherheit pro Zug in offener Stellung, Phasen pro ruhigem Zug).
  */
-export const SKILL_TABLE: {
+export interface SkillBand {
 	r: number;
 	safety: number;
 	tactics: number;
@@ -46,7 +46,10 @@ export const SKILL_TABLE: {
 	strategy: number;
 	endgame: number;
 	lpm: LossPerMove;
-}[] = [
+}
+export type SkillTable = SkillBand[];
+
+export const SKILL_TABLE: SkillTable = [
 	{
 		r: 506,
 		safety: 5.41,
@@ -173,6 +176,25 @@ export const MEAN_COUNT: Record<Skill, number> = {
 export const ELO_PER_POINT = 10.7;
 
 /**
+ * Eichungen je Tempo (lib/training/skillTables.ts): Jede Tabelle bringt ihre eigenen Zugzahlen je Kategorie
+ * und ihre eigene Elo-Wirkung pro Prozentpunkt mit. Ohne Eintrag gelten die Rapid-Werte oben.
+ */
+interface CalibrationMeta {
+	meanCount: Record<Skill, number>;
+	eloPerPoint: number;
+	/** Ecken, die in diesem Tempo im Holdout schlechter als Raten waren – bleiben leer */
+	hidden?: Skill[];
+}
+const META = new WeakMap<SkillTable, CalibrationMeta>();
+export function registerCalibration(table: SkillTable, meta: CalibrationMeta): SkillTable {
+	META.set(table, meta);
+	return table;
+}
+export const meanCountOf = (table: SkillTable) => META.get(table)?.meanCount ?? MEAN_COUNT;
+export const eloPerPointOf = (table: SkillTable) => META.get(table)?.eloPerPoint ?? ELO_PER_POINT;
+export const hiddenOf = (table: SkillTable): Skill[] => META.get(table)?.hidden ?? [];
+
+/**
  * Mindestmengen, ab denen eine Ecke gezeigt wird. Geprüft an 139 echten Lichess-Spielern, die nicht in der
  * Eichung stecken (Holdout, Produkt-Review 14.11.2026): Raten (immer den Mittelwert) liegt im Mittel 500 Elo
  * daneben. Darunter war z. B. Taktik mit 10–19 Gegnerfehlern 621 Elo daneben – schlechter als Raten.
@@ -233,11 +255,91 @@ const winFor = (e: PlyEval, side: 'white' | 'black') =>
  * Sammelt die fünf Messwerte aus den jüngsten analysierten eigenen Partien –
  * genau wie scripts/research/skill-study.mjs, damit die Eichung passt.
  */
-export function collectSkills(games: GameRow[], window = WINDOW): SkillRaw {
-	const recent = games
-		.filter((g) => g.analysis?.done && g.analysis.evals.length > 2)
-		.sort((a, b) => b.date - a.date)
-		.slice(0, window);
+/** Rohzahlen einer einzelnen analysierten Partie – lassen sich über beliebige Fenster zusammenfassen */
+export interface GameSkillStats {
+	live: number;
+	blunders: number;
+	chances: number;
+	taken: number;
+	opening: [number, number];
+	strategy: [number, number];
+	endgame: [number, number];
+	blunderLoss: { opening: number; endgame: number };
+	cnt: Record<Skill, number>;
+}
+
+/** Auswertung einer Partie wie skill-study.mjs (null = nicht analysiert oder nicht lesbar) */
+export function gameSkillStats(g: GameRow): GameSkillStats | null {
+	if (!g.analysis?.done || g.analysis.evals.length <= 2) return null;
+	let game: Game;
+	try {
+		game = Game.fromUciMoves(g.moves, g.startFen);
+	} catch {
+		return null;
+	}
+	const evals = g.analysis.evals as PlyEval[];
+	const fens = Array.from({ length: game.ply + 1 }, (_, i) => game.fenAt(i));
+	const phases = phasesByMaterial(fens);
+	const n = Math.min(game.moves.length, evals.length - 1);
+	const loss: number[] = [];
+	for (let i = 0; i < n; i++) {
+		const mover = i % 2 === 0 ? turnOf(fens[0]) : other(turnOf(fens[0]));
+		const before = evals[i];
+		const after = evals[i + 1];
+		const l =
+			game.moves[i].uci === before.best
+				? 0
+				: Math.max(0, winFor(before, mover) - winFor(after, mover)) * 2;
+		loss.push(l);
+	}
+	const out: GameSkillStats = {
+		live: 0,
+		blunders: 0,
+		chances: 0,
+		taken: 0,
+		opening: [0, 0],
+		strategy: [0, 0],
+		endgame: [0, 0],
+		blunderLoss: { opening: 0, endgame: 0 },
+		cnt: { safety: 0, tactics: 0, opening: 0, strategy: 0, endgame: 0 }
+	};
+	for (let i = 0; i < n; i++) {
+		const mover = i % 2 === 0 ? turnOf(fens[0]) : other(turnOf(fens[0]));
+		if (mover !== g.myColor) continue;
+		const l = loss[i];
+		const w = winFor(evals[i], mover);
+		if (w >= 0.2) {
+			out.live++;
+			if (l >= 0.3) out.blunders++;
+		}
+		// Genauigkeit nur in offenen Stellungen (wie die Eichung)
+		const open = w >= 0.15 && w <= 0.85;
+		const p = phases[i];
+		if (open && p === 'opening') {
+			add(out.opening, l);
+			if (l >= 0.3) out.blunderLoss.opening += l;
+		} else if (open && p === 'middlegame') {
+			if (l < 0.3) add(out.strategy, l);
+		} else if (open && p === 'endgame') {
+			add(out.endgame, l);
+			if (l >= 0.3) out.blunderLoss.endgame += l;
+		}
+		const chance = i > 0 && loss[i - 1] >= 0.2;
+		if (chance) {
+			out.chances++;
+			if (l < 0.1) out.taken++;
+			out.cnt.tactics++;
+		} else {
+			if (w >= 0.2) out.cnt.safety++;
+			if (!(w >= 0.2 && l >= 0.3) && open)
+				out.cnt[p === 'opening' ? 'opening' : p === 'middlegame' ? 'strategy' : 'endgame']++;
+		}
+	}
+	return out;
+}
+
+/** mehrere Partien zusammenfassen (gepoolt wie die Eichung) */
+export function poolSkills(stats: GameSkillStats[]): SkillRaw {
 	const acc = {
 		live: 0,
 		blunders: 0,
@@ -246,7 +348,6 @@ export function collectSkills(games: GameRow[], window = WINDOW): SkillRaw {
 		opening: [0, 0],
 		strategy: [0, 0],
 		endgame: [0, 0],
-		/** Verlust durch Patzer je Phase (Eröffnung, Endspiel) */
 		blunderLoss: { opening: 0, endgame: 0 }
 	};
 	const cnt: Record<Skill, number> = { safety: 0, tactics: 0, opening: 0, strategy: 0, endgame: 0 };
@@ -257,70 +358,18 @@ export function collectSkills(games: GameRow[], window = WINDOW): SkillRaw {
 		strategy: [],
 		endgame: []
 	};
-	for (const g of recent) {
-		let game: Game;
-		try {
-			game = Game.fromUciMoves(g.moves, g.startFen);
-		} catch {
-			continue;
-		}
-		const evals = g.analysis!.evals as PlyEval[];
-		const fens = Array.from({ length: game.ply + 1 }, (_, i) => game.fenAt(i));
-		const phases = phasesByMaterial(fens);
-		const n = Math.min(game.moves.length, evals.length - 1);
-		const loss: number[] = [];
-		for (let i = 0; i < n; i++) {
-			const mover = i % 2 === 0 ? turnOf(fens[0]) : other(turnOf(fens[0]));
-			const before = evals[i];
-			const after = evals[i + 1];
-			const l =
-				game.moves[i].uci === before.best
-					? 0
-					: Math.max(0, winFor(before, mover) - winFor(after, mover)) * 2;
-			loss.push(l);
-		}
-		const g1 = { live: 0, blunders: 0, chances: 0, taken: 0 };
-		const ph = { opening: [0, 0], strategy: [0, 0], endgame: [0, 0] };
-		for (let i = 0; i < n; i++) {
-			const mover = i % 2 === 0 ? turnOf(fens[0]) : other(turnOf(fens[0]));
-			if (mover !== g.myColor) continue;
-			const l = loss[i];
-			const w = winFor(evals[i], mover);
-			if (w >= 0.2) {
-				g1.live++;
-				if (l >= 0.3) g1.blunders++;
-			}
-			// Genauigkeit nur in offenen Stellungen (wie die Eichung)
-			const open = w >= 0.15 && w <= 0.85;
-			const p = phases[i];
-			if (open && p === 'opening') {
-				add(ph.opening, l);
-				if (l >= 0.3) acc.blunderLoss.opening += l;
-			} else if (open && p === 'middlegame') {
-				if (l < 0.3) add(ph.strategy, l);
-			} else if (open && p === 'endgame') {
-				add(ph.endgame, l);
-				if (l >= 0.3) acc.blunderLoss.endgame += l;
-			}
-			const chance = i > 0 && loss[i - 1] >= 0.2;
-			if (chance) {
-				g1.chances++;
-				if (l < 0.1) g1.taken++;
-				cnt.tactics++;
-			} else {
-				if (w >= 0.2) cnt.safety++;
-				if (!(w >= 0.2 && l >= 0.3) && open)
-					cnt[p === 'opening' ? 'opening' : p === 'middlegame' ? 'strategy' : 'endgame']++;
-			}
-		}
+	for (const g1 of stats) {
 		acc.live += g1.live;
 		acc.blunders += g1.blunders;
 		acc.chances += g1.chances;
 		acc.taken += g1.taken;
+		acc.blunderLoss.opening += g1.blunderLoss.opening;
+		acc.blunderLoss.endgame += g1.blunderLoss.endgame;
+		for (const k of SKILLS) cnt[k] += g1.cnt[k];
 		for (const k of ['opening', 'strategy', 'endgame'] as const) {
-			acc[k][0] += ph[k][0];
-			acc[k][1] += ph[k][1];
-			if (ph[k][1] >= 5) per[k].push(accuracy(Array(ph[k][1]).fill(ph[k][0] / ph[k][1])));
+			acc[k][0] += g1[k][0];
+			acc[k][1] += g1[k][1];
+			if (g1[k][1] >= 5) per[k].push(accuracy(Array(g1[k][1]).fill(g1[k][0] / g1[k][1])));
 		}
 		if (g1.live >= 10) per.safety.push((g1.blunders / g1.live) * 30);
 		if (g1.chances >= 2) per.tactics.push((g1.taken / g1.chances) * 100);
@@ -328,7 +377,7 @@ export function collectSkills(games: GameRow[], window = WINDOW): SkillRaw {
 	const accOf = (x: number[]) => (x[1] ? accuracy(Array(x[1]).fill(x[0] / x[1])) : null);
 	const shareOf = (k: 'opening' | 'endgame') =>
 		acc[k][0] > 0 ? acc.blunderLoss[k] / acc[k][0] : null;
-	const nGames = recent.length;
+	const nGames = stats.length;
 	return {
 		games: nGames,
 		blunderShare: { opening: shareOf('opening'), endgame: shareOf('endgame') },
@@ -349,6 +398,14 @@ export function collectSkills(games: GameRow[], window = WINDOW): SkillRaw {
 		strategy: { value: accOf(acc.strategy), n: acc.strategy[1], perGame: per.strategy },
 		endgame: { value: accOf(acc.endgame), n: acc.endgame[1], perGame: per.endgame }
 	};
+}
+
+export function collectSkills(games: GameRow[], window = WINDOW): SkillRaw {
+	const recent = games
+		.filter((g) => g.analysis?.done && g.analysis.evals.length > 2)
+		.sort((a, b) => b.date - a.date)
+		.slice(0, window);
+	return poolSkills(recent.map(gameSkillStats).filter((x): x is GameSkillStats => x !== null));
 }
 
 /**
@@ -437,6 +494,8 @@ export interface SkillValue {
 	missing: number;
 	/** aus so vielen Partien */
 	games: number;
+	/** in diesem Tempo nicht aussagekräftig (Holdout schlechter als Raten) */
+	hidden?: boolean;
 }
 
 export function skillMirror(raw: SkillRaw, table = SKILL_TABLE): SkillValue[] {
@@ -444,6 +503,8 @@ export function skillMirror(raw: SkillRaw, table = SKILL_TABLE): SkillValue[] {
 		const s = raw[skill];
 		const games = raw.windowGames?.[skill] ?? raw.games;
 		const missing = Math.max(0, MIN_SAMPLE[skill] - s.n);
+		// verborgene Ecken zählen im Gesamtniveau mit (Holdout), werden aber nicht einzeln gezeigt
+		const hidden = hiddenOf(table).includes(skill);
 		if (s.value === null || missing > 0 || !table.length)
 			return {
 				skill,
@@ -467,6 +528,7 @@ export function skillMirror(raw: SkillRaw, table = SKILL_TABLE): SkillValue[] {
 		const e1 = eloFor(skill, s.value + se, table);
 		const e2 = eloFor(skill, s.value - se, table);
 		return {
+			...(hidden ? { hidden: true } : {}),
 			skill,
 			score: scoreFor(elo),
 			elo: r25(elo),
@@ -491,7 +553,7 @@ export function lossPerMoveAt(skill: Skill, elo: number, table = SKILL_TABLE): n
 
 /** verlorene Gewinnchance je Partie eines typischen Spielers dieser Wertung (Prozentpunkte) */
 function totalLossAt(elo: number, table = SKILL_TABLE): number {
-	return SKILLS.reduce((s, k) => s + lossPerMoveAt(k, elo, table) * MEAN_COUNT[k], 0);
+	return SKILLS.reduce((s, k) => s + lossPerMoveAt(k, elo, table) * meanCountOf(table)[k], 0);
 }
 
 /**
@@ -505,7 +567,7 @@ export function overallLevel(values: SkillValue[], table = SKILL_TABLE) {
 	const avg = known.reduce((s, v) => s + v.elo!, 0) / known.length;
 	const loss = SKILLS.reduce((s, k) => {
 		const v = values.find((x) => x.skill === k);
-		return s + lossPerMoveAt(k, v?.elo ?? avg, table) * MEAN_COUNT[k];
+		return s + lossPerMoveAt(k, v?.elo ?? avg, table) * meanCountOf(table)[k];
 	}, 0);
 	// Wertung mit genau diesem Gesamtverlust (Verlust fällt mit der Wertung)
 	const totals = table.map((t) => totalLossAt(t.r, table));
@@ -524,7 +586,8 @@ export function overallLevel(values: SkillValue[], table = SKILL_TABLE) {
 /** Anteil jeder Fähigkeit am Unterschied zwischen einer Wertung und 200 darüber (0..1) */
 export function shareAt(elo: number, table = SKILL_TABLE): Record<Skill, number> {
 	const d = SKILLS.map(
-		(k) => (lossPerMoveAt(k, elo, table) - lossPerMoveAt(k, elo + 200, table)) * MEAN_COUNT[k]
+		(k) =>
+			(lossPerMoveAt(k, elo, table) - lossPerMoveAt(k, elo + 200, table)) * meanCountOf(table)[k]
 	);
 	const tot = d.reduce((a, b) => a + Math.max(0, b), 0) || 1;
 	return Object.fromEntries(SKILLS.map((k, i) => [k, Math.max(0, d[i]) / tot])) as Record<
@@ -562,18 +625,18 @@ export function adviceFor(values: SkillValue[], raw: SkillRaw, table = SKILL_TAB
 	const all = overallLevel(values, table);
 	if (!all) return [];
 	return values
-		.filter((v) => v.elo !== null)
+		.filter((v) => v.elo !== null && !v.hidden)
 		.map((v) => {
 			const target = Math.min(ELITE, Math.max(v.elo! + 200, all.elo + 100));
 			const points =
 				(lossPerMoveAt(v.skill, v.elo!, table) - lossPerMoveAt(v.skill, target, table)) *
-				(raw.perGameCount[v.skill] || MEAN_COUNT[v.skill]);
+				(raw.perGameCount[v.skill] || meanCountOf(table)[v.skill]);
 			return {
 				skill: v.skill,
 				target: r25(target),
 				targetValue: valueAt(v.skill, target, table),
 				// auf 25 gerundet: das Niveau selbst ist nur auf ±230 Elo genau (Holdout), mehr wäre Scheingenauigkeit
-				gain: Math.max(0, Math.round((points * ELO_PER_POINT) / 25) * 25),
+				gain: Math.max(0, Math.round((points * eloPerPointOf(table)) / 25) * 25),
 				points: Math.round(points * 10) / 10,
 				viaSafety: mostlyBlunders(v.skill, raw)
 			};

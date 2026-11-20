@@ -1,6 +1,6 @@
 # Rookie – Coach-Plan (20. November 2026)
 
-> **Stand der Umsetzung (v0.8.0):** Etappen 1–3 umgesetzt. Abweichung vom ersten Entwurf, aus der Messung: Spielanteil 45 % statt 30–35 % und mindestens 3 (ab 30 min 4) Partien pro Woche, weil Einsteiger mit weniger als 4 Partien kaum stiegen; Bedenkzeit 10+5 für alle statt 15+10 unter 1200 – für 15+10 gibt es keinen Beleg, es bleibt das Mittel bei Stillstand mit vielen Patzern.
+> **Stand der Umsetzung (v0.9.0):** Etappen 1–5 umgesetzt (4 = Release 0.8.0). Abweichung vom ersten Entwurf, aus der Messung: Spielanteil 45 % statt 30–35 % und mindestens 3 (ab 30 min 4) Partien pro Woche, weil Einsteiger mit weniger als 4 Partien kaum stiegen; Bedenkzeit 10+5 für alle statt 15+10 unter 1200 – für 15+10 gibt es keinen Beleg, es bleibt das Mittel bei Stillstand mit vielen Patzern.
 
 Grundlage: [coach-review-2026-11-20.md](coach-review-2026-11-20.md) und der [Nachtrag vom 20.11.](research-2026-11-13.md#nachtrag-wie-viel-spielen-wie-viele-puzzles-aufstieg-neuer-lichess-spieler-20-november-2026). Ziel: **Rookie sagt jede Woche, wie viel du spielst und übst, merkt, ob es wirkt, und ändert die Dosis, wenn nicht.**
 
@@ -64,3 +64,13 @@ Version 0.8.0, README, Tag, GitHub-Release, Website gemäß `portfolio/PUBLISHIN
 - **Mehr als 8 Partien pro Woche verordnen:** Der Zuwachs flacht ab (+165 bei 8–15, +231 darüber, aber bei 4× so vielen Partien); die Zeit geht dann besser in Puzzles und Besprechen.
 - **Erinnerungen/Push:** erst bei beobachteter Wiederkehr-Hürde (Backlog).
 - **Puzzle-Wertung und Sterne verstecken:** motivieren, schaden der Dosis nicht.
+
+## Etappe 5 – Penta für jedes Tempo, Spielniveau statt Trainingsindex (M) · umgesetzt (0.9.0)
+
+Nach Rückmeldung: Das Penta mischte Blitz, Bullet und Bot-Partien; der Verlauf zeigte „−222“ trotz Anstieg; der Trainingsindex war nicht deutbar.
+
+- Penta-Tempo umschaltbar (Rapid Standard, Klassisch, Blitz, Bullet; nie Bot-Partien), Wahl gespeichert.
+- Eigene Eichung für Blitz und Bullet, im Holdout geprüft ([Nachtrag](research-2026-11-13.md#nachtrag-skill-penta-für-blitz-und-bullet-spielniveau-statt-trainingsindex-20-november-2026)): Blitz ±298 Elo (Raten ±480) – Taktik-Ecke verborgen; Bullet schlechter als Raten – kein Penta, ehrlicher Hinweis.
+- Verlauf: Einstufung neuer Lichess-Konten zählt nicht; **Spielniveau** (Penta-Gesamtniveau aus 15 Partien) auf derselben Elo-Achse wie die Wertung ersetzt den Trainingsindex.
+
+**Messkriterium:** Holdout je Tempo besser als Raten, sonst keine Anzeige; Tests für Einstufung, Spielniveau, Tabellen und verborgene Ecke.

@@ -14,13 +14,13 @@
 import { readFileSync } from 'node:fs';
 import { build } from 'esbuild';
 
-const [, , file, maxArg, minArg] = process.argv;
+const [, , file, maxArg, minArg, speedArg] = process.argv;
 const MAXG = Number(maxArg ?? 30);
 const MING = Number(minArg ?? 10);
 const root = new URL('../../', import.meta.url).pathname;
 const out = await build({
 	stdin: {
-		contents: `export * from './src/lib/training/skills.ts'; export { accuracy } from './src/lib/analysis/classify.ts';`,
+		contents: `export * from './src/lib/training/skills.ts'; export { tableFor } from './src/lib/training/skillTables.ts'; export { accuracy } from './src/lib/analysis/classify.ts';`,
 		resolveDir: root,
 		loader: 'ts'
 	},
@@ -46,6 +46,7 @@ const S = await import(
 	'data:text/javascript;base64,' + Buffer.from(out.outputFiles[0].text).toString('base64')
 );
 
+const TABLE = S.tableFor(speedArg ?? 'rapid');
 const games = JSON.parse(readFileSync(file, 'utf8')).players;
 const by = new Map();
 for (const g of games) by.set(g.name, [...(by.get(g.name) ?? []), g]);
@@ -85,11 +86,11 @@ const rows = [];
 for (const gs0 of by.values()) {
 	const gs = gs0.slice(0, MAXG);
 	if (gs.length < MING) continue;
-	const m = S.skillMirror(raw(gs));
+	const m = S.skillMirror(raw(gs), TABLE);
 	rows.push({
 		rating: gs.reduce((s, g) => s + g.rating, 0) / gs.length,
 		m,
-		o: S.overallLevel(m)
+		o: S.overallLevel(m, TABLE)
 	});
 }
 function stat(pairs) {

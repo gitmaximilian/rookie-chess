@@ -11,7 +11,8 @@
 	import {
 		valueAt,
 		SKILL_TABLE,
-		MEAN_COUNT,
+		meanCountOf,
+		type SkillTable,
 		MIN_SAMPLE,
 		SKILLS,
 		type Advice,
@@ -25,7 +26,8 @@
 		advice,
 		overall,
 		blunderShare = { opening: null, endgame: null },
-		lever = true
+		lever = true,
+		table = SKILL_TABLE
 	}: {
 		values: SkillValue[];
 		advice: Advice[];
@@ -35,6 +37,8 @@
 		blunderShare?: { opening: number | null; endgame: number | null };
 		/** Hinweis auf den größten Hebel zeigen (im Coach übernimmt das die Schwerpunkt-Karte) */
 		lever?: boolean;
+		/** Eichung des gewählten Tempos (lib/training/skillTables.ts) */
+		table?: SkillTable;
 	} = $props();
 
 	let chosen = $state<Skill | null>(null);
@@ -42,8 +46,8 @@
 	const v = $derived(values.find((x) => x.skill === selected)!);
 	const top = $derived(advice[0] ?? null);
 	/** Anteil am Abstand zu Spielern 200 Elo über dir (aus Lichess-Daten) */
-	const bottom = SKILL_TABLE[0]?.r ?? 0;
-	const topR = SKILL_TABLE.at(-1)?.r ?? 0;
+	const bottom = $derived(table[0]?.r ?? 0);
+	const topR = $derived(table.at(-1)?.r ?? 0);
 
 	/** Messwert lesbar: Patzer mit einer Nachkommastelle, sonst ganze Prozent */
 	const fmt = (s: Skill, x: number) =>
@@ -63,7 +67,7 @@
 	const ctaSkill = $derived<Skill>(viaSafety ? 'safety' : selected);
 	/** fehlende Partien bis zur Mindestmenge – aus deinem eigenen Tempo (Züge je Partie), sonst Mittelwert */
 	const gamesMissing = $derived.by(() => {
-		const perGame = v.n > 0 && v.games > 0 ? v.n / v.games : MEAN_COUNT[selected];
+		const perGame = v.n > 0 && v.games > 0 ? v.n / v.games : meanCountOf(table)[selected];
 		return Math.max(1, Math.ceil(v.missing / Math.max(0.5, perGame)));
 	});
 
@@ -137,6 +141,8 @@
 						{t('skills.range', { low: v.low, high: v.high })}
 					{/if}
 				</p>
+			{:else if v.hidden}
+				<p class="d-need" data-testid="skill-hidden">{t('skills.hiddenSpeed')}</p>
 			{:else}
 				<p class="d-need">
 					{t('skills.needMoreShort', { n: gamesMissing })}
@@ -148,7 +154,7 @@
 				{#each LEVELS as lv (lv)}
 					<span class="lv" class:mine={v.elo !== null && Math.abs(v.elo - lv) < 200}>
 						<small>{lv === 2800 ? t('skills.eliteShort') : lv}</small>
-						<b>{fmt(selected, valueAt(selected, lv))}</b>
+						<b>{fmt(selected, valueAt(selected, lv, table))}</b>
 					</span>
 				{/each}
 			</div>
