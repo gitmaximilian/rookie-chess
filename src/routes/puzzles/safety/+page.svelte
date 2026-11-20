@@ -18,6 +18,7 @@
 	import Board from '#lib/ui/board/Board.svelte';
 	import CommentBar from '#lib/ui/CommentBar.svelte';
 	import Dock from '#lib/ui/Dock.svelte';
+	import { sameRefutation } from '#lib/training/refutation.js';
 	import { Game, sanForUci, turnFromFen } from '#lib/chess/game.js';
 	import { figurine } from '#lib/chess/notation.js';
 	import { db, getSetting, setSetting, bumpActivity, today } from '#lib/db/db.js';
@@ -95,7 +96,7 @@
 	const opp = $derived<'white' | 'black'>(me === 'white' ? 'black' : 'white');
 	const dests = $derived.by(() => {
 		void v;
-		return status === 'refute' && game ? game.dests() : new Map<string, string[]>();
+		return status === 'refute' && game && !checking ? game.dests() : new Map<string, string[]>();
 	});
 	const moveSan = $derived(item ? figurine(sanForUci(item.fen, item.move)) : '');
 	const replySan = $derived.by(() => {
@@ -229,10 +230,25 @@
 		await finish();
 	}
 
-	function onMove(uci: string) {
-		if (status !== 'refute' || !item || !game) return;
+	/** eine andere Widerlegung wird gerade mit Stockfish geprüft */
+	let checking = $state(false);
+
+	async function onMove(uci: string) {
+		if (status !== 'refute' || !item || !game || checking) return;
 		const test = new Game(game.fen);
-		const ok = isReply(item, uci) || (test.play(uci) && test.end()?.kind === 'checkmate');
+		let ok = isReply(item, uci) || (test.play(uci) && test.end()?.kind === 'checkmate');
+		if (!ok && item.reply) {
+			// nicht die gespeicherte Antwort – vielleicht eine gleich starke (z. B. mit einer anderen Figur schlagen)
+			checking = true;
+			const at = item.id;
+			try {
+				ok = await sameRefutation(game.fen, item.reply, uci);
+			} catch {
+				ok = false;
+			}
+			checking = false;
+			if (item?.id !== at || status !== 'refute') return;
+		}
 		if (ok) {
 			refuted = true;
 			playOnBoard(uci);

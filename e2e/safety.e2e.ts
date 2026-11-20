@@ -141,3 +141,28 @@ test('Blunder-Check: auf gedrehtem Brett die weiße Widerlegung spielen', async 
 	).toBeVisible();
 	await expect(page.getByTestId('safety-next').locator('visible=true').first()).toBeVisible();
 });
+
+test('Blunder-Check: eine andere, gleich starke Widerlegung zählt auch', async ({
+	page,
+	hasTouch
+}) => {
+	test.setTimeout(60_000);
+	// Schwarz stellt die Dame auf d4 ein – gespeichert ist ♖xd4, ♘xd4 gewinnt sie genauso
+	await page.route('**/safety/items.json', (route) =>
+		route.fulfill({
+			json: [
+				['alt01', '3q3k/8/8/1N6/8/8/8/3RK3 b - - 0 1', 'd8d4', 0, 'd1d4', 400, 'hangingPiece', '']
+			]
+		})
+	);
+	await page.goto('/puzzles/safety');
+	await page.getByTestId('answer-unsafe').locator('visible=true').first().click();
+	await expect(page.locator('.cg-host')).toHaveAttribute('data-fen', /^7k\/8\/8\/1N6\/3q4/);
+	await playUci(page, 'b5d4', hasTouch ? 'touch' : 'mouse');
+	await expect(
+		page
+			.getByText(/you found the refutation/)
+			.locator('visible=true')
+			.first()
+	).toBeVisible({ timeout: 30_000 });
+});

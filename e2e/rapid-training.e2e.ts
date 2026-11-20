@@ -149,6 +149,8 @@ for (const withHint of [false, true]) {
 				.locator('visible=true')
 				.first()
 		).toBeVisible();
+		// erst wird der Partiezug kurz vorgespielt, dann ist das Brett frei
+		await expect(page.locator('.board-wrap[data-previewing="0"]')).toBeVisible();
 		if (withHint) {
 			await page
 				.getByRole('button', { name: 'Hint', exact: true })

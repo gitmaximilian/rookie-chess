@@ -25,6 +25,8 @@
 	import Info from '@lucide/svelte/icons/info';
 	import Board, { type Shape } from '#lib/ui/board/Board.svelte';
 	import { PuzzleRun, pickPuzzle, dailyPuzzle, type Puzzle } from '#lib/training/puzzles.js';
+	import { Game, sanForUci } from '#lib/chess/game.js';
+	import { figurine } from '#lib/chess/notation.js';
 	import {
 		applyPuzzleResult,
 		getPuzzleRating,
@@ -79,13 +81,19 @@
 	let dailyDone = $state(false);
 	let praiseIdx = $state(0);
 
+	/** eigener Fehler: dein damaliger Zug (UCI) – wird erst gezeigt, dann suchst du den besseren */
+	let played = $state<string | null>(null);
+	/** kurz die Stellung nach deinem damaligen Zug zeigen */
+	let preview = $state<{ fen: string; lastMove: [string, string] } | null>(null);
+	const playedSan = $derived(played && run ? figurine(sanForUci(run.puzzle.fen, played)) : '');
+
 	const fen = $derived.by(() => {
 		void v;
-		return run?.game.fen ?? '8/8/8/8/8/8/8/8 w - - 0 1';
+		return preview?.fen ?? run?.game.fen ?? '8/8/8/8/8/8/8/8 w - - 0 1';
 	});
 	const lastMove = $derived.by(() => {
 		void v;
-		return run?.game.lastMove;
+		return preview?.lastMove ?? run?.game.lastMove;
 	});
 	const turn = $derived.by(() => {
 		void v;
@@ -152,6 +160,27 @@
 		});
 	}
 
+	/**
+	 * Eigener Fehler: erst zeigen, was du damals gespielt hast (Zug kurz vorspielen, dann zurück),
+	 * danach bleibt ein roter Pfeil stehen – so ist klar, welchen Zug du verbessern sollst.
+	 */
+	async function showPlayed(p: Puzzle) {
+		played = null;
+		preview = null;
+		const row = await db.mistakes.get(p.id);
+		if (!row?.played) return;
+		const g = new Game(p.fen);
+		if (!g.play(row.played)) return;
+		played = row.played;
+		status = 'intro';
+		preview = { fen: g.fen, lastMove: [row.played.slice(0, 2), row.played.slice(2, 4)] };
+		shapes = [];
+		await new Promise((r) => setTimeout(r, 1400));
+		if (run?.puzzle.id !== p.id) return;
+		preview = null;
+		shapes = [{ orig: row.played.slice(0, 2), dest: row.played.slice(2, 4), brush: 'bad' }];
+	}
+
 	let countedForPlan = false;
 
 	async function next() {
@@ -174,6 +203,7 @@
 			run = new PuzzleRun(p);
 			v++;
 			if (p.source === 'mistake') {
+				await showPlayed(p);
 				status = 'solving';
 				return;
 			}
@@ -400,7 +430,9 @@
 				run && run.mistakes > 0
 					? t('puzzles.tryAgain')
 					: puzzle.source === 'mistake'
-						? (puzzle.note ?? '')
+						? played
+							? t('puzzles.youPlayed', { move: playedSan })
+							: (puzzle.note ?? '')
 						: '',
 			color: run && run.mistakes > 0 ? 'var(--k-inaccuracy)' : 'var(--c-puzzle)'
 		};

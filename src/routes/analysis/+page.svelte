@@ -657,10 +657,42 @@
 		void toBoard();
 	}
 
+	/**
+	 * Vor jeder Übung kurz zeigen, was du in der Partie gespielt hast (Zug vorspielen, dann zurück);
+	 * danach bleibt er als roter Pfeil stehen, bis du einen besseren findest.
+	 */
+	let retryPreview = $state<{ fen: string; last: [string, string] } | null>(null);
+	let previewKey = '';
+	let previewTimer: ReturnType<typeof setTimeout> | undefined;
+	$effect(() => {
+		const key = retry && retryItem && retry.status === 'try' ? `${retryIdx}:${retryFen}` : '';
+		if (!key || key === previewKey || !retryOriginal) return;
+		previewKey = key;
+		const g = new Game(retryFen);
+		if (!g.play(retryOriginal)) return;
+		retryPreview = { fen: g.fen, last: [retryOriginal.slice(0, 2), retryOriginal.slice(2, 4)] };
+		// Timer nicht an den Effekt binden: der läuft bei jeder Zustandsänderung neu und würde ihn löschen
+		clearTimeout(previewTimer);
+		previewTimer = setTimeout(() => (retryPreview = null), 1400);
+	});
+	onMount(() => () => clearTimeout(previewTimer));
+	$effect(() => {
+		if (!retry) {
+			previewKey = '';
+			retryPreview = null;
+		}
+	});
+
 	const retryShapes = $derived.by<Shape[]>(() => {
-		if (!retry || !retryItem) return [];
+		if (!retry || !retryItem || retryPreview) return [];
+		const played: Shape = {
+			orig: retryOriginal.slice(0, 2),
+			dest: retryOriginal.slice(2, 4),
+			brush: 'bad'
+		};
 		if (retry.status === 'try' && retry.hint && retryBest)
-			return [{ orig: retryBest.slice(0, 2), brush: 'good' }];
+			return [played, { orig: retryBest.slice(0, 2), brush: 'good' }];
+		if (retry.status === 'try' || retry.status === 'checking') return retryOriginal ? [played] : [];
 		if ((retry.status === 'shown' || retry.status === 'solved') && retryBest)
 			return [
 				// rot: was in der Partie gespielt wurde, grün: der bessere Zug
@@ -1212,15 +1244,15 @@
 		<div class="board-col" class:with-bar={!!bar}>
 			<div class="board-row">
 				<EvalBar score={evalHere} {orientation} />
-				<div class="board-wrap">
+				<div class="board-wrap" data-previewing={retryPreview ? '1' : '0'}>
 					{#if retryGame && retry && retryItem}
 						<!-- ein Brett für den ganzen Übungsablauf (kein Neuaufbau zwischen Versuch und Lösung) -->
 						<Board
-							fen={retryFen}
+							fen={retryPreview?.fen ?? retryFen}
 							{orientation}
 							turnColor={retryGame.turn}
-							lastMove={retryLast}
-							dests={retry.status === 'try' ? retryGame.dests() : new Map()}
+							lastMove={retryPreview?.last ?? retryLast}
+							dests={retry.status === 'try' && !retryPreview ? retryGame.dests() : new Map()}
 							movableColor={row.myColor}
 							shapes={retryShapes}
 							isPromotion={(f, to) => retryGame.isPromotion(f as never, to as never)}
@@ -1306,7 +1338,7 @@
 			{/if}
 			{#if retry}
 				<!-- Fehler-Trainer: eigene Steuerung (am Handy in der Leiste, Text steht oben im Kommentar) -->
-				<Dock reserve={112}>
+				<Dock reserve={60}>
 					<div
 						class="card retry"
 						role="group"
@@ -1935,8 +1967,15 @@
 
 	.arena {
 		display: grid;
+		/* minmax(0, …): ein langer Text unter dem Brett (Variante, Eröffnungsname) darf die Spalte nicht
+		   verbreitern – sonst wächst das Brett bei einzelnen Zügen um ein paar Pixel („Zoomen“) */
+		grid-template-columns: minmax(0, 1fr);
 		gap: 1rem;
 		max-width: 1100px;
+	}
+
+	.arena > :global(*) {
+		min-width: 0;
 	}
 
 	@media (min-width: 1000px) {
@@ -2196,6 +2235,31 @@
 		background: none;
 		padding: 0.1rem;
 		gap: 0.4rem;
+	}
+
+	/* Am Handy: Übungsleiste in EINER Zeile (× ‹ Tipp Lösung ›) – so hoch wie die normale Navigation.
+	   Zwei Zeilen machten die Leiste höher, und das Brett schrumpfte beim Start der Übung („Zoomen“).
+	   Der Fortschritt („Fehler 1 von 3“) steht oben im Kommentar. */
+	:global(.docked) .retry {
+		flex-direction: row;
+		align-items: center;
+	}
+	:global(.docked) .rt-nav,
+	:global(.docked) .rt-actions {
+		display: contents;
+	}
+	:global(.docked) .rt-dots,
+	:global(.docked) .rt-actions p {
+		display: none;
+	}
+	:global(.docked) .rt-icon:last-child {
+		order: 3;
+	}
+	:global(.docked) .rt-actions > * {
+		order: 2;
+		min-width: 0;
+		padding-inline: 0.7rem;
+		white-space: nowrap;
 	}
 
 	.moves-card {
