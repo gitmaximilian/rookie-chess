@@ -35,7 +35,13 @@ for (const raw of readFileSync(file, 'utf8').split('\n[Event ')) {
 	const h = (k) => g.match(new RegExp(`\\[${k} "([^"]*)"\\]`))?.[1];
 	if (h('WhiteTitle') === 'BOT' || h('BlackTitle') === 'BOT') continue;
 	if (!/\n1\. /.test(g)) continue;
-	games.push({ pgn: g.trim(), w: h('White'), b: h('Black'), we: +h('WhiteElo'), be: +h('BlackElo') });
+	games.push({
+		pgn: g.trim(),
+		w: h('White'),
+		b: h('Black'),
+		we: +h('WhiteElo'),
+		be: +h('BlackElo')
+	});
 }
 
 // Holdout-Spieler
