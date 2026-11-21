@@ -36,8 +36,17 @@ export interface Backfill {
 }
 
 const KEY = 'linkedAccounts';
-/** so oft höchstens automatisch abrufen */
-const AUTO_INTERVAL = 30 * 60 * 1000;
+/**
+ * so oft höchstens automatisch abrufen – kurz, damit eine gerade beendete Partie sofort da ist (der Abruf seit dem
+ * letzten Mal ist eine kleine Anfrage; bis 0.10.0 waren es 30 Minuten)
+ */
+export const AUTO_INTERVAL = 15 * 1000;
+/**
+ * Lichess filtert `since` nach dem Beginn der Partie und liefert laufende Partien nicht mit. Eine Partie, die beim
+ * letzten Abruf noch lief, begann also vor `lastSync` – ohne Überlappung fehlte sie für immer. Bekannte Partien
+ * werden beim Speichern übersprungen.
+ */
+export const SINCE_OVERLAP = 12 * 60 * 60 * 1000;
 /** pro Sitzung höchstens so viele Partien im Hintergrund analysieren (Akku) */
 const ANALYSE_PER_SESSION = 8;
 
@@ -189,7 +198,8 @@ async function syncSource(
 
 	// 1) Neue Partien seit dem letzten Abruf
 	if (since) {
-		if (source === 'lichess') await streamLichess(user, { since }, save, fetcher);
+		if (source === 'lichess')
+			await streamLichess(user, { since: since - SINCE_OVERLAP }, save, fetcher);
 		else {
 			const archives = await chessComArchives(user, fetcher);
 			for (const url of [...archives].reverse()) {

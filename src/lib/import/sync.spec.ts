@@ -2,7 +2,9 @@ import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from '#lib/db/db.js';
 import {
+	AUTO_INTERVAL,
 	backfillClocks,
+	SINCE_OVERLAP,
 	CLOCK_BACKFILL_KEY,
 	getLinked,
 	link,
@@ -112,6 +114,29 @@ describe('Konto-Sync', () => {
 		expect(await syncNow(fetcher)).toBe(0);
 		expect(urls.filter((u) => u.includes('/api/games/user/'))[1]).toContain('&since=');
 		expect(await db.games.count()).toBe(2);
+	});
+
+	it('Lichess: eine Partie, die beim letzten Abruf noch lief, kommt beim nächsten Abruf (Überlappung)', async () => {
+		await link('lichess', 'alice');
+		const fetcher = (async () =>
+			new Response(lichessLine('a', 1000) + '\n')) as unknown as typeof fetch;
+		await syncNow(fetcher);
+		const last = (await getLinked()).lastSync!.lichess!;
+		// begonnen vor dem letzten Abruf, erst danach beendet → Lichess liefert sie erst jetzt
+		const urls: string[] = [];
+		const later = (async (url: string) => {
+			urls.push(url);
+			return new Response(
+				lichessLine('a', 1000) + '\n' + lichessLine('running', last - 60_000) + '\n'
+			);
+		}) as unknown as typeof fetch;
+		expect(await syncNow(later)).toBe(1);
+		const since = Number(urls[0].match(/since=(\d+)/)![1]);
+		expect(since).toBe(last - SINCE_OVERLAP);
+	});
+
+	it('automatischer Abruf schon nach Sekunden, nicht erst nach 30 Minuten', () => {
+		expect(AUTO_INTERVAL).toBeLessThanOrEqual(30_000);
 	});
 
 	it('Chess.com: ältere Monate als der letzte Abruf werden nicht geladen', async () => {

@@ -73,8 +73,12 @@
 			}
 		}
 		if (!onboarding) document.documentElement.removeAttribute('data-first-run');
-		// verknüpfte Konten: neue Partien holen, wenn die App geöffnet wird oder zurückkehrt
-		setTimeout(sync, 2500);
+		// verknüpfte Konten: neue Partien holen, wenn die App geöffnet wird oder zurückkehrt –
+		// und solange sie sichtbar ist jede Minute (Partie im anderen Tab oder auf dem anderen Gerät beendet)
+		setTimeout(sync, 600);
+		setInterval(() => {
+			if (document.visibilityState === 'visible') void sync();
+		}, 60_000);
 		// Konto: Stand beim Öffnen holen, beim Verlassen der App sichern
 		setTimeout(async () => {
 			await refreshAccount();

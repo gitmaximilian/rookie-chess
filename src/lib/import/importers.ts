@@ -295,7 +295,9 @@ export async function chessComArchives(
 	let res: Response;
 	try {
 		res = await fetcher(
-			`https://api.chess.com/pub/player/${encodeURIComponent(user.toLowerCase())}/games/archives`
+			`https://api.chess.com/pub/player/${encodeURIComponent(user.toLowerCase())}/games/archives`,
+			// frisch, nicht aus dem Browser-Cache – sonst fehlt der neue Monat
+			{ cache: 'no-cache' }
 		);
 	} catch {
 		throw new ImportError('network');
@@ -312,7 +314,8 @@ export async function chessComMonth(
 ): Promise<ImportedGame[]> {
 	let res: Response;
 	try {
-		res = await fetcher(url);
+		// frisch: sonst liefert der Browser die gerade beendete Partie erst später
+		res = await fetcher(url, { cache: 'no-cache' });
 	} catch {
 		throw new ImportError('network');
 	}
