@@ -1,7 +1,17 @@
 import { expect, test } from 'vitest';
 import { Game } from '#lib/chess/game.js';
 import type { GameRow } from '#lib/db/db.js';
-import { coachHistory, coachPeriod, LEVEL_MIN, LEVEL_WINDOW, playingLevel } from './coachHistory';
+import {
+	coachHistory,
+	coachPeriod,
+	LEVEL_MIN,
+	LEVEL_NOISE,
+	LEVEL_WINDOW,
+	playingLevel,
+	RATING_NOISE,
+	ratingChange,
+	type CoachHistoryPoint
+} from './coachHistory';
 import type { GameSkillStats } from './skills';
 
 const DAY = 86_400_000;
@@ -101,4 +111,33 @@ test('ohne Einstufung (älteres Konto) zählt jeder Punkt', () => {
 		row(4 - i, { myRating: r, pgn: '[WhiteRatingDiff "0"]' })
 	);
 	expect(coachHistory(games).some((p) => p.provisional)).toBe(false);
+});
+
+test('Wirkt es? Wertung über die letzten 15 Partien, Urteil nach der Schwankung, Partien pro Woche', () => {
+	const pt = (days: number, rating: number, provisional = false): CoachHistoryPoint => ({
+		date: now - days * DAY,
+		rating,
+		index: null,
+		outcome: 'w',
+		analysed: false,
+		conversion: null,
+		provisional
+	});
+	// Einstufung zählt nicht: 5 vorläufige + 15 eingestufte Partien reichen noch nicht
+	const first = [...Array.from({ length: 5 }, (_, i) => pt(40 - i, 1500 - i * 100, true))];
+	expect(
+		ratingChange([...first, ...Array.from({ length: 15 }, (_, i) => pt(30 - i, 1000))])
+	).toBeNull();
+	const make = (after: number) => [
+		...first,
+		pt(30, 1000),
+		...Array.from({ length: 15 }, (_, i) => pt(14 - i, after))
+	];
+	const up = ratingChange(make(1000 + RATING_NOISE + 1), now)!;
+	expect(up).toMatchObject({ before: 1000, verdict: 'up', delta: RATING_NOISE + 1 });
+	// 15 Partien in 14 Tagen → 7,5 pro Woche
+	expect(up.perWeek).toBeCloseTo(7.5, 1);
+	expect(ratingChange(make(1000 + RATING_NOISE), now)!.verdict).toBe('flat');
+	expect(ratingChange(make(1000 - RATING_NOISE - 1), now)!.verdict).toBe('down');
+	expect(LEVEL_NOISE).toBeGreaterThan(RATING_NOISE * 10);
 });

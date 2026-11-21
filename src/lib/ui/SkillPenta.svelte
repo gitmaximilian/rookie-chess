@@ -20,6 +20,7 @@
 		type SkillValue
 	} from '#lib/training/skills.js';
 	import { t } from '#lib/i18n/i18n.svelte.js';
+	import { eloFor } from '#lib/training/platforms.js';
 
 	let {
 		values,
@@ -27,7 +28,8 @@
 		overall,
 		blunderShare = { opening: null, endgame: null },
 		lever = true,
-		table = SKILL_TABLE
+		table = SKILL_TABLE,
+		chesscom = false
 	}: {
 		values: SkillValue[];
 		advice: Advice[];
@@ -39,6 +41,8 @@
 		lever?: boolean;
 		/** Eichung des gewählten Tempos (lib/training/skillTables.ts) */
 		table?: SkillTable;
+		/** nur Chess.com verknüpft: Elo-Angaben zusätzlich auf der Chess.com-Skala */
+		chesscom?: boolean;
 	} = $props();
 
 	let chosen = $state<Skill | null>(null);
@@ -90,7 +94,7 @@
 			<div class="overall" title={t('skills.overallTitle')}>
 				<span class="mono-label">{t('skills.overall')}</span>
 				<b>{overall.score}<small>/100</small></b>
-				<span>{t('skills.overallFrom', { elo: overall.elo })}</span>
+				<span>{t('skills.overallFrom', { elo: eloFor(overall.elo, chesscom) })}</span>
 			</div>
 		{/if}
 	</header>
@@ -133,10 +137,10 @@
 				<p class="d-you">{unit(selected, v.value)}</p>
 				<p class="d-elo muted">
 					{(v.elo ?? 0) <= bottom
-						? t('skills.eloEqLow', { elo: bottom })
+						? t('skills.eloEqLow', { elo: eloFor(bottom, chesscom) })
 						: (v.elo ?? 0) >= topR
-							? t('skills.eloEqHigh', { elo: topR })
-							: t('skills.eloEq', { elo: v.elo ?? 0 })}
+							? t('skills.eloEqHigh', { elo: eloFor(topR, chesscom) })
+							: t('skills.eloEq', { elo: eloFor(v.elo ?? 0, chesscom) })}
 					{#if v.low !== null && v.high !== null && v.high > v.low}
 						{t('skills.range', { low: v.low, high: v.high })}
 					{/if}

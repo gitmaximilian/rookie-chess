@@ -108,7 +108,13 @@ async function analyse(engine, g) {
 	for (const node of g.moves.mainline()) {
 		const mv = parseSan(pos, node.san);
 		if (!mv) break;
-		plies.push({ fen: makeFen(pos.toSetup()), uci: makeUci(mv), phase: phaseOf(pos, i) });
+		const clk = (node.comments ?? []).join(' ').match(/%clk (\d+):(\d+):(\d+(?:\.\d+)?)/);
+		plies.push({
+			fen: makeFen(pos.toSetup()),
+			uci: makeUci(mv),
+			phase: phaseOf(pos, i),
+			clock: clk ? +clk[1] * 3600 + +clk[2] * 60 + +clk[3] : null
+		});
 		pos.play(mv);
 		i++;
 	}
@@ -126,6 +132,27 @@ async function analyse(engine, g) {
 		white: { ...empty(Number(h.get('WhiteElo'))), name: h.get('White') },
 		black: { ...empty(Number(h.get('BlackElo'))), name: h.get('Black') }
 	};
+	// Bedenkzeit (falls %clk im PGN): Grundzeit aus TimeControl „Sekunden+Inkrement“
+	const tc = (h.get('TimeControl') ?? '').match(/^(\d+)(?:\+(\d+))?$/);
+	const base = tc ? Number(tc[1]) : null;
+	const hasClock = base !== null && base > 0 && plies.some((p) => p.clock !== null);
+	for (const s of [side.white, side.black])
+		s.clock = hasClock
+			? {
+					base,
+					inc: Number(tc[2] ?? 0),
+					moves: 0,
+					tt: 0,
+					ttLive: 0,
+					ttBlunders: 0,
+					used10: null,
+					flagged: false
+				}
+			: null;
+	const term = h.get('Termination') ?? '';
+	const res = h.get('Result');
+	if (hasClock && /time/i.test(term) && (res === '1-0' || res === '0-1'))
+		side[res === '1-0' ? 'black' : 'white'].clock.flagged = true;
 	const losses = plies.map((p, k) => {
 		const wBefore = win(evals[k].cp);
 		const wAfter = 1 - win(evals[k + 1].cp);
@@ -139,6 +166,20 @@ async function analyse(engine, g) {
 		if (wBefore >= 0.2) {
 			s.live++;
 			if (loss >= 0.3) s.blunders++;
+		}
+		// Zeitnot: vor dem Zug weniger als 10 % der Grundzeit auf der Uhr (Uhr nach meinem vorigen Zug)
+		if (s.clock && p.clock !== null) {
+			const before = k >= 2 ? (plies[k - 2].clock ?? s.clock.base) : s.clock.base;
+			const tt = before < 0.1 * s.clock.base;
+			s.clock.moves++;
+			if (tt) s.clock.tt++;
+			if (tt && wBefore >= 0.2) {
+				s.clock.ttLive++;
+				if (loss >= 0.3) s.clock.ttBlunders++;
+			}
+			// Anteil der Grundzeit, der bis einschließlich meines 10. Zugs verbraucht ist (ohne Inkrement)
+			if (k === 18 || k === 19)
+				s.clock.used10 = Math.max(0, 1 - (p.clock - 10 * s.clock.inc) / s.clock.base);
 		}
 		// Genauigkeit nur in offenen Stellungen (15–85 % Gewinnchance): in entschiedenen Stellungen
 		// kosten auch schlechte Züge kaum Gewinnchance – dort misst Genauigkeit nichts

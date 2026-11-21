@@ -1255,11 +1255,21 @@ export const de: Shape<typeof en> = {
 		done: 'Los geht’s!'
 	},
 	coachHistory: {
+		change: {
+			up: (p: P) =>
+				`Wertung über die letzten 15 Partien (seit ${p.since}): mehr als die Schwankung (±${p.noise}) – es wirkt.`,
+			flat: (p: P) =>
+				`Wertung über die letzten 15 Partien (seit ${p.since}): noch innerhalb der Schwankung (±${p.noise}).`,
+			down: (p: P) =>
+				`Wertung über die letzten 15 Partien (seit ${p.since}): mehr verloren als die Schwankung (±${p.noise}). Schau dir deine letzten Patzer an.`,
+			dose: (p: P) => `Dabei ${p.n} Rapid-Partien pro Woche (Dosis: 3–8).`,
+			why: 'Das Spielniveau schwankt zwischen zwei 15er-Fenstern zufällig um bis zu ±650 Elo – für kurze Zeiträume zählt deshalb die Wertung.'
+		},
 		provisional: 'Einstufung',
 		title: 'Deine Entwicklung',
 		period: 'Zeitraum',
 		index: 'Spielniveau',
-		rating: 'Lichess-Rapid',
+		rating: (p: P) => `${p.source}-Rapid`,
 		outOf100: '/ 100',
 		elo: 'Elo',
 		noPeriod: 'Für diesen Zeitraum sind keine Rapid-Partien vorhanden.',
@@ -1460,6 +1470,26 @@ export const de: Shape<typeof en> = {
 				'Spiel gegen einen Bot oder verknüpfe Lichess / Chess.com – dann bekommst du hier persönliche Tipps.'
 		}
 	},
+	clock: {
+		title: 'Uhr',
+		need: (p: P) =>
+			`Die Uhr braucht ${p.m} Partien mit Zeitangaben in diesem Tempo (bisher ${p.n}). Ältere Lichess-Partien bekommen ihre Zeiten beim nächsten Abruf.`,
+		tempo: 'deiner Bedenkzeit bis Zug 10',
+		typical: (p: P) => `Strich: Lichess-Spieler um 1600 brauchen ${p.pct} %.`,
+		level: (p: P) => `Niveau mit Uhr: ≈ ${p.elo} (im Mittel ±${p.mae})`,
+		flags: (p: P) => `Auf Zeit verloren: ${p.pct} % der Partien`,
+		ttBlunders: (p: P) => `Patzer in Zeitnot: ${p.n} von ${p.m}`,
+		advice: {
+			tempo:
+				'Du brauchst viel Zeit für die ersten Züge. Wer seine Eröffnung kennt, spielt sie schneller – und hat später Zeit.',
+			flag: 'Du verlierst oft auf Zeit. Spiel mit wenig Zeit einfache, sichere Züge – oder wähle ein längeres Tempo.',
+			fine: 'Die Uhr ist nicht dein Engpass – trainiere die schwächste Ecke deines Profils.'
+		},
+		cta: { tempo: 'Eröffnung lernen' },
+		why: 'Woher die Zahlen?',
+		whyText:
+			'Gemessen an 45–64 Lichess-Spielern je Tempo: Zeitnot (unter 10 % der Zeit) erklärt nur 1–7 % aller Patzer. Das Tempo der ersten 10 Züge sagt die Wertung in Blitz und Bullet stark voraus – starke Spieler kennen ihre Eröffnung. Ein Zusammenhang, keine Garantie.'
+	},
 	skills: {
 		title: 'Dein Skill-Penta',
 		subtitle: '100 = Weltspitze',
@@ -1588,9 +1618,9 @@ export const de: Shape<typeof en> = {
 		speedNote: {
 			classical: 'Verglichen mit Lichess-Spielern in Rapid und Klassisch (gemeinsame Eichung).',
 			blitz:
-				'Verglichen mit Lichess-Blitz-Spielern (eigene Eichung). Geprüft an 59 Spielern: im Mittel ±300 Elo genau – etwas ungenauer als Rapid (±230).',
+				'Verglichen mit Lichess-Blitz-Spielern (eigene Eichung). Geprüft an 59 Spielern: im Mittel ±300 Elo genau. Mit der Uhr (unten) ±234.',
 			bullet:
-				'Für Bullet zeigt Rookie kein Penta: Geprüft an 57 Lichess-Spielern sagte die Zugqualität die Bullet-Wertung schlechter voraus als bloßes Raten. Im Bullet entscheidet vor allem die Uhr – das misst Rookie nicht.'
+				'Für Bullet zeigt Rookie kein Penta: Geprüft an 57 Lichess-Spielern sagte die Zugqualität die Bullet-Wertung schlechter voraus als bloßes Raten. Im Bullet entscheidet die Uhr – die misst Rookie unten.'
 		},
 		needData: (p) =>
 			`Dein Profil braucht mindestens 3 analysierte ${p.speed}-Partien gegen Menschen (bisher ${p.n}). Verknüpfe Lichess oder Chess.com – Bot-Partien zählen nicht.`,
@@ -1950,6 +1980,7 @@ export const de: Shape<typeof en> = {
 			games: 'Forschungsdaten: Fehlerarten und Genauigkeit nach Wertung (docs/research)',
 			openings: 'Eröffnungsnamen',
 			tablebase: 'Endspiel-Datenbank',
+			chesscom: 'Umrechnung Chess.com ↔ Lichess (nur zusammengefasste Kennzahlen)',
 			lucide: 'Icons',
 			font: 'Schrift',
 			dexie: 'Lokale Datenbank',

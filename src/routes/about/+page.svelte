@@ -36,6 +36,12 @@
 			url: 'https://database.lichess.org'
 		},
 		{
+			name: 'Chess.com Published-Data API',
+			key: 'chesscom',
+			license: 'Public API',
+			url: 'https://www.chess.com/news/view/published-data-api'
+		},
+		{
 			name: 'Lichess chess-openings',
 			key: 'openings',
 			license: 'CC0',

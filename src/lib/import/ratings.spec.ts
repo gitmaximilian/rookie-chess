@@ -8,7 +8,10 @@ import {
 	summarise,
 	byMonth,
 	targetRating,
-	isPentaGame
+	isPentaGame,
+	isTargetGame,
+	isTargetGameOn,
+	targetSource
 } from './ratings';
 
 const g = (p: Partial<GameRow>): GameRow => ({
@@ -146,5 +149,33 @@ describe('Skill-Penta: nur Rapid gegen Menschen', () => {
 		expect(isPentaGame(g({ speed: 'blitz' }), 'blitz')).toBe(true);
 		expect(isPentaGame(g({ speed: 'rapid' }), 'blitz')).toBe(false);
 		expect(isPentaGame(g({ speed: 'bullet', opponentIsBot: true }), 'bullet')).toBe(false);
+	});
+});
+
+describe('Zielplattform für den Verlauf', () => {
+	const base = {
+		date: 1,
+		pgn: '',
+		moves: [],
+		startFen: '',
+		result: '1-0' as const,
+		myColor: 'white' as const,
+		opponent: 'x',
+		speed: 'rapid',
+		rated: true,
+		myRating: 900
+	};
+	it('Chess.com-Rapid zählt nur, wenn kein Lichess-Rapid vorhanden ist', () => {
+		const cc = { ...base, source: 'chesscom' as const };
+		const li = { ...base, source: 'lichess' as const };
+		expect(isTargetGame(cc)).toBe(false);
+		expect(isTargetGameOn(cc, 'chesscom')).toBe(true);
+		expect(isTargetGameOn({ ...cc, rated: false }, 'chesscom')).toBe(false);
+		expect(isTargetGameOn({ ...cc, opponentIsBot: true }, 'chesscom')).toBe(false);
+		// sicher als Filter-Callback (der Index darf nicht als Plattform gelten)
+		expect([li, cc].filter(isTargetGame)).toEqual([li]);
+		expect(targetSource([cc])).toBe('chesscom');
+		expect(targetSource([cc, li])).toBe('lichess');
+		expect(targetSource([])).toBe('lichess');
 	});
 });

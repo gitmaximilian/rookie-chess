@@ -149,9 +149,10 @@ describe('Spielstärke', () => {
 		expect(withBot.value).toBeGreaterThan(1050);
 		expect(withBot.value).toBeLessThan(1300);
 		expect(estimateStrength({ botsBeaten: [1650] })!.confidence).toBeLessThan(0.2);
-		// Lichess ist die Skala selbst, Chess.com liegt darunter
+		// Lichess ist die Skala selbst, Chess.com liegt darunter – unten weiter als oben (gemessen, platforms.ts)
 		expect(estimateStrength({ online: { rating: 1400, source: 'lichess' } })!.value).toBe(1400);
-		expect(estimateStrength({ online: { rating: 1250, source: 'chesscom' } })!.value).toBe(1400);
+		expect(estimateStrength({ online: { rating: 1250, source: 'chesscom' } })!.value).toBe(1525);
+		expect(estimateStrength({ online: { rating: 700, source: 'chesscom' } })!.value).toBe(1075);
 	});
 
 	it('eigene Partien fließen ein – mehr Partien, mehr Gewicht; unter 5 Partien gar nicht', () => {

@@ -260,3 +260,45 @@ test('Skill-Penta: Tempo umschalten, Blitz mit Hinweis, Bot-Partien zählen nie'
 		page.getByTestId('penta-speed').getByRole('radio', { name: /Blitz 2/ })
 	).toHaveAttribute('aria-checked', 'true');
 });
+
+test('Uhr: Bullet bekommt Tempo, Niveau mit Uhr und einen Rat – ohne Analyse', async ({ page }) => {
+	await page.goto('/');
+	await expect(page.locator('.plan[aria-busy="false"]')).toBeVisible();
+	const san = 'e4 e5 Nf3 Nc6 Bc4 Bc5 c3 Nf6 d3 d6 O-O O-O h3 h6 Re1 a6 a4 Ba7 Nbd2 Be6'.split(' ');
+	const uci =
+		'e2e4 e7e5 g1f3 b8c6 f1c4 f8c5 c2c3 g8f6 d2d3 d7d6 e1g1 e8g8 h2h3 h7h6 f1e1 a7a6 a2a4 c5a7 b1d2 c8e6'.split(
+			' '
+		);
+	// 1+0: Weiß (ich) braucht je Zug 2,5 s → 25 von 60 s bis Zug 10 (42 %), Schwarz 1 s je Zug
+	const body = san
+		.map((m, i) => {
+			const n = Math.floor(i / 2) + 1;
+			const left = i % 2 === 0 ? 60 - n * 2.5 : 60 - n;
+			const clk = `0:00:${String(Math.floor(left)).padStart(2, '0')}${left % 1 ? '.5' : ''}`;
+			return `${i % 2 === 0 ? `${n}. ` : ''}${m} { [%clk ${clk}] }`;
+		})
+		.join(' ');
+	const now = Date.now();
+	await seed(
+		page,
+		{ pentaSpeed: 'bullet' },
+		Array.from({ length: 12 }, (_, i) => ({
+			...example,
+			id: 50 + i,
+			date: now - i * 3_600_000,
+			speed: 'bullet',
+			analysis: undefined,
+			moves: uci,
+			result: i < 6 ? ('0-1' as const) : ('1-0' as const),
+			pgn: `[TimeControl "60+0"]\n[Termination "${i < 6 ? 'Time forfeit' : 'Normal'}"]\n[Result "${i < 6 ? '0-1' : '1-0'}"]\n\n${body} ${i < 6 ? '0-1' : '1-0'}`
+		}))
+	);
+	await page.goto('/coach');
+	const card = page.getByTestId('clock-card');
+	await expect(card).toBeVisible();
+	await expect(page.getByTestId('clock-tempo')).toHaveText('42 %');
+	await expect(page.getByTestId('clock-level')).toContainText('Level with clock');
+	await expect(card).toContainText('Lost on time: 50 %');
+	await expect(page.getByTestId('clock-advice')).toContainText('first moves');
+	await expect(card.getByRole('link', { name: /Learn an opening/ })).toBeVisible();
+});

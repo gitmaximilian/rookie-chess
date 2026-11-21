@@ -115,7 +115,7 @@ export async function fetchLichess(
 	let res: Response;
 	try {
 		res = await fetcher(
-			`https://lichess.org/api/games/user/${encodeURIComponent(user)}?max=${max}&pgnInJson=true&moves=true&clocks=false&evals=false&opening=false${since ? `&since=${since}` : ''}`,
+			`https://lichess.org/api/games/user/${encodeURIComponent(user)}?max=${max}&pgnInJson=true&moves=true&clocks=true&evals=false&opening=false${since ? `&since=${since}` : ''}`,
 			{ headers: { Accept: 'application/x-ndjson' } }
 		);
 	} catch {
@@ -124,6 +124,28 @@ export async function fetchLichess(
 	if (res.status === 404) throw new ImportError('notFound');
 	if (!res.ok) throw new ImportError('network');
 	return parseLichessNdjson(await res.text()).slice(0, max);
+}
+
+/**
+ * Lichess: Partien nach ID (höchstens 300 je Anfrage) – zum Nachladen der Uhrzeiten älterer Importe,
+ * die noch ohne `clocks=true` geladen wurden. Öffentlich, kein Konto nötig.
+ */
+export async function fetchLichessByIds(
+	ids: string[],
+	fetcher: typeof fetch = fetch
+): Promise<ImportedGame[]> {
+	let res: Response;
+	try {
+		res = await fetcher(
+			'https://lichess.org/api/games/export/_ids?pgnInJson=true&moves=true&clocks=true&evals=false&opening=false',
+			{ method: 'POST', body: ids.join(','), headers: { Accept: 'application/x-ndjson' } }
+		);
+	} catch {
+		throw new ImportError('network');
+	}
+	if (res.status === 429) throw new ImportError('rateLimit');
+	if (!res.ok) throw new ImportError('network');
+	return parseLichessNdjson(await res.text());
 }
 
 export async function fetchChessCom(
@@ -212,7 +234,7 @@ export async function streamLichess(
 	const q = new URLSearchParams({
 		pgnInJson: 'true',
 		moves: 'true',
-		clocks: 'false',
+		clocks: 'true',
 		evals: 'false',
 		opening: 'false'
 	});

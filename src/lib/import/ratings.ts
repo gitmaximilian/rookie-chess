@@ -60,19 +60,38 @@ export function isRated(g: GameRow): boolean {
 	return true;
 }
 
-export function isTargetGame(game: GameRow): boolean {
+/**
+ * Gewertete Rapid-Partie gegen Menschen auf der Zielplattform – Grundlage für Wertungsverlauf und Spielniveau.
+ * Standard Lichess; wer nur Chess.com verknüpft hat, bekommt den Verlauf mit Chess.com-Rapid (seit 0.10.0).
+ */
+export function isTargetGameOn(game: GameRow, source: 'lichess' | 'chesscom'): boolean {
 	const opponent = game.myColor === 'white' ? 'BlackTitle' : 'WhiteTitle';
+	if (
+		game.source !== source ||
+		game.speed !== 'rapid' ||
+		game.result === '*' ||
+		game.opponentIsBot ||
+		header(game.pgn, opponent) === 'BOT' ||
+		!isRated(game)
+	)
+		return false;
+	if (source === 'chesscom') return game.rated !== false;
 	return (
-		game.source === 'lichess' &&
-		game.speed === 'rapid' &&
-		game.result !== '*' &&
-		!game.opponentIsBot &&
-		header(game.pgn, opponent) !== 'BOT' &&
-		isRated(game) &&
-		(game.rated === true ||
-			/^rated\b/i.test(header(game.pgn, 'Event') ?? '') ||
-			ratingDiff(game) !== null)
+		game.rated === true ||
+		/^rated\b/i.test(header(game.pgn, 'Event') ?? '') ||
+		ratingDiff(game) !== null
 	);
+}
+
+/** Lichess-Rapid-Ziel (einzelnes Argument – sicher für `games.filter(isTargetGame)`) */
+export function isTargetGame(game: GameRow): boolean {
+	return isTargetGameOn(game, 'lichess');
+}
+
+/** Plattform für den Verlauf: Lichess, sobald es dort Rapid-Partien gibt, sonst Chess.com */
+export function targetSource(games: GameRow[]): 'lichess' | 'chesscom' {
+	if (games.some((g) => isTargetGameOn(g, 'lichess'))) return 'lichess';
+	return games.some((g) => isTargetGameOn(g, 'chesscom')) ? 'chesscom' : 'lichess';
 }
 
 /**

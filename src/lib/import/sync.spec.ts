@@ -1,7 +1,15 @@
 import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { db } from '#lib/db/db.js';
-import { getLinked, link, syncNow, unlink } from './sync.svelte';
+import {
+	backfillClocks,
+	CLOCK_BACKFILL_KEY,
+	getLinked,
+	link,
+	syncNow,
+	unlink
+} from './sync.svelte';
+import { getSetting } from '#lib/db/db.js';
 
 const PGN = `[White "alice"]
 [Black "bob"]
@@ -22,6 +30,58 @@ function lichessLine(id: string, createdAt: number) {
 		pgn: PGN
 	});
 }
+
+describe('Uhrzeiten nachladen', () => {
+	beforeEach(async () => {
+		await db.games.clear();
+		await db.settings.clear();
+	});
+
+	it('ersetzt nur das PGN, nur bei gleichen Zügen, und merkt sich den Fortschritt', async () => {
+		const base = {
+			source: 'lichess' as const,
+			myColor: 'white' as const,
+			opponent: 'bob',
+			result: '1-0' as const,
+			startFen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+		};
+		const moves = ['e2e4', 'e7e5', 'g1f3', 'b8c6', 'f1b5', 'a7a6'];
+		const a = await db.games.add({
+			...base,
+			date: 2,
+			externalId: 'lichess:a',
+			pgn: PGN,
+			moves,
+			analysis: { depth: 11, done: true, evals: [] }
+		});
+		const b = await db.games.add({ ...base, date: 1, externalId: 'lichess:b', pgn: PGN, moves });
+		const timed = PGN.replace('1. e4 e5', '1. e4 { [%clk 0:03:00] } e5 { [%clk 0:03:00] }');
+		const other = '[White "alice"]\n[Black "bob"]\n\n1. d4 { [%clk 0:03:00] } d5 *';
+		let body = '';
+		const fetcher = (async (url: string, init?: RequestInit) => {
+			body = String(init?.body);
+			const line = (id: string, pgn: string) =>
+				JSON.stringify({
+					id,
+					variant: 'standard',
+					speed: 'blitz',
+					createdAt: 1,
+					players: { white: { user: { name: 'alice' } }, black: { user: { name: 'bob' } } },
+					pgn
+				});
+			return new Response(line('a', timed) + '\n' + line('b', other) + '\n');
+		}) as unknown as typeof fetch;
+		expect(await backfillClocks(fetcher)).toBe(1);
+		expect(body).toBe('a,b');
+		const ra = await db.games.get(a);
+		expect(ra?.pgn).toContain('%clk');
+		expect(ra?.analysis?.done).toBe(true);
+		// andere Züge → unverändert
+		expect((await db.games.get(b))?.pgn).toBe(PGN);
+		expect(await getSetting(CLOCK_BACKFILL_KEY, {})).toEqual({ done: true });
+		expect(await backfillClocks(fetcher)).toBe(0);
+	});
+});
 
 describe('Konto-Sync', () => {
 	beforeEach(async () => {
@@ -50,7 +110,7 @@ describe('Konto-Sync', () => {
 
 		// zweiter Abruf: nur seit dem letzten Mal, Duplikate werden nicht doppelt gespeichert
 		expect(await syncNow(fetcher)).toBe(0);
-		expect(urls[1]).toContain('&since=');
+		expect(urls.filter((u) => u.includes('/api/games/user/'))[1]).toContain('&since=');
 		expect(await db.games.count()).toBe(2);
 	});
 

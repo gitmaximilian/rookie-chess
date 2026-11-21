@@ -22,7 +22,7 @@ export interface Tombstones {
 export const TOMBSTONE_KEY = 'tombstones';
 
 /** Einstellungen, die nur auf diesem Gerät gelten */
-export const LOCAL_ONLY_SETTINGS = new Set(['lastBackupAt', 'syncState']);
+export const LOCAL_ONLY_SETTINGS = new Set(['lastBackupAt', 'syncState', 'clockBackfill']);
 
 /** Partien aus Lichess/Chess.com enthalten Namen Dritter – sie werden nicht synchronisiert,
  * sondern auf jedem Gerät über das verknüpfte Konto neu geladen. */

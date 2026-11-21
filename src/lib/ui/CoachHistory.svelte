@@ -2,16 +2,25 @@
 	import { intlLocale, t } from '#lib/i18n/i18n.svelte.js';
 	import {
 		COACH_PERIODS,
+		RATING_NOISE,
 		coachPeriod,
+		ratingChange,
 		type CoachHistoryPoint,
 		type CoachPeriod
 	} from '#lib/training/coachHistory.js';
 	import { resolve } from '$app/paths';
 
-	let { history }: { history: CoachHistoryPoint[] } = $props();
+	let {
+		history,
+		source = 'lichess'
+	}: { history: CoachHistoryPoint[]; source?: 'lichess' | 'chesscom' } = $props();
 	let period = $state<CoachPeriod>(30);
 	let selected = $state<number | null>(null);
 	const summary = $derived(coachPeriod(history, period));
+	/** Wirkt es? Die Wertung über die letzten 15 Partien – unabhängig vom Zeitraum */
+	const change = $derived(ratingChange(history));
+	const day = (ms: number) =>
+		new Date(ms).toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short' });
 	const active = $derived(summary.points[selected ?? Math.max(0, summary.points.length - 1)]);
 	const W = 420;
 	const H = 178;
@@ -113,12 +122,31 @@
 				{#if summary.indexDelta !== null}<small>{delta(summary.indexDelta)}</small>{/if}
 			</div>
 			<div class="elo">
-				<span>{t('coachHistory.rating')}</span>
+				<span
+					>{t('coachHistory.rating', {
+						source: source === 'chesscom' ? 'Chess.com' : 'Lichess'
+					})}</span
+				>
 				<strong>{display(summary.latestRating)} <small>{t('coachHistory.elo')}</small></strong>
 				{#if summary.ratingDelta !== null}<small>{delta(summary.ratingDelta)}</small>{/if}
 			</div>
 		</div>
 		{#if !summary.latestIndex}<p class="muted">{t('coachHistory.notEnough')}</p>{/if}
+		{#if change}
+			<div class="change {change.verdict}" data-testid="level-change">
+				<b
+					>{change.before} → {change.now}
+					<small>{change.delta > 0 ? '+' : ''}{change.delta}</small></b
+				>
+				<span
+					>{t(`coachHistory.change.${change.verdict}`, {
+						noise: RATING_NOISE,
+						since: day(change.since)
+					})}</span
+				>
+				<small class="muted">{t('coachHistory.change.dose', { n: change.perWeek })}</small>
+			</div>
+		{/if}
 		<svg viewBox="0 0 {W} {H}" aria-hidden="true" onpointermove={pick} onpointerdown={pick}>
 			{#each ticks as tick (tick)}
 				<line class="grid" x1={L} x2={R} y1={ypos(tick)} y2={ypos(tick)} />
@@ -216,10 +244,34 @@
 		<p>{t('coachHistory.formula')}</p>
 		<p>{t('coachHistory.safety')}</p>
 		<p>{t('coachHistory.eloSource')}</p>
+		<p>{t('coachHistory.change.why')}</p>
 	</details>
 </section>
 
 <style>
+	.change {
+		display: grid;
+		gap: 0.2rem;
+		padding: 0.7rem 0.85rem;
+		border-radius: 12px;
+		background: var(--surface-2);
+		border-left: 4px solid var(--line-strong);
+	}
+	.change.up {
+		border-left-color: var(--good);
+	}
+	.change.down {
+		border-left-color: var(--warn);
+	}
+	.change b {
+		font-family: var(--font-display);
+		font-size: 1.05rem;
+		font-variant-numeric: tabular-nums;
+	}
+	.change b small {
+		font-size: 0.85rem;
+		color: var(--text-2);
+	}
 	.history {
 		display: grid;
 		gap: 0.85rem;

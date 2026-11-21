@@ -20,6 +20,7 @@ import { Game } from '#lib/chess/game.js';
 import type { GameRow } from '#lib/db/db.js';
 import { accuracy, whiteWin, type PlyEval } from '#lib/analysis/classify.js';
 import { phasesByMaterial } from './gamestats.js';
+import { clockTrack, inTimeTrouble, used10, type GameClockStats } from './clock.js';
 
 export type Skill = 'safety' | 'tactics' | 'opening' | 'strategy' | 'endgame';
 
@@ -266,6 +267,8 @@ export interface GameSkillStats {
 	endgame: [number, number];
 	blunderLoss: { opening: number; endgame: number };
 	cnt: Record<Skill, number>;
+	/** Bedenkzeit, falls das PGN %clk-Kommentare hat (clock.ts) */
+	clock?: GameClockStats | null;
 }
 
 /** Auswertung einer Partie wie skill-study.mjs (null = nicht analysiert oder nicht lesbar) */
@@ -303,6 +306,18 @@ export function gameSkillStats(g: GameRow): GameSkillStats | null {
 		blunderLoss: { opening: 0, endgame: 0 },
 		cnt: { safety: 0, tactics: 0, opening: 0, strategy: 0, endgame: 0 }
 	};
+	const track = clockTrack(g.pgn);
+	const firstPly = turnOf(fens[0]) === g.myColor ? 0 : 1;
+	const clock: GameClockStats | null = track
+		? {
+				moves: 0,
+				tt: 0,
+				ttLive: 0,
+				ttBlunders: 0,
+				used10: used10(track, firstPly),
+				flagged: track.flagged === g.myColor
+			}
+		: null;
 	for (let i = 0; i < n; i++) {
 		const mover = i % 2 === 0 ? turnOf(fens[0]) : other(turnOf(fens[0]));
 		if (mover !== g.myColor) continue;
@@ -311,6 +326,16 @@ export function gameSkillStats(g: GameRow): GameSkillStats | null {
 		if (w >= 0.2) {
 			out.live++;
 			if (l >= 0.3) out.blunders++;
+		}
+		if (clock && track && track.clocks[i] !== null && track.clocks[i] !== undefined) {
+			clock.moves++;
+			if (inTimeTrouble(track, i)) {
+				clock.tt++;
+				if (w >= 0.2) {
+					clock.ttLive++;
+					if (l >= 0.3) clock.ttBlunders++;
+				}
+			}
 		}
 		// Genauigkeit nur in offenen Stellungen (wie die Eichung)
 		const open = w >= 0.15 && w <= 0.85;
@@ -335,6 +360,7 @@ export function gameSkillStats(g: GameRow): GameSkillStats | null {
 				out.cnt[p === 'opening' ? 'opening' : p === 'middlegame' ? 'strategy' : 'endgame']++;
 		}
 	}
+	if (clock) out.clock = clock;
 	return out;
 }
 

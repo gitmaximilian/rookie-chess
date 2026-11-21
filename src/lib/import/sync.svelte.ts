@@ -1,10 +1,12 @@
 /* eslint-disable svelte/prefer-svelte-reactivity -- Sets hier nur lokal während eines Abrufs, nicht als UI-Zustand */
 import { db, getSetting, setSetting, type GameRow } from '#lib/db/db.js';
 import { analyseGame, createMistakePuzzles } from '#lib/analysis/run.js';
+import { Game } from '#lib/chess/game.js';
 import {
 	archiveEnd,
 	chessComArchives,
 	chessComMonth,
+	fetchLichessByIds,
 	streamLichess,
 	toGameRow,
 	ImportError,
@@ -109,6 +111,7 @@ export async function syncNow(fetcher: typeof fetch = fetch): Promise<number> {
 			};
 			try {
 				await syncSource(source, user, acc, save, fetcher);
+				if (source === 'lichess') await backfillClocks(fetcher);
 			} catch (e) {
 				const code = (e as ImportError).code;
 				syncState.error =
@@ -121,6 +124,57 @@ export async function syncNow(fetcher: typeof fetch = fetch): Promise<number> {
 		syncState.lastNew = added;
 	}
 	return added;
+}
+
+/** Fortschritt beim Nachladen der Uhrzeiten – nur auf diesem Gerät (importierte Partien werden nicht synchronisiert) */
+export const CLOCK_BACKFILL_KEY = 'clockBackfill';
+const CLOCK_BATCH = 300;
+
+/**
+ * Lädt für ältere Lichess-Importe ohne Uhrzeiten das PGN mit `%clk` nach (neueste zuerst, höchstens `batches`
+ * Anfragen je Abruf). Ersetzt wird nur das PGN und nur, wenn die Züge exakt gleich sind – Analyse, Wiederholungs-
+ * karten und alles andere an der Partie bleiben unverändert.
+ */
+export async function backfillClocks(fetcher: typeof fetch = fetch, batches = 2): Promise<number> {
+	const state = await getSetting<{ before?: number; done?: boolean }>(CLOCK_BACKFILL_KEY, {});
+	if (state.done) return 0;
+	const missing = (await db.games.where('source').equals('lichess').toArray())
+		.filter((g) => !g.pgn.includes('%clk') && (state.before === undefined || g.date < state.before))
+		.sort((a, b) => b.date - a.date);
+	let updated = 0;
+	for (let b = 0; b < batches; b++) {
+		const batch = missing.slice(b * CLOCK_BATCH, (b + 1) * CLOCK_BATCH);
+		if (!batch.length) {
+			await setSetting(CLOCK_BACKFILL_KEY, { done: true });
+			break;
+		}
+		const fresh = new Map(
+			(
+				await fetchLichessByIds(
+					batch.map((g) => g.externalId!.slice('lichess:'.length)),
+					fetcher
+				)
+			).map((g) => [g.externalId, g.pgn])
+		);
+		for (const row of batch) {
+			const pgn = fresh.get(row.externalId!);
+			if (!pgn?.includes('%clk') || row.id === undefined) continue;
+			try {
+				if (
+					Game.fromPgn(pgn)
+						.moves.map((m) => m.uci)
+						.join(' ') !== row.moves.join(' ')
+				)
+					continue;
+			} catch {
+				continue;
+			}
+			await db.games.update(row.id, { pgn });
+			updated++;
+		}
+		await setSetting(CLOCK_BACKFILL_KEY, { before: Math.min(...batch.map((g) => g.date)) });
+	}
+	return updated;
 }
 
 async function syncSource(

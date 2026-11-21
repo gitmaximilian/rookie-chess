@@ -117,3 +117,49 @@ test('Coach-Übersicht: Penta, dann ein Schwerpunkt, dann Entwicklung – Kennza
 	await expect(page.getByTestId('coach-kpis')).toBeVisible();
 	await expect(page.getByTestId('tile-converted')).toBeVisible();
 });
+
+test('Nur Chess.com: Verlauf mit Chess.com-Rapid und „Wirkt es?“ nach 16 Partien', async ({
+	page
+}) => {
+	await page.goto('/coach');
+	const chart = page.getByTestId('coach-history');
+	await expect(chart).toBeVisible();
+	// 17 Rapid-Partien, die Wertung steigt um 5 je Partie → +75 über die letzten 15 (Schwankung ±47)
+	const games: GameRow[] = Array.from({ length: 17 }, (_, i) => ({
+		date: Date.now() - (17 - i) * 86_400_000,
+		source: 'chesscom',
+		speed: 'rapid',
+		rated: true,
+		myRating: 700 + i * 5,
+		startFen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+		pgn: '1. e4 e5 2. Nf3 Nc6 1-0',
+		moves: ['e2e4', 'e7e5', 'g1f3', 'b8c6'],
+		result: '1-0',
+		myColor: 'white',
+		opponent: 'Fixture'
+	}));
+	await page.evaluate(
+		(rows) =>
+			new Promise<void>((resolve, reject) => {
+				const req = indexedDB.open('rookie');
+				req.onerror = () => reject(req.error);
+				req.onsuccess = () => {
+					const db = req.result;
+					const tx = db.transaction('games', 'readwrite');
+					for (const game of rows) tx.objectStore('games').add(game);
+					tx.oncomplete = () => {
+						db.close();
+						resolve();
+					};
+					tx.onerror = () => reject(tx.error);
+				};
+			}),
+		games
+	);
+	await page.reload();
+	await expect(chart.getByText('Chess.com Rapid')).toBeVisible();
+	const change = chart.getByTestId('level-change');
+	await expect(change).toContainText('705 → 780');
+	await expect(change).toContainText('it works');
+	await expect(change).toContainText('rapid games per week');
+});

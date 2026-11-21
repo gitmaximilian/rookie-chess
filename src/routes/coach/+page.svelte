@@ -16,19 +16,34 @@
 	import LevelFocus from '#lib/ui/LevelFocus.svelte';
 	import CoachHistory from '#lib/ui/CoachHistory.svelte';
 	import CoachWeek from '#lib/ui/CoachWeek.svelte';
+	import ClockCard from '#lib/ui/ClockCard.svelte';
+	import {
+		clockLevel,
+		gameClockStats,
+		poolClock,
+		type ClockSummary,
+		type GameClockStats
+	} from '#lib/training/clock.js';
 	import { tableFor } from '#lib/training/skillTables.js';
 	import { coachHistory, type CoachHistoryPoint } from '#lib/training/coachHistory.js';
 	import type { AccPoint } from '#lib/ui/AccuracyTrend.svelte';
 	import {
 		adviceFor,
 		collectSkillsAdaptive,
+		gameSkillStats,
 		overallLevel,
 		skillMirror,
 		type Advice as SkillAdvice,
 		type Skill,
 		type SkillValue
 	} from '#lib/training/skills.js';
-	import { isPentaGame, PENTA_SPEEDS, quality, type PentaSpeed } from '#lib/import/ratings.js';
+	import {
+		isPentaGame,
+		PENTA_SPEEDS,
+		quality,
+		targetSource,
+		type PentaSpeed
+	} from '#lib/import/ratings.js';
 	import { db, getSetting, setSetting } from '#lib/db/db.js';
 	import { loadOpenings, openingFor } from '#lib/data/openings.js';
 	import {
@@ -99,6 +114,9 @@
 		speeds: { speed: PentaSpeed; n: number }[];
 		ratingSpark: number[];
 		history: CoachHistoryPoint[];
+		historySource: 'lichess' | 'chesscom';
+		/** Uhr im gewählten Tempo (letzte 30 Partien mit Zeitangaben) */
+		clock: { summary: ClockSummary | null; withClock: number; level: number | null };
 	}
 
 	let d = $state<Data | null>(null);
@@ -244,9 +262,22 @@
 		const mirror = skillMirror(skillRaw, table);
 		// Ecken, die in diesem Tempo nicht aussagekräftig sind, zählen im Gesamtniveau, werden aber nicht gezeigt
 		const skills = mirror.map((v) => (v.hidden ? { ...v, score: null, elo: null } : v));
+		// Uhr: Tempo und Zeitverluste brauchen keine Analyse, Zeitnot-Patzer schon
+		const clockStats = [...pentaGames]
+			.sort((a, b) => b.date - a.date)
+			.flatMap((g): { clock: GameClockStats; blunders: number | null }[] => {
+				const s = gameSkillStats(g);
+				if (s?.clock) return [{ clock: s.clock, blunders: s.blunders }];
+				const c = gameClockStats(g);
+				return c ? [{ clock: c, blunders: null }] : [];
+			})
+			.slice(0, 30);
+		const clockSummary = poolClock(clockStats);
+		const overall = overallLevel(mirror, table);
 		d = {
 			name: linked.lichess || linked.chesscom || '',
 			history: coachHistory(games),
+			historySource: targetSource(games),
 			games: games.length,
 			stats,
 			last,
@@ -260,7 +291,7 @@
 			skills,
 			// Bullet: Zugqualität sagt die Wertung nicht voraus (Holdout schlechter als Raten) – kein Penta, kein Rat
 			skillAdvice: pentaSpeed === 'bullet' ? [] : adviceFor(mirror, skillRaw, table),
-			skillOverall: pentaSpeed === 'bullet' ? null : overallLevel(mirror, table),
+			skillOverall: pentaSpeed === 'bullet' ? null : overall,
 			skillBlunderShare: skillRaw.blunderShare,
 			// Genauigkeit der letzten 20 analysierten Partien, älteste links
 			accuracy: sorted
@@ -279,6 +310,11 @@
 				total: analysable.length
 			},
 			speeds,
+			clock: {
+				summary: clockSummary,
+				withClock: clockStats.length,
+				level: clockLevel(pentaSpeed, overall?.elo ?? null, clockSummary?.used10 ?? null)
+			},
 			ratingSpark: main ? main.points.slice(-20).map((p) => p.rating) : []
 		};
 	}
@@ -491,15 +527,23 @@
 					blunderShare={d.skillBlunderShare}
 					lever={false}
 					table={tableFor(pentaSpeed)}
+					chesscom={d.historySource === 'chesscom'}
 				/>
 			{/if}
+			<ClockCard
+				speed={pentaSpeed}
+				summary={d.clock.summary}
+				withClock={d.clock.withClock}
+				level={d.clock.level}
+				chesscom={d.historySource === 'chesscom'}
+			/>
 		</section>
 
 		<!-- 3. Woran genau? Ein Schwerpunkt (derselbe wie im Tagesplan), die Stufe zum Aufklappen -->
 		{@render focusCard(d)}
 
 		<!-- 4. Wirkt es? Entwicklung und Lernkennzahlen -->
-		<CoachHistory history={d.history} />
+		<CoachHistory history={d.history} source={d.historySource} />
 
 		<!-- Wertungsverlauf, Genauigkeit je Partie, typische Fehler und Erkenntnisse: Tab „Statistik“ -->
 		<a class="all card pressable" href={resolve('/coach/stats')}>

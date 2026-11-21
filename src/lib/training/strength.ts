@@ -1,4 +1,5 @@
 import type { Rating } from './glicko2.js';
+import { fromChessCom } from './platforms.js';
 
 export interface StrengthInput {
 	puzzle?: Rating | null;
@@ -25,11 +26,11 @@ export interface Strength {
  * Umrechnung auf die **Lichess-Skala** – an ihr sind Skill-Penta, Stufen und alle Schwellen geeicht
  * (Lichess-Partien je Wertungsband). Bis v0.6 rechnete Rookie „FIDE-ähnlich“ (Lichess −150); dadurch lagen
  * Spielstärke und Penta bei denselben Daten ~150 auseinander. Die Abstände der Quellen bleiben gleich:
- * - Chess.com-Wertungen liegen unter Lichess-Wertungen (+150)
+ * - Chess.com-Wertungen liegen unter Lichess-Wertungen – gemessen, nicht pauschal (platforms.ts; bis 0.9.0 +150)
  * - Puzzle-Wertungen liegen über der Partie-Stärke (−50 gegenüber Lichess, früher −200 gegenüber FIDE)
  * - Bot-Angaben sind Schätzungen (siehe unten), wie bisher +150 zur alten Skala
  */
-export const OFFSET = { lichess: 0, chesscom: 150, puzzle: -50, bots: 150 } as const;
+export const OFFSET = { lichess: 0, puzzle: -50, bots: 150 } as const;
 
 /**
  * Spielstärke aus allem, was Rookie weiß.
@@ -46,7 +47,10 @@ export function estimateStrength(input: StrengthInput): Strength | null {
 	if (input.online) {
 		parts.push({
 			source: 'online',
-			v: input.online.rating + OFFSET[input.online.source],
+			v:
+				input.online.source === 'chesscom'
+					? fromChessCom(input.online.rating)
+					: input.online.rating + OFFSET.lichess,
 			w: 1.5
 		});
 	}

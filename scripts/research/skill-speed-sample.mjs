@@ -14,8 +14,10 @@ import { readFileSync, writeFileSync } from 'node:fs';
 
 const [, , file, speed, outCalib, outHold] = process.argv;
 const PER_BAND = 120;
-const HOLD_PLAYERS = 6;
-const HOLD_GAMES = 20;
+// Holdout-Größe über Umgebungsvariablen änderbar (z. B. HOLD_MIN=30 HOLD_GAMES=30 für die Fenster-Streuung)
+const HOLD_PLAYERS = Number(process.env.HOLD_PLAYERS ?? 6);
+const HOLD_GAMES = Number(process.env.HOLD_GAMES ?? 20);
+const HOLD_MIN = Number(process.env.HOLD_MIN ?? 12);
 let seed = 4242;
 const rnd = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
 const shuffle = (xs) => {
@@ -61,7 +63,7 @@ const holdGames = new Set();
 for (let band = 400; band <= 2400; band += 200) {
 	const cands = shuffle(
 		[...byPlayer.entries()].filter(
-			([, p]) => p.games.length >= 12 && bandOf(median(p.ratings)) === band
+			([, p]) => p.games.length >= HOLD_MIN && bandOf(median(p.ratings)) === band
 		)
 	).slice(0, HOLD_PLAYERS);
 	for (const [n, p] of cands) {

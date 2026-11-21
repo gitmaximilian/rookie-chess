@@ -1197,11 +1197,21 @@ export const en = {
 		done: 'Let’s go!'
 	},
 	coachHistory: {
+		change: {
+			up: (p: P) =>
+				`Rating over the last 15 games (since ${p.since}): more than the noise (±${p.noise}) – it works.`,
+			flat: (p: P) =>
+				`Rating over the last 15 games (since ${p.since}): still within the noise (±${p.noise}).`,
+			down: (p: P) =>
+				`Rating over the last 15 games (since ${p.since}): lost more than the noise (±${p.noise}). Look at your latest blunders.`,
+			dose: (p: P) => `Meanwhile ${p.n} rapid games per week (dose: 3–8).`,
+			why: 'The playing level varies by up to ±650 Elo between two windows of 15 games by chance – so for short periods the rating counts.'
+		},
 		provisional: 'provisional',
 		title: 'Your progress',
 		period: 'Time range',
 		index: 'Playing level',
-		rating: 'Lichess Rapid',
+		rating: (p: P) => `${p.source} Rapid`,
 		outOf100: '/ 100',
 		elo: 'Elo',
 		noPeriod: 'There are no Rapid games in this range.',
@@ -1396,6 +1406,26 @@ export const en = {
 			playText: 'Play a bot or link Lichess / Chess.com – then you get personal advice here.'
 		}
 	},
+	clock: {
+		title: 'Clock',
+		need: (p: P) =>
+			`The clock needs ${p.m} games with clock times at this speed (${p.n} so far). Older Lichess games get their times on the next sync.`,
+		tempo: 'of your time spent by move 10',
+		typical: (p: P) => `Line: Lichess players around 1600 use ${p.pct} %.`,
+		level: (p: P) => `Level with clock: ≈ ${p.elo} (±${p.mae} on average)`,
+		flags: (p: P) => `Lost on time: ${p.pct} % of games`,
+		ttBlunders: (p: P) => `Blunders in time trouble: ${p.n} of ${p.m}`,
+		advice: {
+			tempo:
+				'You spend a lot of time on the first moves. If you know your opening, you play it faster – and have time later.',
+			flag: 'You often lose on time. With little time left, play simple, safe moves – or choose a longer time control.',
+			fine: 'The clock is not your bottleneck – train the weakest corner of your profile.'
+		},
+		cta: { tempo: 'Learn an opening' },
+		why: 'Where do the numbers come from?',
+		whyText:
+			'Measured on 45–64 Lichess players per speed: time trouble (under 10 % of the time) explains only 1–7 % of all blunders. How fast you play the first 10 moves predicts the rating strongly in blitz and bullet – strong players know their opening. A correlation, not a guarantee.'
+	},
 	skills: {
 		title: 'Your skill penta',
 		subtitle: '100 = world elite',
@@ -1524,9 +1554,9 @@ export const en = {
 		speedNote: {
 			classical: 'Compared with Lichess players in rapid and classical (shared calibration).',
 			blitz:
-				'Compared with Lichess blitz players (own calibration). Checked on 59 players: within ±300 Elo on average – a little less precise than rapid (±230).',
+				'Compared with Lichess blitz players (own calibration). Checked on 59 players: within ±300 Elo on average. With the clock (below) ±234.',
 			bullet:
-				'Rookie shows no penta for bullet: checked on 57 Lichess players, move quality predicted the bullet rating worse than plain guessing. In bullet the clock decides most – Rookie does not measure that.'
+				'Rookie shows no penta for bullet: checked on 57 Lichess players, move quality predicted the bullet rating worse than plain guessing. In bullet the clock decides – Rookie measures it below.'
 		},
 		needData: (p: P) =>
 			`Your profile needs at least 3 analysed ${p.speed} games against people (${p.n} so far). Link Lichess or Chess.com – bot games don't count.`,
@@ -1880,6 +1910,7 @@ export const en = {
 			games: 'Research data: blunder types and accuracy by rating (docs/research)',
 			openings: 'Opening names',
 			tablebase: 'Endgame tablebase',
+			chesscom: 'Chess.com ↔ Lichess conversion (aggregate figures only)',
 			lucide: 'Icons',
 			font: 'Typeface',
 			dexie: 'Local database',
