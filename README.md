@@ -18,6 +18,15 @@ A chess trainer for beginners as a Progressive Web App for iPhone, iPad and Mac 
 
 Screenshots use generated sample data (`scripts/screenshots/`), not real games.
 
+## What's new in 0.10.0
+
+Measured, not guessed ([research](docs/research-2026-11-13.md#nachtrag-bedenkzeit-messschwankung-und-chesscom-21-november-2026), [plan](docs/plan-2026-11-21.md)).
+
+- **Clock:** Lichess games now come with clock times (older imports get them on the next sync). A new Coach card per time control shows how much of your time you spend by move 10, games lost on time and blunders in time trouble – with one next step. Time trouble causes only 1–7 % of blunders, but opening speed separates levels: with it, blitz is estimated within ±234 Elo (penta alone ±288) and **bullet becomes measurable** (±267, before worse than guessing).
+- **Does it work?** The progress chart judges your rating over the last 15 games against the measured noise (±47) and shows how many games a week you played. The playing level varies by up to ±650 between two 15-game windows by chance, so it cannot answer that.
+- **Chess.com ↔ Lichess:** an own sample of 85 rapid and 87 blitz Chess.com players replaces the flat +150: Chess.com rapid ≈ 1.209 × Lichess − 608. Chess.com-only players get the progress chart in Chess.com rapid and penta figures on their scale.
+- **Retrieval tasks:** twelve lessons now end with a new, unseen position where you apply the idea yourself – all checked with Stockfish.
+
 ## What's new in 0.9.0
 
 - **Skill penta for each time control:** switch between Rapid (default), Classical, Blitz and Bullet; bot games never count. Blitz has its own Lichess calibration – checked on 59 players outside it: within ±300 Elo (guessing: ±480); its tactics corner was worse than guessing and stays hidden. **Bullet shows no penta:** move quality predicted bullet ratings worse than guessing (57 players) – the clock decides most ([research](docs/research-2026-11-13.md#nachtrag-skill-penta-für-blitz-und-bullet-spielniveau-statt-trainingsindex-20-november-2026)).
