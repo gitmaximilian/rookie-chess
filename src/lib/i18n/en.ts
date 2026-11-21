@@ -672,6 +672,7 @@ export const en = {
 		starsLeft: (p: P) => `${p.n} ${s(p.n, 'star', 'stars')} left`,
 		allStars: (p: P) => `All stars collected in ${p.n} ${s(p.n, 'move', 'moves')}!`,
 		tryAgain: 'Not quite – try again.',
+		transfer: 'New position',
 		lessonDone: 'Lesson complete!',
 		nextLesson: 'Next lesson',
 		overview: 'All lessons',

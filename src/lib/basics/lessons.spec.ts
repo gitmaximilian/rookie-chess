@@ -73,4 +73,17 @@ describe('Grundlagen-Lektionen', () => {
 		expect(soloFen('knight', 'g1')).toBe('8/8/8/8/8/8/8/6N1 w - - 0 1');
 		expect(soloDests('knight', 'b1').get('b1')!.sort()).toEqual(['a3', 'c3', 'd2']);
 	});
+
+	// Abrufübung: Lektionen mit Erklärung enden mit einer eigenen Entscheidung in einer neuen Stellung
+	it('Lektionen mit Erklärung enden mit einer Aufgabe, Abrufaufgaben in neuer Stellung', () => {
+		for (const l of [...BASICS, ...TACTICS, ...POSITIONAL]) {
+			if (l.id === 'board') continue; // reine Einführung ins Brett
+			expect(l.steps.at(-1)?.kind, l.id).not.toBe('info');
+			l.steps.forEach((s, i) => {
+				if (s.kind !== 'find' || !s.transfer) return;
+				const seen = l.steps.slice(0, i).flatMap((x) => ('fen' in x ? [x.fen.split(' ')[0]] : []));
+				expect(seen, `${l.id}: Abrufstellung kam schon vor`).not.toContain(s.fen.split(' ')[0]);
+			});
+		}
+	});
 });

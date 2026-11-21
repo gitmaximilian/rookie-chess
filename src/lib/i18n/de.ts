@@ -722,6 +722,7 @@ export const de: Shape<typeof en> = {
 		starsLeft: (p: P) => `Noch ${p.n} ${p.n === 1 ? 'Stern' : 'Sterne'}`,
 		allStars: (p: P) => `Alle Sterne in ${p.n} ${p.n === 1 ? 'Zug' : 'Zügen'} gesammelt!`,
 		tryAgain: 'Nicht ganz – versuch es nochmal.',
+		transfer: 'Neue Stellung',
 		lessonDone: 'Lektion geschafft!',
 		nextLesson: 'Nächste Lektion',
 		overview: 'Alle Lektionen',

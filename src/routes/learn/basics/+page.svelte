@@ -307,7 +307,14 @@
 				<div class="dots">
 					{#each lesson.steps.map((_, i) => i) as i (i)}<span class:on={i <= si}></span>{/each}
 				</div>
-				<span class="step-no">{t('basics.step', { i: si + 1, n: lesson.steps.length })}</span>
+				<span class="step-no"
+					>{t('basics.step', {
+						i: si + 1,
+						n: lesson.steps.length
+					})}{#if step.kind === 'find' && step.transfer}{' · '}<b data-testid="transfer"
+							>{t('basics.transfer')}</b
+						>{/if}</span
+				>
 				{#key si}<p class="text">{loc(step.text)}</p>{/key}
 
 				{#if step.kind === 'stars'}

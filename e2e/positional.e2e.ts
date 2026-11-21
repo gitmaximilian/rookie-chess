@@ -21,6 +21,25 @@ test('Stellungsspiel: Lektion mit Schwarz am Zug lösen (zum Zentrum zurückschl
 			.locator('visible=true')
 			.first()
 	).toBeVisible();
+	// Abrufaufgabe: dasselbe Konzept in einer neuen Stellung
+	await page.getByRole('button', { name: /Next/ }).locator('visible=true').first().click();
+	await expect(page.getByTestId('transfer').locator('visible=true').first()).toHaveText(
+		'New position'
+	);
+	await playUci(page, 'c7b6');
+	await expect(
+		page
+			.getByText(/Not quite/)
+			.locator('visible=true')
+			.first()
+	).toBeVisible();
+	await playUci(page, 'a7b6');
+	await expect(
+		page
+			.getByText(/the a-file opens/)
+			.locator('visible=true')
+			.first()
+	).toBeVisible();
 });
 
 test('Lernen zeigt, was auf dem eigenen Niveau zählt, und die neuen Pfade', async ({ page }) => {

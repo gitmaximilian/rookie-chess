@@ -36,6 +36,11 @@ export interface FindStep {
 	accept: string[] | 'check' | 'mate';
 	/** Erklärung nach dem richtigen Zug */
 	done: L;
+	/**
+	 * Abrufaufgabe: eine neue Stellung, die in der Erklärung nicht vorkam – das Konzept selbst anwenden
+	 * (Abrufübung und Transfer, Roediger & Karpicke 2006; Dunlosky et al. 2013)
+	 */
+	transfer?: true;
 }
 
 export type BasicStep = InfoStep | StarsStep | FindStep;
@@ -503,6 +508,20 @@ export const BASICS: BasicLesson[] = [
 					'Weitere Remis: dreimal dieselbe Stellung, 50 Züge ohne Schlagen oder Bauernzug, zu wenig Material zum Mattsetzen (z. B. König gegen König) oder Einigung beider Spieler.'
 				),
 				fen: '8/8/3k4/8/8/4K3/8/8 w - - 0 1'
+			},
+			{
+				kind: 'find',
+				transfer: true,
+				text: N(
+					'Mate in one – careful: one queen move here is stalemate!',
+					'Matt in einem Zug – Vorsicht: Ein Damenzug hier wäre Patt!'
+				),
+				fen: 'k7/8/1K6/8/8/8/3Q4/8 w - - 0 1',
+				accept: 'mate',
+				done: N(
+					'Qd8# – mate. After Qd6? Black would have no move and no check: stalemate.',
+					'Dd8# – matt. Nach Dd6? hätte Schwarz keinen Zug und kein Schach: Patt.'
+				)
 			}
 		]
 	},
@@ -545,6 +564,31 @@ export const BASICS: BasicLesson[] = [
 				),
 				fen: 'r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/3P1N2/PPP2PPP/RNBQ1RK1 b kq - 0 5',
 				shapes: [{ orig: 'g1', brush: 'good' }]
+			},
+			{
+				kind: 'find',
+				transfer: true,
+				text: N(
+					'Now with Black: play a move that follows the principles!',
+					'Jetzt mit Schwarz: Spiel einen Zug nach den Grundregeln!'
+				),
+				fen: 'rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2',
+				accept: ['b8c6', 'g8f6', 'd7d6'],
+				done: N(
+					'Good: you develop a knight or protect your centre pawn.',
+					'Gut: Du entwickelst einen Springer oder deckst deinen Zentrumsbauern.'
+				)
+			},
+			{
+				kind: 'find',
+				transfer: true,
+				text: N(
+					'Knights and bishops are developing. Which rule is still missing for your king?',
+					'Springer und Läufer kommen ins Spiel. Welche Regel fehlt noch für deinen König?'
+				),
+				fen: 'r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/3P1N2/PPP2PPP/RNBQK2R w KQkq - 1 5',
+				accept: ['e1g1', 'e1h1'],
+				done: N('Castled early – rule 3.', 'Früh rochiert – Regel 3.')
 			}
 		]
 	}
@@ -641,6 +685,20 @@ export const TACTICS: BasicLesson[] = [
 				fen: '4k3/3n4/8/8/8/8/8/4KB2 w - - 0 1',
 				accept: ['f1b5'],
 				done: N('Pinned – the knight cannot move.', 'Gefesselt – der Springer kann nicht ziehen.')
+			},
+			{
+				kind: 'find',
+				transfer: true,
+				text: N(
+					'Now with Black: pin the white knight to its king!',
+					'Jetzt mit Schwarz: Fessle den weißen Springer an seinen König!'
+				),
+				fen: 'r1bqk1nr/pppp1ppp/2n5/2b1p3/4P3/2NP4/PPP2PPP/R1BQKBNR b KQkq - 0 4',
+				accept: ['c5b4'],
+				done: N(
+					'…Bb4 – the knight on c3 is pinned to the king on e1.',
+					'…Lb4 – der Springer c3 ist an den König e1 gefesselt.'
+				)
 			}
 		]
 	},
@@ -670,6 +728,20 @@ export const TACTICS: BasicLesson[] = [
 				done: N(
 					'Skewer! The king steps aside, then Rxd8.',
 					'Spieß! Der König weicht aus, dann Txd8.'
+				)
+			},
+			{
+				kind: 'find',
+				transfer: true,
+				text: N(
+					'Now with the bishop: skewer the king and the rook!',
+					'Jetzt mit dem Läufer: Spieße König und Turm auf!'
+				),
+				fen: '6r1/8/8/3k4/8/8/6PP/1B2K3 w - - 0 1',
+				accept: ['b1a2'],
+				done: N(
+					'Ba2+ – the king must leave the diagonal, then Bxg8.',
+					'La2+ – der König muss die Diagonale verlassen, dann Lxg8.'
 				)
 			}
 		]
@@ -703,6 +775,20 @@ export const TACTICS: BasicLesson[] = [
 				done: N(
 					'Discovered attack: the king must escape the check, then Bxh8.',
 					'Abzugsangriff: Der König muss aus dem Schach, dann Lxh8.'
+				)
+			},
+			{
+				kind: 'find',
+				transfer: true,
+				text: N(
+					'New position: uncover the rook’s check and attack the queen at the same time!',
+					'Neue Stellung: Gib das Turmschach frei und greif gleichzeitig die Dame an!'
+				),
+				fen: '4k3/8/q7/8/4B3/8/8/4RK2 w - - 0 1',
+				accept: ['e4d3'],
+				done: N(
+					'Bd3+ – check from the rook, and the bishop hits the queen.',
+					'Ld3+ – Schach vom Turm, und der Läufer trifft die Dame.'
 				)
 			}
 		]
@@ -750,6 +836,20 @@ export const TACTICS: BasicLesson[] = [
 					{ orig: 'h3', brush: 'good' },
 					{ orig: 'h6', brush: 'good' }
 				]
+			},
+			{
+				kind: 'find',
+				transfer: true,
+				text: N(
+					'Black threatens …Rd1#. Protect your king!',
+					'Schwarz droht …Td1#. Schütze deinen König!'
+				),
+				fen: '3r2k1/R4ppp/8/8/8/8/5PPP/6K1 w - - 0 1',
+				accept: ['h2h3', 'g2g3', 'h2h4', 'g2g4', 'a7a1', 'g1f1'],
+				done: N(
+					'Safe – your king has a square or the back rank is covered.',
+					'Sicher – dein König hat ein Fluchtfeld oder die Grundreihe ist gedeckt.'
+				)
 			}
 		]
 	}
