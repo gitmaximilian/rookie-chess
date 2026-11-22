@@ -203,8 +203,8 @@ export class PuzzleRun {
 
 	/** Erkennt einen gleichwertigen Alternativzug an (z. B. per Engine geprüft) und beendet das Puzzle */
 	acceptAlternative(uci: string): boolean {
+		// frühere Fehlversuche bleiben gezählt – sonst gälte „erst falsch, dann gut“ als sauber gelöst
 		if (!this.game.play(uci)) return false;
-		this.mistakes = Math.max(0, this.mistakes - 1);
 		this.step = this.puzzle.moves.length;
 		return true;
 	}

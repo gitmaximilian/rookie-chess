@@ -111,3 +111,21 @@ describe('Wiederholung (FSRS)', () => {
 		expect(formatInterval(now + 5 * 86400000, now)).toBe('in 5 days');
 	});
 });
+
+describe('eigene Fehler', () => {
+	it('gute Alternative nach Fehlversuch zählt nicht als sauber gelöst', () => {
+		const p: Puzzle = {
+			id: 'm1',
+			fen: 'rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2',
+			moves: ['', 'b8c6'],
+			rating: 0,
+			themes: [],
+			source: 'mistake'
+		};
+		const run = new PuzzleRun(p);
+		expect(run.try('a7a6').result).toBe('wrong');
+		expect(run.acceptAlternative('d7d6')).toBe(true);
+		expect(run.done).toBe(true);
+		expect(run.mistakes).toBe(1);
+	});
+});

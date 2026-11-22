@@ -146,8 +146,14 @@
 			return (due[0]?.data as Puzzle) ?? null;
 		}
 		if (mode === 'mistakes') {
+			// Nicht dieselbe Aufgabe direkt noch einmal; ist nichts fällig, die als Nächstes fällige vorziehen
+			const current = run?.puzzle.id;
+			const other = (r: { data?: unknown }) => (r.data as Puzzle | undefined)?.id !== current;
 			const due = await dueCards('mistake');
-			const pick = due[0] ?? (await db.reviewCards.where('kind').equals('mistake').first());
+			const all = due.length
+				? due
+				: await db.reviewCards.where('kind').equals('mistake').sortBy('due');
+			const pick = all.find(other) ?? all[0];
 			return (pick?.data as Puzzle) ?? null;
 		}
 		if (mode === 'daily') return dailyPuzzle(today());
@@ -169,7 +175,7 @@
 		played = null;
 		preview = null;
 		const row = await db.mistakes.get(p.id);
-		if (!row?.played) return;
+		if (!row?.played || run?.puzzle.id !== p.id) return;
 		const g = new Game(p.fen);
 		if (!g.play(row.played)) return;
 		played = row.played;
@@ -184,7 +190,9 @@
 
 	let countedForPlan = false;
 
+	let loadToken = 0;
 	async function next() {
+		const token = ++loadToken;
 		countedForPlan = false;
 		failureRecorded = false;
 		status = 'loading';
@@ -196,6 +204,7 @@
 		delta = null;
 		try {
 			const p = await loadPuzzle();
+			if (token !== loadToken) return;
 			if (!p) {
 				run = null;
 				status = 'empty';
@@ -205,11 +214,12 @@
 			v++;
 			if (p.source === 'mistake') {
 				await showPlayed(p);
-				status = 'solving';
+				if (token === loadToken) status = 'solving';
 				return;
 			}
 			status = 'intro';
 			await new Promise((r) => setTimeout(r, 650));
+			if (token !== loadToken || !run) return;
 			run.playIntro();
 			sound.move(!!run.game.moves.at(-1)?.captured, run.game.isCheck);
 			v++;
@@ -228,8 +238,11 @@
 			uci !== run.expected &&
 			!(run.expected ?? '').startsWith(uci)
 		) {
+			const active = run;
 			status = 'intro';
-			const ok = await isGoodAlternative(run.game.fen, uci, run.expected ?? '');
+			const ok = await isGoodAlternative(active.game.fen, uci, active.expected ?? '');
+			// inzwischen eine andere Aufgabe geladen → Zug verwerfen
+			if (run !== active) return;
 			status = 'solving';
 			if (ok && run.acceptAlternative(uci)) {
 				sound.move(!!run.game.moves.at(-1)?.captured, run.game.isCheck);
@@ -255,8 +268,9 @@
 		setTimeout(() => (feedback = ''), 500);
 		// Gegnerantwort nach kurzer Pause
 		status = 'intro';
+		const active = run;
 		setTimeout(() => {
-			if (!run) return;
+			if (run !== active) return;
 			run.playReply();
 			sound.move(!!run.game.moves.at(-1)?.captured, run.game.isCheck);
 			v++;
