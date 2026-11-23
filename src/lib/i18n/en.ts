@@ -1299,8 +1299,8 @@ export const en = {
 	coachWeek: {
 		title: 'Your week',
 		daysLeft: (p: P) => (Number(p.n) <= 1 ? 'last day' : `${p.n} days left`),
-		games: (p: P) => `Games · ${p.tc}`,
-		gamesBots: (p: P) => `Games · ${p.tc} or vs bots`,
+		games: 'Rapid games',
+		gamesBots: 'Rapid games or vs bots',
 		reviewed: 'Games reviewed',
 		puzzles: 'Puzzles',
 		safety: 'Blunder check',
@@ -1747,7 +1747,7 @@ export const en = {
 		rightUnsafe: 'Exactly – you found the refutation!',
 		halfUnsafe: 'Not safe, well sensed – here is why.',
 		whySafe: (p: P) =>
-			`After ${p.san} your opponent wins nothing: every capture can be answered and there is no mate.`,
+			`After ${p.san} your opponent wins nothing: ${p.check ? 'they must answer the check first, then you save whatever was attacked.' : 'every capture can be answered and there is no mate.'}`,
 		whyUnsafe: (p: P) =>
 			`After ${p.san} comes ${p.reply} (${p.theme}). Check before every move what your opponent can do next.`,
 		testScore: (p: P) => `${p.n} of ${p.m} points`,
@@ -1884,7 +1884,7 @@ export const en = {
 		streakDone: 'today done',
 		streakOpen: 'train today to keep it',
 		week: 'This week',
-		weekSub: (p: P) => `games ${p.tc} · dose ${p.pct} %`,
+		weekSub: (p: P) => `rapid · dose ${p.pct} %`,
 		goal: 'Daily goal',
 		goalDone: 'reached – well done',
 		goalLeft: (p: P) => `${p.n} more ${s(p.n, 'puzzle', 'puzzles')}`,

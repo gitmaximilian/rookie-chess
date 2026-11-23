@@ -1359,8 +1359,8 @@ export const de: Shape<typeof en> = {
 	coachWeek: {
 		title: 'Deine Woche',
 		daysLeft: (p: P) => (Number(p.n) <= 1 ? 'letzter Tag' : `noch ${p.n} Tage`),
-		games: (p: P) => `Partien · ${p.tc}`,
-		gamesBots: (p: P) => `Partien · ${p.tc} oder gegen Bots`,
+		games: 'Rapid-Partien',
+		gamesBots: 'Rapid-Partien oder gegen Bots',
 		reviewed: 'Partien besprochen',
 		puzzles: 'Puzzles',
 		safety: 'Blunder-Check',
@@ -1814,7 +1814,7 @@ export const de: Shape<typeof en> = {
 		rightUnsafe: 'Genau – du hast die Widerlegung gefunden!',
 		halfUnsafe: 'Nicht sicher, gut gespürt – hier ist der Grund.',
 		whySafe: (p: P) =>
-			`Nach ${p.san} gewinnt der Gegner nichts: Jeder Schlagzug lässt sich beantworten, und es gibt kein Matt.`,
+			`Nach ${p.san} gewinnt der Gegner nichts: ${p.check ? 'Er muss erst das Schach parieren, danach rettest du alles Bedrohte.' : 'Jeder Schlagzug lässt sich beantworten, und es gibt kein Matt.'}`,
 		whyUnsafe: (p: P) =>
 			`Nach ${p.san} kommt ${p.reply} (${p.theme}). Prüf vor jedem Zug, was der Gegner danach kann.`,
 		testScore: (p: P) => `${p.n} von ${p.m} Punkten`,
@@ -1954,7 +1954,7 @@ export const de: Shape<typeof en> = {
 		streakDone: 'heute erledigt',
 		streakOpen: 'heute trainieren, um sie zu halten',
 		week: 'Diese Woche',
-		weekSub: (p: P) => `Partien ${p.tc} · Dosis ${p.pct} %`,
+		weekSub: (p: P) => `Rapid · Dosis ${p.pct} %`,
 		goal: 'Tagesziel',
 		goalDone: 'erreicht – stark',
 		goalLeft: (p: P) => `noch ${p.n} ${Number(p.n) === 1 ? 'Puzzle' : 'Puzzles'}`,

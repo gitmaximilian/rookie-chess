@@ -352,7 +352,8 @@
 	});
 	const resultText = $derived.by(() => {
 		if (!item || status !== 'done') return '';
-		if (item.safe) return t('safety.whySafe', { san: moveSan });
+		if (item.safe)
+			return t('safety.whySafe', { san: moveSan, check: /[+#]/.test(moveSan) ? 1 : 0 });
 		return t('safety.whyUnsafe', {
 			san: moveSan,
 			reply: replySan,
