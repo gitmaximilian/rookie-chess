@@ -1328,7 +1328,7 @@ export const de: Shape<typeof en> = {
 		importRapid: 'Fertige Partie importieren',
 		openLichess: 'Lichess öffnen',
 		rapidDetails: (p: P) =>
-			`Spiele auf Lichess eine gewertete Rapid-Partie, ${p.tc} – der Zuschlag lässt Zeit für den Blunder-Check. Plane bis zu ${p.min} Minuten ein. Nach dem Import kannst du einen wichtigen Fehler üben.`,
+			`Spiele auf Lichess eine gewertete Rapid-Partie – nimm dir Zeit für den Blunder-Check. Plane bis zu ${p.min} Minuten ein. Nach dem Import kannst du einen wichtigen Fehler üben.`,
 		rapidSlot: 'Rapid-Partie einplanen, sobald du 25 Minuten hast',
 		kicker: 'Nächster Schritt',
 		title: 'Dein Training heute',
@@ -1370,7 +1370,7 @@ export const de: Shape<typeof en> = {
 				`Nur ${p.n} ${s(p.n, 'Partie', 'Partien')} in 14 Tagen – mit weniger als 4 pro Woche kommen Einsteiger kaum voran.`,
 			'review-first': 'Erst die letzten Partien besprechen – dort stecken deine Fehler.',
 			'slow-down':
-				'Seit 6 Wochen kein Fortschritt und noch viele Patzer: spiel 15+10 und prüf vor jedem Zug.',
+				'Seit 6 Wochen kein Fortschritt und noch viele Patzer: spiel langsamere Rapid-Partien und prüf vor jedem Zug.',
 			'more-tactics': 'Seit 6 Wochen kein Fortschritt: Taktik ist jetzt dein Hebel.',
 			'on-track': (p: P) => `Es geht voran: +${p.n} in 6 Wochen.`
 		},
@@ -1387,7 +1387,7 @@ export const de: Shape<typeof en> = {
 		reached: '1600 erreicht. Jetzt zählen Stellungsspiel und Endspiel.',
 		why: 'Warum diese Dosis?',
 		dose: (p: P) =>
-			`Pro Tag ${p.puzzles} Puzzles und ${p.safety} Blunder-Checks${Number(p.scan) ? ` und ${p.scan} Brett-Scans` : ''}, pro Woche ${p.games} Partien (${p.tc}) und ${p.lessons} ${s(p.lessons, 'Lektion', 'Lektionen')}.`,
+			`Pro Tag ${p.puzzles} Puzzles und ${p.safety} Blunder-Checks${Number(p.scan) ? ` und ${p.scan} Brett-Scans` : ''}, pro Woche ${p.games} Rapid-Partien und ${p.lessons} ${s(p.lessons, 'Lektion', 'Lektionen')}.`,
 		why1: 'Lichess-Daten, 883 neue Spieler um 900: Mit 4–8 Partien pro Woche stiegen sie in einem Jahr um +137 (Median), mit weniger als 2 kaum.',
 		why2: 'Bei gleich vielen Partien stiegen Spieler mit über 1000 Puzzles um +289, mit unter 100 um +71.',
 		why3: 'Rapid statt Blitz – Zeit für den Blunder-Check. Nach jeder Partie 5 Minuten: eigene Patzer zuerst.',

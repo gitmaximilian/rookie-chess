@@ -1269,7 +1269,7 @@ export const en = {
 		importRapid: 'Import a finished game',
 		openLichess: 'Open Lichess',
 		rapidDetails: (p: P) =>
-			`Play a rated Rapid game on Lichess, ${p.tc} – the increment leaves time for the blunder check. Allow up to ${p.min} minutes. Import the finished game to check this off and practise a key mistake.`,
+			`Play a rated Rapid game on Lichess – take time for the blunder check. Allow up to ${p.min} minutes. Import the finished game to check this off and practise a key mistake.`,
 		rapidSlot: 'Plan a Rapid game when you have 25 minutes',
 		kicker: 'Next step',
 		title: 'Your training today',
@@ -1310,7 +1310,7 @@ export const en = {
 				`Only ${p.n} ${s(p.n, 'game', 'games')} in 14 days – with fewer than 4 a week beginners hardly improve.`,
 			'review-first': 'Review your last games first – that is where your mistakes are.',
 			'slow-down':
-				'No progress for 6 weeks and still many blunders: play 15+10 and check before every move.',
+				'No progress for 6 weeks and still many blunders: play slower Rapid games and check before every move.',
 			'more-tactics': 'No progress for 6 weeks: tactics are your lever now.',
 			'on-track': (p: P) => `You are improving: +${p.n} in 6 weeks.`
 		},
@@ -1327,7 +1327,7 @@ export const en = {
 		reached: '1600 reached. Now positional play and endgames count.',
 		why: 'Why this dose?',
 		dose: (p: P) =>
-			`Per day ${p.puzzles} puzzles and ${p.safety} blunder checks${Number(p.scan) ? ` and ${p.scan} board scans` : ''}, per week ${p.games} games (${p.tc}) and ${p.lessons} ${s(p.lessons, 'lesson', 'lessons')}.`,
+			`Per day ${p.puzzles} puzzles and ${p.safety} blunder checks${Number(p.scan) ? ` and ${p.scan} board scans` : ''}, per week ${p.games} Rapid games and ${p.lessons} ${s(p.lessons, 'lesson', 'lessons')}.`,
 		why1: 'Lichess data, 883 new players around 900: with 4–8 games a week they gained +137 in a year (median), with fewer than 2 hardly anything.',
 		why2: 'With the same number of games, players with over 1000 puzzles gained +289, with under 100 +71.',
 		why3: 'Rapid, not blitz – time for the blunder check. After every game 5 minutes: your own blunders first.',
