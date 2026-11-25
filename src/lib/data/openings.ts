@@ -97,3 +97,19 @@ export function continuations(ucis: string[]): { uci: string; name: string }[] {
 function localName(name: string): string {
 	return i18n.locale === 'de' ? translateOpening(name) : name;
 }
+
+/**
+ * Buchzüge nach einer Zugfolge (vom Grundstellung aus): nächster Zug → Anzahl bekannter
+ * Varianten, die mit ihm weitergehen. Viele Varianten = gängiger Zug. Ohne Daten leer.
+ */
+export function bookMoves(ucis: string[]): Map<string, number> {
+	const out = new Map<string, number>();
+	if (!table) return out;
+	const prefix = ucis.length ? ucis.join(' ') + ' ' : '';
+	for (const key of Object.keys(table)) {
+		if (!key.startsWith(prefix)) continue;
+		const next = key.slice(prefix.length).split(' ')[0];
+		if (next) out.set(next, (out.get(next) ?? 0) + 1);
+	}
+	return out;
+}

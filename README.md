@@ -2,7 +2,7 @@
 
 A chess trainer for beginners as a Progressive Web App for iPhone, iPad and Mac – completely free, offline-capable, no App Store, no account, no tracking. English and German.
 
-**Live:** https://rookie.maximilianauer.at · **Version:** 0.9.0
+**Live:** https://rookie.maximilianauer.at · **Version:** 0.11.0
 
 | Home                                                                                                                           | Coach                                                                                                                                                                                     | Play                                                                                                   | Game review                                                                                                                                | Blunder check                                                                                            |
 | ------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
@@ -17,6 +17,12 @@ A chess trainer for beginners as a Progressive Web App for iPhone, iPad and Mac 
 | <img src="docs/screenshots/desktop-analysis-light.png" width="420" alt="Game review on desktop in light mode: a mistake on the board, the engine's top moves and accuracy per move type">    | <img src="docs/screenshots/desktop-analysis-dark.png" width="420" alt="Game review on desktop in dark mode"> |
 
 Screenshots use generated sample data (`scripts/screenshots/`), not real games.
+
+## What's new in 0.11.0
+
+- **More human bots:** bots play real openings from the opening database (stronger bots stay in theory longer), almost always recapture, and their mistakes are plausible – a greedy capture or a weaker candidate move instead of a random move. They also think like people: book moves and recaptures come quickly, close positions take longer.
+- **New app icon:** a white pawn on a coral tile with a pressable edge, like the buttons.
+- **Pastel polish:** clearer dark mode with real pastel tints, pressable buttons, labels in sentence case instead of capitals, the page header in the colour of its area, a short check-mark moment when a daily task is done, shorter text on the account card and a maximum width for pages without a board on large screens.
 
 ## What's new in 0.10.0
 

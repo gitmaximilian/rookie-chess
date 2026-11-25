@@ -20,6 +20,7 @@
 	import BotAvatar from '#lib/ui/BotAvatar.svelte';
 	import MoveList from '#lib/ui/MoveList.svelte';
 	import { BOTS, botById, chooseBotMove, thinkDelay, type Bot } from '#lib/bots/bots.js';
+	import { bookMoves, loadOpenings } from '#lib/data/openings.js';
 	import { Game, INITIAL_FEN, type GameEnd } from '#lib/chess/game.js';
 	import {
 		endReason,
@@ -327,6 +328,7 @@
 	const verdict = $derived(ended ? verdictFor(ended, myColor) : null);
 
 	onMount(async () => {
+		void loadOpenings();
 		void loadCoachWeek()
 			.then((w) => (rapidTc = w.recipe.timeControl))
 			.catch(() => {});
@@ -516,8 +518,29 @@
 			// klappt auch der nicht, wählt chooseBotMove einen legalen Zug ohne Engine
 			if (!res.lines.length && !signal.aborted) res = await ask();
 			if (signal.aborted || game.fen !== fenNow) return;
-			const choice = chooseBotMove(bot, res.lines, game.legalUcis(), game.captureUcis());
-			const wait = thinkDelay(bot, game.ply) - (performance.now() - t0);
+			// Was ein Mensch sieht: Buchzüge, gerade geschlagene Figur, knappe Stellung
+			const last = game.moves.at(-1);
+			const recaptureOn = last?.captured ? last.uci.slice(2, 4) : undefined;
+			const book =
+				game.startFen === INITIAL_FEN ? bookMoves(game.moves.map((m) => m.uci)) : undefined;
+			const choice = chooseBotMove(
+				bot,
+				res.lines,
+				game.legalUcis(),
+				game.captureUcis(),
+				Math.random,
+				{ recaptureOn, ply: game.ply, book }
+			);
+			const [l1, l2] = res.lines;
+			const kind =
+				choice && book?.has(choice)
+					? 'book'
+					: choice && recaptureOn && choice.slice(2, 4) === recaptureOn
+						? 'recapture'
+						: l1 && l2 && Math.abs((l1.cp ?? 0) - (l2.cp ?? 0)) < 30 && !l1.mate
+							? 'critical'
+							: 'normal';
+			const wait = thinkDelay(bot, game.ply, Math.random, kind) - (performance.now() - t0);
 			if (wait > 0) await new Promise((r) => setTimeout(r, wait));
 			if (signal.aborted || game.fen !== fenNow || !choice) return;
 			const botFen = game.fen;
