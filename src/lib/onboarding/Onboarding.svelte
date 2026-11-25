@@ -234,6 +234,7 @@
 		font-family: var(--font-num);
 		font-size: 0.74rem;
 		font-weight: 500;
+		text-transform: uppercase;
 		letter-spacing: 0.05em;
 		color: var(--text-2);
 	}

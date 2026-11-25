@@ -454,6 +454,7 @@
 		gap: 0.45rem;
 		font-size: 0.82rem;
 		font-weight: 700;
+		text-transform: uppercase;
 		letter-spacing: 0.05em;
 		color: var(--text-2);
 		margin-top: 0.4rem;

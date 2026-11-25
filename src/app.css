@@ -1,61 +1,61 @@
 /* ───────────────────────── Design-Tokens ───────────────────────── */
 :root {
 	/* Flächen – warmes Papier statt klinischem Weiß */
-	--bg: #eef1f4;
-	--bg-tint: #e4e9ee;
+	--bg: #f6f3ee;
+	--bg-tint: #efe9df;
 	--surface: #ffffff;
-	--surface-2: #e8ecf0;
-	--surface-glass: rgb(238 241 244 / 0.86);
-	--line: rgb(18 24 32 / 0.09);
-	--line-strong: rgb(18 24 32 / 0.16);
+	--surface-2: #f1ece4;
+	--surface-glass: rgb(250 248 244 / 0.85);
+	--line: rgb(28 26 23 / 0.08);
+	--line-strong: rgb(28 26 23 / 0.14);
 
 	/* Text */
-	--text: #121820;
-	--text-2: #4a5563;
-	--text-3: #5f6b78;
+	--text: #1c1a17;
+	--text-2: #57524a;
+	--text-3: #736d64;
 	--hue-text-l: 30%;
 
 	/* Akzent – „Glut“: warm, lebendig, gut lesbar */
-	--accent: #13704d;
-	--accent-strong: #0f5c3f;
-	--accent-soft: #dcefe6;
+	--accent: #c0432a;
+	--accent-strong: #ad3a23;
+	--accent-soft: #fbe4dc;
 	--on-accent: #ffffff;
 
 	/* Modus-Farben (jeder Bereich hat seine Persönlichkeit) */
-	--c-play: #13704d;
-	--c-play-soft: #dcefe6;
+	--c-play: #c0432a;
+	--c-play-soft: #fbe4dc;
 	--c-puzzle: #5f4ee6;
 	--c-puzzle-soft: #e8e4ff;
-	--c-learn: #1f6a80;
-	--c-learn-soft: #d6e8ee;
+	--c-learn: #0e7a6b;
+	--c-learn-soft: #d8f1ec;
 	--c-analysis: #d4900f;
 	--c-analysis-soft: #fbefd3;
 	--c-coach: #2f6fd0;
 	--c-coach-soft: #e1ebfb;
 
 	/* ── Bento: Pastellflächen je Bereich (Kontraste: node scripts/contrast.mjs) ── */
-	--tile-text: #121820;
-	--tile-text-2: #4a5563;
-	--tile-play: #ffffff;
-	--tile-play-ink: #13704d;
-	--tile-games: #ffffff;
-	--tile-games-ink: #855c00;
-	--tile-coach: #ffffff;
-	--tile-coach-ink: #1f5fbf;
-	--tile-puzzle: #ffffff;
-	--tile-puzzle-ink: #5443c8;
-	--tile-learn: #ffffff;
-	--tile-learn-ink: #136a80;
-	--tile-stars: #ffffff;
-	--tile-stars-ink: #7a5a00;
-	--tile-neutral: #ffffff;
-	--tile-neutral-ink: #4c5864;
+	--tile-text: #1c1a17;
+	--tile-text-2: #463f37;
+	--tile-play: #fcdcd2;
+	--tile-play-ink: #8a2a15;
+	--tile-games: #f6e5c3;
+	--tile-games-ink: #6b4800;
+	--tile-coach: #d9e6fb;
+	--tile-coach-ink: #1d4f9e;
+	--tile-puzzle: #e5e0fd;
+	--tile-puzzle-ink: #4535b8;
+	--tile-learn: #cfeee4;
+	--tile-learn-ink: #0b5c50;
+	--tile-stars: #faefb3;
+	--tile-stars-ink: #664e00;
+	--tile-neutral: #ece6dc;
+	--tile-neutral-ink: #4f4940;
 
 	/* Tab-Leiste: dunkel und ruhig, aktiver Tab als Pastell-Pille */
-	--tabbar-bg: #121820;
-	--tabbar-fg: #a7b2bd;
-	--tabbar-active-bg: #25313b;
-	--tabbar-active-fg: #7fdcb4;
+	--tabbar-bg: #1c1a17;
+	--tabbar-fg: #b4ada2;
+	--tabbar-active-bg: #f3efe8;
+	--tabbar-active-fg: #1c1a17;
 
 	/* Status */
 	--good: #2b9a66;
@@ -79,23 +79,23 @@
 	--k-blunder: #d23b3b;
 
 	/* Form */
-	--radius-s: 8px;
-	--radius-m: 12px;
-	--radius-l: 16px;
-	--radius-xl: 22px;
+	--radius-s: 10px;
+	--radius-m: 14px;
+	--radius-l: 24px;
+	--radius-xl: 28px;
 	/* Bento */
-	--radius-tile: 20px;
+	--radius-tile: 28px;
 	--tile-pad: 1.1rem;
 	--bento-gap: 0.65rem;
-	--shadow-1: 0 1px 2px rgb(18 24 32 / 0.05);
-	--shadow-2: 0 2px 6px rgb(18 24 32 / 0.06), 0 10px 28px rgb(18 24 32 / 0.08);
+	--shadow-1: 0 1px 2px rgb(28 26 23 / 0.04), 0 2px 8px rgb(28 26 23 / 0.04);
+	--shadow-2: 0 2px 6px rgb(28 26 23 / 0.05), 0 12px 32px rgb(28 26 23 / 0.08);
 
 	/* Typografie */
-	--font-display: 'Archivo Variable', system-ui, sans-serif;
+	--font-display: 'Bricolage Grotesque Variable', ui-rounded, system-ui, sans-serif;
 	--font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', system-ui, sans-serif;
 	--font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
 	/* Zahlen, Kennzahl-Labels, Kachel-Überschriften, kurze Statuszeilen – nie Fließtext */
-	--font-num: 'Archivo Variable', system-ui, sans-serif;
+	--font-num: var(--font-mono);
 
 	/* Bewegung */
 	--ease-out: cubic-bezier(0.22, 1, 0.36, 1);
@@ -122,113 +122,113 @@
 
 @media (prefers-color-scheme: dark) {
 	:root:not([data-theme='light']) {
-		--bg: #0e1216;
-		--bg-tint: #12171c;
-		--surface: #161c22;
-		--surface-2: #1e262e;
-		--surface-glass: rgb(22 28 34 / 0.88);
-		--line: rgb(232 237 242 / 0.08);
-		--line-strong: rgb(232 237 242 / 0.15);
-		--text: #e8edf2;
-		--text-2: #9aa6b2;
-		--text-3: #8794a0;
+		--bg: #121110;
+		--bg-tint: #1a1816;
+		--surface: #1c1a18;
+		--surface-2: #26231f;
+		--surface-glass: rgb(24 22 20 / 0.85);
+		--line: rgb(243 239 232 / 0.08);
+		--line-strong: rgb(243 239 232 / 0.14);
+		--text: #f3efe8;
+		--text-2: #a8a196;
+		--text-3: #958e83;
 		--hue-text-l: 72%;
-		--accent: #5fd0a0;
-		--accent-strong: #7fdcb4;
-		--accent-soft: rgb(95 208 160 / 0.15);
-		--on-accent: #08130e;
+		--accent: #ff7a5c;
+		--accent-strong: #ff9479;
+		--accent-soft: rgb(255 122 92 / 0.16);
+		--on-accent: #1a0f0b;
 		--bad: #f07a7a;
 		--good-text: #5fd49b;
 		--warn-text: #f2b544;
 		--bad-text: #f59494;
-		--c-play: #5fd0a0;
-		--c-play-soft: rgb(95 208 160 / 0.15);
+		--c-play: #ff7a5c;
+		--c-play-soft: rgb(255 122 92 / 0.15);
 		--c-puzzle: #9c8dff;
 		--c-puzzle-soft: rgb(156 141 255 / 0.15);
-		--c-learn: #6fbfd6;
-		--c-learn-soft: rgb(111 191 214 / 0.15);
+		--c-learn: #3cc7b2;
+		--c-learn-soft: rgb(60 199 178 / 0.14);
 		--c-analysis: #f2b544;
 		--c-analysis-soft: rgb(242 181 68 / 0.14);
 		--c-coach: #6ea6ff;
 		--c-coach-soft: rgb(110 166 255 / 0.15);
-		--tile-text: #e8edf2;
-		--tile-text-2: #9aa6b2;
-		--tile-play: #161c22;
-		--tile-play-ink: #5fd0a0;
-		--tile-games: #161c22;
-		--tile-games-ink: #e9b44c;
-		--tile-coach: #161c22;
-		--tile-coach-ink: #7fb0ff;
-		--tile-puzzle: #161c22;
-		--tile-puzzle-ink: #a99bff;
-		--tile-learn: #161c22;
-		--tile-learn-ink: #6fc8e0;
-		--tile-stars: #161c22;
-		--tile-stars-ink: #e9c46a;
-		--tile-neutral: #161c22;
-		--tile-neutral-ink: #aab4bf;
-		--tabbar-bg: #1a2128;
-		--tabbar-fg: #9aa6b2;
-		--tabbar-active-bg: #25313b;
-		--tabbar-active-fg: #7fdcb4;
-		--shadow-1: 0 1px 2px rgb(0 0 0 / 0.25);
-		--shadow-2: 0 2px 6px rgb(0 0 0 / 0.3), 0 10px 28px rgb(0 0 0 / 0.35);
+		--tile-text: #f3efe8;
+		--tile-text-2: #d2cbc0;
+		--tile-play: #3b2620;
+		--tile-play-ink: #ffb39f;
+		--tile-games: #352a17;
+		--tile-games-ink: #f2c66e;
+		--tile-coach: #1f2a3d;
+		--tile-coach-ink: #a9c8ff;
+		--tile-puzzle: #29243f;
+		--tile-puzzle-ink: #c3b9ff;
+		--tile-learn: #17322d;
+		--tile-learn-ink: #7fdccb;
+		--tile-stars: #33301b;
+		--tile-stars-ink: #eed96a;
+		--tile-neutral: #26231f;
+		--tile-neutral-ink: #c9c2b7;
+		--tabbar-bg: #0b0a09;
+		--tabbar-fg: #a8a196;
+		--tabbar-active-bg: #f3efe8;
+		--tabbar-active-fg: #1c1a17;
+		--shadow-1: 0 1px 2px rgb(0 0 0 / 0.3);
+		--shadow-2: 0 2px 6px rgb(0 0 0 / 0.3), 0 12px 32px rgb(0 0 0 / 0.35);
 		color-scheme: dark;
 	}
 }
 
 :root[data-theme='dark'] {
-	--bg: #0e1216;
-	--bg-tint: #12171c;
-	--surface: #161c22;
-	--surface-2: #1e262e;
-	--surface-glass: rgb(22 28 34 / 0.88);
-	--line: rgb(232 237 242 / 0.08);
-	--line-strong: rgb(232 237 242 / 0.15);
-	--text: #e8edf2;
-	--text-2: #9aa6b2;
-	--text-3: #8794a0;
+	--bg: #121110;
+	--bg-tint: #1a1816;
+	--surface: #1c1a18;
+	--surface-2: #26231f;
+	--surface-glass: rgb(24 22 20 / 0.85);
+	--line: rgb(243 239 232 / 0.08);
+	--line-strong: rgb(243 239 232 / 0.14);
+	--text: #f3efe8;
+	--text-2: #a8a196;
+	--text-3: #958e83;
 	--hue-text-l: 72%;
-	--accent: #5fd0a0;
-	--accent-strong: #7fdcb4;
-	--accent-soft: rgb(95 208 160 / 0.15);
-	--on-accent: #08130e;
+	--accent: #ff7a5c;
+	--accent-strong: #ff9479;
+	--accent-soft: rgb(255 122 92 / 0.16);
+	--on-accent: #1a0f0b;
 	--bad: #f07a7a;
 	--good-text: #5fd49b;
 	--warn-text: #f2b544;
 	--bad-text: #f59494;
-	--c-play: #5fd0a0;
-	--c-play-soft: rgb(95 208 160 / 0.15);
+	--c-play: #ff7a5c;
+	--c-play-soft: rgb(255 122 92 / 0.15);
 	--c-puzzle: #9c8dff;
 	--c-puzzle-soft: rgb(156 141 255 / 0.15);
-	--c-learn: #6fbfd6;
-	--c-learn-soft: rgb(111 191 214 / 0.15);
+	--c-learn: #3cc7b2;
+	--c-learn-soft: rgb(60 199 178 / 0.14);
 	--c-analysis: #f2b544;
 	--c-analysis-soft: rgb(242 181 68 / 0.14);
 	--c-coach: #6ea6ff;
 	--c-coach-soft: rgb(110 166 255 / 0.15);
-	--tile-text: #e8edf2;
-	--tile-text-2: #9aa6b2;
-	--tile-play: #161c22;
-	--tile-play-ink: #5fd0a0;
-	--tile-games: #161c22;
-	--tile-games-ink: #e9b44c;
-	--tile-coach: #161c22;
-	--tile-coach-ink: #7fb0ff;
-	--tile-puzzle: #161c22;
-	--tile-puzzle-ink: #a99bff;
-	--tile-learn: #161c22;
-	--tile-learn-ink: #6fc8e0;
-	--tile-stars: #161c22;
-	--tile-stars-ink: #e9c46a;
-	--tile-neutral: #161c22;
-	--tile-neutral-ink: #aab4bf;
-	--tabbar-bg: #1a2128;
-	--tabbar-fg: #9aa6b2;
-	--tabbar-active-bg: #25313b;
-	--tabbar-active-fg: #7fdcb4;
-	--shadow-1: 0 1px 2px rgb(0 0 0 / 0.25);
-	--shadow-2: 0 2px 6px rgb(0 0 0 / 0.3), 0 10px 28px rgb(0 0 0 / 0.35);
+	--tile-text: #f3efe8;
+	--tile-text-2: #d2cbc0;
+	--tile-play: #3b2620;
+	--tile-play-ink: #ffb39f;
+	--tile-games: #352a17;
+	--tile-games-ink: #f2c66e;
+	--tile-coach: #1f2a3d;
+	--tile-coach-ink: #a9c8ff;
+	--tile-puzzle: #29243f;
+	--tile-puzzle-ink: #c3b9ff;
+	--tile-learn: #17322d;
+	--tile-learn-ink: #7fdccb;
+	--tile-stars: #33301b;
+	--tile-stars-ink: #eed96a;
+	--tile-neutral: #26231f;
+	--tile-neutral-ink: #c9c2b7;
+	--tabbar-bg: #0b0a09;
+	--tabbar-fg: #a8a196;
+	--tabbar-active-bg: #f3efe8;
+	--tabbar-active-fg: #1c1a17;
+	--shadow-1: 0 1px 2px rgb(0 0 0 / 0.3);
+	--shadow-2: 0 2px 6px rgb(0 0 0 / 0.3), 0 12px 32px rgb(0 0 0 / 0.35);
 	color-scheme: dark;
 }
 
@@ -265,9 +265,8 @@ h2,
 h3,
 h4 {
 	font-family: var(--font-display);
-	font-weight: 720;
-	font-stretch: 112%;
-	letter-spacing: -0.015em;
+	font-weight: 680;
+	letter-spacing: -0.02em;
 	line-height: 1.1;
 	margin: 0;
 	text-wrap: balance;
@@ -358,9 +357,7 @@ html[data-first-run] .sidebar {
 .tone-stars,
 .tone-neutral {
 	background: var(--tone-bg);
-	border: 1px solid var(--line);
 	color: var(--tile-text);
-	--tone-soft: color-mix(in srgb, var(--tone-ink) 15%, transparent);
 	--text: var(--tile-text);
 	--text-2: var(--tile-text-2);
 	--text-3: var(--tile-text-2);
@@ -438,7 +435,8 @@ html[data-first-run] .sidebar {
 	font-family: var(--font-num);
 	font-size: 0.72rem;
 	font-weight: 500;
-	letter-spacing: 0;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
 }
 
 .pressable {
@@ -457,7 +455,8 @@ html[data-first-run] .sidebar {
 
 @media (hover: hover) {
 	.pressable:hover {
-		border-color: var(--line-strong);
+		box-shadow: var(--shadow-2);
+		transform: translateY(-2px);
 	}
 	.pressable:hover:active {
 		transform: scale(0.98);
@@ -471,9 +470,8 @@ html[data-first-run] .sidebar {
 	gap: 0.5rem;
 	min-height: 44px;
 	padding: 0 1.15rem;
-	border-radius: 14px;
+	border-radius: 999px;
 	border: none;
-	box-shadow: inset 0 -3px 0 rgb(0 0 0 / 0.22);
 	font-weight: 600;
 	background: var(--accent);
 	color: var(--on-accent);
@@ -484,16 +482,12 @@ html[data-first-run] .sidebar {
 }
 
 .btn:active {
-	transform: translateY(2px);
-	box-shadow: inset 0 -1px 0 rgb(0 0 0 / 0.22);
+	transform: scale(0.96);
 }
 
 .btn.secondary {
 	background: var(--surface-2);
 	color: var(--text);
-	box-shadow:
-		inset 0 0 0 1px var(--line),
-		inset 0 -3px 0 var(--line-strong);
 }
 
 .btn:disabled {
@@ -579,7 +573,8 @@ html[data-first-run] .sidebar {
 	font-family: var(--font-num);
 	font-size: 0.74rem;
 	font-weight: 500;
-	letter-spacing: 0;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
 	color: var(--text-3);
 }
 

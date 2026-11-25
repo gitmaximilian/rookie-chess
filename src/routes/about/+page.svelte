@@ -79,10 +79,10 @@
 		},
 		{ name: 'Lucide', key: 'lucide', license: 'ISC', url: 'https://lucide.dev' },
 		{
-			name: 'Archivo',
+			name: 'Bricolage Grotesque',
 			key: 'font',
 			license: 'OFL-1.1',
-			url: 'https://github.com/Omnibus-Type/Archivo'
+			url: 'https://github.com/ateliertriay/bricolage'
 		},
 		{ name: 'Dexie', key: 'dexie', license: 'Apache-2.0', url: 'https://dexie.org' },
 		{

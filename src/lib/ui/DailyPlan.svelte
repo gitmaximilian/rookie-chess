@@ -166,8 +166,9 @@
 
 <section class="plan tone-play" data-size="l" aria-busy={!ctx}>
 	<div class="p-head">
-		<GoalRing value={doneCount} max={Math.max(1, rows.length)} size={124} />
+		<GoalRing value={doneCount} max={Math.max(1, rows.length)} size={56} />
 		<div class="p-title">
+			<span class="mono-label kicker">{t('plan.kicker')}</span>
 			<h2>{t('plan.title')}</h2>
 			<span
 				>{ctx
@@ -178,16 +179,10 @@
 			>
 		</div>
 	</div>
+
 	{#if !ctx}
 		<div class="skeleton" style:height="150px"></div>
 	{:else}
-		<!-- Der eine nächste Schritt, direkt unter dem Ring -->
-		{#if next}
-			<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- href() liefert bereits resolve()-Pfade -->
-			<a class="btn big go" href={href(next.task)}
-				>{doneCount ? t('plan.continue') : t('plan.start')} <ArrowRight size={18} /></a
-			>
-		{/if}
 		<ol class="tasks">
 			{#each rows as r, i (r.task.id)}
 				{@const Icon = ICON[r.task.kind]}
@@ -205,6 +200,13 @@
 				</li>
 			{/each}
 		</ol>
+		<!-- Hauptaktion unten und über die volle Breite: der eine nächste Schritt -->
+		{#if next}
+			<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- href() liefert bereits resolve()-Pfade -->
+			<a class="btn big go" href={href(next.task)}
+				>{doneCount ? t('plan.continue') : t('plan.start')} <ArrowRight size={18} /></a
+			>
+		{/if}
 		{#if rapidDue(ctx) && !tasks.some((task) => task.kind === 'play')}
 			<a class="rapid-slot" href={resolve('/play?plan=1')} data-testid="rapid-slot">
 				<ChessKnight size={16} />
@@ -234,30 +236,35 @@
 
 	.p-head {
 		display: flex;
-		flex-direction: column;
 		align-items: center;
-		gap: 0.6rem;
-		padding-top: 0.3rem;
-		text-align: center;
+		gap: 0.85rem;
 	}
 
 	.p-title {
+		flex: 1;
+		min-width: 0;
 		display: flex;
 		flex-direction: column;
-		gap: 0.15rem;
+		gap: 0.1rem;
+	}
+
+	.kicker {
+		color: var(--tone-ink);
 	}
 
 	.p-title h2 {
-		font-size: 1.35rem;
+		font-size: 1.3rem;
 	}
 
 	.p-title > span:last-child {
-		font-size: 0.85rem;
+		font-family: var(--font-num);
+		font-size: 0.8rem;
 		color: var(--tile-text-2);
 	}
 
 	.go {
 		width: 100%;
+		margin-top: auto;
 	}
 
 	.tasks {
@@ -280,15 +287,16 @@
 		gap: 0.7rem;
 		min-height: 52px;
 		padding: 0.55rem 0.75rem;
-		border-radius: 14px;
-		background: var(--surface-2);
+		border-radius: 18px;
+		background: color-mix(in srgb, var(--surface) 62%, transparent);
 		color: var(--tile-text);
 		border: 1.5px solid transparent;
 		transition: border-color var(--dur) var(--ease-out);
 	}
 
 	.task.next {
-		border-color: color-mix(in srgb, var(--tone-ink) 55%, transparent);
+		border-color: var(--tone-ink);
+		background: var(--surface);
 	}
 
 	.t-ico {
@@ -297,8 +305,8 @@
 		place-items: center;
 		width: 32px;
 		height: 32px;
-		border-radius: 10px;
-		background: var(--tone-soft);
+		border-radius: 11px;
+		background: var(--tone-bg);
 		color: var(--tone-ink);
 	}
 

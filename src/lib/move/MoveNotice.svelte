@@ -108,7 +108,7 @@
 		gap: 0.75rem;
 		padding: 1.5rem 1.25rem;
 		border-radius: var(--radius-tile);
-		background: var(--tone-soft, var(--tone-bg));
+		background: var(--tone-bg);
 		color: var(--text);
 	}
 

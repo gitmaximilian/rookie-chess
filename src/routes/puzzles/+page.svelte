@@ -747,6 +747,7 @@
 		font-size: 0.68rem;
 		font-weight: 500;
 		letter-spacing: 0.05em;
+		text-transform: uppercase;
 		color: var(--text-3);
 	}
 

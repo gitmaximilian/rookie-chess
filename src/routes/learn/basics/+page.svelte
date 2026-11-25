@@ -461,6 +461,7 @@
 	.step-no {
 		font-size: 0.78rem;
 		font-weight: 700;
+		text-transform: uppercase;
 		letter-spacing: 0.05em;
 		color: var(--text-2);
 	}
