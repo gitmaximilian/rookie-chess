@@ -67,6 +67,19 @@
 				})
 			: []
 	);
+	// Erfolgsmoment: nur Aufgaben, die während der Sitzung fertig werden, springen auf
+	let seen: Set<string> | null = null;
+	let justDone = $state(new Set<string>());
+	$effect(() => {
+		const finished = rows.filter((r) => r.finished).map((r) => r.task.id);
+		if (!ctx) return;
+		if (seen) {
+			const fresh = finished.filter((id) => !seen!.has(id));
+			if (fresh.length) justDone = new Set([...justDone, ...fresh]);
+		}
+		seen = new Set(finished);
+	});
+
 	const doneCount = $derived(rows.filter((r) => r.finished).length);
 	const next = $derived(rows.find((r) => !r.finished));
 
@@ -168,7 +181,6 @@
 	<div class="p-head">
 		<GoalRing value={doneCount} max={Math.max(1, rows.length)} size={56} />
 		<div class="p-title">
-			<span class="mono-label kicker">{t('plan.kicker')}</span>
 			<h2>{t('plan.title')}</h2>
 			<span
 				>{ctx
@@ -188,7 +200,13 @@
 				{@const Icon = ICON[r.task.kind]}
 				<li style:--i={i}>
 					<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- href() liefert bereits resolve()-Pfade -->
-					<a href={href(r.task)} class="task" class:finished={r.finished} class:next={r === next}>
+					<a
+						href={href(r.task)}
+						class="task"
+						class:finished={r.finished}
+						class:next={r === next}
+						class:just-done={justDone.has(r.task.id)}
+					>
 						<span class="t-ico">
 							{#if r.finished}<Check size={17} strokeWidth={3} />{:else}<Icon size={17} />{/if}
 						</span>
@@ -248,10 +266,6 @@
 		gap: 0.1rem;
 	}
 
-	.kicker {
-		color: var(--tone-ink);
-	}
-
 	.p-title h2 {
 		font-size: 1.3rem;
 	}
@@ -308,6 +322,10 @@
 		border-radius: 11px;
 		background: var(--tone-bg);
 		color: var(--tone-ink);
+	}
+
+	.task.just-done .t-ico {
+		animation: done-pop 520ms var(--ease-spring);
 	}
 
 	.task.finished .t-ico {

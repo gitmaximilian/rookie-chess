@@ -966,6 +966,7 @@ export const en = {
 			'Link your username once – Rookie imports all your past games and then fetches every new game automatically whenever you open the app.',
 		noPassword:
 			'Your games on Lichess and Chess.com are public, so no login or password is needed – just your username.',
+		noPasswordShort: 'Username only – no password.',
 		link: 'Link',
 		unlink: 'Unlink',
 		syncNow: 'Sync now',
@@ -1840,7 +1841,7 @@ export const en = {
 	accounts: {
 		ctaTitle: 'Link Lichess or Chess.com',
 		ctaText:
-			'All your games – past and future – land here automatically, analysed by Stockfish, with your Elo.',
+			'Every game is imported and analysed automatically.',
 		noRating: 'No rated games yet',
 		manage: 'Manage',
 		elo: 'Your Elo'

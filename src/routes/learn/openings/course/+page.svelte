@@ -1296,7 +1296,6 @@
 		font-size: 0.8rem;
 		font-weight: 650;
 		color: var(--text-2);
-		text-transform: uppercase;
 		letter-spacing: 0.04em;
 	}
 
@@ -1416,7 +1415,6 @@
 	.who {
 		font-size: 0.72rem;
 		font-weight: 700;
-		text-transform: uppercase;
 		letter-spacing: 0.05em;
 		color: var(--text-2);
 		margin-right: 0.35rem;

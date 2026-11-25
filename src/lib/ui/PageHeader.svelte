@@ -1,5 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import { page } from '$app/state';
+	import { navItems, isActive } from '#lib/nav.js';
 
 	let {
 		eyebrow,
@@ -7,12 +9,19 @@
 		subtitle,
 		action
 	}: { eyebrow?: string; title: string; subtitle?: string; action?: Snippet } = $props();
+
+	// Bereichsfarbe des aktuellen Tabs: Kopfzeile zeigt, wo man gerade ist
+	const tone = $derived(
+		navItems.find((i) => i.href !== '/' && isActive(i.href, page.url.pathname))?.tone
+	);
 </script>
 
 <header>
 	<div class="row">
 		<div class="titles">
-			{#if eyebrow}<span class="eyebrow">{eyebrow}</span>{/if}
+			{#if eyebrow}<span class="eyebrow" style:color={tone ? `var(--tile-${tone}-ink)` : undefined}
+					>{eyebrow}</span
+				>{/if}
 			<h1>{title}</h1>
 		</div>
 		{#if action}<div class="action">{@render action()}</div>{/if}

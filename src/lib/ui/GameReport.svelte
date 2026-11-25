@@ -214,7 +214,6 @@
 	.f-k {
 		font-size: 0.75rem;
 		font-weight: 650;
-		text-transform: uppercase;
 		letter-spacing: 0.04em;
 		color: var(--text-3);
 	}

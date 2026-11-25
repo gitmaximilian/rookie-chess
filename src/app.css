@@ -122,11 +122,11 @@
 
 @media (prefers-color-scheme: dark) {
 	:root:not([data-theme='light']) {
-		--bg: #121110;
-		--bg-tint: #1a1816;
-		--surface: #1c1a18;
-		--surface-2: #26231f;
-		--surface-glass: rgb(24 22 20 / 0.85);
+		--bg: #131217;
+		--bg-tint: #18171d;
+		--surface: #1c1b21;
+		--surface-2: #26252c;
+		--surface-glass: rgb(25 24 30 / 0.86);
 		--line: rgb(243 239 232 / 0.08);
 		--line-strong: rgb(243 239 232 / 0.14);
 		--text: #f3efe8;
@@ -151,23 +151,23 @@
 		--c-analysis-soft: rgb(242 181 68 / 0.14);
 		--c-coach: #6ea6ff;
 		--c-coach-soft: rgb(110 166 255 / 0.15);
-		--tile-text: #f3efe8;
-		--tile-text-2: #d2cbc0;
-		--tile-play: #3b2620;
+		--tile-text: #f3f1f6;
+		--tile-text-2: #d4d0dc;
+		--tile-play: #45271f;
 		--tile-play-ink: #ffb39f;
-		--tile-games: #352a17;
+		--tile-games: #3d3018;
 		--tile-games-ink: #f2c66e;
-		--tile-coach: #1f2a3d;
+		--tile-coach: #1c2d4b;
 		--tile-coach-ink: #a9c8ff;
-		--tile-puzzle: #29243f;
+		--tile-puzzle: #2c2552;
 		--tile-puzzle-ink: #c3b9ff;
-		--tile-learn: #17322d;
+		--tile-learn: #143a33;
 		--tile-learn-ink: #7fdccb;
-		--tile-stars: #33301b;
+		--tile-stars: #3a3416;
 		--tile-stars-ink: #eed96a;
-		--tile-neutral: #26231f;
-		--tile-neutral-ink: #c9c2b7;
-		--tabbar-bg: #0b0a09;
+		--tile-neutral: #26252c;
+		--tile-neutral-ink: #cdc9d4;
+		--tabbar-bg: #0c0b10;
 		--tabbar-fg: #a8a196;
 		--tabbar-active-bg: #f3efe8;
 		--tabbar-active-fg: #1c1a17;
@@ -178,11 +178,11 @@
 }
 
 :root[data-theme='dark'] {
-	--bg: #121110;
-	--bg-tint: #1a1816;
-	--surface: #1c1a18;
-	--surface-2: #26231f;
-	--surface-glass: rgb(24 22 20 / 0.85);
+	--bg: #131217;
+	--bg-tint: #18171d;
+	--surface: #1c1b21;
+	--surface-2: #26252c;
+	--surface-glass: rgb(25 24 30 / 0.86);
 	--line: rgb(243 239 232 / 0.08);
 	--line-strong: rgb(243 239 232 / 0.14);
 	--text: #f3efe8;
@@ -207,23 +207,23 @@
 	--c-analysis-soft: rgb(242 181 68 / 0.14);
 	--c-coach: #6ea6ff;
 	--c-coach-soft: rgb(110 166 255 / 0.15);
-	--tile-text: #f3efe8;
-	--tile-text-2: #d2cbc0;
-	--tile-play: #3b2620;
+	--tile-text: #f3f1f6;
+	--tile-text-2: #d4d0dc;
+	--tile-play: #45271f;
 	--tile-play-ink: #ffb39f;
-	--tile-games: #352a17;
+	--tile-games: #3d3018;
 	--tile-games-ink: #f2c66e;
-	--tile-coach: #1f2a3d;
+	--tile-coach: #1c2d4b;
 	--tile-coach-ink: #a9c8ff;
-	--tile-puzzle: #29243f;
+	--tile-puzzle: #2c2552;
 	--tile-puzzle-ink: #c3b9ff;
-	--tile-learn: #17322d;
+	--tile-learn: #143a33;
 	--tile-learn-ink: #7fdccb;
-	--tile-stars: #33301b;
+	--tile-stars: #3a3416;
 	--tile-stars-ink: #eed96a;
-	--tile-neutral: #26231f;
-	--tile-neutral-ink: #c9c2b7;
-	--tabbar-bg: #0b0a09;
+	--tile-neutral: #26252c;
+	--tile-neutral-ink: #cdc9d4;
+	--tabbar-bg: #0c0b10;
 	--tabbar-fg: #a8a196;
 	--tabbar-active-bg: #f3efe8;
 	--tabbar-active-fg: #1c1a17;
@@ -432,11 +432,10 @@ html[data-first-run] .sidebar {
 }
 
 .mono-label {
-	font-family: var(--font-num);
-	font-size: 0.72rem;
-	font-weight: 500;
-	letter-spacing: 0.04em;
-	text-transform: uppercase;
+	font-family: var(--font-body);
+	font-size: 0.8rem;
+	font-weight: 600;
+	letter-spacing: 0;
 }
 
 .pressable {
@@ -472,6 +471,7 @@ html[data-first-run] .sidebar {
 	padding: 0 1.15rem;
 	border-radius: 999px;
 	border: none;
+	box-shadow: inset 0 -3px 0 rgb(0 0 0 / 0.2);
 	font-weight: 600;
 	background: var(--accent);
 	color: var(--on-accent);
@@ -482,12 +482,14 @@ html[data-first-run] .sidebar {
 }
 
 .btn:active {
-	transform: scale(0.96);
+	transform: translateY(2px);
+	box-shadow: inset 0 -1px 0 rgb(0 0 0 / 0.2);
 }
 
 .btn.secondary {
 	background: var(--surface-2);
 	color: var(--text);
+	box-shadow: inset 0 -3px 0 var(--line-strong);
 }
 
 .btn:disabled {
@@ -570,11 +572,10 @@ html[data-first-run] .sidebar {
 }
 
 .eyebrow {
-	font-family: var(--font-num);
-	font-size: 0.74rem;
-	font-weight: 500;
-	letter-spacing: 0.06em;
-	text-transform: uppercase;
+	font-family: var(--font-body);
+	font-size: 0.82rem;
+	font-weight: 600;
+	letter-spacing: 0;
 	color: var(--text-3);
 }
 
@@ -681,4 +682,17 @@ html[data-first-run] .sidebar {
 	flex-direction: column;
 	gap: 0.5rem;
 	min-width: 0;
+}
+
+/* Erfolgsmoment: Häkchen springt einmal auf, wenn eine Aufgabe gerade erledigt wurde */
+@keyframes done-pop {
+	0% {
+		transform: scale(0.4);
+	}
+	60% {
+		transform: scale(1.18);
+	}
+	100% {
+		transform: scale(1);
+	}
 }

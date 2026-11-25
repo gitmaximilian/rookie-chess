@@ -101,6 +101,18 @@
 	// Weicher Seitenwechsel ohne View Transitions: Safari fotografiert dabei die Seite,
 	// wodurch die Tab-Leiste kurz verschwindet. Hier bewegt sich nur der Inhalt.
 	let mainEl = $state<HTMLElement>();
+	// Seiten ohne Brett: auf großen Bildschirmen schmaler, damit Kacheln nicht ausfransen
+	const NARROW = [
+		'/',
+		'/coach',
+		'/coach/stats',
+		'/learn',
+		'/profile',
+		'/settings',
+		'/about',
+		'/privacy'
+	];
+	const narrow = $derived(NARROW.includes(page.url.pathname.replace(/\/$/, '') || '/'));
 	afterNavigate(({ from, to, type }) => {
 		if (to && busyRoute(to.url.pathname)) pauseBackground();
 		else if (type !== 'enter') void analyseInBackground();
@@ -125,7 +137,7 @@
 {:else}
 	<Sidebar />
 
-	<main bind:this={mainEl}>
+	<main bind:this={mainEl} class:narrow>
 		{@render children()}
 	</main>
 
@@ -229,6 +241,11 @@
 	@media (min-width: 1200px) {
 		main {
 			padding-inline: 3.5rem;
+		}
+
+		main.narrow > :global(*) {
+			max-width: 1120px;
+			margin-inline: auto;
 		}
 	}
 </style>

@@ -1019,6 +1019,7 @@ export const de: Shape<typeof en> = {
 			'Einmal Benutzernamen verknüpfen – Rookie importiert alle deine bisherigen Partien und holt danach jede neue Partie automatisch, sobald du die App öffnest.',
 		noPassword:
 			'Deine Partien auf Lichess und Chess.com sind öffentlich – du brauchst kein Login und kein Passwort, nur deinen Benutzernamen.',
+		noPasswordShort: 'Nur Benutzername – kein Passwort.',
 		link: 'Verknüpfen',
 		unlink: 'Trennen',
 		syncNow: 'Jetzt abrufen',
@@ -1910,7 +1911,7 @@ export const de: Shape<typeof en> = {
 	accounts: {
 		ctaTitle: 'Lichess oder Chess.com verknüpfen',
 		ctaText:
-			'Alle deine Partien – vergangene und künftige – landen automatisch hier, analysiert von Stockfish, mit deiner Elo.',
+			'Jede Partie wird automatisch geholt und analysiert.',
 		noRating: 'Noch keine gewerteten Partien',
 		manage: 'Verwalten',
 		elo: 'Deine Elo'

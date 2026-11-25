@@ -133,7 +133,7 @@
 				</form>
 			{/each}
 		</div>
-		<p class="fine">{t('import.noPassword')}</p>
+		<p class="fine">{t('import.noPasswordShort')}</p>
 	</section>
 {:else if linked && !ctaOnly}
 	<section class="strip card" class:compact>

@@ -559,7 +559,6 @@
 	dt {
 		font-size: 0.72rem;
 		font-weight: 700;
-		text-transform: uppercase;
 		letter-spacing: 0.04em;
 		color: var(--text-2);
 	}
@@ -601,7 +600,6 @@
 		font-size: 0.72rem;
 		font-weight: 700;
 		color: var(--text-2);
-		text-transform: uppercase;
 		letter-spacing: 0.03em;
 		padding: 0 0.3rem 0.35rem;
 	}
