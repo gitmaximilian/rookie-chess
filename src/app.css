@@ -1,61 +1,61 @@
 /* ───────────────────────── Design-Tokens ───────────────────────── */
 :root {
 	/* Flächen – warmes Papier statt klinischem Weiß */
-	--bg: #f6f3ee;
-	--bg-tint: #efe9df;
-	--surface: #ffffff;
-	--surface-2: #f1ece4;
-	--surface-glass: rgb(250 248 244 / 0.85);
-	--line: rgb(28 26 23 / 0.08);
-	--line-strong: rgb(28 26 23 / 0.14);
+	--bg: #eceee9;
+	--bg-tint: #e2e6df;
+	--surface: #fbfcfa;
+	--surface-2: #e9ece6;
+	--surface-glass: rgb(244 246 242 / 0.86);
+	--line: rgb(23 32 28 / 0.09);
+	--line-strong: rgb(23 32 28 / 0.16);
 
 	/* Text */
-	--text: #1c1a17;
-	--text-2: #57524a;
-	--text-3: #736d64;
+	--text: #17201c;
+	--text-2: #4a554f;
+	--text-3: #626d67;
 	--hue-text-l: 30%;
 
 	/* Akzent – „Glut“: warm, lebendig, gut lesbar */
-	--accent: #c0432a;
-	--accent-strong: #ad3a23;
-	--accent-soft: #fbe4dc;
+	--accent: #1d5c47;
+	--accent-strong: #164a39;
+	--accent-soft: #d7e7de;
 	--on-accent: #ffffff;
 
 	/* Modus-Farben (jeder Bereich hat seine Persönlichkeit) */
-	--c-play: #c0432a;
-	--c-play-soft: #fbe4dc;
+	--c-play: #1d5c47;
+	--c-play-soft: #d7e7de;
 	--c-puzzle: #5f4ee6;
 	--c-puzzle-soft: #e8e4ff;
-	--c-learn: #0e7a6b;
-	--c-learn-soft: #d8f1ec;
+	--c-learn: #1f6a80;
+	--c-learn-soft: #d6e8ee;
 	--c-analysis: #d4900f;
 	--c-analysis-soft: #fbefd3;
 	--c-coach: #2f6fd0;
 	--c-coach-soft: #e1ebfb;
 
 	/* ── Bento: Pastellflächen je Bereich (Kontraste: node scripts/contrast.mjs) ── */
-	--tile-text: #1c1a17;
-	--tile-text-2: #463f37;
-	--tile-play: #fcdcd2;
-	--tile-play-ink: #8a2a15;
+	--tile-text: #17201c;
+	--tile-text-2: #3f4a44;
+	--tile-play: #d3e6da;
+	--tile-play-ink: #164a39;
 	--tile-games: #f6e5c3;
 	--tile-games-ink: #6b4800;
 	--tile-coach: #d9e6fb;
 	--tile-coach-ink: #1d4f9e;
 	--tile-puzzle: #e5e0fd;
 	--tile-puzzle-ink: #4535b8;
-	--tile-learn: #cfeee4;
-	--tile-learn-ink: #0b5c50;
-	--tile-stars: #faefb3;
-	--tile-stars-ink: #664e00;
-	--tile-neutral: #ece6dc;
-	--tile-neutral-ink: #4f4940;
+	--tile-learn: #d3e6ed;
+	--tile-learn-ink: #145466;
+	--tile-stars: #efe4c4;
+	--tile-stars-ink: #5e4710;
+	--tile-neutral: #e1e5de;
+	--tile-neutral-ink: #46514b;
 
 	/* Tab-Leiste: dunkel und ruhig, aktiver Tab als Pastell-Pille */
-	--tabbar-bg: #1c1a17;
-	--tabbar-fg: #b4ada2;
-	--tabbar-active-bg: #f3efe8;
-	--tabbar-active-fg: #1c1a17;
+	--tabbar-bg: #17201c;
+	--tabbar-fg: #a9b3ad;
+	--tabbar-active-bg: #e9efe9;
+	--tabbar-active-fg: #17201c;
 
 	/* Status */
 	--good: #2b9a66;
@@ -79,23 +79,23 @@
 	--k-blunder: #d23b3b;
 
 	/* Form */
-	--radius-s: 10px;
-	--radius-m: 14px;
-	--radius-l: 24px;
-	--radius-xl: 28px;
+	--radius-s: 6px;
+	--radius-m: 10px;
+	--radius-l: 16px;
+	--radius-xl: 20px;
 	/* Bento */
-	--radius-tile: 28px;
+	--radius-tile: 18px;
 	--tile-pad: 1.1rem;
 	--bento-gap: 0.65rem;
-	--shadow-1: 0 1px 2px rgb(28 26 23 / 0.04), 0 2px 8px rgb(28 26 23 / 0.04);
-	--shadow-2: 0 2px 6px rgb(28 26 23 / 0.05), 0 12px 32px rgb(28 26 23 / 0.08);
+	--shadow-1: 0 1px 2px rgb(23 32 28 / 0.05), 0 2px 8px rgb(23 32 28 / 0.04);
+	--shadow-2: 0 2px 6px rgb(23 32 28 / 0.06), 0 12px 32px rgb(23 32 28 / 0.09);
 
 	/* Typografie */
-	--font-display: 'Bricolage Grotesque Variable', ui-rounded, system-ui, sans-serif;
+	--font-display: 'Archivo Variable', system-ui, sans-serif;
 	--font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', system-ui, sans-serif;
 	--font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
 	/* Zahlen, Kennzahl-Labels, Kachel-Überschriften, kurze Statuszeilen – nie Fließtext */
-	--font-num: var(--font-mono);
+	--font-num: 'Archivo Variable', system-ui, sans-serif;
 
 	/* Bewegung */
 	--ease-out: cubic-bezier(0.22, 1, 0.36, 1);
@@ -122,55 +122,55 @@
 
 @media (prefers-color-scheme: dark) {
 	:root:not([data-theme='light']) {
-		--bg: #121110;
-		--bg-tint: #1a1816;
-		--surface: #1c1a18;
-		--surface-2: #26231f;
-		--surface-glass: rgb(24 22 20 / 0.85);
-		--line: rgb(243 239 232 / 0.08);
-		--line-strong: rgb(243 239 232 / 0.14);
-		--text: #f3efe8;
-		--text-2: #a8a196;
-		--text-3: #958e83;
+		--bg: #0f1513;
+		--bg-tint: #141c19;
+		--surface: #17201c;
+		--surface-2: #1f2a25;
+		--surface-glass: rgb(21 29 26 / 0.86);
+		--line: rgb(233 237 232 / 0.08);
+		--line-strong: rgb(233 237 232 / 0.15);
+		--text: #e9ede8;
+		--text-2: #a3ada7;
+		--text-3: #8f9a94;
 		--hue-text-l: 72%;
-		--accent: #ff7a5c;
-		--accent-strong: #ff9479;
-		--accent-soft: rgb(255 122 92 / 0.16);
-		--on-accent: #1a0f0b;
+		--accent: #6fc39f;
+		--accent-strong: #8bd3b3;
+		--accent-soft: rgb(111 195 159 / 0.16);
+		--on-accent: #0c1a14;
 		--bad: #f07a7a;
 		--good-text: #5fd49b;
 		--warn-text: #f2b544;
 		--bad-text: #f59494;
-		--c-play: #ff7a5c;
-		--c-play-soft: rgb(255 122 92 / 0.15);
+		--c-play: #6fc39f;
+		--c-play-soft: rgb(111 195 159 / 0.15);
 		--c-puzzle: #9c8dff;
 		--c-puzzle-soft: rgb(156 141 255 / 0.15);
-		--c-learn: #3cc7b2;
-		--c-learn-soft: rgb(60 199 178 / 0.14);
+		--c-learn: #6fbfd6;
+		--c-learn-soft: rgb(111 191 214 / 0.15);
 		--c-analysis: #f2b544;
 		--c-analysis-soft: rgb(242 181 68 / 0.14);
 		--c-coach: #6ea6ff;
 		--c-coach-soft: rgb(110 166 255 / 0.15);
-		--tile-text: #f3efe8;
-		--tile-text-2: #d2cbc0;
-		--tile-play: #3b2620;
-		--tile-play-ink: #ffb39f;
+		--tile-text: #e9ede8;
+		--tile-text-2: #c4cdc8;
+		--tile-play: #183229;
+		--tile-play-ink: #9ad9bb;
 		--tile-games: #352a17;
 		--tile-games-ink: #f2c66e;
 		--tile-coach: #1f2a3d;
 		--tile-coach-ink: #a9c8ff;
 		--tile-puzzle: #29243f;
 		--tile-puzzle-ink: #c3b9ff;
-		--tile-learn: #17322d;
-		--tile-learn-ink: #7fdccb;
-		--tile-stars: #33301b;
-		--tile-stars-ink: #eed96a;
-		--tile-neutral: #26231f;
-		--tile-neutral-ink: #c9c2b7;
-		--tabbar-bg: #0b0a09;
-		--tabbar-fg: #a8a196;
-		--tabbar-active-bg: #f3efe8;
-		--tabbar-active-fg: #1c1a17;
+		--tile-learn: #162d35;
+		--tile-learn-ink: #9fd6e6;
+		--tile-stars: #2e2915;
+		--tile-stars-ink: #e6cf80;
+		--tile-neutral: #1f2a25;
+		--tile-neutral-ink: #c1cac5;
+		--tabbar-bg: #0a0f0d;
+		--tabbar-fg: #a3ada7;
+		--tabbar-active-bg: #e9efe9;
+		--tabbar-active-fg: #17201c;
 		--shadow-1: 0 1px 2px rgb(0 0 0 / 0.3);
 		--shadow-2: 0 2px 6px rgb(0 0 0 / 0.3), 0 12px 32px rgb(0 0 0 / 0.35);
 		color-scheme: dark;
@@ -178,55 +178,55 @@
 }
 
 :root[data-theme='dark'] {
-	--bg: #121110;
-	--bg-tint: #1a1816;
-	--surface: #1c1a18;
-	--surface-2: #26231f;
-	--surface-glass: rgb(24 22 20 / 0.85);
-	--line: rgb(243 239 232 / 0.08);
-	--line-strong: rgb(243 239 232 / 0.14);
-	--text: #f3efe8;
-	--text-2: #a8a196;
-	--text-3: #958e83;
+	--bg: #0f1513;
+	--bg-tint: #141c19;
+	--surface: #17201c;
+	--surface-2: #1f2a25;
+	--surface-glass: rgb(21 29 26 / 0.86);
+	--line: rgb(233 237 232 / 0.08);
+	--line-strong: rgb(233 237 232 / 0.15);
+	--text: #e9ede8;
+	--text-2: #a3ada7;
+	--text-3: #8f9a94;
 	--hue-text-l: 72%;
-	--accent: #ff7a5c;
-	--accent-strong: #ff9479;
-	--accent-soft: rgb(255 122 92 / 0.16);
-	--on-accent: #1a0f0b;
+	--accent: #6fc39f;
+	--accent-strong: #8bd3b3;
+	--accent-soft: rgb(111 195 159 / 0.16);
+	--on-accent: #0c1a14;
 	--bad: #f07a7a;
 	--good-text: #5fd49b;
 	--warn-text: #f2b544;
 	--bad-text: #f59494;
-	--c-play: #ff7a5c;
-	--c-play-soft: rgb(255 122 92 / 0.15);
+	--c-play: #6fc39f;
+	--c-play-soft: rgb(111 195 159 / 0.15);
 	--c-puzzle: #9c8dff;
 	--c-puzzle-soft: rgb(156 141 255 / 0.15);
-	--c-learn: #3cc7b2;
-	--c-learn-soft: rgb(60 199 178 / 0.14);
+	--c-learn: #6fbfd6;
+	--c-learn-soft: rgb(111 191 214 / 0.15);
 	--c-analysis: #f2b544;
 	--c-analysis-soft: rgb(242 181 68 / 0.14);
 	--c-coach: #6ea6ff;
 	--c-coach-soft: rgb(110 166 255 / 0.15);
-	--tile-text: #f3efe8;
-	--tile-text-2: #d2cbc0;
-	--tile-play: #3b2620;
-	--tile-play-ink: #ffb39f;
+	--tile-text: #e9ede8;
+	--tile-text-2: #c4cdc8;
+	--tile-play: #183229;
+	--tile-play-ink: #9ad9bb;
 	--tile-games: #352a17;
 	--tile-games-ink: #f2c66e;
 	--tile-coach: #1f2a3d;
 	--tile-coach-ink: #a9c8ff;
 	--tile-puzzle: #29243f;
 	--tile-puzzle-ink: #c3b9ff;
-	--tile-learn: #17322d;
-	--tile-learn-ink: #7fdccb;
-	--tile-stars: #33301b;
-	--tile-stars-ink: #eed96a;
-	--tile-neutral: #26231f;
-	--tile-neutral-ink: #c9c2b7;
-	--tabbar-bg: #0b0a09;
-	--tabbar-fg: #a8a196;
-	--tabbar-active-bg: #f3efe8;
-	--tabbar-active-fg: #1c1a17;
+	--tile-learn: #162d35;
+	--tile-learn-ink: #9fd6e6;
+	--tile-stars: #2e2915;
+	--tile-stars-ink: #e6cf80;
+	--tile-neutral: #1f2a25;
+	--tile-neutral-ink: #c1cac5;
+	--tabbar-bg: #0a0f0d;
+	--tabbar-fg: #a3ada7;
+	--tabbar-active-bg: #e9efe9;
+	--tabbar-active-fg: #17201c;
 	--shadow-1: 0 1px 2px rgb(0 0 0 / 0.3);
 	--shadow-2: 0 2px 6px rgb(0 0 0 / 0.3), 0 12px 32px rgb(0 0 0 / 0.35);
 	color-scheme: dark;
@@ -265,8 +265,9 @@ h2,
 h3,
 h4 {
 	font-family: var(--font-display);
-	font-weight: 680;
-	letter-spacing: -0.02em;
+	font-weight: 720;
+	font-stretch: 112%;
+	letter-spacing: -0.015em;
 	line-height: 1.1;
 	margin: 0;
 	text-wrap: balance;
