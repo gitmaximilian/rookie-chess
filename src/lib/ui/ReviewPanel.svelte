@@ -157,7 +157,6 @@
 		font-size: 0.72rem;
 		font-weight: 700;
 		letter-spacing: 0.04em;
-		text-transform: uppercase;
 		color: var(--text-3);
 	}
 
@@ -228,7 +227,6 @@
 		font-size: 0.72rem;
 		font-weight: 700;
 		letter-spacing: 0.04em;
-		text-transform: uppercase;
 		color: var(--text-3);
 		margin-bottom: 0.1rem;
 	}

@@ -65,7 +65,6 @@
 
 	h3 {
 		font-size: 0.8rem;
-		text-transform: uppercase;
 		letter-spacing: 0.05em;
 		color: var(--text-3);
 		margin-top: 0.3rem;

@@ -560,7 +560,6 @@
 	.grp {
 		font-size: 0.82rem;
 		font-weight: 700;
-		text-transform: uppercase;
 		letter-spacing: 0.05em;
 		color: var(--text-2);
 		margin: 1.1rem 0 0.55rem;

@@ -1655,7 +1655,6 @@
 		font-size: 0.74rem;
 		font-weight: 500;
 		letter-spacing: 0.05em;
-		text-transform: uppercase;
 		color: var(--text-2);
 	}
 
@@ -1800,7 +1799,6 @@
 		font-family: var(--font-num);
 		font-size: 0.72rem;
 		letter-spacing: 0.04em;
-		text-transform: uppercase;
 		color: var(--c-puzzle);
 	}
 
@@ -2117,7 +2115,6 @@
 		font-size: 0.75rem;
 		font-weight: 700;
 		letter-spacing: 0.04em;
-		text-transform: uppercase;
 		color: var(--text-3);
 	}
 

@@ -23,7 +23,9 @@
 			stroke-dashoffset={circ * (1 - pct)}
 		/>
 	</svg>
-	<span class="num">{label ?? `${value}/${max}`}</span>
+	<span class="num" style:font-size="{Math.max(13, Math.round(size * 0.2))}px"
+		>{label ?? `${value}/${max}`}</span
+	>
 	<span class="sr-only">{label ?? `${value} / ${max}`}</span>
 </div>
 
@@ -58,9 +60,9 @@
 
 	.num {
 		font-family: var(--font-num);
-		font-weight: 500;
+		font-weight: 600;
 		font-size: 0.82rem;
-		color: var(--text-2);
+		color: var(--text);
 		font-variant-numeric: tabular-nums;
 		letter-spacing: -0.02em;
 	}
