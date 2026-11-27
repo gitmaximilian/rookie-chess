@@ -118,7 +118,7 @@
 					<input
 						bind:value={input[src]}
 						aria-label="{label} {t('import.username')}"
-						placeholder={t('import.username')}
+						placeholder={label}
 						autocomplete="off"
 						autocapitalize="off"
 						spellcheck="false"

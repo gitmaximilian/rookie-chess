@@ -334,11 +334,7 @@
 
 <svelte:head><title>{t('coachTab.title')} – Rookie</title></svelte:head>
 
-<PageHeader
-	eyebrow={t('coachTab.eyebrow')}
-	title={t('coachTab.title')}
-	subtitle={t('coachTab.subtitle')}
->
+<PageHeader eyebrow={t('coachTab.eyebrow')} title={t('coachTab.title')}>
 	{#snippet action()}<AvatarButton />{/snippet}
 </PageHeader>
 <CoachTabs active="overview" />

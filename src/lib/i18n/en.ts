@@ -143,16 +143,16 @@ export const en = {
 		}
 	},
 	bots: {
-		bruno: { name: 'Pawn Pete', tag: 'Captures everything that moves – and forgets his king.' },
-		pia: { name: 'Pony Penny', tag: 'Loves to jump around. Sometimes into thin air.' },
-		leo: { name: 'Bishop Ben', tag: 'Likes long diagonals and short games.' },
-		tina: { name: 'Tower Tina', tag: 'Solid as a castle wall. Almost always.' },
-		kai: { name: 'Combo Kai', tag: 'Always looking for a fork. Often finds one.' },
-		rita: { name: 'Castle Cass', tag: 'Gets her king safe first – then the fun begins.' },
-		sven: { name: 'Sly Sven', tag: 'Tactically wide awake. Don’t underestimate him.' },
+		bruno: { name: 'Pawn Pete', tag: 'Takes everything. Forgets his king.' },
+		pia: { name: 'Pony Penny', tag: 'Loves to jump. Often into nothing.' },
+		leo: { name: 'Bishop Ben', tag: 'Loves long diagonals.' },
+		tina: { name: 'Tower Tina', tag: 'Solid as a castle wall.' },
+		kai: { name: 'Combo Kai', tag: 'Always hunting for a fork.' },
+		rita: { name: 'Castle Cass', tag: 'Castles first, then attacks.' },
+		sven: { name: 'Sly Sven', tag: 'Tactically wide awake.' },
 		doris: {
 			name: 'Queen Doris',
-			tag: 'The boss of the board. Beat her and you’re no rookie anymore.'
+			tag: 'The boss of the board.'
 		}
 	},
 	play: {
@@ -230,6 +230,7 @@ export const en = {
 		chanceTitle: 'Your opponent just blundered!',
 		chanceText:
 			'There is something to win: look for captures, checks and threats – find the best move.',
+		levelHow: 'What does this mean?',
 		levelLabel: 'Coach help',
 		levelAuto: 'Auto',
 		levelWarn: 'Warn me',
@@ -295,7 +296,7 @@ export const en = {
 		blackToMove: 'Black to move – find the best move',
 		youPlayed: (p: P) => `You played ${p.move} (red arrow). Find a better move.`,
 		fromGame: 'From your game',
-		puzzleRating: (p: P) => `Puzzle rating ${p.r}`,
+		puzzleRating: (p: P) => `Difficulty ${p.r}`,
 		praise: 'Strong!|Nicely done!|Exactly!|Perfect!',
 		withHint: 'Well done – with a little hint.',
 		noProblem: 'No problem – that’s how you learn.',
@@ -378,6 +379,8 @@ export const en = {
 		empty: 'No games yet',
 		emptyText: 'Play a bot, import your online games or paste a PGN.',
 		playGame: 'Play a game',
+		search: 'Opponent or opening',
+		noHit: 'No game found.',
 		import: 'Import',
 		vs: (p: P) => `vs ${p.name}`,
 		analysed: 'analysed',
@@ -447,6 +450,8 @@ export const en = {
 		}
 	},
 	review: {
+		allKinds: 'All move types',
+		fewerKinds: 'Only mistakes',
 		head: {
 			brilliant: (p: P) => `${p.san} is brilliant`,
 			great: (p: P) => `${p.san} is a great move`,
@@ -605,15 +610,13 @@ export const en = {
 		soundStyle: 'Sound style',
 		soundStyles: { wood: 'Wood', soft: 'Soft', chime: 'Chime' },
 		minutes: 'Time per day',
-		minutesText: 'Time per day – the coach turns it into games per week and your daily dose.',
-		minutesN: (p: P) => `${p.n} min`,
+		minutesText: 'Time per day in minutes',
+		minutesN: (p: P) => `${p.n}`,
 		goal: 'Daily goal',
-		goalText:
-			'How many puzzles do you want to solve per day? “Coach” fits the number to your level and time.',
+		goalText: 'Puzzles per day. “Coach” adapts the number.',
 		goalCoach: 'Coach',
 		data: 'Your data',
-		dataText:
-			'Without an account, everything stays on this device only. A backup file lets you move your progress to another device yourself (e.g. from iPhone to Mac).',
+		dataText: 'Everything stays on this device. A backup lets you take it along.',
 		facts: (p: P) => `${p.g} games · ${p.a} puzzle attempts · ${p.c} review cards`,
 		protected: 'Data is protected from automatic deletion.',
 		unprotected: 'Safari may delete data after a longer period of non-use.',
@@ -958,14 +961,11 @@ export const en = {
 		autoAnalyse: 'Analyse automatically and create exercises',
 		practise: 'Practise my mistakes',
 		toGames: 'View games',
-		privacy:
-			'Only public games are loaded directly from Lichess or Chess.com – nothing is sent anywhere else.',
+		privacy: 'Public games only, straight from Lichess or Chess.com.',
 		stop: 'Stop',
 		accounts: 'Linked accounts',
-		accountsText:
-			'Link your username once – Rookie imports all your past games and then fetches every new game automatically whenever you open the app.',
-		noPassword:
-			'Your games on Lichess and Chess.com are public, so no login or password is needed – just your username.',
+		accountsText: 'Link once – new games then arrive automatically.',
+		noPassword: 'Username only – no password.',
 		noPasswordShort: 'Username only – no password.',
 		link: 'Link',
 		unlink: 'Unlink',
@@ -1006,7 +1006,7 @@ export const en = {
 		importGames: 'Import games',
 		settings: 'Settings & backup',
 		about: 'About Rookie & licences',
-		legal: 'Legal notice & privacy',
+		legal: 'Legal notice',
 		less: 'less',
 		more: 'more'
 	},
@@ -1189,8 +1189,7 @@ export const en = {
 			openings: { t: 'Learn openings', d: 'Real openings with explanations.' }
 		},
 		onlineQ: 'Do you play on Lichess or Chess.com?',
-		onlineText:
-			'Enter your username and Rookie imports all your games – past and future – analyses them and shows your Elo. No password needed.',
+		onlineText: 'Rookie fetches and analyses your games. Username only, no password.',
 		lichessName: 'Lichess username',
 		chesscomName: 'Chess.com username',
 		linkGo: 'Link and start',
@@ -1592,6 +1591,7 @@ export const en = {
 	dailyProgress: { count: 'Today: {done} of {goal}', done: 'Done for today' },
 	selfReview: {
 		open: 'Find my mistakes',
+		openFirst: 'Or find them yourself first',
 		kicker: 'You first',
 		title: 'Where were your mistakes?',
 		text: (p: P) =>
@@ -1632,6 +1632,7 @@ export const en = {
 		missed: (p: P) => `missed at ${p.move}`,
 		lesson: 'Lesson',
 		lessonText: (p: P) => `${p.motif} (${p.n}×) – practise now`,
+		noteShort: 'How is this rated?',
 		note: 'Rating: accuracy of this game compared with 1,440 real Lichess games (400–2200, same engine depth). A single game varies a lot – even players around 1000 exceed 87 % in one game in four. A “performance Elo” from one game would mostly be chance; what counts is how the game was for your level, and the trend over many games.'
 	},
 	progress: {
@@ -1768,8 +1769,7 @@ export const en = {
 	storm: {
 		title: 'Puzzle Storm',
 		teaser: 'As many puzzles as you can in 3 minutes.',
-		rules:
-			'3 minutes, puzzles get harder with every solve. A wrong move costs 10 seconds and skips the puzzle. How far do you get?',
+		rules: '3 minutes, each puzzle harder. A mistake costs 10 seconds.',
 		start: 'Start',
 		find: (p: P) => `${p.side} to move – find the best move!`,
 		streak: 'in a row',
@@ -1840,8 +1840,7 @@ export const en = {
 	},
 	accounts: {
 		ctaTitle: 'Link Lichess or Chess.com',
-		ctaText:
-			'Every game is imported and analysed automatically.',
+		ctaText: 'Every game is imported and analysed automatically.',
 		noRating: 'No rated games yet',
 		manage: 'Manage',
 		elo: 'Your Elo'
@@ -1864,7 +1863,7 @@ export const en = {
 	summary: {
 		rapidImported: 'Latest imported rating. Stability unverified.',
 		rapidNoData: 'Import a rated Rapid game',
-		rapidGoal: 'Lichess Rapid · goal 1600',
+		rapidGoal: 'Playing strength',
 		title: 'Overview',
 		link: 'Link account',
 		loading: 'Loading games …',
@@ -1885,7 +1884,8 @@ export const en = {
 		streakDone: 'today done',
 		streakOpen: 'train today to keep it',
 		week: 'This week',
-		weekSub: (p: P) => `rapid · dose ${p.pct} %`,
+		weekSub: 'rapid games · coach',
+		streakStart: 'start today',
 		goal: 'Daily goal',
 		goalDone: 'reached – well done',
 		goalLeft: (p: P) => `${p.n} more ${s(p.n, 'puzzle', 'puzzles')}`,

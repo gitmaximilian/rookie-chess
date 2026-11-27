@@ -151,17 +151,17 @@ export const de: Shape<typeof en> = {
 	bots: {
 		bruno: {
 			name: 'Bauer Bruno',
-			tag: 'Schlägt alles, was sich bewegt – und vergisst seinen König.'
+			tag: 'Schlägt alles. Vergisst den König.'
 		},
-		pia: { name: 'Pia Pferdchen', tag: 'Springt gern herum. Manchmal ins Leere.' },
-		leo: { name: 'Leo Läufer', tag: 'Mag lange Diagonalen und kurze Partien.' },
-		tina: { name: 'Tina Turm', tag: 'Solide wie eine Burgmauer. Fast immer.' },
-		kai: { name: 'Kai Kombinator', tag: 'Sucht immer die Gabel. Findet sie auch oft.' },
-		rita: { name: 'Rita Rochade', tag: 'Bringt den König in Sicherheit, dann geht’s los.' },
-		sven: { name: 'Sven Springer', tag: 'Taktisch hellwach. Unterschätz ihn nicht.' },
+		pia: { name: 'Pia Pferdchen', tag: 'Springt gern. Oft ins Leere.' },
+		leo: { name: 'Leo Läufer', tag: 'Liebt lange Diagonalen.' },
+		tina: { name: 'Tina Turm', tag: 'Solide wie eine Burgmauer.' },
+		kai: { name: 'Kai Kombinator', tag: 'Sucht immer die Gabel.' },
+		rita: { name: 'Rita Rochade', tag: 'Erst rochieren, dann angreifen.' },
+		sven: { name: 'Sven Springer', tag: 'Taktisch hellwach.' },
 		doris: {
 			name: 'Dame Doris',
-			tag: 'Die Chefin am Brett. Wer sie schlägt, ist kein Rookie mehr.'
+			tag: 'Die Chefin am Brett.'
 		}
 	},
 	play: {
@@ -240,6 +240,7 @@ export const de: Shape<typeof en> = {
 		chanceTitle: 'Dein Gegner hat gerade gepatzt!',
 		chanceText:
 			'Hier gibt es etwas zu holen: Schau nach Schlagzügen, Schachs und Drohungen – such den besten Zug.',
+		levelHow: 'Was heißt das?',
 		levelLabel: 'Hilfe des Coachs',
 		levelAuto: 'Auto',
 		levelWarn: 'Warnen',
@@ -307,7 +308,7 @@ export const de: Shape<typeof en> = {
 		blackToMove: 'Schwarz am Zug – finde den besten Zug',
 		youPlayed: (p) => `Du hast ${p.move} gespielt (roter Pfeil). Finde einen besseren Zug.`,
 		fromGame: 'Aus deiner Partie',
-		puzzleRating: (p) => `Puzzle-Rating ${p.r}`,
+		puzzleRating: (p) => `Schwierigkeit ${p.r}`,
 		praise: 'Stark!|Sauber gelöst!|Genau so!|Perfekt!',
 		withHint: 'Gut gemacht – mit kleinem Tipp.',
 		noProblem: 'Kein Problem – genau so lernst du.',
@@ -412,6 +413,8 @@ export const de: Shape<typeof en> = {
 		empty: 'Noch keine Partien',
 		emptyText: 'Spiel gegen einen Bot, importiere deine Online-Partien oder füge ein PGN ein.',
 		playGame: 'Partie spielen',
+		search: 'Gegner oder Eröffnung',
+		noHit: 'Keine Partie gefunden.',
 		import: 'Importieren',
 		vs: (p) => `gegen ${p.name}`,
 		analysed: 'analysiert',
@@ -482,6 +485,8 @@ export const de: Shape<typeof en> = {
 		}
 	},
 	review: {
+		allKinds: 'Alle Zugarten',
+		fewerKinds: 'Nur Fehler zeigen',
 		head: {
 			brilliant: (p) => `${p.san} ist brillant`,
 			great: (p) => `${p.san} ist ein starker Zug`,
@@ -652,16 +657,13 @@ export const de: Shape<typeof en> = {
 		soundStyle: 'Klangstil',
 		soundStyles: { wood: 'Holz', soft: 'Sanft', chime: 'Glocke' },
 		minutes: 'Zeit pro Tag',
-		minutesText:
-			'Zeit pro Tag – daraus berechnet der Coach Partien pro Woche und deine tägliche Dosis.',
-		minutesN: (p: P) => `${p.n} min`,
+		minutesText: 'Zeit pro Tag in Minuten',
+		minutesN: (p: P) => `${p.n}`,
 		goal: 'Tagesziel',
-		goalText:
-			'Wie viele Puzzles möchtest du pro Tag lösen? „Coach“ passt die Zahl an Niveau und Zeit an.',
+		goalText: 'Puzzles pro Tag. „Coach“ passt die Zahl an.',
 		goalCoach: 'Coach',
 		data: 'Deine Daten',
-		dataText:
-			'Ohne Konto bleibt alles nur auf diesem Gerät. Mit einer Sicherungsdatei nimmst du deinen Fortschritt selbst auf ein anderes Gerät mit (z. B. vom iPhone auf den Mac).',
+		dataText: 'Alles bleibt auf diesem Gerät. Mit einer Sicherung nimmst du es mit.',
 		facts: (p) => `${p.g} Partien · ${p.a} Puzzle-Versuche · ${p.c} Wiederholungskarten`,
 		protected: 'Daten sind vor automatischem Löschen geschützt.',
 		unprotected: 'Safari kann Daten nach längerer Nichtnutzung löschen.',
@@ -913,7 +915,7 @@ export const de: Shape<typeof en> = {
 		}
 	},
 	course: {
-		recommended: 'Empfohlen zum Start',
+		recommended: 'Hier starten',
 		study: 'Lernen',
 		studyLine: 'Variante lernen',
 		practise: 'Üben',
@@ -1011,14 +1013,11 @@ export const de: Shape<typeof en> = {
 		autoAnalyse: 'Automatisch analysieren und Übungen erstellen',
 		practise: 'Meine Fehler üben',
 		toGames: 'Partien ansehen',
-		privacy:
-			'Es werden nur öffentliche Partien direkt von Lichess bzw. Chess.com geladen – nichts wird woandershin gesendet.',
+		privacy: 'Nur öffentliche Partien, direkt von Lichess bzw. Chess.com.',
 		stop: 'Stopp',
 		accounts: 'Verknüpfte Konten',
-		accountsText:
-			'Einmal Benutzernamen verknüpfen – Rookie importiert alle deine bisherigen Partien und holt danach jede neue Partie automatisch, sobald du die App öffnest.',
-		noPassword:
-			'Deine Partien auf Lichess und Chess.com sind öffentlich – du brauchst kein Login und kein Passwort, nur deinen Benutzernamen.',
+		accountsText: 'Einmal verknüpfen – neue Partien kommen dann automatisch.',
+		noPassword: 'Nur Benutzername – kein Passwort.',
 		noPasswordShort: 'Nur Benutzername – kein Passwort.',
 		link: 'Verknüpfen',
 		unlink: 'Trennen',
@@ -1059,7 +1058,7 @@ export const de: Shape<typeof en> = {
 		importGames: 'Partien importieren',
 		settings: 'Einstellungen & Datensicherung',
 		about: 'Über Rookie & Lizenzen',
-		legal: 'Impressum & Datenschutz',
+		legal: 'Impressum',
 		less: 'weniger',
 		more: 'mehr'
 	},
@@ -1247,8 +1246,7 @@ export const de: Shape<typeof en> = {
 			openings: { t: 'Eröffnungen lernen', d: 'Echte Eröffnungen mit Erklärungen.' }
 		},
 		onlineQ: 'Spielst du auf Lichess oder Chess.com?',
-		onlineText:
-			'Gib deinen Benutzernamen ein, und Rookie importiert alle deine Partien – vergangene und künftige –, analysiert sie und zeigt deine Elo. Kein Passwort nötig.',
+		onlineText: 'Rookie holt und analysiert deine Partien. Nur Benutzername, kein Passwort.',
 		lichessName: 'Lichess-Benutzername',
 		chesscomName: 'Chess.com-Benutzername',
 		linkGo: 'Verknüpfen und loslegen',
@@ -1657,6 +1655,7 @@ export const de: Shape<typeof en> = {
 	dailyProgress: { count: 'Heute: {done} von {goal}', done: 'Heute erledigt' },
 	selfReview: {
 		open: 'Eigene Fehler finden',
+		openFirst: 'Oder erst selbst suchen',
 		kicker: 'Erst du',
 		title: 'Wo waren deine Fehler?',
 		text: (p: P) =>
@@ -1697,6 +1696,7 @@ export const de: Shape<typeof en> = {
 		missed: (p: P) => `verpasst bei ${p.move}`,
 		lesson: 'Lernpunkt',
 		lessonText: (p: P) => `${p.motif} (${p.n}×) – jetzt üben`,
+		noteShort: 'Wie wird das eingeordnet?',
 		note: 'Einordnung: Genauigkeit dieser Partie im Vergleich zu 1 440 echten Lichess-Partien (400–2200, gleiche Rechentiefe). Eine einzelne Partie schwankt stark – auch Spieler um 1000 erreichen in jeder vierten Partie über 87 %. Eine „gespielte Elo“ aus einer Partie wäre deshalb Zufall; aussagekräftig ist, wie die Partie für deine Stärke war, und der Verlauf über viele Partien.'
 	},
 	progress: {
@@ -1835,8 +1835,7 @@ export const de: Shape<typeof en> = {
 	storm: {
 		title: 'Puzzle-Sturm',
 		teaser: 'So viele Puzzles wie möglich in 3 Minuten.',
-		rules:
-			'3 Minuten, die Puzzles werden mit jedem gelösten schwerer. Ein falscher Zug kostet 10 Sekunden und überspringt das Puzzle. Wie weit kommst du?',
+		rules: '3 Minuten, jedes Puzzle schwerer. Ein Fehler kostet 10 Sekunden.',
 		start: 'Start',
 		find: (p: P) => `${p.side} am Zug – finde den besten Zug!`,
 		streak: 'in Folge',
@@ -1910,8 +1909,7 @@ export const de: Shape<typeof en> = {
 	},
 	accounts: {
 		ctaTitle: 'Lichess oder Chess.com verknüpfen',
-		ctaText:
-			'Jede Partie wird automatisch geholt und analysiert.',
+		ctaText: 'Jede Partie wird automatisch geholt und analysiert.',
 		noRating: 'Noch keine gewerteten Partien',
 		manage: 'Verwalten',
 		elo: 'Deine Elo'
@@ -1934,7 +1932,7 @@ export const de: Shape<typeof en> = {
 	summary: {
 		rapidImported: 'Letzte importierte Wertung. Stabilität offen.',
 		rapidNoData: 'Gewertete Rapid-Partie importieren',
-		rapidGoal: 'Lichess Rapid · Ziel 1600',
+		rapidGoal: 'Spielstärke',
 		title: 'Überblick',
 		link: 'Konto verknüpfen',
 		loading: 'Partien werden geladen …',
@@ -1955,7 +1953,8 @@ export const de: Shape<typeof en> = {
 		streakDone: 'heute erledigt',
 		streakOpen: 'heute trainieren, um sie zu halten',
 		week: 'Diese Woche',
-		weekSub: (p: P) => `Rapid · Dosis ${p.pct} %`,
+		weekSub: 'Rapid-Partien · Coach',
+		streakStart: 'heute starten',
 		goal: 'Tagesziel',
 		goalDone: 'erreicht – stark',
 		goalLeft: (p: P) => `noch ${p.n} ${Number(p.n) === 1 ? 'Puzzle' : 'Puzzles'}`,

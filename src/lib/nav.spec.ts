@@ -12,12 +12,13 @@ describe('isActive', () => {
 		expect(isActive('/learn', '/learnx')).toBe(false);
 	});
 
-	it('Coach-Tab gilt auch für die Statistik', () => {
-		expect(isActive('/coach', '/coach/stats')).toBe(true);
+	it('Coach und Statistik hängen an Start', () => {
+		expect(isActive('/', '/coach')).toBe(true);
+		expect(isActive('/', '/coach/stats')).toBe(true);
 		expect(navItems.some((n) => n.href === '/profile')).toBe(false);
 	});
 
-	it('hat sechs Tabs (Coach statt Profil)', () => {
-		expect(navItems).toHaveLength(6);
+	it('hat fünf Tabs (Coach unter Start)', () => {
+		expect(navItems).toHaveLength(5);
 	});
 });

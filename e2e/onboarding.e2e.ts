@@ -83,5 +83,7 @@ test('Einstieg: Lichess verknüpfen → Partien und Elo auf der Startseite', asy
 	await page.goto('/');
 	const mine = page.locator('.mine');
 	await expect(mine.getByText('vs opp1')).toBeVisible({ timeout: 15_000 });
-	await expect(page.locator('[data-testid="home-bento"]')).toContainText('1501');
+	// Online-Wertung steht in der Coach-Statistik, Start zeigt nur das Heute
+	await page.goto('/coach/stats');
+	await expect(page.getByText('1501').first()).toBeVisible();
 });

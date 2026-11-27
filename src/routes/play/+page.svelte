@@ -761,7 +761,7 @@
 	{#if typeof window !== 'undefined' && page.url.searchParams.get('plan') === '1'}
 		{@render rapidPlan()}
 	{/if}
-	<PageHeader eyebrow={t('play.eyebrow')} title={t('play.title')} subtitle={t('play.subtitle')} />
+	<PageHeader eyebrow={t('play.eyebrow')} title={t('play.title')} />
 
 	<div class="setup">
 		<section>
@@ -863,14 +863,14 @@
 							{ value: 'check', label: t('coach.levelCheck') }
 						]}
 					/>
-					<span class="level-note"
-						>{coachLevel(coachPref, coachSamples) === 'check'
+					<!-- Erklärung nur auf Wunsch -->
+					<details class="level-note">
+						<summary>{t('coach.levelHow')}</summary>
+						{coachLevel(coachPref, coachSamples) === 'check'
 							? t('coach.levelCheckText')
-							: t('coach.levelWarnText')}</span
-					>
-					{#if coachPref === 'auto'}
-						<span class="level-note">{t('decision.autoEvidence')}</span>
-					{/if}
+							: t('coach.levelWarnText')}
+						{#if coachPref === 'auto'}{t('decision.autoEvidence')}{/if}
+					</details>
 				</div>
 			{/if}
 
@@ -1482,7 +1482,6 @@
 			margin-bottom: 5.5rem;
 		}
 		.options {
-			order: -1;
 			padding: 1rem;
 			gap: 0.85rem;
 		}
@@ -1654,6 +1653,16 @@
 		font-size: 0.9rem;
 		line-height: 1.4;
 		color: var(--good-text);
+	}
+
+	.level-note summary {
+		cursor: pointer;
+		font-weight: 600;
+		color: var(--text-2);
+	}
+
+	.level-note[open] summary {
+		margin-bottom: 0.3rem;
 	}
 
 	.level-note {

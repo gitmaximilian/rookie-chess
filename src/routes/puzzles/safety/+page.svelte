@@ -623,7 +623,7 @@
 		gap: 0.4rem 1rem;
 		font-size: 0.82rem;
 		color: var(--text-3);
-		font-family: var(--font-mono);
+		font-family: var(--font-num);
 	}
 
 	.actions {

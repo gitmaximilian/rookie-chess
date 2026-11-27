@@ -367,6 +367,7 @@
 				<button
 					role="radio"
 					aria-checked={minutes === n}
+					aria-label="{n} min"
 					class:on={minutes === n}
 					onclick={() => saveMinutes(n)}>{t('settings.minutesN', { n })}</button
 				>
@@ -602,18 +603,20 @@
 		margin-top: 0.3rem;
 	}
 
+	/* alle Optionen in einer Reihe: schrumpfen statt einzeln umzubrechen */
 	.swatches,
 	.sets {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.5rem;
+		display: grid;
+		grid-auto-flow: column;
+		grid-auto-columns: minmax(0, 48px);
+		gap: 0.4rem;
 	}
 
 	.swatch-btn {
 		display: grid;
 		grid-template-columns: 1fr 1fr;
-		width: 44px;
-		height: 44px;
+		width: 100%;
+		aspect-ratio: 1;
 		padding: 0;
 		border-radius: 10px;
 		overflow: hidden;
@@ -668,12 +671,18 @@
 	.set-btn {
 		display: grid;
 		place-items: center;
-		width: 48px;
-		height: 48px;
+		width: 100%;
+		aspect-ratio: 1;
+		padding: 0;
 		border-radius: 12px;
 		border: 2px solid var(--line);
 		background: var(--surface-2);
 		cursor: pointer;
+	}
+
+	.set-btn img {
+		width: 72%;
+		height: auto;
 	}
 
 	.mini {

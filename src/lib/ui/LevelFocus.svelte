@@ -65,7 +65,7 @@
 
 	h3 {
 		font-size: 0.8rem;
-		letter-spacing: 0.05em;
+		letter-spacing: 0;
 		color: var(--text-3);
 		margin-top: 0.3rem;
 	}

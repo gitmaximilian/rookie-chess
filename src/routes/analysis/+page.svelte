@@ -5,6 +5,8 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
+	import Search from '@lucide/svelte/icons/search';
+	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import ChevronsLeft from '@lucide/svelte/icons/chevrons-left';
 	import ChevronsRight from '@lucide/svelte/icons/chevrons-right';
@@ -123,10 +125,37 @@
 		return { key: `${d.getFullYear()}-${d.getMonth()}`, label };
 	}
 
+	// Suche nach Gegner oder Eröffnung; ältere Monate standardmäßig zugeklappt
+	let query = $state('');
+	let expanded = $state<Record<string, boolean>>({});
+	const q = $derived(query.trim().toLowerCase());
+	const shownGames = $derived(
+		q
+			? games.filter(
+					(g) =>
+						g.opponent.toLowerCase().includes(q) || (openingName(g) ?? '').toLowerCase().includes(q)
+				)
+			: games
+	);
+	$effect(() => {
+		// beim Suchen alle Partien durchsuchen, nicht nur die geladenen
+		if (q && gameCount > games.length && listLimit < 100_000) {
+			listLimit = 100_000;
+			void loadList();
+		}
+	});
+	const isMonth = (key: string) => /^\d{4}-\d+$/.test(key);
+	/** zugeklappt: jeder Monat außer dem jüngsten – solange nicht gesucht wird */
+	function folded(key: string, i: number): boolean {
+		if (q || expanded[key] || !isMonth(key)) return false;
+		const firstMonth = groups.findIndex((g) => isMonth(g.key));
+		return i > firstMonth;
+	}
+
 	const groups = $derived.by(() => {
 		const out: { key: string; label: string; games: GameRow[]; w: number; d: number; l: number }[] =
 			[];
-		for (const g of games) {
+		for (const g of shownGames) {
 			const p = periodOf(g.date);
 			let grp = out.at(-1);
 			if (!grp || grp.key !== p.key) {
@@ -390,6 +419,9 @@
 		const no = Number(parts[5] ?? 1);
 		return parts[1] === 'w' ? `${no}.` : `${no}…`;
 	});
+
+	const ERROR_KINDS: Kind[] = ['inaccuracy', 'mistake', 'miss', 'blunder'];
+	let allKinds = $state(false);
 
 	/** Zugarten je Seite – für die Besprechung oben */
 	const kindCounts = $derived.by(() => {
@@ -1074,11 +1106,7 @@
 <svelte:window onkeydown={onKey} />
 
 {#if !gameId}
-	<PageHeader
-		eyebrow={t('analysis.eyebrow')}
-		title={t('analysis.title')}
-		subtitle={t('analysis.subtitle')}
-	/>
+	<PageHeader eyebrow={t('analysis.eyebrow')} title={t('analysis.title')} />
 
 	<div class="hub">
 		<!-- oben nur zwei Werkzeuge; alles zum Hinzufügen liegt an einem Ort -->
@@ -1131,6 +1159,19 @@
 			</a>
 		{/if}
 
+		{#if gameCount > 8}
+			<label class="search">
+				<Search size={17} aria-hidden="true" />
+				<input
+					type="search"
+					bind:value={query}
+					placeholder={t('analysis.search')}
+					aria-label={t('analysis.search')}
+					autocomplete="off"
+					spellcheck="false"
+				/>
+			</label>
+		{/if}
 		{#if loading || gameCount > 0 || filter !== 'all'}
 			<nav class="filters" aria-label={t('analysis.games')}>
 				{#each FILTERS as f (f)}
@@ -1156,9 +1197,18 @@
 				</div>
 			</div>
 		{:else}
-			{#each groups as grp (grp.key)}
+			{#each groups as grp, gi (grp.key)}
+				{@const shut = folded(grp.key, gi)}
 				<div class="day">
-					<h3>{grp.label}</h3>
+					{#if shut}
+						<button class="day-open" onclick={() => (expanded[grp.key] = true)}
+							><h3>{grp.label}</h3>
+							<span class="day-n">{t('stats.games', { n: grp.games.length })}</span>
+							<ChevronDown size={16} /></button
+						>
+					{:else}
+						<h3>{grp.label}</h3>
+					{/if}
 					<span class="day-score"
 						>{[
 							grp.w ? t('analysis.dayWins', { n: grp.w }) : '',
@@ -1169,11 +1219,15 @@
 							.join(' · ')}</span
 					>
 				</div>
-				<ul class="game-list">
-					{#each grp.games as g (g.id)}
-						<li><GameListItem game={g} detailed opening={openingName(g)} /></li>
-					{/each}
-				</ul>
+				{#if !shut}
+					<ul class="game-list">
+						{#each grp.games as g (g.id)}
+							<li><GameListItem game={g} detailed opening={openingName(g)} /></li>
+						{/each}
+					</ul>
+				{/if}
+			{:else}
+				<p class="muted no-hit">{t('analysis.noHit')}</p>
 			{/each}
 			{#if gameCount > games.length}
 				<button class="btn secondary more" onclick={showMore}
@@ -1453,17 +1507,17 @@
 					</button>
 				{/if}
 				{#if myMistakes.length}
-					<button class="btn secondary" onclick={() => (selfReview = 'active')}
-						>{t('selfReview.open')}</button
-					>
-					<button class="card retry-cta" onclick={() => startRetry()}>
-						<span class="rc-ico"><Target size={20} /></span>
-						<span
-							><b>{t('retry.cta', { n: myMistakes.length })}</b>
-							{t('retry.ctaText')}</span
+					<!-- ein Einstieg: nachspielen – oder vorher selbst suchen -->
+					<div class="retry-group">
+						<button class="card retry-cta" onclick={() => startRetry()}>
+							<span class="rc-ico"><Target size={20} /></span>
+							<span><b>{t('retry.cta', { n: myMistakes.length })}</b></span>
+							<ChevronRight size={18} />
+						</button>
+						<button class="self-link" onclick={() => (selfReview = 'active')}
+							>{t('selfReview.openFirst')}</button
 						>
-						<ChevronRight size={18} />
-					</button>
+					</div>
 				{/if}
 			{/if}
 
@@ -1518,7 +1572,7 @@
 						{/each}
 					</div>
 					{#each KINDS as k (k)}
-						{#if kindCounts.white[k] + kindCounts.black[k] > 0}
+						{#if kindCounts.white[k] + kindCounts.black[k] > 0 && (allKinds || ERROR_KINDS.includes(k))}
 							{@const KI = KIND_ICON[k]}
 							<div class="sum-kind" style:--k={kindColor(k)}>
 								<span class="sk-name"
@@ -1531,6 +1585,10 @@
 							</div>
 						{/if}
 					{/each}
+					<!-- Fehlerarten zuerst; die guten Züge (Bester, Exzellent, Buch …) auf Wunsch -->
+					<button class="sum-more" onclick={() => (allKinds = !allKinds)} aria-expanded={allKinds}
+						>{allKinds ? t('review.fewerKinds') : t('review.allKinds')}</button
+					>
 				</div>
 			{/if}
 
@@ -1652,10 +1710,68 @@
 
 	.day h3 {
 		font-family: var(--font-num);
-		font-size: 0.74rem;
-		font-weight: 500;
-		letter-spacing: 0.05em;
+		font-size: 0.82rem;
+		font-weight: 650;
+		letter-spacing: 0;
 		color: var(--text-2);
+	}
+
+	.day-open {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		width: 100%;
+		min-height: 44px;
+		padding: 0 0.85rem;
+		border: 1px solid var(--line);
+		border-radius: var(--radius-m);
+		background: var(--surface);
+		font: inherit;
+		color: var(--text-2);
+		cursor: pointer;
+	}
+
+	.day-open h3 {
+		flex: 1;
+		text-align: left;
+	}
+
+	.day-n {
+		font-size: 0.82rem;
+	}
+
+	.day:has(.day-open) .day-score {
+		display: none;
+	}
+
+	.search {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0 0.85rem;
+		min-height: 44px;
+		border: 1px solid var(--line-strong);
+		border-radius: 999px;
+		background: var(--surface);
+		color: var(--text-2);
+	}
+
+	.search input {
+		flex: 1;
+		min-width: 0;
+		border: none;
+		background: none;
+		font: inherit;
+		color: var(--text);
+		outline: none;
+	}
+
+	.search:focus-within {
+		border-color: var(--accent);
+	}
+
+	.no-hit {
+		padding: 1rem 0.2rem;
 	}
 
 	.day-score {
@@ -1798,7 +1914,7 @@
 	.rt-kick {
 		font-family: var(--font-num);
 		font-size: 0.72rem;
-		letter-spacing: 0.04em;
+		letter-spacing: 0;
 		color: var(--c-puzzle);
 	}
 
@@ -1907,6 +2023,30 @@
 		text-align: left;
 		font: inherit;
 		color: var(--text-2);
+		cursor: pointer;
+	}
+
+	.retry-group {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+	}
+
+	.retry-cta > span:nth-child(2) {
+		flex: 1;
+	}
+
+	.self-link {
+		align-self: center;
+		min-height: 44px;
+		border: none;
+		background: none;
+		font: inherit;
+		font-size: 0.88rem;
+		font-weight: 600;
+		color: var(--text-2);
+		text-decoration: underline;
+		text-underline-offset: 3px;
 		cursor: pointer;
 	}
 
@@ -2114,7 +2254,7 @@
 		text-align: center;
 		font-size: 0.75rem;
 		font-weight: 700;
-		letter-spacing: 0.04em;
+		letter-spacing: 0;
 		color: var(--text-3);
 	}
 
@@ -2145,6 +2285,20 @@
 	.sum-acc small {
 		font-size: 0.65em;
 		color: var(--text-3);
+	}
+
+	.sum-more {
+		grid-column: 1 / -1;
+		justify-self: start;
+		min-height: 40px;
+		padding: 0;
+		border: none;
+		background: none;
+		font: inherit;
+		font-size: 0.85rem;
+		font-weight: 600;
+		color: var(--text-2);
+		cursor: pointer;
 	}
 
 	.sk-name {

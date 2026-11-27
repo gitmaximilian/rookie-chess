@@ -42,11 +42,10 @@ test('Stellungsspiel: Lektion mit Schwarz am Zug lösen (zum Zentrum zurückschl
 	).toBeVisible();
 });
 
-test('Lernen zeigt, was auf dem eigenen Niveau zählt, und die neuen Pfade', async ({ page }) => {
+test('Lernen zeigt die Pfade, Brett-Scan liegt bei den Puzzles', async ({ page }) => {
 	await page.goto('/learn');
-	const lvl = page.getByTestId('level-focus');
-	await expect(lvl).toBeVisible();
-	await expect(lvl).toContainText('What counts at your level');
-	await expect(page.getByRole('link', { name: /Board scan/ })).toBeVisible();
 	await expect(page.getByRole('link', { name: /Positional play/ })).toBeVisible();
+	await expect(page.getByRole('link', { name: /Endgames/ })).toBeVisible();
+	await page.goto('/puzzles');
+	await expect(page.getByTestId('chip-scan')).toBeVisible();
 });

@@ -559,7 +559,7 @@
 	dt {
 		font-size: 0.72rem;
 		font-weight: 700;
-		letter-spacing: 0.04em;
+		letter-spacing: 0;
 		color: var(--text-2);
 	}
 

@@ -5,7 +5,7 @@ test('Zug und Antwort: eigener Zug, Gegnerzug, sofortige Rückmeldung', async ({
 	page,
 	hasTouch
 }) => {
-	await page.goto('/puzzles/scan');
+	await page.goto('/puzzles');
 	await page.getByRole('link', { name: 'Move and reply' }).click();
 	const input = hasTouch ? 'touch' : 'mouse';
 	await expect(page.getByText('Position 1 of 6')).toBeVisible();

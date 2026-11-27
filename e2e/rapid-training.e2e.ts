@@ -74,7 +74,7 @@ test('Fortgeschrittenes Profil: Schnellschach bleibt bei späteren Blitzpartien 
 	await expect.poll(async () => await plan.getByRole('link', { name: /^Start$/ }).count()).toBe(1);
 	await page.reload();
 	await expect(tile).toContainText('1320');
-	await expect(tile).toContainText('Lichess Rapid');
+	await expect(tile).toContainText('Playing strength');
 	await expect(plan.getByRole('link', { name: /Board scan/ })).toHaveCount(0);
 	await expect(plan.getByTestId('rapid-slot')).toBeVisible();
 	// 5 min Budget: Puzzles bleiben täglich drin (bis zu 5 min darüber)

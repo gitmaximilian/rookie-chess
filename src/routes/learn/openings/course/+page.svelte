@@ -1296,7 +1296,7 @@
 		font-size: 0.8rem;
 		font-weight: 650;
 		color: var(--text-2);
-		letter-spacing: 0.04em;
+		letter-spacing: 0;
 	}
 
 	.prompt {
@@ -1415,7 +1415,7 @@
 	.who {
 		font-size: 0.72rem;
 		font-weight: 700;
-		letter-spacing: 0.05em;
+		letter-spacing: 0;
 		color: var(--text-2);
 		margin-right: 0.35rem;
 	}

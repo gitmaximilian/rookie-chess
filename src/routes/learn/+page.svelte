@@ -4,10 +4,8 @@
 	import BookOpen from '@lucide/svelte/icons/book-open';
 	import GraduationCap from '@lucide/svelte/icons/graduation-cap';
 	import { BASICS, TACTICS, POSITIONAL, basicById } from '#lib/basics/lessons.js';
-	import ScanEye from '@lucide/svelte/icons/scan-eye';
 	import Compass from '@lucide/svelte/icons/compass';
-	import LevelFocus from '#lib/ui/LevelFocus.svelte';
-	import { currentStrength, loadPlanContext } from '#lib/training/planData.js';
+	import { loadPlanContext } from '#lib/training/planData.js';
 	import { nextLesson, type PlanTask } from '#lib/training/plan.js';
 	import { courseById } from '#lib/openings/courses.js';
 	import { lessonById } from '#lib/endgames/lessons.js';
@@ -19,9 +17,7 @@
 	import Swords from '@lucide/svelte/icons/swords';
 	import { getSetting } from '#lib/db/db.js';
 	import PageHeader from '#lib/ui/PageHeader.svelte';
-	import LessonIcon from '#lib/ui/LessonIcon.svelte';
-	import Stars from '#lib/ui/Stars.svelte';
-	import { LESSONS, lessonTitle, lessonSubtitle } from '#lib/endgames/lessons.js';
+	import { LESSONS, lessonTitle } from '#lib/endgames/lessons.js';
 	import { db } from '#lib/db/db.js';
 	import { t } from '#lib/i18n/i18n.svelte.js';
 	import { countDue } from '#lib/training/srs.js';
@@ -39,11 +35,9 @@
 	const starsOf = (a: StarArea) => starAreas.find((x) => x.area === a);
 	const allStars = $derived(totalStars(starAreas));
 
-	let strength = $state<number | null>(null);
 	/** derselbe nächste Lernschritt wie im Tagesplan (Stufe, Regeln, Schwerpunkt) */
 	let planned = $state<PlanTask | null>(null);
 	onMount(async () => {
-		strength = (await currentStrength())?.value ?? null;
 		try {
 			planned = nextLesson(await loadPlanContext());
 		} catch {
@@ -148,7 +142,7 @@
 
 <svelte:head><title>{t('learn.title')} – Rookie</title></svelte:head>
 
-<PageHeader eyebrow={t('learn.eyebrow')} title={t('learn.title')} subtitle={t('learn.subtitle')}>
+<PageHeader eyebrow={t('learn.eyebrow')} title={t('learn.title')}>
 	{#snippet action()}
 		{#if loaded}
 			<a
@@ -180,8 +174,6 @@
 	{:else if !loaded}
 		<div class="skeleton" style:height="76px"></div>
 	{/if}
-
-	{#if loaded}<LevelFocus elo={strength} />{/if}
 
 	<div class="paths">
 		<a class="path tone-puzzle pressable" href={resolve('/learn/basics')}>
@@ -216,14 +208,6 @@
 			</span>
 			<ChevronRight size={18} class="chev" />
 		</a>
-		<a class="path tone-coach pressable" href={resolve('/puzzles/scan')}>
-			<span class="p-icon"><ScanEye size={22} /></span>
-			<span class="p-main">
-				<b>{t('scan.title')}</b>
-				<span class="p-text">{t('scan.hubText')}</span>
-			</span>
-			<ChevronRight size={18} class="chev" />
-		</a>
 		<a class="path tone-games pressable" href={resolve('/learn/basics?set=positional')}>
 			<span class="p-icon"><Compass size={22} /></span>
 			<span class="p-main">
@@ -254,38 +238,18 @@
 			</span>
 			<ChevronRight size={18} class="chev" />
 		</a>
-	</div>
-
-	<div class="sec-head">
-		<div>
-			<h2><Crown size={20} /> {t('learn.endgames')}</h2>
-			<p>{t('learn.endgamesText')}</p>
-		</div>
-		<span class="total"
-			><Star size={15} fill="var(--warn)" color="var(--warn)" />
-			{total} / {LESSONS.length * 3}</span
-		>
-	</div>
-
-	<div class="lessons">
-		{#each LESSONS as l (l.id)}
-			<a
-				class="lesson card pressable"
-				href={resolve(`/learn/endgame?id=${l.id}`)}
-				class:done={(stars[l.id] ?? 0) > 0}
-			>
-				<span class="l-icon lv{l.level}"><LessonIcon icon={l.icon} size={20} /></span>
-				<span class="l-main">
-					<span class="l-title">{lessonTitle(l)}</span>
-					<span class="l-sub"
-						><span class="lvl lv{l.level}">{t('learn.level', { n: l.level })}</span> · {lessonSubtitle(
-							l
-						)}</span
-					>
-				</span>
-				<Stars n={stars[l.id] ?? 0} size={14} />
-			</a>
-		{/each}
+		<a class="path tone-coach pressable" href={resolve('/learn/endgames')}>
+			<span class="p-icon"><Crown size={22} /></span>
+			<span class="p-main">
+				<b>{t('learn.endgames')}</b>
+				<span class="p-text">{t('learn.endgamesText')}</span>
+				<span class="p-bar"
+					><span style:width="{(total / (LESSONS.length * 3)) * 100}%"></span></span
+				>
+				<span class="p-meta">{@render starChip('endgames')}</span>
+			</span>
+			<ChevronRight size={18} class="chev" />
+		</a>
 	</div>
 </div>
 
@@ -450,105 +414,5 @@
 		font-family: inherit !important;
 		font-size: inherit !important;
 		color: var(--tone-ink);
-	}
-
-	.sec-head {
-		display: flex;
-		align-items: flex-end;
-		justify-content: space-between;
-		gap: 1rem;
-		margin-top: 0.75rem;
-	}
-
-	.sec-head h2 {
-		display: flex;
-		align-items: center;
-		gap: 0.4rem;
-		font-size: 1.3rem;
-	}
-
-	.sec-head p {
-		color: var(--text-2);
-		font-size: 0.92rem;
-		margin-top: 0.2rem;
-	}
-
-	.total {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.35rem;
-		font-family: var(--font-num);
-		font-weight: 500;
-		color: var(--text-2);
-		white-space: nowrap;
-	}
-
-	.lessons {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
-		gap: 0.45rem;
-	}
-
-	.lesson {
-		display: flex;
-		align-items: center;
-		gap: 0.8rem;
-		min-height: 64px;
-		padding: 0.65rem 0.85rem 0.65rem 0.7rem;
-		color: var(--text);
-	}
-
-	.l-icon {
-		flex: none;
-		display: grid;
-		place-items: center;
-		width: 40px;
-		height: 40px;
-		border-radius: 12px;
-		color: #fff;
-		background: var(--c-learn);
-	}
-
-	.l-icon.lv2 {
-		background: var(--c-puzzle);
-	}
-
-	.l-icon.lv3 {
-		background: var(--c-play);
-	}
-
-	.l-main {
-		flex: 1;
-		min-width: 0;
-		display: flex;
-		flex-direction: column;
-	}
-
-	.l-title {
-		font-family: var(--font-display);
-		font-weight: 680;
-		font-size: 1rem;
-		letter-spacing: -0.01em;
-	}
-
-	.l-sub {
-		font-size: 0.8rem;
-		color: var(--text-2);
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-	}
-
-	.lvl {
-		font-weight: 700;
-		color: var(--c-learn);
-	}
-
-	.lvl.lv2 {
-		color: var(--c-puzzle);
-	}
-
-	.lvl.lv3 {
-		color: var(--c-play);
 	}
 </style>

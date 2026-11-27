@@ -156,7 +156,7 @@
 	.who {
 		font-size: 0.72rem;
 		font-weight: 700;
-		letter-spacing: 0.04em;
+		letter-spacing: 0;
 		color: var(--text-3);
 	}
 
@@ -199,7 +199,7 @@
 		min-width: 3.1rem;
 		padding: 0.15rem 0.4rem;
 		border-radius: 7px;
-		font-family: var(--font-mono);
+		font-family: var(--font-num);
 		font-size: 0.8rem;
 		font-weight: 700;
 		background: #f4f1ea;
@@ -226,7 +226,7 @@
 		justify-content: space-between;
 		font-size: 0.72rem;
 		font-weight: 700;
-		letter-spacing: 0.04em;
+		letter-spacing: 0;
 		color: var(--text-3);
 		margin-bottom: 0.1rem;
 	}

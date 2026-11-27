@@ -318,7 +318,7 @@
 	}
 
 	.num {
-		font-family: var(--font-mono, monospace);
+		font-family: var(--font-num);
 		font-variant-numeric: tabular-nums;
 		font-size: 0.85rem;
 		text-align: right;

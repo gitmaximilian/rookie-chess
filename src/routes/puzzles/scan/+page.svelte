@@ -191,7 +191,6 @@
 
 <div class="wrap">
 	<a class="back hit44" href={resolve('/puzzles')}><ArrowLeft size={18} /> {t('nav.puzzles')}</a>
-	<a class="hit44" href={resolve('/puzzles/decision')}>{t('decision.title')}</a>
 	<header class="top">
 		<span class="eyebrow">{t('scan.eyebrow')}</span>
 		<h1>{t('scan.title')}</h1>
@@ -351,7 +350,7 @@
 		display: flex;
 		flex-wrap: wrap;
 		gap: 0.3rem 1rem;
-		font-family: var(--font-mono);
+		font-family: var(--font-num);
 		font-size: 0.8rem;
 		color: var(--text-3);
 	}

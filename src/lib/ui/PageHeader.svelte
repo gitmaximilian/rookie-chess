@@ -12,7 +12,8 @@
 
 	// Bereichsfarbe des aktuellen Tabs: Kopfzeile zeigt, wo man gerade ist
 	const tone = $derived(
-		navItems.find((i) => i.href !== '/' && isActive(i.href, page.url.pathname))?.tone
+		navItems.find((i) => i.href !== '/' && isActive(i.href, page.url.pathname))?.tone ??
+			(page.url.pathname.startsWith('/coach') ? 'coach' : undefined)
 	);
 </script>
 

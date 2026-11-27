@@ -221,11 +221,6 @@
 			: set === 'positional'
 				? t('positional.title')
 				: t('basics.title')}
-		subtitle={set === 'tactics'
-			? t('tactics.subtitle')
-			: set === 'positional'
-				? t('positional.subtitle')
-				: t('basics.subtitle')}
 	/>
 	<p class="meta">{t('basics.progress', { n: done.length, m: SET.length })}</p>
 	<ol class="path">
@@ -311,7 +306,7 @@
 					>{t('basics.step', {
 						i: si + 1,
 						n: lesson.steps.length
-					})}{#if step.kind === 'find' && step.transfer}{' · '}<b data-testid="transfer"
+					})}{#if step.kind === 'find' && step.transfer}&nbsp;· <b data-testid="transfer"
 							>{t('basics.transfer')}</b
 						>{/if}</span
 				>
@@ -461,7 +456,7 @@
 	.step-no {
 		font-size: 0.78rem;
 		font-weight: 700;
-		letter-spacing: 0.05em;
+		letter-spacing: 0;
 		color: var(--text-2);
 	}
 

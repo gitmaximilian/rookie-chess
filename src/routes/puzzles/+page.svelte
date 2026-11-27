@@ -65,6 +65,7 @@
 	let streak = $state(0);
 	let solvedToday = $state(0);
 	let goal = $state(5);
+	let planTask = $state(false);
 	/** Tagesziel genau mit diesem Puzzle erreicht → nächste Aktion zeigen */
 	let goalJustReached = $state(false);
 
@@ -549,6 +550,7 @@
 
 	<DailyTaskProgress
 		kind={mode === 'review' ? 'review' : mode === 'mistakes' ? 'mistakes' : 'puzzles'}
+		bind:active={planTask}
 	/>
 
 	{#if puzzleBar}
@@ -693,19 +695,23 @@
 					</Dock>
 				{/if}
 
-				<div class="today">
-					<span>{t('puzzles.todayGoal')}</span>
-					<b>{solvedToday}/{goal}</b>
-					<span
-						class="goal-track"
-						role="progressbar"
-						aria-label={t('puzzles.todayGoal')}
-						aria-valuemin={0}
-						aria-valuemax={goal}
-						aria-valuenow={Math.min(solvedToday, goal)}
-						><span style:width="{Math.min(1, solvedToday / Math.max(1, goal)) * 100}%"></span></span
-					>
-				</div>
+				<!-- nur ein Tagesziel: steht die Aufgabe im Tagesplan, zählt oben dessen Zahl -->
+				{#if !planTask}
+					<div class="today">
+						<span>{t('puzzles.todayGoal')}</span>
+						<b>{solvedToday}/{goal}</b>
+						<span
+							class="goal-track"
+							role="progressbar"
+							aria-label={t('puzzles.todayGoal')}
+							aria-valuemin={0}
+							aria-valuemax={goal}
+							aria-valuenow={Math.min(solvedToday, goal)}
+							><span style:width="{Math.min(1, solvedToday / Math.max(1, goal)) * 100}%"
+							></span></span
+						>
+					</div>
+				{/if}
 			{/if}
 		</aside>
 	</div>
@@ -746,7 +752,7 @@
 		font-family: var(--font-num);
 		font-size: 0.68rem;
 		font-weight: 500;
-		letter-spacing: 0.05em;
+		letter-spacing: 0;
 		color: var(--text-3);
 	}
 
@@ -810,11 +816,14 @@
 		padding-inline: 1.1rem;
 		scrollbar-width: none;
 		flex-wrap: nowrap;
+		/* weiche Kante rechts: zeigt, dass die Leiste weiterscrollt */
+		mask-image: linear-gradient(90deg, #000 calc(100% - 2.5rem), transparent);
 	}
 
 	@media (min-width: 768px) {
 		.modes {
 			flex-wrap: wrap;
+			mask-image: none;
 			margin-inline: 0;
 			padding-inline: 2px;
 		}
@@ -1141,6 +1150,10 @@
 						var(--comment-h) - 0.5rem
 				)
 			);
+		}
+		/* nichts Sichtbares im Panel (Aufgabe steht über dem Brett): keine leere Karte */
+		.panel:not(:has(.themes, .result, .empty, .today, .note, button, a)) {
+			display: none;
 		}
 		.turn-pill,
 		.meta .tag,

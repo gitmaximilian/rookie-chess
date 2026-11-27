@@ -14,6 +14,7 @@
 	import Board, { type Shape } from '#lib/ui/board/Board.svelte';
 	import PageHeader from '#lib/ui/PageHeader.svelte';
 	import ColorBadge from '#lib/ui/ColorBadge.svelte';
+	import MiniBoard from '#lib/ui/MiniBoard.svelte';
 	import { Game } from '#lib/chess/game.js';
 	import { figurine } from '#lib/chess/notation.js';
 	import { db, type RepertoireNodeRow, bumpActivity } from '#lib/db/db.js';
@@ -29,7 +30,7 @@
 	import { openingFor, continuations, onOpeningsLoaded } from '#lib/data/openings.js';
 	import { sound } from '#lib/ui/sound.js';
 	import { t } from '#lib/i18n/i18n.svelte.js';
-	import { COURSES, loc, noteFor, type Course } from '#lib/openings/courses.js';
+	import { COURSES, courseFen, loc, noteFor, type Course } from '#lib/openings/courses.js';
 	import { getCourseProgress, type CourseProgress } from '#lib/openings/progress.js';
 
 	type View = 'overview' | 'edit' | 'train';
@@ -300,15 +301,10 @@
 
 {#if view === 'overview'}
 	<a class="back hit44" href={resolve('/learn')}><ArrowLeft size={18} /> {t('endgame.back')}</a>
-	<PageHeader title={t('openings.title')} subtitle={t('openings.subtitle')} />
+	<PageHeader title={t('openings.title')} />
 
 	{#if stats.white.mine + stats.black.mine === 0}
-		<div class="first-hint card">
-			<b>{t('openings.startHere')}</b>
-			<span>{t('openings.startHereText')}</span>
-		</div>
 		<h2 class="sec">{t('course.courses')}</h2>
-		<p class="sec-text">{t('course.coursesText')}</p>
 		{#each COURSE_GROUPS as grp (grp.key)}
 			<h3 class="grp">{t(grp.label)}</h3>
 			<div class="courses">
@@ -319,17 +315,22 @@
 						style:--i={i}
 						href={resolve(`/learn/openings/course?id=${c.id}`)}
 					>
-						<span class="c-top">
-							<ColorBadge color={c.color} size={28} />
-							{#if recommended(c, grp.match)}<span class="rec">{t('course.recommended')}</span>{/if}
-							<span class="lvl l{c.level}">{t(`course.level${c.level}`)}</span>
+						<MiniBoard fen={courseFen(c)} orientation={c.color} size={72} />
+						<span class="c-main">
+							<span class="c-top">
+								<b>{loc(c.name)}</b>
+								{#if recommended(c, grp.match)}<span class="rec">{t('course.recommended')}</span
+									>{/if}
+							</span>
+							<span class="c-tag">{loc(c.tagline)}</span>
+							<span class="c-bar"
+								><span style:width="{(learned / c.lines.length) * 100}%"></span></span
+							>
+							<span class="c-prog"
+								><span class="lvl l{c.level}">{t(`course.level${c.level}`)}</span>
+								{t('course.progress', { n: learned, m: c.lines.length })}</span
+							>
 						</span>
-						<b>{loc(c.name)}</b>
-						<span class="c-tag">{loc(c.tagline)}</span>
-						<span class="c-bar"
-							><span style:width="{(learned / c.lines.length) * 100}%"></span></span
-						>
-						<span class="c-prog">{t('course.progress', { n: learned, m: c.lines.length })}</span>
 					</a>
 				{/each}
 			</div>
@@ -347,10 +348,10 @@
 						{#if stats[c].due}· <b class="due">{t('openings.due', { n: stats[c].due })}</b>{/if}
 					</p>
 					<div class="row-btns">
-						<button class="btn" onclick={() => startTraining(c)} disabled={!stats[c].mine}>
-							<Play size={17} />
-							{t('openings.train')}
-						</button>
+						{#if stats[c].mine}<button class="btn" onclick={() => startTraining(c)}>
+								<Play size={17} />
+								{t('openings.train')}
+							</button>{/if}
 						<button class="btn secondary" onclick={() => openEditor(c)}>
 							<PenLine size={17} />
 							{t('openings.edit')}
@@ -372,10 +373,10 @@
 						{#if stats[c].due}· <b class="due">{t('openings.due', { n: stats[c].due })}</b>{/if}
 					</p>
 					<div class="row-btns">
-						<button class="btn" onclick={() => startTraining(c)} disabled={!stats[c].mine}>
-							<Play size={17} />
-							{t('openings.train')}
-						</button>
+						{#if stats[c].mine}<button class="btn" onclick={() => startTraining(c)}>
+								<Play size={17} />
+								{t('openings.train')}
+							</button>{/if}
 						<button class="btn secondary" onclick={() => openEditor(c)}>
 							<PenLine size={17} />
 							{t('openings.edit')}
@@ -386,7 +387,6 @@
 		</div>
 
 		<h2 class="sec">{t('course.courses')}</h2>
-		<p class="sec-text">{t('course.coursesText')}</p>
 		{#each COURSE_GROUPS as grp (grp.key)}
 			<h3 class="grp">{t(grp.label)}</h3>
 			<div class="courses">
@@ -397,17 +397,22 @@
 						style:--i={i}
 						href={resolve(`/learn/openings/course?id=${c.id}`)}
 					>
-						<span class="c-top">
-							<ColorBadge color={c.color} size={28} />
-							{#if recommended(c, grp.match)}<span class="rec">{t('course.recommended')}</span>{/if}
-							<span class="lvl l{c.level}">{t(`course.level${c.level}`)}</span>
+						<MiniBoard fen={courseFen(c)} orientation={c.color} size={72} />
+						<span class="c-main">
+							<span class="c-top">
+								<b>{loc(c.name)}</b>
+								{#if recommended(c, grp.match)}<span class="rec">{t('course.recommended')}</span
+									>{/if}
+							</span>
+							<span class="c-tag">{loc(c.tagline)}</span>
+							<span class="c-bar"
+								><span style:width="{(learned / c.lines.length) * 100}%"></span></span
+							>
+							<span class="c-prog"
+								><span class="lvl l{c.level}">{t(`course.level${c.level}`)}</span>
+								{t('course.progress', { n: learned, m: c.lines.length })}</span
+							>
 						</span>
-						<b>{loc(c.name)}</b>
-						<span class="c-tag">{loc(c.tagline)}</span>
-						<span class="c-bar"
-							><span style:width="{(learned / c.lines.length) * 100}%"></span></span
-						>
-						<span class="c-prog">{t('course.progress', { n: learned, m: c.lines.length })}</span>
 					</a>
 				{/each}
 			</div>
@@ -560,49 +565,52 @@
 	.grp {
 		font-size: 0.82rem;
 		font-weight: 700;
-		letter-spacing: 0.05em;
+		letter-spacing: 0;
 		color: var(--text-2);
 		margin: 1.1rem 0 0.55rem;
 	}
 
 	.courses {
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+		grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr));
 		gap: 0.6rem;
 		max-width: 1040px;
 	}
 
 	.course {
 		display: flex;
-		flex-direction: column;
-		gap: 0.3rem;
-		padding: 1rem;
+		align-items: center;
+		gap: 0.85rem;
+		padding: 0.75rem;
 		color: var(--text);
 		animation: rise 420ms var(--ease-out) both;
 		animation-delay: calc(var(--i) * 45ms);
 	}
 
+	.c-main {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.2rem;
+	}
+
 	.c-top {
 		display: flex;
 		justify-content: space-between;
-		align-items: center;
+		align-items: baseline;
 		gap: 0.4rem;
-		margin-bottom: 0.2rem;
 	}
 
 	/* Empfehlung zum Start: kräftiger als die Schwierigkeit, damit Einsteiger wissen, wo sie anfangen */
 	.rec {
-		margin-left: auto;
-		padding: 0.15rem 0.55rem;
+		flex: none;
+		padding: 0.1rem 0.5rem;
 		border-radius: 999px;
-		background: var(--accent);
-		color: var(--on-accent);
+		background: var(--accent-soft);
+		color: var(--accent-strong);
 		font-size: 0.72rem;
 		font-weight: 700;
-	}
-
-	.rec + .lvl {
-		margin-left: 0;
 	}
 
 	.lvl {
@@ -651,6 +659,9 @@
 	}
 
 	.c-prog {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
 		font-size: 0.75rem;
 		color: var(--text-2);
 	}
@@ -697,21 +708,6 @@
 		font-size: 1.3rem;
 	}
 
-	.first-hint {
-		display: flex;
-		flex-direction: column;
-		gap: 0.2rem;
-		padding: 0.9rem 1rem;
-		margin-bottom: 0.5rem;
-		border-color: color-mix(in srgb, var(--c-learn) 35%, transparent);
-		background: var(--c-learn-soft);
-	}
-
-	.first-hint span {
-		font-size: 0.9rem;
-		color: var(--text-2);
-	}
-
 	.meta {
 		color: var(--text-2);
 		font-size: 0.92rem;
@@ -740,11 +736,6 @@
 	.sec {
 		font-size: 1.25rem;
 		margin-top: 1.5rem;
-	}
-
-	.sec-text {
-		color: var(--text-2);
-		margin: 0.2rem 0 0.75rem;
 	}
 
 	.starters {

@@ -30,10 +30,10 @@ test('Profil zeigt Kennzahlen, Diagramme und Links', async ({ page }) => {
 
 	await page.goto('/profile');
 	await expect(page.getByText('Puzzle rating').locator('visible=true').first()).toBeVisible();
-	await expect(page.locator('[data-testid="profile-tiles"] > .tile')).toHaveCount(7);
+	await expect(page.locator('[data-testid="profile-tiles"] > .tile')).toHaveCount(4);
 	await expect(page.locator('.chart svg')).toBeVisible();
 	await expect(page.locator('.heat .cell.l1, .heat .cell.l2').first()).toBeVisible();
-	await expect(page.getByRole('link', { name: /My games/ })).toBeVisible();
+	await expect(page.locator('.links').getByRole('link', { name: /Import games/ })).toBeVisible();
 	await expect(page.locator('.links').getByRole('link', { name: /Legal notice/ })).toHaveAttribute(
 		'href',
 		'https://maximilianauer.at/legal/'

@@ -1147,6 +1147,20 @@ export function lineUcis(line: CourseLine): string[] {
 	});
 }
 
+/** Vorschau-Stellung eines Kurses: gemeinsamer Anfang aller Varianten (höchstens 6 Halbzüge) */
+export function courseFen(course: Course): string {
+	const lines = course.lines.map((l) => l.moves.split(/\s+/));
+	let n = 0;
+	while (n < 6 && lines.every((l) => l[n] && l[n] === lines[0][n])) n++;
+	const pos = positionFromFen(INITIAL_FEN);
+	for (const san of lines[0].slice(0, Math.max(1, n))) {
+		const m = parseSan(pos, san);
+		if (!m) break;
+		pos.play(m);
+	}
+	return makeFen(pos.toSetup());
+}
+
 /** Ist dieser Halbzug ein eigener Zug (aus Sicht des Kurses)? */
 export function isOwnPly(course: Course, ply: number): boolean {
 	return course.color === 'white' ? ply % 2 === 0 : ply % 2 === 1;

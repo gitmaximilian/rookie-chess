@@ -2,7 +2,6 @@ import House from '@lucide/svelte/icons/house';
 import ChessKnight from '@lucide/svelte/icons/chess-knight';
 import Puzzle from '@lucide/svelte/icons/puzzle';
 import GraduationCap from '@lucide/svelte/icons/graduation-cap';
-import Brain from '@lucide/svelte/icons/brain';
 import ChartLine from '@lucide/svelte/icons/chart-line';
 import type { Component } from 'svelte';
 import type { PageRouteId } from '$app/types';
@@ -27,7 +26,6 @@ export const navItems: NavItem[] = [
 		color: 'var(--c-analysis)',
 		tone: 'games'
 	},
-	{ href: '/coach', label: 'nav.coach', icon: Brain, color: 'var(--c-coach)', tone: 'coach' },
 	{ href: '/play', label: 'nav.play', icon: ChessKnight, color: 'var(--c-play)', tone: 'play' },
 	{
 		href: '/puzzles',
@@ -48,8 +46,10 @@ export const navItems: NavItem[] = [
 /**
  * Ist `href` der aktive Bereich für `pathname`?
  * Profil, Einstellungen & Co. haben keinen eigenen Tab – sie hängen am Avatar oben rechts.
+ * Der Coach gehört zu Start (dort führen Wochen- und Spielstärke-Kachel hin): 5 Tabs statt 6.
  */
 export function isActive(href: string, pathname: string): boolean {
-	if (href === '/') return pathname === '/';
+	if (href === '/')
+		return pathname === '/' || pathname === '/coach' || pathname.startsWith('/coach/');
 	return pathname === href || pathname.startsWith(href + '/');
 }

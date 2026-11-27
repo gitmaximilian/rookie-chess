@@ -7,7 +7,16 @@
 	import { progressOf, type PlanContext, type PlanTask } from '#lib/training/plan.js';
 	import { loadPlanContext, todayPlan } from '#lib/training/planData.js';
 
-	let { kind, gameId }: { kind: PlanTask['kind']; gameId?: number } = $props();
+	let {
+		kind,
+		gameId,
+		active = $bindable(false)
+	}: {
+		kind: PlanTask['kind'];
+		gameId?: number;
+		/** true, solange der Tagesplan eine passende Aufgabe hat (Seite blendet eigene Ziele dann aus) */
+		active?: boolean;
+	} = $props();
 	let snapshot = $state<{
 		plan: Awaited<ReturnType<typeof todayPlan>>;
 		context: PlanContext;
@@ -20,6 +29,10 @@
 			(task) => task.kind === kind && (task.kind !== 'game' || task.gameId === gameId)
 		);
 		return task ? progressOf(task, context, plan.initial) : null;
+	});
+
+	$effect(() => {
+		active = !!progress;
 	});
 
 	onMount(() => {

@@ -3,6 +3,7 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import PageHeader from '#lib/ui/PageHeader.svelte';
+	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import Board from '#lib/ui/board/Board.svelte';
 	import { Game, sanForUci } from '#lib/chess/game.js';
 	import { db, getSetting, setSetting } from '#lib/db/db.js';
@@ -147,7 +148,7 @@
 <svelte:head><title>{t(test ? 'decision.test' : 'decision.title')} – Rookie</title></svelte:head>
 
 <section class="decision">
-	<a class="hit44" href={resolve('/puzzles')}>{t('nav.puzzles')}</a>
+	<a class="back hit44" href={resolve('/puzzles')}><ArrowLeft size={18} /> {t('nav.puzzles')}</a>
 	<PageHeader title={t(test ? 'decision.test' : 'decision.title')} />
 	{#if !ready}
 		<p role="status">{t('decision.loading')}</p>
@@ -220,6 +221,15 @@
 		margin: 0 auto;
 		display: grid;
 		gap: 0.75rem;
+	}
+
+	.back {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
+		justify-self: start;
+		font-weight: 600;
+		color: var(--text-2);
 	}
 
 	.instructions {

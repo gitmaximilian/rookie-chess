@@ -1,10 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
-	import Sparkles from '@lucide/svelte/icons/sparkles';
-	import TrendingUp from '@lucide/svelte/icons/trending-up';
-	import TrendingDown from '@lucide/svelte/icons/trending-down';
-	import Info from '@lucide/svelte/icons/info';
 	import PageHeader from '#lib/ui/PageHeader.svelte';
 	import BentoGrid from '#lib/ui/bento/BentoGrid.svelte';
 	import StatTile from '#lib/ui/bento/StatTile.svelte';
@@ -19,18 +15,10 @@
 	import { getPuzzleRating } from '#lib/training/rating.js';
 	import { db, type GameRow } from '#lib/db/db.js';
 	import { loadOpenings, openingFor } from '#lib/data/openings.js';
-	import {
-		computeStats,
-		insights as findInsights,
-		outcomeOf,
-		type GameStats,
-		type Insight,
-		type WDL
-	} from '#lib/training/gamestats.js';
+	import { computeStats, outcomeOf, type GameStats, type WDL } from '#lib/training/gamestats.js';
 	import { t } from '#lib/i18n/i18n.svelte.js';
 
 	let stats = $state<GameStats | null>(null);
-	let list = $state<Insight[]>([]);
 	let puzzleHist = $state<{ date: number; rating: number }[]>([]);
 	/** Genauigkeit der letzten 20 analysierten Partien, älteste links */
 	let accuracy = $state<AccPoint[]>([]);
@@ -38,6 +26,13 @@
 	let winRate = $state<number | null>(null);
 	let recentN = $state(0);
 	let rows: GameRow[] = [];
+
+	/** Eröffnungen erst ab 3 Partien – 0 % oder 100 % aus 1–2 Partien sind nur Rauschen */
+	function openingRows(color: 'white' | 'black') {
+		const all = (stats?.openings ?? []).filter((o) => o.color === color);
+		const solid = all.filter((o) => o.n >= 3);
+		return (solid.length >= 2 ? solid : all).slice(0, 6);
+	}
 
 	onMount(async () => {
 		try {
@@ -48,7 +43,6 @@
 		const games = await db.games.toArray();
 		rows = games;
 		stats = computeStats(games, (m) => openingFor(m)?.name ?? null);
-		list = findInsights(stats);
 		const recent = [...games]
 			.sort((a, b) => b.date - a.date)
 			.map((g) => outcomeOf(g))
@@ -98,30 +92,6 @@
 		);
 	}
 
-	function actionHref(a: NonNullable<Insight['action']>): string {
-		switch (a) {
-			case 'course':
-				return resolve('/learn/openings');
-			case 'safety':
-				return resolve('/puzzles/safety');
-			case 'endgame':
-				return resolve('/learn/endgame');
-			case 'slower':
-				return resolve('/play');
-			case 'mistakes':
-				return resolve('/puzzles?mode=mistakes');
-			default:
-				return resolve('/puzzles');
-		}
-	}
-
-	function insightText(i: Insight): string {
-		const p = { ...i.params };
-		if (i.key === 'weakPhase') p.phase = t(`stats.phase.${p.phase}`);
-		if (i.key === 'motif') p.motif = t(`stats.motif.${p.motif}`);
-		return t(`stats.insight.${i.key}`, p);
-	}
-
 	const speedName = (k: string) => {
 		const s = t(`stats.speed.${k}`);
 		return s.startsWith('stats.') ? k : s;
@@ -156,7 +126,7 @@
 		</li>{/if}
 {/snippet}
 
-<PageHeader eyebrow={t('coachTab.eyebrow')} title={t('stats.title')} subtitle={t('stats.subtitle')}>
+<PageHeader eyebrow={t('coachTab.eyebrow')} title={t('stats.title')}>
 	{#snippet action()}<AvatarButton />{/snippet}
 </PageHeader>
 <CoachTabs active="stats" />
@@ -212,36 +182,6 @@
 		</section>
 
 		<!-- Erkenntnisse -->
-		<section class="card block insights">
-			<h2><Sparkles size={18} /> {t('stats.insights')}</h2>
-			{#if list.length}
-				<ul>
-					{#each list as i, n (i.key)}
-						<li class={i.kind} style:--i={n}>
-							<span class="ins-ico">
-								{#if i.kind === 'good'}<TrendingUp
-										size={16}
-									/>{:else if i.kind === 'bad'}<TrendingDown size={16} />{:else}<Info
-										size={16}
-									/>{/if}
-							</span>
-							<span class="ins-text"
-								>{insightText(i)}
-								{#if i.action}
-									<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- actionHref liefert resolve()-Pfade -->
-									<a class="ins-go" href={actionHref(i.action)}
-										>{t(`stats.insightAction.${i.action}`)} →</a
-									>
-								{/if}</span
-							>
-						</li>
-					{/each}
-				</ul>
-			{:else}
-				<p class="muted">{t('stats.noInsights')}</p>
-			{/if}
-			<p class="muted ins-rule">{t('stats.insightRule')}</p>
-		</section>
 
 		<!-- Ergebnisse -->
 		<div class="duo">
@@ -263,8 +203,8 @@
 				</ul>
 			</section>
 
-			<section class="card block">
-				<h2>{t('stats.bySource')}</h2>
+			<details class="card block fold">
+				<summary><h2>{t('stats.bySource')}</h2></summary>
 				<ul class="rows">
 					{#each stats.bySource as s (s.key)}
 						{@render wdlRow(t(`stats.source.${s.key}`), s.wdl)}
@@ -286,7 +226,7 @@
 						{/each}
 					</ul>
 				{/if}
-			</section>
+			</details>
 		</div>
 
 		<!-- Eröffnungen -->
@@ -302,7 +242,7 @@
 									: t('stats.asBlack')}
 							</h3>
 							<ul class="rows">
-								{#each stats.openings.filter((o) => o.color === c).slice(0, 6) as o (o.name)}
+								{#each openingRows(c) as o (o.name)}
 									{@render wdlRow(o.name, o)}
 								{/each}
 							</ul>
@@ -454,7 +394,7 @@
 		gap: 0.45rem;
 		font-size: 0.82rem;
 		font-weight: 700;
-		letter-spacing: 0.05em;
+		letter-spacing: 0;
 		color: var(--text-2);
 		margin-top: 0.4rem;
 	}
@@ -480,61 +420,35 @@
 		gap: 1.25rem;
 	}
 
-	.insights ul {
+	.fold > summary {
 		list-style: none;
-		margin: 0;
-		padding: 0;
+		cursor: pointer;
 		display: flex;
-		flex-direction: column;
-		gap: 0.5rem;
+		align-items: center;
+		justify-content: space-between;
 	}
 
-	.ins-text {
-		display: flex;
-		flex-direction: column;
-		gap: 0.3rem;
+	.fold > summary::-webkit-details-marker {
+		display: none;
 	}
 
-	.ins-go {
-		font-weight: 650;
-		font-size: 0.88rem;
-		color: var(--accent-text, var(--accent));
-	}
-
-	.ins-rule {
-		margin-top: 0.75rem;
-		font-size: 0.82rem;
-	}
-
-	.insights li {
-		display: flex;
-		gap: 0.6rem;
-		align-items: flex-start;
-		padding: 0.65rem 0.75rem;
-		border-radius: 12px;
-		background: var(--surface-2);
-		line-height: 1.45;
-		animation: rise 380ms var(--ease-out) both;
-		animation-delay: calc(var(--i) * 60ms);
-	}
-
-	.ins-ico {
-		flex: none;
-		display: grid;
-		place-items: center;
-		width: 26px;
-		height: 26px;
-		border-radius: 8px;
+	.fold > summary::after {
+		content: '+';
+		font-size: 1.3rem;
+		font-weight: 500;
 		color: var(--text-2);
-		background: var(--surface);
 	}
 
-	.insights li.good .ins-ico {
-		color: var(--good-text);
+	.fold[open] > summary::after {
+		content: '–';
 	}
 
-	.insights li.bad .ins-ico {
-		color: var(--bad);
+	.fold > summary h2 {
+		margin: 0;
+	}
+
+	.fold[open] > summary {
+		margin-bottom: 0.75rem;
 	}
 
 	.big {

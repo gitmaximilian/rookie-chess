@@ -38,7 +38,8 @@
 
 	const fen = $derived.by(() => {
 		void v;
-		return run?.game.fen ?? '8/8/8/8/8/8/8/8 w - - 0 1';
+		// vor dem Start die Grundstellung statt eines leeren Bretts
+		return run?.game.fen ?? 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 	});
 	const lastMove = $derived.by(() => {
 		void v;

@@ -199,7 +199,7 @@
 			{#each rows as r, i (r.task.id)}
 				{@const Icon = ICON[r.task.kind]}
 				<li style:--i={i}>
-					<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- href() liefert bereits resolve()-Pfade -->
+					<!-- eslint-disable svelte/no-navigation-without-resolve -- href() liefert bereits resolve()-Pfade -->
 					<a
 						href={href(r.task)}
 						class="task"
@@ -215,6 +215,7 @@
 							<span class="t-count">{r.done}/{r.target}</span>
 						{/if}
 					</a>
+					<!-- eslint-enable svelte/no-navigation-without-resolve -->
 				</li>
 			{/each}
 		</ol>

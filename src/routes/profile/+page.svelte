@@ -8,38 +8,23 @@
 	import Scale from '@lucide/svelte/icons/scale';
 	import ShieldCheck from '@lucide/svelte/icons/shield-check';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
-	import ChartLine from '@lucide/svelte/icons/chart-line';
 	import CloudDownload from '@lucide/svelte/icons/cloud-download';
-	import Flame from '@lucide/svelte/icons/flame';
-	import Puzzle from '@lucide/svelte/icons/puzzle';
-	import Swords from '@lucide/svelte/icons/swords';
-	import Trophy from '@lucide/svelte/icons/trophy';
-	import Star from '@lucide/svelte/icons/star';
-	import Target from '@lucide/svelte/icons/target';
 	import PageHeader from '#lib/ui/PageHeader.svelte';
 	import StarsOverview from '#lib/ui/StarsOverview.svelte';
-	import LinkedAccounts from '#lib/ui/LinkedAccounts.svelte';
 	import RatingChart from '#lib/ui/RatingChart.svelte';
 	import ActivityHeatmap from '#lib/ui/ActivityHeatmap.svelte';
 	import { db, getSetting, type ActivityRow } from '#lib/db/db.js';
 	import { getPuzzleRating, isProvisional } from '#lib/training/rating.js';
-	import { computeStreak } from '#lib/training/streak.js';
 	import { themeStats, weakest, strongest, type ThemeStat } from '#lib/training/stats.js';
 	import { themeName } from '#lib/data/themes.js';
 	import { BOTS } from '#lib/bots/bots.js';
-	import { LESSONS } from '#lib/endgames/lessons.js';
 	import { t } from '#lib/i18n/i18n.svelte.js';
-	import { currentStrength } from '#lib/training/planData.js';
-	import Gauge from '@lucide/svelte/icons/gauge';
 	import type { Rating } from '#lib/training/glicko2.js';
 
 	let rating = $state<Rating | null>(null);
-	let streak = $state(0);
 	let solved = $state(0);
 	let games = $state(0);
 	let bots = $state(0);
-	let stars = $state(0);
-	let strength = $state<number | null>(null);
 	let history = $state<{ date: number; rating: number }[]>([]);
 	let activity = $state<ActivityRow[]>([]);
 	let weak = $state<ThemeStat[]>([]);
@@ -47,13 +32,10 @@
 
 	onMount(async () => {
 		rating = await getPuzzleRating();
-		strength = (await currentStrength())?.value ?? null;
 		activity = await db.activity.toArray();
-		streak = computeStreak(activity).days;
 		solved = await db.puzzleAttempts.filter((a) => a.solved).count();
 		games = await db.games.count();
 		bots = (await getSetting<string[]>('botsBeaten', [])).length;
-		stars = (await db.endgames.toArray()).reduce((s, r) => s + r.stars, 0);
 		const rows = await db.ratings.orderBy('date').toArray();
 		history = rows.slice(-150).map((r) => ({ date: r.date, rating: r.rating }));
 		const stats = themeStats(await db.puzzleAttempts.toArray());
@@ -61,46 +43,24 @@
 		strong = strongest(stats).filter((s) => !weak.some((w) => w.theme === s.theme));
 	});
 
+	// Profil = Erfolge. Spielstärke und Serie stehen auf Start, Endspiel-Sterne in „Deine Sterne“,
+	// der Puzzle-Verlauf im Diagramm darunter
 	const tiles = $derived([
 		{
-			icon: Gauge,
-			label: t('profile.strength'),
-			value: strength ? `≈${strength}` : '–',
-			tone: 'coach' as Tone
-		},
-		{
-			icon: Puzzle,
 			label: t('profile.puzzleRating'),
 			value: rating ? String(Math.round(rating.rating)) : '–',
 			sub: rating && isProvisional(rating) ? t('common.provisional') : undefined,
-			tone: 'puzzle' as Tone,
-			spark: history.slice(-40).map((h) => h.rating)
+			tone: 'puzzle' as Tone
 		},
-		{ icon: Flame, label: t('profile.streak'), value: String(streak), tone: 'play' as Tone },
-		{ icon: Target, label: t('profile.solved'), value: String(solved), tone: 'learn' as Tone },
-		{ icon: Swords, label: t('profile.games'), value: String(games), tone: 'games' as Tone },
-		{
-			icon: Trophy,
-			label: t('profile.bots'),
-			value: `${bots}/${BOTS.length}`,
-			tone: 'neutral' as Tone
-		},
-		{
-			icon: Star,
-			label: t('profile.endgames'),
-			value: `${stars}/${LESSONS.length * 3}`,
-			tone: 'stars' as Tone
-		}
+		{ label: t('profile.solved'), value: String(solved), tone: 'learn' as Tone },
+		{ label: t('profile.games'), value: String(games), tone: 'games' as Tone },
+		{ label: t('profile.bots'), value: `${bots}/${BOTS.length}`, tone: 'neutral' as Tone }
 	]);
 </script>
 
 <svelte:head><title>{t('profile.title')} – Rookie</title></svelte:head>
 
-<PageHeader
-	eyebrow={t('profile.eyebrow')}
-	title={t('profile.title')}
-	subtitle={t('profile.subtitle')}
->
+<PageHeader eyebrow={t('profile.eyebrow')} title={t('profile.title')}>
 	{#snippet action()}
 		<a
 			class="gear"
@@ -116,11 +76,9 @@
 		{#each tiles as tile (tile.label)}
 			<StatTile
 				tone={tile.tone}
-				size={tile.spark && tile.spark.length > 1 ? 'm' : 's'}
 				label={tile.label}
 				value={tile.value}
 				muted={tile.value === '–'}
-				spark={tile.spark}
 				sub={'sub' in tile ? tile.sub : undefined}
 			/>
 		{/each}
@@ -174,22 +132,10 @@
 		{/each}
 	</div>
 
-	<LinkedAccounts collapsed />
-
 	<nav class="links">
-		<a href={resolve('/analysis')} class="row card pressable">
-			<span class="ico"><ChartLine size={20} /></span>
-			<span class="txt">{t('profile.myGames')}</span>
-			<ChevronRight size={18} />
-		</a>
 		<a href={resolve('/import')} class="row card pressable">
 			<span class="ico"><CloudDownload size={20} /></span>
 			<span class="txt">{t('profile.importGames')}</span>
-			<ChevronRight size={18} />
-		</a>
-		<a href={resolve('/settings')} class="row card pressable">
-			<span class="ico"><Settings size={20} /></span>
-			<span class="txt">{t('profile.settings')}</span>
 			<ChevronRight size={18} />
 		</a>
 		<a href={resolve('/about')} class="row card pressable">

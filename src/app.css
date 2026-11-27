@@ -95,7 +95,7 @@
 	--font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', system-ui, sans-serif;
 	--font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
 	/* Zahlen, Kennzahl-Labels, Kachel-Überschriften, kurze Statuszeilen – nie Fließtext */
-	--font-num: var(--font-mono);
+	--font-num: var(--font-display);
 
 	/* Bewegung */
 	--ease-out: cubic-bezier(0.22, 1, 0.36, 1);

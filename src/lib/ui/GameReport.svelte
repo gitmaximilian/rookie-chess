@@ -123,7 +123,10 @@
 			</li>
 		{/if}
 	</ul>
-	<p class="note">{t('report.note')}</p>
+	<details class="note">
+		<summary>{t('report.noteShort')}</summary>
+		{t('report.note')}
+	</details>
 </section>
 
 <style>
@@ -214,7 +217,7 @@
 	.f-k {
 		font-size: 0.75rem;
 		font-weight: 650;
-		letter-spacing: 0.04em;
+		letter-spacing: 0;
 		color: var(--text-3);
 	}
 
@@ -256,6 +259,12 @@
 		gap: 0.3rem;
 		font-weight: 650;
 		color: var(--accent-text, var(--accent));
+	}
+
+	.note summary {
+		cursor: pointer;
+		font-weight: 600;
+		color: var(--text-2);
 	}
 
 	.note {

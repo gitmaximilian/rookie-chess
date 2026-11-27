@@ -263,7 +263,9 @@
 
 {#if lesson}
 	<div class="top-line">
-		<a class="back hit44" href={resolve('/learn')}><ArrowLeft size={18} /> {t('endgame.back')}</a>
+		<a class="back hit44" href={resolve('/learn/endgames')}
+			><ArrowLeft size={18} /> {t('learn.endgames')}</a
+		>
 		{#if lesson.positions.length > 1}
 			<span class="pos">{t('endgame.position', { i: posIdx + 1, n: lesson.positions.length })}</span
 			>
@@ -425,7 +427,7 @@
 	.t-step {
 		font-size: 0.78rem;
 		font-weight: 700;
-		letter-spacing: 0.05em;
+		letter-spacing: 0;
 		color: var(--c-learn);
 	}
 

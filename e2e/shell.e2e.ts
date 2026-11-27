@@ -17,13 +17,17 @@ test('Navigation zwischen allen Bereichen', async ({ page, isMobile }) => {
 		['Play', 'Play'],
 		['Puzzles', 'Puzzles'],
 		['Learn', 'Learn'],
-		['Coach', 'Coach'],
 		['Games', 'My games']
 	]) {
 		await nav.getByRole('link', { name: label }).click();
 		await expect(page.locator('h1')).toHaveText(heading);
 		await expect(nav.getByRole('link', { name: label })).toHaveAttribute('aria-current', 'page');
 	}
+	// Coach hängt an Start: über die Wochen-Kachel, Start bleibt aktiv
+	await page.goto('/');
+	await page.getByTestId('tile-week').click();
+	await expect(page.locator('h1')).toHaveText('Coach');
+	await expect(nav.getByRole('link', { name: 'Home' })).toHaveAttribute('aria-current', 'page');
 	// Profil hängt am Avatar oben rechts
 	await page.goto('/');
 	await page.getByRole('link', { name: 'Profile' }).first().click();
@@ -87,7 +91,7 @@ test('Unterseiten mit Parametern funktionieren auch über den Service Worker', a
 	await expect(page.locator('.cg-host')).toBeVisible();
 });
 
-test('Startseite zeigt nur verknüpfte Konten', async ({ page }) => {
+test('Startseite: nach dem Verknüpfen kein Verknüpfen-Hinweis mehr', async ({ page }) => {
 	await page.route(/lichess\.org|chess\.com/, (r) => r.abort());
 	await page.goto('/');
 	await expect(page.locator('[data-testid="home-bento"] .tile').first()).toBeVisible();
@@ -108,9 +112,8 @@ test('Startseite zeigt nur verknüpfte Konten', async ({ page }) => {
 			})
 	);
 	await page.reload();
-	const sum = page.locator('[data-testid="home-bento"]');
-	await expect(sum.getByText('Lichess', { exact: true })).toBeVisible();
-	await expect(sum.getByText('Chess.com')).toHaveCount(0);
+	await expect(page.locator('[data-testid="home-bento"] .tile').first()).toBeVisible();
+	await expect(page.getByText('Link Lichess or Chess.com')).toHaveCount(0);
 	await expect(page.getByText('Puzzle of the day')).toHaveCount(0);
 	if (process.env.SHOT) await page.screenshot({ path: process.env.SHOT });
 });
