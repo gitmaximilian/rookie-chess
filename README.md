@@ -2,7 +2,7 @@
 
 A chess trainer for beginners as a Progressive Web App for iPhone, iPad and Mac – completely free, offline-capable, no App Store, no account, no tracking. English and German.
 
-**Live:** https://rookie.maximilianauer.at · **Version:** 0.11.0
+**Live:** https://rookie.maximilianauer.at · **Version:** 0.12.0
 
 | Home                                                                                                                           | Coach                                                                                                                                                                                     | Play                                                                                                   | Game review                                                                                                                                | Blunder check                                                                                            |
 | ------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
@@ -17,6 +17,12 @@ A chess trainer for beginners as a Progressive Web App for iPhone, iPad and Mac 
 | <img src="docs/screenshots/desktop-analysis-light.png" width="420" alt="Game review on desktop in light mode: a mistake on the board, the engine's top moves and accuracy per move type">    | <img src="docs/screenshots/desktop-analysis-dark.png" width="420" alt="Game review on desktop in dark mode"> |
 
 Screenshots use generated sample data (`scripts/screenshots/`), not real games.
+
+## What's new in 0.12.0
+
+- **Clearer structure:** five tabs instead of six – the Coach now sits under Home (the week and playing-strength tiles lead there). Every number has one home: Home shows today, the Coach the analysis, the Profile your achievements.
+- **Less text, calmer numbers:** shorter copy everywhere, explanations behind “What does this mean?”, numbers set in Bricolage instead of monospace.
+- **Pages:** search and folded months in the game list; one entry to replay mistakes; mistake types first in the move table; opponents first on Play; one daily goal on Puzzles; a mini board for every opening course; endgames on their own page; settings options in one row.
 
 ## What's new in 0.11.0
 
