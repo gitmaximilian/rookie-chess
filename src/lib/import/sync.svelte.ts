@@ -37,6 +37,13 @@ export interface Backfill {
 
 const KEY = 'linkedAccounts';
 /**
+ * Import-Fortschritt (letzter Abruf, Historie) gehört zum Gerät, nicht zum Konto: importierte Partien werden nicht
+ * zwischen Geräten abgeglichen. Lag er bis 0.13.0 in `linkedAccounts`, kam er per Abgleich aufs zweite Gerät – das
+ * hielt die Historie dann für geladen und holte nur noch neue Partien. Alte Werte dort werden ignoriert.
+ */
+export const IMPORT_PROGRESS_KEY = 'importProgress';
+type Progress = Pick<LinkedAccounts, 'lastSync' | 'backfill'>;
+/**
  * so oft höchstens automatisch abrufen – kurz, damit eine gerade beendete Partie sofort da ist (der Abruf seit dem
  * letzten Mal ist eine kleine Anfrage; bis 0.10.0 waren es 30 Minuten)
  */
@@ -65,30 +72,48 @@ export const syncState = $state({
 	error: '' as '' | 'notFound' | 'network' | 'rateLimit'
 });
 
-export function getLinked(): Promise<LinkedAccounts> {
-	return getSetting<LinkedAccounts>(KEY, {});
+export async function getLinked(): Promise<LinkedAccounts> {
+	const [acc, prog] = await Promise.all([
+		getSetting<LinkedAccounts>(KEY, {}),
+		getSetting<Progress>(IMPORT_PROGRESS_KEY, {})
+	]);
+	const out: LinkedAccounts = {};
+	if (acc.lichess) out.lichess = acc.lichess;
+	if (acc.chesscom) out.chesscom = acc.chesscom;
+	if (prog.lastSync) out.lastSync = prog.lastSync;
+	if (prog.backfill) out.backfill = prog.backfill;
+	return out;
+}
+
+/** nur die Benutzernamen werden gespeichert (und abgeglichen) */
+async function saveAccounts(update: (acc: LinkedAccounts) => void): Promise<void> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars -- alten Gerätestand nicht weitertragen
+	const { lastSync, backfill, ...acc } = await getSetting<LinkedAccounts>(KEY, {});
+	update(acc);
+	await setSetting(KEY, acc);
+}
+
+async function patch(update: (p: Progress) => void): Promise<void> {
+	const p = await getSetting<Progress>(IMPORT_PROGRESS_KEY, {});
+	update(p);
+	await setSetting(IMPORT_PROGRESS_KEY, p);
+}
+
+async function resetProgress(source: Source): Promise<void> {
+	await patch((p) => {
+		if (p.lastSync) delete p.lastSync[source];
+		if (p.backfill) delete p.backfill[source];
+	});
 }
 
 export async function link(source: Source, user: string): Promise<void> {
-	const acc = await getLinked();
-	acc[source] = user.trim();
-	if (acc.lastSync) delete acc.lastSync[source];
-	if (acc.backfill) delete acc.backfill[source];
-	await setSetting(KEY, acc);
+	await saveAccounts((acc) => (acc[source] = user.trim()));
+	await resetProgress(source);
 }
 
 export async function unlink(source: Source): Promise<void> {
-	const acc = await getLinked();
-	delete acc[source];
-	if (acc.lastSync) delete acc.lastSync[source];
-	if (acc.backfill) delete acc.backfill[source];
-	await setSetting(KEY, acc);
-}
-
-async function patch(update: (acc: LinkedAccounts) => void): Promise<void> {
-	const acc = await getLinked();
-	update(acc);
-	await setSetting(KEY, acc);
+	await saveAccounts((acc) => delete acc[source]);
+	await resetProgress(source);
 }
 
 /** Lädt neue Partien und – beim ersten Mal – die komplette Historie. Liefert die Anzahl neuer Partien. */

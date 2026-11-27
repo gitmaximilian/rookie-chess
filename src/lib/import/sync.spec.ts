@@ -7,11 +7,13 @@ import {
 	SINCE_OVERLAP,
 	CLOCK_BACKFILL_KEY,
 	getLinked,
+	IMPORT_PROGRESS_KEY,
 	link,
 	syncNow,
 	unlink
 } from './sync.svelte';
 import { getSetting } from '#lib/db/db.js';
+import { LOCAL_ONLY_SETTINGS } from '#lib/sync/merge.js';
 
 const PGN = `[White "alice"]
 [Black "bob"]
@@ -142,10 +144,10 @@ describe('Konto-Sync', () => {
 	it('Chess.com: ältere Monate als der letzte Abruf werden nicht geladen', async () => {
 		await link('chesscom', 'alice');
 		const now = Date.UTC(2026, 10, 15);
-		const acc = await getLinked();
-		acc.lastSync = { chesscom: now };
-		acc.backfill = { chesscom: { done: true } };
-		await db.settings.put({ key: 'linkedAccounts', value: acc });
+		await db.settings.put({
+			key: IMPORT_PROGRESS_KEY,
+			value: { lastSync: { chesscom: now }, backfill: { chesscom: { done: true } } }
+		});
 		const urls: string[] = [];
 		const fetcher = (async (url: string) => {
 			urls.push(url);
@@ -240,5 +242,25 @@ describe('Konto-Sync', () => {
 		expect(await syncNow(fetcher)).toBe(9);
 		expect((await getLinked()).backfill?.chesscom?.done).toBe(true);
 		expect(await syncNow(fetcher)).toBe(0);
+	});
+
+	it('Fortschritt eines anderen Geräts (abgeglichen) zählt nicht: hier wird die ganze Historie geladen', async () => {
+		// so kam der Stand bis 0.13.0 vom Mac aufs iPhone – mit „Historie fertig“, aber ohne die Partien
+		await db.settings.put({
+			key: 'linkedAccounts',
+			value: {
+				lichess: 'alice',
+				lastSync: { lichess: Date.now() },
+				backfill: { lichess: { done: true } }
+			}
+		});
+		const all = Array.from({ length: 30 }, (_, i) => lichessLine(`d${i}`, 1_000_000 - i * 1000));
+		const fetcher = (async () => new Response(all.join('\n') + '\n')) as unknown as typeof fetch;
+		expect(await syncNow(fetcher)).toBe(30);
+		expect((await getLinked()).backfill?.lichess?.done).toBe(true);
+		// der Gerätestand bleibt lokal und wird nicht abgeglichen
+		expect(LOCAL_ONLY_SETTINGS.has(IMPORT_PROGRESS_KEY)).toBe(true);
+		const acc = (await db.settings.get('linkedAccounts'))!.value as Record<string, unknown>;
+		expect(acc.backfill).toEqual({ lichess: { done: true } }); // alter Wert unangetastet, nur ignoriert
 	});
 });
