@@ -6,9 +6,9 @@
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 	import StatTile from '#lib/ui/bento/StatTile.svelte';
+	import Radar from '@lucide/svelte/icons/radar';
 	import { db, today } from '#lib/db/db.js';
 	import { loadCoachWeek, type CoachWeek } from '#lib/training/planData.js';
-	import { targetRating } from '#lib/import/ratings.js';
 	import { syncState } from '#lib/import/sync.svelte.js';
 	import { outcomeOf } from '#lib/training/gamestats.js';
 	import { computeStreak } from '#lib/training/streak.js';
@@ -16,7 +16,6 @@
 
 	/** Start zeigt nur das Heute: Woche, Serie, Spielstärke, Form – alles Weitere im Coach und im Profil */
 	interface Data {
-		rapid: number | null;
 		form: ('w' | 'd' | 'l')[];
 		streak: { days: number; todayDone: boolean };
 		last14: number[];
@@ -37,7 +36,6 @@
 			(_, i) => byDay.get(today(new Date(now - (13 - i) * 86_400_000))) ?? 0
 		);
 		d = {
-			rapid: targetRating(games),
 			form: games
 				.slice(0, 10)
 				.map(outcomeOf)
@@ -105,14 +103,16 @@
 
 	<!-- Kacheln erscheinen erst, wenn es etwas zu zeigen gibt – keine leeren „–“ für neue Spieler -->
 
+	<!-- Spielstärke steht im Weg zu 1600 oben; hier der Weg in die Details des Coachs -->
 	<StatTile
 		tone="learn"
-		label={t('summary.rapidGoal')}
-		value={d.rapid ?? '–'}
-		sub={t(d.rapid === null ? 'summary.rapidNoData' : 'summary.rapidImported')}
-		href={resolve(d.rapid === null ? '/import' : '/coach')}
-		testid="tile-strength"
-	/>
+		label={t('coachPath.details')}
+		sub={t('coachPath.detailsSub')}
+		href={resolve('/coach')}
+		testid="tile-details"
+	>
+		<span class="det" aria-hidden="true"><Radar size={34} strokeWidth={1.6} /></span>
+	</StatTile>
 
 	{#if d.form.length && score !== null}<StatTile
 			tone="games"
@@ -133,6 +133,12 @@
 	.tile-sk {
 		height: 132px;
 		border-radius: var(--radius-tile);
+	}
+
+	.det {
+		display: block;
+		margin: 0.5rem 0 0.3rem;
+		color: var(--tone-ink);
 	}
 
 	.form {

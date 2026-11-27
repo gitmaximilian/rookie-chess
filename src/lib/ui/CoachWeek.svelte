@@ -104,7 +104,6 @@
 		if (a.kind === 'on-track') return t('coachWeek.adj.on-track', { n: a.gain });
 		return t(`coachWeek.adj.${a.kind}`);
 	});
-	const fmt = (x: number) => x.toLocaleString(undefined, { maximumFractionDigits: 1 });
 </script>
 
 <section class="card week" data-testid="coach-week" aria-busy={!w}>
@@ -158,30 +157,6 @@
 						>{t(`coachWeek.adjGo.${w.adjustment.kind}`)} <ArrowRight size={15} /></a
 					>
 				{/if}
-			</div>
-		{/if}
-
-		{#if w.path}
-			{@const p = w.path}
-			<div class="path" data-testid="coach-path">
-				<div class="p-top">
-					<span class="mono-label">{t('coachWeek.path')}</span>
-					<b class="num"
-						>{p.reached ? '1600 ✓' : t('coachWeek.milestone', { n: p.strength, goal: p.goal })}</b
-					>
-				</div>
-				<span class="track" aria-hidden="true"
-					><i style:width="{Math.round(p.progress * 100)}%"></i></span
-				>
-				<span class="muted small" class:warn={p.blunderGap}>
-					{#if p.reached}{t('coachWeek.reached')}{:else if p.blunders === null}{t(
-							'coachWeek.blundersNone'
-						)}{:else}{t('coachWeek.blunders', {
-							you: fmt(p.blunders),
-							goal: p.goal,
-							ref: fmt(p.blundersAtGoal)
-						})}{/if}
-				</span>
 			</div>
 		{/if}
 
@@ -302,21 +277,7 @@
 	}
 
 	.bar,
-	.track {
-		height: 6px;
-		border-radius: 3px;
-		background: color-mix(in srgb, var(--text) 10%, transparent);
-		overflow: hidden;
-	}
-
 	.bar i,
-	.track i {
-		display: block;
-		height: 100%;
-		background: var(--accent);
-		border-radius: 3px;
-	}
-
 	.num {
 		font-family: var(--font-num);
 		font-variant-numeric: tabular-nums;
@@ -345,25 +306,8 @@
 		color: var(--text);
 	}
 
-	.path {
-		display: flex;
-		flex-direction: column;
-		gap: 0.4rem;
-	}
-
-	.p-top {
-		display: flex;
-		justify-content: space-between;
-		align-items: baseline;
-		gap: 0.5rem;
-	}
-
 	.mono-label {
 		color: var(--text-3);
-	}
-
-	.warn {
-		color: var(--warn-text);
 	}
 
 	.why summary {

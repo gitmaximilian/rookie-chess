@@ -106,7 +106,7 @@ export const en = {
 	},
 	home: {
 		allGames: 'All games',
-		eyebrow: 'Your training',
+		eyebrow: 'Your coach',
 		morning: 'Good morning',
 		hello: 'Hello',
 		evening: 'Good evening',
@@ -1337,6 +1337,17 @@ export const en = {
 		minutesN: (p: P) => `${p.n} min`,
 		note: 'Correlations, not a guarantee: people who practise more are often more motivated too.'
 	},
+	coachPath: {
+		title: 'Your road to 1600',
+		left: (p: P) => `${p.n} to go`,
+		stage: (p: P) => `next stage ${p.goal}`,
+		week: (p: P) =>
+			`This week: ${p.done} of ${p.n} rapid games, ${p.days} ${Number(p.days) === 1 ? 'day' : 'days'} left.`,
+		noData: 'The coach needs one rated rapid game, then it shows your road.',
+		import: 'Get games',
+		details: 'How you play',
+		detailsSub: 'Penta, focus, statistics'
+	},
 	coachTab: {
 		pentaLever: (p: P) => `Your penta says: ${p.name}`,
 		pentaViaSafety: 'Your losses there are mostly blunders – blunder check first.',
@@ -1344,7 +1355,7 @@ export const en = {
 		stageMore: 'What counts at your level',
 		focus: 'Your focus',
 		eyebrow: 'Your coach',
-		title: 'Coach',
+		title: 'How you play',
 		subtitle: 'How you play, what holds you back – and what to train next.',
 		you: 'You',
 		gamesCount: (p: P) => `${p.n} ${s(p.n, 'game', 'games')}`,

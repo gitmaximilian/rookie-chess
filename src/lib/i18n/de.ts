@@ -112,7 +112,7 @@ export const de: Shape<typeof en> = {
 	},
 	home: {
 		allGames: 'Alle Partien',
-		eyebrow: 'Dein Training',
+		eyebrow: 'Dein Coach',
 		morning: 'Guten Morgen',
 		hello: 'Hallo',
 		evening: 'Guten Abend',
@@ -1396,6 +1396,17 @@ export const de: Shape<typeof en> = {
 		minutesN: (p: P) => `${p.n} min`,
 		note: 'Zusammenhänge, keine Garantie: Wer mehr übt, ist oft auch motivierter.'
 	},
+	coachPath: {
+		title: 'Dein Weg zu 1600',
+		left: (p: P) => `noch ${p.n} bis 1600`,
+		stage: (p: P) => `nächste Etappe ${p.goal}`,
+		week: (p: P) =>
+			`Diese Woche: ${p.done} von ${p.n} Rapid-Partien, noch ${p.days} ${Number(p.days) === 1 ? 'Tag' : 'Tage'}.`,
+		noData: 'Der Coach braucht eine gewertete Rapid-Partie, dann zeigt er deinen Weg.',
+		import: 'Partien holen',
+		details: 'Wie du spielst',
+		detailsSub: 'Penta, Schwerpunkt, Statistik'
+	},
 	coachTab: {
 		pentaLever: (p: P) => `Laut deinem Penta: ${p.name}`,
 		pentaViaSafety: 'Deine Verluste dort sind vor allem Patzer – zuerst der Blunder-Check.',
@@ -1403,7 +1414,7 @@ export const de: Shape<typeof en> = {
 		stageMore: 'Was auf deinem Niveau zählt',
 		focus: 'Dein Schwerpunkt',
 		eyebrow: 'Dein Coach',
-		title: 'Coach',
+		title: 'Wie du spielst',
 		subtitle: 'Wie du spielst, was dich bremst – und was du als Nächstes trainierst.',
 		you: 'Du',
 		gamesCount: (p) => `${p.n} ${s(p.n, 'Partie', 'Partien')}`,

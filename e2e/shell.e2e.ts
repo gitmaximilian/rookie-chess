@@ -26,8 +26,8 @@ test('Navigation zwischen allen Bereichen', async ({ page, isMobile }) => {
 	// Coach hängt an Start: über die Wochen-Kachel, Start bleibt aktiv
 	await page.goto('/');
 	await page.getByTestId('tile-week').click();
-	await expect(page.locator('h1')).toHaveText('Coach');
-	await expect(nav.getByRole('link', { name: 'Home' })).toHaveAttribute('aria-current', 'page');
+	await expect(page.locator('h1')).toHaveText('How you play');
+	await expect(nav.getByRole('link', { name: 'Coach' })).toHaveAttribute('aria-current', 'page');
 	// Profil hängt am Avatar oben rechts
 	await page.goto('/');
 	await page.getByRole('link', { name: 'Profile' }).first().click();

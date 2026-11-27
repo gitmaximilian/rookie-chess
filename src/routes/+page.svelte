@@ -8,6 +8,7 @@
 	import AvatarButton from '#lib/ui/AvatarButton.svelte';
 	import RecentGames from '#lib/ui/RecentGames.svelte';
 	import HomeSummary from '#lib/ui/HomeSummary.svelte';
+	import CoachPath from '#lib/ui/CoachPath.svelte';
 	import BentoGrid from '#lib/ui/bento/BentoGrid.svelte';
 	import BotAvatar from '#lib/ui/BotAvatar.svelte';
 	import { BASICS } from '#lib/basics/lessons.js';
@@ -82,6 +83,7 @@
 	{/if}
 
 	<BentoGrid label={t('summary.title')} testid="home-bento">
+		<CoachPath />
 		<DailyPlan />
 		<HomeSummary />
 	</BentoGrid>
