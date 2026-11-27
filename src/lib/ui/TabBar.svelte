@@ -35,7 +35,9 @@
 		right: max(12px, calc(var(--safe-right) + 8px));
 		bottom: var(--tabbar-gap);
 		display: grid;
-		grid-template-columns: repeat(6, minmax(0, 1fr));
+		/* so viele gleich breite Spalten wie Tabs – nie eine leere Spalte */
+		grid-auto-flow: column;
+		grid-auto-columns: minmax(0, 1fr);
 		gap: 2px;
 		height: var(--tabbar-h);
 		padding: 4px;

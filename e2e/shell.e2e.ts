@@ -117,3 +117,12 @@ test('Startseite: nach dem Verknüpfen kein Verknüpfen-Hinweis mehr', async ({ 
 	await expect(page.getByText('Puzzle of the day')).toHaveCount(0);
 	if (process.env.SHOT) await page.screenshot({ path: process.env.SHOT });
 });
+
+test('Tab-Leiste: Tabs füllen die ganze Breite', async ({ page, isMobile }) => {
+	test.skip(!isMobile, 'Tab-Leiste nur am Handy');
+	await page.goto('/');
+	const bar = page.locator('.tabbar');
+	const box = (await bar.boundingBox())!;
+	const last = (await bar.getByRole('link').last().boundingBox())!;
+	expect(box.x + box.width - (last.x + last.width)).toBeLessThan(12);
+});
