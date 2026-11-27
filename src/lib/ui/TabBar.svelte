@@ -25,8 +25,8 @@
 </nav>
 
 <style>
-	/* Schwebende Glas-Kapsel (wie aktuelle iOS-Apps): dunkel in beiden Modi,
-	   Beschriftungen bleiben, aktiver Tab als Pastell-Kapsel mit Symbol und Text.
+	/* Schwebende Papier-Leiste (hell im hellen, dunkel im dunklen Modus). Der aktive Tab ist eine
+	   Pastell-Kachel seines Bereichs mit Unterkante – wie Buttons und App-Icon.
 	   Platzbedarf steht in --tabbar-space (app.css) – Dock und Brettgröße rechnen damit. */
 	.tabbar {
 		position: fixed;
@@ -38,19 +38,18 @@
 		/* so viele gleich breite Spalten wie Tabs – nie eine leere Spalte */
 		grid-auto-flow: column;
 		grid-auto-columns: minmax(0, 1fr);
-		gap: 2px;
+		gap: 3px;
 		height: var(--tabbar-h);
-		padding: 4px;
-		border-radius: 999px;
-		/* 88 % deckend: Beschriftung bleibt auch über hellem Inhalt ≥ 4,5:1 (scripts/contrast.mjs) */
+		padding: 5px;
+		border-radius: 22px;
+		/* 88 % deckend: Beschriftung bleibt auch über buntem Inhalt ≥ 4,5:1 (scripts/contrast.mjs) */
 		background: color-mix(in srgb, var(--tabbar-bg) 88%, transparent);
 		backdrop-filter: saturate(160%) blur(22px);
 		-webkit-backdrop-filter: saturate(160%) blur(22px);
-		border: 1px solid rgb(255 255 255 / 0.08);
+		border: 1px solid var(--line-strong);
 		box-shadow:
-			0 10px 30px rgb(0 0 0 / 0.22),
-			inset 0 1px 0 rgb(255 255 255 / 0.06);
-		color-scheme: dark;
+			0 1px 2px rgb(28 26 23 / 0.06),
+			0 10px 28px rgb(28 26 23 / 0.12);
 	}
 
 	.tab {
@@ -61,11 +60,11 @@
 		justify-content: center;
 		gap: 2px;
 		min-width: 0;
-		border-radius: 999px;
+		border-radius: 16px;
 		color: var(--tabbar-fg);
-		font-size: 0.7rem;
+		font-size: 0.74rem;
 		font-weight: 600;
-		letter-spacing: 0.01em;
+		letter-spacing: 0;
 		-webkit-user-select: none;
 		user-select: none;
 		transition:
@@ -80,6 +79,7 @@
 		inset: 0;
 		border-radius: inherit;
 		background: var(--tab-bg);
+		box-shadow: inset 0 -3px 0 color-mix(in srgb, var(--tab-ink) 28%, transparent);
 		opacity: 0;
 		transform: scale(0.82);
 		transition:
@@ -92,7 +92,12 @@
 	}
 
 	.tab.active {
-		color: var(--tile-text);
+		color: var(--tab-ink);
+	}
+
+	.tab:focus-visible {
+		outline: 2px solid var(--accent);
+		outline-offset: 2px;
 	}
 
 	.tab.active::before {

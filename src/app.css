@@ -52,8 +52,8 @@
 	--tile-neutral-ink: #4f4940;
 
 	/* Tab-Leiste: dunkel und ruhig, aktiver Tab als Pastell-Pille */
-	--tabbar-bg: #1c1a17;
-	--tabbar-fg: #b4ada2;
+	--tabbar-bg: #fffdf9;
+	--tabbar-fg: #655d52;
 	--tabbar-active-bg: #f3efe8;
 	--tabbar-active-fg: #1c1a17;
 
@@ -167,8 +167,8 @@
 		--tile-stars-ink: #eed96a;
 		--tile-neutral: #26252c;
 		--tile-neutral-ink: #cdc9d4;
-		--tabbar-bg: #0c0b10;
-		--tabbar-fg: #a8a196;
+		--tabbar-bg: #1c1b21;
+		--tabbar-fg: #b3adb9;
 		--tabbar-active-bg: #f3efe8;
 		--tabbar-active-fg: #1c1a17;
 		--shadow-1: 0 1px 2px rgb(0 0 0 / 0.3);
@@ -223,8 +223,8 @@
 	--tile-stars-ink: #eed96a;
 	--tile-neutral: #26252c;
 	--tile-neutral-ink: #cdc9d4;
-	--tabbar-bg: #0c0b10;
-	--tabbar-fg: #a8a196;
+	--tabbar-bg: #1c1b21;
+	--tabbar-fg: #b3adb9;
 	--tabbar-active-bg: #f3efe8;
 	--tabbar-active-fg: #1c1a17;
 	--shadow-1: 0 1px 2px rgb(0 0 0 / 0.3);

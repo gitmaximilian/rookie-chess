@@ -103,7 +103,7 @@
 		gap: 0.75rem;
 		height: 44px;
 		padding: 0 0.6rem;
-		border-radius: 999px;
+		border-radius: 14px;
 		color: var(--text-2);
 		font-weight: 560;
 		transition:
@@ -127,9 +127,11 @@
 		}
 	}
 
+	/* wie die Tab-Leiste: Pastell-Kachel des Bereichs mit Unterkante */
 	.item.active {
 		background: var(--item-bg);
-		color: var(--tile-text);
+		color: var(--item-ink);
+		box-shadow: inset 0 -3px 0 color-mix(in srgb, var(--item-ink) 28%, transparent);
 	}
 
 	.item.active .icon {
